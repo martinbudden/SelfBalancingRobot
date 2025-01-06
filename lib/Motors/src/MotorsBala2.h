@@ -1,0 +1,18 @@
+#pragma once
+
+#include "MotorPairBase.h"
+
+
+class MotorsBala2 final : public MotorPairBase {
+public:
+    MotorsBala2();
+public:
+    virtual void readEncoder() override;
+    virtual void setPower(float leftPower, float rightPower) override;
+private:
+    enum { MIN_POWER = -1023, MAX_POWER = 1023 };
+    enum { ENCODER_STEPS_PER_REVOLUTION = 420 };
+
+    enum : uint8_t { I2C_ADDRESS = 0x3A };
+    enum : uint8_t { REGISTER_SPEED = 0x00, REGISTER_ENCODER = 0x10 };
+};

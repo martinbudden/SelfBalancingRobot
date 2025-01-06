@@ -1,0 +1,7 @@
+#if defined(PIO_UNIT_TESTING)
+// dummy main for TEST_BUILD
+int main(int argc, char **argv)
+{
+    return 0;
+}
+#endif

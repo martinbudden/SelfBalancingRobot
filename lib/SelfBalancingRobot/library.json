@@ -1,0 +1,15 @@
+{
+    "name": "SelfBalancingRobot",
+    "description": "Library for Self Balancing Robot",
+    "keywords": "SelfBalancingRobot",
+    "authors": {
+        "name": "Martin Budden",
+        "url": "https://github.com/martinbudden/Library-SelfBalancingRobot.git"
+    },
+    "license": "MIT",
+    "version": "0.0.1",
+    "frameworks": "*",
+    "platforms": "*",
+    "dependencies": [
+    ]
+}

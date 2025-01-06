@@ -1,0 +1,184 @@
+#include "AHRS.h"
+#include "IMU_Base.h"
+#include <cmath>
+
+// Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
+// The critical section variant seems to give better performance.
+#if defined(USE_AHRS_DATA_MUTEX) && defined(USE_AHRS_DATA_CRITICAL_SECTION)
+static_assert(false);
+#endif
+
+
+
+/*!
+Main AHRS task function. Reads the IMU and uses the sensor fusion filter to update the orientation quaternion.
+*/
+void AHRS::loop([[maybe_unused]] float deltaT)
+{
+#if defined(M5_STACK) && !defined(USE_MPU_6886_DIRECT)
+
+    // This is the  M5_STACK variant.
+    // It uses the IMU FIFO. This ensures all IMU readings are processed, but it has the disadvantage that
+    // reading the FIFO blocks the I2C bus, which in turn blocks the MPC_TASK.
+    // I'm starting to come to the conclusion that better overall performance is obtained by not using the FIFO.
+
+    constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
+    _fifoCount = _IMU.readFIFO_ToBuffer();
+    if (_fifoCount == 0) {
+        return;
+    }
+
+    Quaternion orientation;
+    xyz_t acc {};
+    xyz_t gyroRadians {};
+    for (auto ii = 0; ii < _fifoCount; ++ii) {
+        _IMU.readFIFO_Item(acc, gyroRadians, ii);
+        orientation = _sensorFusionFilter.update(gyroRadians, acc, dT);
+    }
+
+#else
+    xyz_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    xyz_t gyroRadians; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    const bool dataRead = _IMU.readAccGyroRadians(acc, gyroRadians);
+    if (dataRead == false) {
+        return;
+    }
+    const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
+
+#endif
+
+    if (filterIsInitializing()) {
+        checkMadgwickConvergence(acc, orientation);
+    }
+
+    LOCK();
+    _orientation = orientation;
+    _gyroRadians = gyroRadians;
+    _acc = acc;
+    UNLOCK();
+}
+
+/*!
+Task function for the AHRS. Sets up and runs the task loop() function.
+*/
+void AHRS::Task(const TaskParameters* taskParameters)
+{
+#if defined(USE_FREERTOS)
+    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
+    _tickIntervalTicks = pdMS_TO_TICKS(taskParameters->tickIntervalMilliSeconds);
+    _previousWakeTime = xTaskGetTickCount();
+
+    while (true) {
+        // delay until the end of the next tickIntervalTicks
+        vTaskDelayUntil(&_previousWakeTime, _tickIntervalTicks);
+
+        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than _tickIntervalTicks
+        const TickType_t tickCount = xTaskGetTickCount();
+        _tickCountDelta = tickCount - _tickCountPrevious;
+        _tickCountPrevious = tickCount;
+
+        if (_tickCountDelta > 0) { // guard against the case of the while loop executing twice on the same tick interval
+            const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
+            loop(deltaT);
+        }
+    }
+#endif
+}
+
+/*!
+Wrapper function for AHRS::Task with the correct signature to be used in xTaskCreate.
+*/
+void AHRS::Task(void* arg)
+{
+    const AHRS::TaskParameters* taskParameters = static_cast<AHRS::TaskParameters*>(arg);
+
+    AHRS* ahrs = taskParameters->ahrs;
+    ahrs->Task(taskParameters);
+}
+
+/*!
+Read the raw gyro values. Used in calibration.
+*/
+xyz_int16_t AHRS::readGyroRaw() const
+{
+    return _IMU.readGyroRaw();
+}
+
+/*!
+Read the raw accelerometer values. Used in calibration.
+*/
+xyz_int16_t AHRS::readAccRaw() const
+{
+    return _IMU.readAccRaw();
+}
+
+/*!
+Set the gyro offset. Used in calibration.
+*/
+void AHRS::setGyroOffset(const xyz_int16_t& gyroOffset)
+{
+    _IMU.setGyroOffset(gyroOffset);
+}
+
+/*!
+Set the accelerometer offset. Used in calibration.
+*/
+void AHRS::setAccOffset(const xyz_int16_t& accOffset)
+{
+    _IMU.setAccOffset(accOffset);
+}
+
+Quaternion AHRS::getOrientationUsingLock() const
+{
+    LOCK();
+    const Quaternion ret = _orientation;
+    UNLOCK();
+
+    return ret;
+}
+
+AHRS_Base::data_t AHRS::getAhrsDataUsingLock() const
+{
+    LOCK();
+    const AHRS_Base::data_t ret {
+        .tickCountDelta = _tickCountDelta,
+        .gyroRadians = _gyroRadians,
+        .acc = _acc
+    };
+    UNLOCK();
+
+    return ret;
+}
+
+void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientation)
+{
+    constexpr float degreesToRadians {M_PI / 180.0};
+    constexpr float twoDegreesInRadians = 2.0F * degreesToRadians;
+
+    const float madgwickPitchAngleRadians = orientation.calculatePitchRadians();
+    const float accPitchAngleRadians = std::atan2(acc.y, acc.z);
+    if (fabs(accPitchAngleRadians - madgwickPitchAngleRadians) < twoDegreesInRadians && accPitchAngleRadians != madgwickPitchAngleRadians) {
+        // the angles have converged to within 2 degrees, so set we can reduce the gain.
+        setFilterInitializing(false);
+        _sensorFusionFilter.setFreeParameters(0.1F, 0.0F);
+    }
+}
+
+/*!
+Constructor: set the sensor fusion filter and IMU to be used by the AHRS.
+*/
+AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor) :
+    AHRS_Base(sensorFusionFilter),
+    _IMU(imuSensor)
+#if defined(USE_AHRS_DATA_MUTEX)
+    , _imuDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataMutexBuffer)) // statically allocate the imuDataMutex
+#endif
+{
+#if defined(USE_AHRS_DATA_MUTEX)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+     // ensure _imuDataMutexBuffer declared before _imuDataMutex
+    static_assert(offsetof(AHRS, _imuDataMutex) > offsetof(AHRS, _imuDataMutexBuffer));
+#pragma GCC diagnostic pop
+#endif
+}

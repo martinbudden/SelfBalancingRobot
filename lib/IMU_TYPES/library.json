@@ -1,0 +1,13 @@
+{
+    "name": "IMU_TYPES",
+    "description": "IMU types",
+    "keywords": "IMU types vector quaternion",
+    "authors": {
+        "name": "Martin Budden",
+        "url": "https://github.com/martinbudden/Library-IMU_TYPES"
+    },
+    "license": "MIT",
+    "version": "0.0.1",
+    "frameworks": "*",
+    "platforms": "*"
+}
