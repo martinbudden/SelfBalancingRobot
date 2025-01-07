@@ -17,7 +17,7 @@ private:
     Receiver& operator=(Receiver&&) = delete;
 public:
     esp_err_t setup(int channel);
-    virtual bool update() override;
+    virtual bool update(uint32_t tickCountDelta) override;
     virtual controls_t getControls() const override;
     virtual uint32_t getFlags() const override;
     void broadcastMyMacAddressForBinding() const { _atomJoyStickReceiver.broadcastMyMacAddressForBinding(); }

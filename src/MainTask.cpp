@@ -298,7 +298,7 @@ void MainTask::loop()
     _tickCountDelta = tickCount - _tickCountPrevious;
     _tickCountPrevious = tickCount;
 
-    const bool packetReceived = _receiver->update();
+    const bool packetReceived = _receiver->update(_tickCountDelta);
     if (packetReceived) {
         _failSafeTickCount = tickCount;
         // update the screen template the first time we receive a packet

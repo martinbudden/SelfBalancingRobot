@@ -224,6 +224,10 @@ bool Backchannel::update()
             const int len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
             //Serial.printf("mpcLen:%d\r\n", len);
             sendData(_transmitDataBuffer, len);
+        } else if (_sendType == SEND_RECEIVER_DATA) {
+            const int len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _receiver);
+            //Serial.printf("receiverLen:%d\r\n", len);
+            sendData(_transmitDataBuffer, len);
         } else if (_sendType == RESET_SCREEN_AND_SEND_NO_DATA) {
             const int len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID);
             sendData(_transmitDataBuffer, len);

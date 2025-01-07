@@ -33,11 +33,14 @@ If a packet was received from the atomJoyStickReceiver then unpack it and send t
 
 Returns true if a packet has been received.
 */
-bool Receiver::update()
+bool Receiver::update(uint32_t tickCountDelta)
 {
     if (_atomJoyStickReceiver.isPacketEmpty()) {
         return false;
     }
+
+    // record tickoutDelta for instrumentation
+    _tickCountDelta = tickCountDelta;
 
     // track dropped packets
     _receivedPacketCount = _atomJoyStickReceiver.getTransceiver().getReceivedPacketCount();

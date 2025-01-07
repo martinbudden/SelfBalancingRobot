@@ -120,8 +120,8 @@ struct TD_Receiver {
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_Receiver)}; //!< length of whole packet, ie sizeof(TD_Receiver)
 
-    uint8_t filler0 {0};
-    uint8_t filler1 {0};
+    uint8_t tickInterval {0}; //<! tick number of ticks since last receiver update
+    uint8_t droppedPacketCount {0}; //<! the number of packets dropped by the receiver
     struct Data {
         ReceiverBase::controls_t controls;
         uint32_t flags;

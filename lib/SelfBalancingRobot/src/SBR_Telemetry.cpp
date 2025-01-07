@@ -134,6 +134,8 @@ int packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, const Rec
     td->id = id;
     td->type = TD_Receiver::TYPE;
     td->len = sizeof(TD_Receiver);
+    td->tickInterval = receiver.getTickCountDelta();
+    td->droppedPacketCount = receiver.getDroppedPacketCountDelta();
 
     td->data = {
         .controls = receiver.getControls(),
