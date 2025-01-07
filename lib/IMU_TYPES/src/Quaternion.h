@@ -19,7 +19,7 @@ public:
     inline float getZ() const { return z; }
     inline void getWXYZ(float& w_, float& x_, float&y_, float& z_) const { w_ = w; x_ = x; y_ = y; z_ = z; } 
 public:
-    inline float norm_squared() const { return w*w + x*x + y*y +z*z; } //<! The square of the norm
+    inline float magnitude_squared() const { return w*w + x*x + y*y +z*z; } //<! The square of the norm
     inline Quaternion conjugate() const { return Quaternion(w, -x, -y, -z); }
 
     // Unary operations
@@ -71,14 +71,19 @@ public:
         );
     }
 public:
-    inline float calculateRollRadians() const  { return atan2( w*x + y*z, 0.5F - x*x - y*y ); }
-    inline float calculatePitchRadians() const { return asin ( 2*(w*y - x*z) ); }
-    inline float calculateYawRadians() const   { return atan2( 2*(w*z + x*y), w*w + x*x - y*y - z*z ); } // alternatively atan2(w*z + x*y, 0.5 - y*y - z*z)
+    static inline float asinClipped(float angleRadians) {
+        if (angleRadians <= -1.0F) { return {-M_PI/2.0}; }
+        if (angleRadians >=  1.0f) { return {M_PI/2.0}; }
+        return asinf(angleRadians);
+    }
+    inline float calculateRollRadians() const  { return atan2f(w*x + y*z, 0.5F - x*x - y*y); }
+    inline float calculatePitchRadians() const { return asinClipped(2.0F*(w*y - x*z)); }
+    inline float calculateYawRadians() const   { return atan2f(w*z + x*y, 0.5F - y*y - z*z); } // alternatively atan2f(2*(w*z + x*y), w*w + x*x - y*y - z*z)
 
     inline float calculateRollDegrees() const { return radiansToDegrees * calculateRollRadians(); }
     inline float calculatePitchDegrees() const { return radiansToDegrees * calculatePitchRadians(); }
     inline float calculateYawDegrees() const { return radiansToDegrees * calculateYawRadians(); }
-private:
+protected:
     float w;
     float x;
     float y;

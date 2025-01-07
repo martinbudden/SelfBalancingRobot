@@ -32,19 +32,24 @@ inline float reciprocalSqrt(float x)
 #endif
 }
 
+/*!
+Normalize a vector
+*/
 inline void normalize(xyz_t& v)
 {
-    const float normSquared = v.norm_squared();
-    if (normSquared != 0.0F) { // [[likely]]
-        v *= reciprocalSqrt(normSquared);
+    const float magnitudeSquared = v.magnitude_squared();
+    if (magnitudeSquared != 0.0F) { // [[likely]]
+        v *= reciprocalSqrt(magnitudeSquared);
     }
 }
 
+/*!
+Normalize quaternion
+*/
 inline void normalize(Quaternion& q)
 {
-    q *= reciprocalSqrt(q.norm_squared());
+    q *= reciprocalSqrt(q.magnitude_squared());
 }
-
 
 void SensorFusionFilterBase::reset()
 {
@@ -63,11 +68,11 @@ void SensorFusionFilterBase::_setAndNormalizeQ(float q0_, float q1_, float q2_, 
     q1 = q1_;
     q2 = q2_;
     q3 = q3_;
-    const float normReciprocal = reciprocalSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
-    q0 *= normReciprocal;
-    q1 *= normReciprocal;
-    q2 *= normReciprocal;
-    q3 *= normReciprocal;
+    const float magnitudeReciprocal = reciprocalSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+    q0 *= magnitudeReciprocal;
+    q1 *= magnitudeReciprocal;
+    q2 *= magnitudeReciprocal;
+    q3 *= magnitudeReciprocal;
 }
 
 /*!
@@ -92,13 +97,15 @@ void ComplementaryFilter::setFreeParameters(float parameter0, [[maybe_unused]] f
 
 Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, float deltaT)
 {
+    // Create q from q0, q1, q2, q3
+    Quaternion q(q0, q1, q2, q3);
+
     // Calculate quaternion derivative (qDot) from angular rate https://ahrs.readthedocs.io/en/latest/filters/angular.html#quaternion-derivative
     // Twice the actual value is used to reduce the number of multiplications needed
     const Quaternion _2qDot = twoQdot(gyroRadians);
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*deltaT*0.5.
-    Quaternion q(q0, q1, q2, q3);
     q += _2qDot * deltaT * 0.5F;
 
     // use the normalized accelerometer data to calculate an estimate of the attitude
@@ -123,13 +130,15 @@ see https://ahrs.readthedocs.io/en/latest/filters/complementary.html
 */
 Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
 {
+    // Create q from q0, q1, q2, q3
+    Quaternion q(q0, q1, q2, q3);
+
     // Calculate quaternion derivative (qDot) from angular rate https://ahrs.readthedocs.io/en/latest/filters/angular.html#quaternion-derivative
     // Twice the actual value is used to reduce the number of multiplications needed
     const Quaternion _2qDot = twoQdot(gyroRadians);
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*deltaT*0.5.
-    Quaternion q(q0, q1, q2, q3);
     q += _2qDot * deltaT * 0.5F;
 
     xyz_t acc = accelerometer;
@@ -180,22 +189,21 @@ void MahonyFilter::setFreeParameters(float parameter0, float parameter1)
 
 Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, float deltaT)
 {
+    // Create q from q0, q1, q2, q3
+    QuaternionG q(q0, q1, q2, q3);
+
     // Normalize acceleration
     xyz_t acc = accelerometer;
     normalize(acc);
 
     // Calculate estimated direction of gravity in the sensor coordinate frame
-    const xyz_t estimated = {
-        .x = 2.0F * (q1 * q3 - q0 * q2),
-        .y = 2.0F * (q0 * q1 + q2 * q3),
-        .z = 2.0F * (q0 * q0 - 0.5F + q3 * q3)
-    };
+    const xyz_t gravity = q.gravity();
 
-    // Error is the cross product between direction measured by acceleration and estimated direction
-    const xyz_t error = acc.cross_product(estimated);
+    // Error is the cross product between direction measured by acceleration and estimated direction of gravity
+    const xyz_t error = acc.cross_product(gravity);
 
-    xyz_t gyro = gyroRadians;
     // Apply proportional feedback
+    xyz_t gyro = gyroRadians;
     gyro += error * _kp;
 
     // Apply integral feedback if _ki set
@@ -203,9 +211,6 @@ Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerom
         _errorIntegral += error * _ki * deltaT;
         gyro += _errorIntegral;
     }
-
-    // Create q from q0, q1, q2, q3
-    Quaternion q(q0, q1, q2, q3);
 
     const Quaternion _2qDot = twoQdot(gyro);
 
@@ -251,12 +256,12 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& acceler
 {
     xyz_t a = accelerometer;
     // Normalize acceleration if it is non-zero
-    const float accNorm = a.x*a.x + a.y*a.y + a.z*a.z;
-    if (accNorm != 0.0F) { // [[likely]]
-        const float accNormReciprocal = reciprocalSqrt(accNorm);
-        a.x *= accNormReciprocal;
-        a.y *= accNormReciprocal;
-        a.z *= accNormReciprocal;
+    const float accMagnitudeSquared = a.x*a.x + a.y*a.y + a.z*a.z;
+    if (accMagnitudeSquared != 0.0F) { // [[likely]]
+        const float accMagnitudeReciprocal = reciprocalSqrt(accMagnitudeSquared);
+        a.x *= accMagnitudeReciprocal;
+        a.y *= accMagnitudeReciprocal;
+        a.z *= accMagnitudeReciprocal;
     }
 
     // Auxiliary variables to avoid repeated arithmetic
@@ -269,14 +274,14 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& acceler
     const float s2 = q2*common              + q0*a.x - q3*a.y;
     const float s3 = q3*(_2q1q1_plus_2q2q2) - q1*a.x - q2*a.y;
 
-    const float _2betaNormReciprocal = 2.0F * _beta * reciprocalSqrt(s0*s0 + s1*s1 + s2*s2 + s3*s3);
+    const float _2betaMagnitudeReciprocal = 2.0F * _beta * reciprocalSqrt(s0*s0 + s1*s1 + s2*s2 + s3*s3);
 
     // Calculate quaternion derivative (qDot) from the angular rate and the corrective step
     // Twice the actual value is used to reduce the number of multiplications needed
-    const float _2qDot0 = -q1*gyroRadians.x - q2*gyroRadians.y - q3*gyroRadians.z - s0 * _2betaNormReciprocal;
-    const float _2qDot1 =  q0*gyroRadians.x + q2*gyroRadians.z - q3*gyroRadians.y - s1 * _2betaNormReciprocal;
-    const float _2qDot2 =  q0*gyroRadians.y - q1*gyroRadians.z + q3*gyroRadians.x - s2 * _2betaNormReciprocal;
-    const float _2qDot3 =  q0*gyroRadians.z + q1*gyroRadians.y - q2*gyroRadians.x - s3 * _2betaNormReciprocal;
+    const float _2qDot0 = -q1*gyroRadians.x - q2*gyroRadians.y - q3*gyroRadians.z - s0 * _2betaMagnitudeReciprocal;
+    const float _2qDot1 =  q0*gyroRadians.x + q2*gyroRadians.z - q3*gyroRadians.y - s1 * _2betaMagnitudeReciprocal;
+    const float _2qDot2 =  q0*gyroRadians.y - q1*gyroRadians.z + q3*gyroRadians.x - s2 * _2betaMagnitudeReciprocal;
+    const float _2qDot3 =  q0*gyroRadians.z + q1*gyroRadians.y - q2*gyroRadians.x - s3 * _2betaMagnitudeReciprocal;
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*halfDeltaT.
@@ -287,11 +292,11 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& acceler
     q3 += _2qDot3 * halfDeltaT;
 
     // Normalize the orientation quaternion
-    const float normReciprocal = reciprocalSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
-    q0 *= normReciprocal;
-    q1 *= normReciprocal;
-    q2 *= normReciprocal;
-    q3 *= normReciprocal;
+    const float magnitudeReciprocal = reciprocalSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
+    q0 *= magnitudeReciprocal;
+    q1 *= magnitudeReciprocal;
+    q2 *= magnitudeReciprocal;
+    q3 *= magnitudeReciprocal;
 
     return Quaternion(q0, q1, q2, q3); // NOLINT(modernize-return-braced-init-list) false positive
 }
@@ -302,29 +307,11 @@ For computation efficiency this code refactors the code used in many implementat
 */
 Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
 {
-    // Normalize acceleration if it is not zero
-    float ax = accelerometer.x;
-    float ay = accelerometer.y;
-    float az = accelerometer.z;
-    const float accNorm = ax * ax + ay * ay + az * az;
-    if (accNorm != 0.0F) { // [[likely]]
-        const float accNormReciprocal = reciprocalSqrt(accNorm);
-        ax *= accNormReciprocal;
-        ay *= accNormReciprocal;
-        az *= accNormReciprocal;
-    }
+    xyz_t a = accelerometer;
+    normalize(a);
 
-    // Normalize magnetometer if it is not zero
-    float mx = magnetometer.x;
-    float my = magnetometer.y;
-    float mz = magnetometer.z;
-    const float magNorm = mx * mx + my * my + mz * mz;
-    if (magNorm != 0.0F) { // [[likely]]
-        const float magNormReciprocal = reciprocalSqrt(magNorm);
-        mx *= magNormReciprocal;
-        my *= magNormReciprocal;
-        mz *= magNormReciprocal;
-    }
+    xyz_t m = magnetometer;
+    normalize(m);
 
     // Auxiliary variables to avoid repeated arithmetic
     const float q0q0 = q0*q0;
@@ -342,25 +329,25 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& acceler
     const float q2q2_plus_q3q3 = q2q2 + q3q3;
 
     // Reference direction of Earth's magnetic field
-    const float hX = mx*(q0q0 + q1q1 - q2q2_plus_q3q3) + 2.0F*(my*(q1q2 - q0q3) + mz*(q0q2 + q1q3));
-    const float hY = 2.0F*(mx*(q0q3 + q1q2) + mz*(q2q3 - q0q1)) + my*(q0q0 - q1q1 + q2q2 - q3q3);
+    const float hX = m.x*(q0q0 + q1q1 - q2q2_plus_q3q3) + 2.0F*(m.y*(q1q2 - q0q3) + m.z*(q0q2 + q1q3));
+    const float hY = 2.0F*(m.x*(q0q3 + q1q2) + m.y*(q0q0 - q1q1 + q2q2 - q3q3) + m.z*(q2q3 - q0q1));
 
     const float bXbX = hX*hX + hY*hY;
     const float bX =   sqrt(bXbX);
-    const float bZ =   2.0F*(mx*(q1q3 - q0q2) + my*(q0q1 + q2q3)) + mz*(q0q0 - q1q1_plus_q2q2 + q3q3);
+    const float bZ =   2.0F*(m.x*(q1q3 - q0q2) + m.y*(q0q1 + q2q3)) + m.z*(q0q0 - q1q1_plus_q2q2 + q3q3);
     const float bZbZ = bZ*bZ;
     const float _4bXbZ = 4.0F * bX * bZ;
 
-    const float mXbX = mx*bX;
-    const float mYbX = my*bX;
-    const float mZbX = mz*bX;
-    const float mZbZ = mz*bZ;
+    const float mXbX = m.x*bX;
+    const float mYbX = m.y*bX;
+    const float mZbX = m.z*bX;
+    const float mZbZ = m.z*bZ;
 
-    const float aX_plus_mXbZ = ax + mx*bZ;
-    const float aY_plus_mYbZ = ay + my*bZ;
+    const float aX_plus_mXbZ = a.x + m.x*bZ;
+    const float aY_plus_mYbZ = a.y + m.y*bZ;
 
     const float sumSquaresMinusOne  = q0q0 + q1q1_plus_q2q2 + q3q3 - 1.0F;
-    const float common              = sumSquaresMinusOne + q1q1_plus_q2q2 + az;
+    const float common              = sumSquaresMinusOne + q1q1_plus_q2q2 + a.z;
 
     // Gradient decent algorithm corrective step
     const float s0 = 
@@ -405,11 +392,11 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& acceler
     q3 += _2qDot3 * halfDeltaT;
 
     // Normalize the orientation quaternion
-    const float normReciprocal = reciprocalSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
-    q0 *= normReciprocal;
-    q1 *= normReciprocal;
-    q2 *= normReciprocal;
-    q3 *= normReciprocal;
+    const float magnitudeReciprocal = reciprocalSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
+    q0 *= magnitudeReciprocal;
+    q1 *= magnitudeReciprocal;
+    q2 *= magnitudeReciprocal;
+    q3 *= magnitudeReciprocal;
 
     return Quaternion(q0, q1, q2, q3); // NOLINT(modernize-return-braced-init-list) false positive
 }

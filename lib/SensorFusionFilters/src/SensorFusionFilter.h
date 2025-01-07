@@ -4,6 +4,20 @@
 #include <xyz_type.h>
 
 /*!
+Quaternion with added gravity function;
+*/
+class QuaternionG : public Quaternion {
+public:
+    explicit QuaternionG(const Quaternion& q) : Quaternion(q) {} 
+    QuaternionG(float w, float x, float y, float z) : Quaternion(w, x, y, z) {}
+public:
+    inline xyz_t halfGravity() {
+        return xyz_t { .x = x*z - w*y, .y = w*x + y*z, .z = w*w - 0.5F + z*z };
+    }
+    inline xyz_t gravity() { return halfGravity()*2.0F; }
+};
+
+/*!
 SensorFusionFilterBase
 
 For Sensor fusion filters, Euler angles are defined in radians:

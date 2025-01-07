@@ -9,6 +9,16 @@ void setUp() {
 void tearDown() {
 }
 
+void test_quaternion_g() {
+    Quaternion q(1, 2, 3, 4);
+    QuaternionG g(q);
+
+    TEST_ASSERT_EQUAL_FLOAT(1, g.getW());
+    TEST_ASSERT_EQUAL_FLOAT(2, g.getX());
+    TEST_ASSERT_EQUAL_FLOAT(3, g.getY());
+    TEST_ASSERT_EQUAL_FLOAT(4, g.getZ());
+}
+
 void test_conversions() {
     const float degrees45inRadians = 45.0F * Quaternion::degreesToRadians;
 
@@ -58,6 +68,7 @@ void test_complementary_filter() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
 
+    RUN_TEST(test_quaternion_g);
     RUN_TEST(test_conversions);
     RUN_TEST(test_complementary_filter);
 
