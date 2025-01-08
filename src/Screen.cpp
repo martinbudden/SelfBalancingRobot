@@ -8,8 +8,8 @@
 #include "Screen.h"
 #include "AHRS_Base.h"
 #include "ESPNOW_Receiver.h"
-#include "MotorPairBase.h"
 #include "MotorPairController.h"
+#include "SBR_TelemetryData.h"
 
 #include <cfloat>
 // NOLINTEND(llvm-include-order)
