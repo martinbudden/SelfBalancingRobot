@@ -126,8 +126,6 @@ void MainTask::setup()
     _ahrs = &ahrs;
 #else
     static MadgwickFilter sensorFusionFilter;
-    // Set a relatively high gain so the measured angles converge quickly during Madgwick initialization.
-    sensorFusionFilter.setBeta(1.0F);
     static AHRS ahrs(sensorFusionFilter, imuSensor);
     _ahrs = &ahrs;
     _ahrs->setFilterInitializing(true);
