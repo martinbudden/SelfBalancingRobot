@@ -25,7 +25,7 @@ public:
     inline FilterMovingAverage()  {} // cppcheck-suppress uninitMemberVar
 public:
     inline void reset() { _sum = 0.0F; _count = 0; _index = 0;}
-    float update(float input);
+    inline float update(float input);
     inline float update(float input, [[maybe_unused]] float dt) { return update(input); }
 private:
     size_t _count {0};
@@ -35,7 +35,7 @@ private:
 };
 
 template <size_t N>
-float FilterMovingAverage<N>::update(float input)
+inline float FilterMovingAverage<N>::update(float input)
 {
     _sum += input;
     if (_count < N) {
@@ -67,14 +67,14 @@ public:
         const float omega = 2.0F * M_PI * frequencyCutoff * dT;
         _tau = omega / (omega + 1.0F);
     }
-    void reset() { _outputPrevious = 0.0F; }
-    float update(float input, float dt);
+    inline void reset() { _outputPrevious = 0.0F; }
+    inline float update(float input, float dt);
 private:
     float _tau;//!< Filter time constant (RC)
     float _outputPrevious;
 };
 
-float IIR_filter::update(float input, float dt) {
+inline float IIR_filter::update(float input, float dt) {
     const float alpha = dt/(_tau + dt);
     _outputPrevious = alpha * input + (1.0F - alpha) * _outputPrevious;
     return _outputPrevious;
@@ -88,7 +88,7 @@ template <size_t N>
 class FIR_filter {
 public:
     explicit FIR_filter(const float* coefficients) : _coefficients(coefficients), _back(0) { memset(_buffer, 0, sizeof(_buffer)); }
-    float update(float input);
+    inline float update(float input);
 private:
     enum { ORDER = N };
 private:
@@ -98,7 +98,7 @@ private:
 };
 
 template <size_t N>
-float FIR_filter<N>::update(float input) {
+inline float FIR_filter<N>::update(float input) {
     auto index = _back;
 
     // Add the input value to the back of the circular buffer
@@ -124,8 +124,8 @@ float FIR_filter<N>::update(float input) {
 class ButterWorthFilter {
 public:
     ButterWorthFilter(float a1, float a2, float b0, float b1, float b2) : _a1(a1), _a2(a2), _b0(b0), _b1(b1), _b2(b2), _x0(0.0F), _x1(0.0F), _y0(0.0F), _y1(0.0F) {}
-    float update(float input);
-    void reset() { _x0 = 0.0F; _x1 = 0.0F; _y0 = 0.0F; _y1 = 0.0F; }
+    inline float update(float input);
+    inline void reset() { _x0 = 0.0F; _x1 = 0.0F; _y0 = 0.0F; _y1 = 0.0F; }
 private:
     float _a1;
     float _a2;
@@ -140,7 +140,7 @@ private:
 
 };
 
-float ButterWorthFilter::update(float input) {
+inline float ButterWorthFilter::update(float input) {
     const float output = _b0 * input - _a2 * _y1 + _b1 * _x0 + _b2 * _x1 - _a1 * _y0;
     _y1 = _y0;
     _y0 = output;
