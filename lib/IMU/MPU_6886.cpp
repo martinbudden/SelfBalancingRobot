@@ -1,3 +1,5 @@
+#if defined(USE_MPU_6886_DIRECT)
+
 #include "MPU_6886.h"
 #include <array>
 #if defined(UNIT_TEST_BUILD)
@@ -448,3 +450,4 @@ int MPU_6886::readFIFO_ToBuffer()
 void MPU_6886::readFIFO_Item(xyz_t& acc, xyz_t& gyroRadians, size_t index)
 {
 }
+#endif // USE_MPU_6886_DIRECT

@@ -1,3 +1,5 @@
+#if defined(USE_I2C)
+
 #include "I2C.h"
 #if !defined(UNIT_TEST_BUILD)
 #include <Wire.h>
@@ -9,7 +11,11 @@ I2C::I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
     _SCL_pin(SCL_pin)
 {
 #if !defined(UNIT_TEST_BUILD)
+#if defined(USE_I2C_BEGIN_2_PARAMETERS)
     Wire.begin(SDA_pin, SCL_pin);
+#else
+    Wire.begin();
+#endif
 #endif
 }
 
@@ -36,7 +42,7 @@ bool I2C::readBytes(uint8_t reg, uint8_t* data, size_t length) const
 
     if (Wire.requestFrom(_I2C_address, length)) {
         uint8_t pos = 0; // NOLINT(misc-const-correctness) false positive
-        for (auto ii = 0; ii < length; ++ii) {
+        for (size_t ii = 0; ii < length; ++ii) {
             data[pos++] = Wire.read();
         }
         return true;
@@ -69,3 +75,4 @@ uint8_t I2C::writeBytes(uint8_t reg, const uint8_t* data, size_t length)
 #endif
 }
 
+#endif // USE_I2C
