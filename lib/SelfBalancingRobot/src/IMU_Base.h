@@ -1,10 +1,12 @@
 #pragma once
 
 #include <cstddef>
+
 #if defined(I2C_MUTEX_REQUIRED)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #endif
+
 #include <xyz_int16_type.h>
 #include <xyz_type.h>
 
