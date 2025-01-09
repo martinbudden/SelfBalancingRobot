@@ -37,7 +37,7 @@ inline static float reciprocalSqrt2(float x)
 }
 
 // [Pizer’s optimisation](https://pizer.wordpress.com/2008/10/12/fast-inverse-square-root/)
-float reciprocalSqrtPizer1(float x){
+float reciprocalSqrtPizer1(float x) {
     union {
         float y;
         long i;
@@ -49,7 +49,7 @@ float reciprocalSqrtPizer1(float x){
     return u.y;
 }
 
-float reciprocalSqrtPizer2(float x){
+float reciprocalSqrtPizer2(float x) {
     union {
         float y;
         long i;
