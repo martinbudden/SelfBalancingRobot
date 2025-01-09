@@ -9,7 +9,7 @@
 #include <freertos/semphr.h>
 #endif
 
-class IMU_Filter;
+class IMU_Filters;
 
 
 class AHRS final : public AHRS_Base {
@@ -22,7 +22,7 @@ private:
     AHRS(AHRS&&) = delete;
     AHRS& operator=(AHRS&&) = delete;
 public:
-    inline IMU_Filter& getIMU_Filter() { return *_imuFilter; }
+    inline IMU_Filters& getIMU_Filters() { return *_imuFilters; }
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
@@ -44,7 +44,7 @@ private:
     xyz_t _gyroRadians {0.0, 0.0, 0.0};
 
     IMU_Base& _IMU;
-    IMU_Filter* _imuFilter;
+    IMU_Filters* _imuFilters;
 
 #if defined(USE_AHRS_DATA_MUTEX)
     StaticSemaphore_t _imuDataMutexBuffer {};
@@ -54,7 +54,7 @@ private:
 #elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
     mutable portMUX_TYPE _imuDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
     inline void LOCK() const { taskENTER_CRITICAL(&_imuDataSpinlock); }
-    inline void UNLOCK() const {taskEXIT_CRITICAL(&_imuDataSpinlock); }
+    inline void UNLOCK() const { taskEXIT_CRITICAL(&_imuDataSpinlock); }
 #else
     inline void LOCK() const {}
     inline void UNLOCK() const {}

@@ -4,7 +4,7 @@
 #include <xyz_type.h>
 
 
-class IMU_Filter {
+class IMU_Filters {
 public:
     void filter(xyz_t& gyroRadians, xyz_t& acc, float deltaT);
 private:
