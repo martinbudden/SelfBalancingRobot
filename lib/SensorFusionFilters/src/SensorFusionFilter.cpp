@@ -22,8 +22,10 @@ inline float reciprocalSqrt(float x)
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
     u.i = 0x5f1f1412 - (u.i >> 1); // Initial estimate for Newton–Raphson method
+    // single iteration gives accuracy to 4.5 significant figures
     u.y *= 1.69000231F - 0.714158168F * x * u.y * u.y; // First iteration
-    u.y *= 1.5F - (0.5F * x * u.y * u.y); // Second iteration
+    // two iterations gives full floating point accuracy, and is not required in this application
+    //u.y *= 1.5F - (0.5F * x * u.y * u.y); // Second iteration
 
     return u.y;
 // NOLINTEND(cppcoreguidelines-pro-type-union-access)
