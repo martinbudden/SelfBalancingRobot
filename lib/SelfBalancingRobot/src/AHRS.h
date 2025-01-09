@@ -14,7 +14,7 @@ class IMU_Filters;
 
 class AHRS final : public AHRS_Base {
 public:
-    AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor);
+    AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint32_t tickIntervalMicroSeconds);
 private:
     // class is not copyable or moveable
     AHRS(const AHRS&) = delete;

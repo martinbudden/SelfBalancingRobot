@@ -16,8 +16,8 @@ Main AHRS task function. Reads the IMU and uses the sensor fusion filter to upda
 */
 void AHRS::loop(float deltaT)
 {
-    xyz_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     xyz_t gyroRadians; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    xyz_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
 #if defined(USE_IMU_FIFO)
     // It uses the IMU FIFO. This ensures all IMU readings are processed, but it has the disadvantage that
@@ -167,7 +167,7 @@ void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientat
 /*!
 Constructor: set the sensor fusion filter and IMU to be used by the AHRS.
 */
-AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor) :
+AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint32_t tickIntervalMicroSeconds) :
     AHRS_Base(sensorFusionFilter),
     _IMU(imuSensor)
 #if defined(USE_AHRS_DATA_MUTEX)
@@ -175,7 +175,8 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor) :
 #endif
 {
     // statically allocate the IMU_Filters
-    static IMU_Filters imuFilters;
+    constexpr float cutoffFrequency = 100.0F;
+    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(tickIntervalMicroSeconds) * 1.0e-6F);
     _imuFilters = &imuFilters;
 #if defined(USE_AHRS_DATA_MUTEX)
 #pragma GCC diagnostic push

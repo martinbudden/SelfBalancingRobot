@@ -58,26 +58,42 @@ inline float FilterMovingAverage<N>::update(float input)
 Infinite Impulse Response (IIR) Filter.
 Also known as Exponential Moving Average (EMA) Filter.
 See https://en.wikipedia.org/wiki/Low-pass_filter#RC_filter
-tau - time constant (RC)
 */
 class IIR_filter {
 public:
-    explicit IIR_filter(float tau) : _tau(tau), _outputPrevious(0.0F) {}
-    IIR_filter(float frequencyCutoff, float dT) : _outputPrevious(0.0F) {
-        const float omega = 2.0F * M_PI * frequencyCutoff * dT;
-        _tau = omega / (omega + 1.0F);
+    explicit IIR_filter(float frequencyCutoff) : _state(0.0F) {
+        _omega = 2.0F * M_PI * frequencyCutoff;
     }
-    inline void reset() { _outputPrevious = 0.0F; }
-    inline float update(float input, float dt);
-private:
-    float _tau;//!< Filter time constant (RC)
-    float _outputPrevious;
+    IIR_filter(float frequencyCutoff, float dT) : _state(0.0F) {
+        setCutoffFrequency(frequencyCutoff, dT);
+    }
+    inline void setCutoffFrequency(float frequencyCutoff, float dT) {
+        _omega = 2.0F * M_PI * frequencyCutoff;
+        _alpha = _omega*dT/(_omega*dT + 1.0F);
+    }
+    inline void reset() { _state = 0.0F; }
+    inline float update(float input, float dT);
+    inline float update(float input);
+protected:
+    float _alpha {0.0};
+    float _omega;
+    float _state;
 };
 
-inline float IIR_filter::update(float input, float dt) {
-    const float alpha = dt/(_tau + dt);
-    _outputPrevious = alpha*(input - _outputPrevious) + alpha; // optimized form of alpha*input + (1.0F - alpha)*_outputPrevious
-    return _outputPrevious;
+/*!
+Variable dT IIR_filter update;
+*/
+inline float IIR_filter::update(float input, float dT) {
+    const float alpha = _omega*dT/(_omega*dT + 1.0F);
+    _state += alpha * (input - _state); // optimized form of _state = alpha*input + (1.0F - alpha)*_state
+    return _state;
+}
+/*!
+Constant dT IIR_filter update
+*/
+inline float IIR_filter::update(float input) {
+    _state += _alpha * (input - _state); // optimized form of _state = alpha*input + (1.0F - alpha)*_state
+    return _state;
 }
 
 

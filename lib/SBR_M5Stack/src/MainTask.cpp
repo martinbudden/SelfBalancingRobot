@@ -126,7 +126,7 @@ void MainTask::setup()
     _ahrs = &ahrs;
 #else
     static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
-    static AHRS ahrs(sensorFusionFilter, imuSensor);
+    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
     _ahrs = &ahrs;
     _ahrs->setFilterInitializing(true);
 #endif

@@ -49,5 +49,14 @@ struct CommandPacketSetPID {
     uint8_t setType;
     float value;
 };
+
+struct CommandPacketSetFilter {
+    enum { TYPE = 5 };
+    enum { GYRO_ALL_LPF, GYRO_X_LPF, GYRO_Y_LP, GYRO_Z_LPF, ACC_ALL_LPF, ACC_X_LPF, ACC_Y_LPF, ACC_Z_LPF };
+    uint32_t id;
+    uint8_t type;
+    uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetPID)
+    uint16_t frequency;
+};
 #pragma pack(pop)
 
