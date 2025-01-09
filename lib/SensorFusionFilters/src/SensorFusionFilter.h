@@ -31,6 +31,7 @@ public:
     virtual Quaternion update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) = 0;
     virtual void setFreeParameters(float parameter0, float parameter1) = 0;
     void reset();
+    inline Quaternion getOrientation() const { return Quaternion(q0, q1, q2, q3); }
     Quaternion twoQdot(const xyz_t& gyroRadians) const;
     // Attitude(tilt) from gravity, https://ahrs.readthedocs.io/en/latest/filters/tilt.html#module-ahrs.filters.tilt
      //! Calculate roll (theta) from the normalized accelerometer readings

@@ -9,6 +9,8 @@
 #include <freertos/semphr.h>
 #endif
 
+class IMU_Filter;
+
 
 class AHRS final : public AHRS_Base {
 public:
@@ -20,6 +22,7 @@ private:
     AHRS(AHRS&&) = delete;
     AHRS& operator=(AHRS&&) = delete;
 public:
+    inline IMU_Filter& getIMU_Filter() { return *_imuFilter; }
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readAccRaw() const override;
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
@@ -41,6 +44,7 @@ private:
     xyz_t _gyroRadians {0.0, 0.0, 0.0};
 
     IMU_Base& _IMU;
+    IMU_Filter* _imuFilter;
 
 #if defined(USE_AHRS_DATA_MUTEX)
     StaticSemaphore_t _imuDataMutexBuffer {};

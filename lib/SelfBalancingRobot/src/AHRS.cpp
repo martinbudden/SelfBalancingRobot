@@ -1,5 +1,6 @@
 #include "AHRS.h"
 #include "IMU_Base.h"
+#include "IMU_Filter.h"
 #include <cmath>
 
 // Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
@@ -15,12 +16,13 @@ Main AHRS task function. Reads the IMU and uses the sensor fusion filter to upda
 */
 void AHRS::loop([[maybe_unused]] float deltaT)
 {
-#if defined(M5_STACK) && !defined(USE_MPU_6886_DIRECT)
+    xyz_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    xyz_t gyroRadians; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
-    // This is the  M5_STACK variant.
+#if defined(USE_IMU_FIFO)
     // It uses the IMU FIFO. This ensures all IMU readings are processed, but it has the disadvantage that
     // reading the FIFO blocks the I2C bus, which in turn blocks the MPC_TASK.
-    // I'm starting to come to the conclusion that better overall performance is obtained by not using the FIFO.
+    // I'm starting to come to the conclusion that, for M5Stack devices, better overall performance is obtained by not using the FIFO.
 
     constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
     _fifoCount = _IMU.readFIFO_ToBuffer();
@@ -28,21 +30,19 @@ void AHRS::loop([[maybe_unused]] float deltaT)
         return;
     }
 
-    Quaternion orientation;
-    xyz_t acc {};
-    xyz_t gyroRadians {};
     for (auto ii = 0; ii < _fifoCount; ++ii) {
         _IMU.readFIFO_Item(acc, gyroRadians, ii);
-        orientation = _sensorFusionFilter.update(gyroRadians, acc, dT);
+        _imuFilter->filter(gyroRadians, acc, deltaT);
+        (void)_sensorFusionFilter.update(gyroRadians, acc, dT);
     }
+    const Quaternion orientation = _sensorFusionFilter.getOrientation();
 
 #else
-    xyz_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    xyz_t gyroRadians; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     const bool dataRead = _IMU.readAccGyroRadians(acc, gyroRadians);
     if (dataRead == false) {
         return;
     }
+    _imuFilter->filter(gyroRadians, acc, deltaT);
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
 
 #endif
@@ -174,6 +174,9 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor) :
     , _imuDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 {
+    // statically allocate the IMU_Filter
+    static IMU_Filter imuFilter;
+    _imuFilter = &imuFilter;
 #if defined(USE_AHRS_DATA_MUTEX)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
