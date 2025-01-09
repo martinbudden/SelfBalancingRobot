@@ -39,7 +39,7 @@ xyz_int16_t IMU_M5_UNIFIED::readGyroRaw() const
     return gyro;
 }
 
-bool IMU_M5_UNIFIED::readAccGyroRadians(xyz_t& acc, xyz_t& gyroRadians) const
+bool IMU_M5_UNIFIED::readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const
 {
     // This is very slow on the M5 Atom.
     i2cSemaphoreTake();
@@ -51,17 +51,17 @@ bool IMU_M5_UNIFIED::readAccGyroRadians(xyz_t& acc, xyz_t& gyroRadians) const
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
     const m5::IMU_Class::imu_data_t& data = M5.Imu.getImuData();
-    acc = {
-        .x = data.accel.x,
-        .y = data.accel.y,
-        .z = data.accel.z
-    };
     // convert gyro values to radians for Madgwick filter
     constexpr float degreesToRadians {M_PI / 180.0};
     gyroRadians = {
         .x = data.gyro.x * degreesToRadians,
         .y = data.gyro.y * degreesToRadians,
         .z = data.gyro.z * degreesToRadians
+    };
+    acc = {
+        .x = data.accel.x,
+        .y = data.accel.y,
+        .z = data.accel.z
     };
 // NOLINTEND(cppcoreguidelines-pro-type-union-access)
     return true;
@@ -72,7 +72,10 @@ int IMU_M5_UNIFIED::readFIFO_ToBuffer()
     return 0;
 }
 
-void IMU_M5_UNIFIED::readFIFO_Item([[maybe_unused]] xyz_t& acc,[[maybe_unused]] xyz_t& gyroRadians, [[maybe_unused]] size_t index)
+void IMU_M5_UNIFIED::readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index)
 {
+    (void)gyroRadians;
+    (void)acc;
+    (void)index;
 }
 #endif

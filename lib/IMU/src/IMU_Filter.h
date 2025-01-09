@@ -6,7 +6,7 @@
 
 class IMU_Filter {
 public:
-    void filter(xyz_t& acc, xyz_t& gyroRadians, float deltaT);
+    void filter(xyz_t& gyroRadians, xyz_t& acc, float deltaT);
 private:
     FilterNull _filterGyroX;
     FilterNull _filterGyroY;

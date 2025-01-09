@@ -21,9 +21,8 @@ public:
     AHRS_Base(SensorFusionFilterBase& sensorFusionFilter) : _sensorFusionFilter(sensorFusionFilter) {}
 public:
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) = 0;
-    virtual xyz_int16_t readGyroRaw() const = 0;
-
     virtual void setAccOffset(const xyz_int16_t& gyroOffset) = 0;
+    virtual xyz_int16_t readGyroRaw() const = 0;
     virtual xyz_int16_t readAccRaw() const = 0;
 
     virtual data_t getAhrsDataUsingLock() const = 0;
@@ -33,8 +32,8 @@ public:
     inline void setFilterInitializing(bool filterInitializing) { _filterInitializing = filterInitializing; }
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
 protected:
+    SensorFusionFilterBase& _sensorFusionFilter;
+    Quaternion _orientation;
     uint32_t _filterInitializing {false};
     uint32_t _fifoCount {0};
-    Quaternion _orientation;
-    SensorFusionFilterBase& _sensorFusionFilter;
 };

@@ -44,13 +44,13 @@ public:
     MPU_6886(uint8_t SDA_pin, uint8_t SCL_pin) : MPU_6886(SDA_pin, SCL_pin, nullptr) {}
     void init();
 public:
-    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
-    virtual xyz_int16_t readAccRaw() const override;
+    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
-    virtual bool readAccGyroRadians(xyz_t& acc, xyz_t& gyroRadians) const override;
+    virtual xyz_int16_t readAccRaw() const override;
+    virtual bool readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const override;
     virtual int readFIFO_ToBuffer() override;
-    virtual void readFIFO_Item(xyz_t& acc, xyz_t& gyroRadians, size_t index) override;
+    virtual void readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index) override;
 
     float readTemperature() const;
     int16_t readTemperatureRaw() const;
@@ -63,12 +63,12 @@ public:
     void setGyroFSR(gyro_scale_t gyroScale);
     void setAccFSR(acc_scale_t accScale);
 
-    static acc_gyroRadians_t accGyroRadiansFromData(const mpu_6886_data_t& data, const xyz_int16_t& accOffset, const xyz_int16_t& gyroOffset);
+    static gyroRadiansAcc_t gyroRadiansAccFromData(const mpu_6886_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
     static mems_sensor_data_t gyroOffsetFromXYZ(const xyz_int16_t& data);
 private:
-    acc_gyroRadians_t readAccGyroRadians() const;
-    xyz_t readAcc() const;
+    gyroRadiansAcc_t readGyroRadiansAcc() const;
     xyz_t readGyro() const;
+    xyz_t readAcc() const;
     xyz_t readGyroRadians() const;
 private:
     I2C _I2C;

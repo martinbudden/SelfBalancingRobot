@@ -31,14 +31,14 @@ void AHRS::loop([[maybe_unused]] float deltaT)
     }
 
     for (auto ii = 0; ii < _fifoCount; ++ii) {
-        _IMU.readFIFO_Item(acc, gyroRadians, ii);
+        _IMU.readFIFO_Item(gyroRadians, acc, ii);
         _imuFilter->filter(gyroRadians, acc, deltaT);
         (void)_sensorFusionFilter.update(gyroRadians, acc, dT);
     }
     const Quaternion orientation = _sensorFusionFilter.getOrientation();
 
 #else
-    const bool dataRead = _IMU.readAccGyroRadians(acc, gyroRadians);
+    const bool dataRead = _IMU.readGyroRadiansAcc(gyroRadians, acc);
     if (dataRead == false) {
         return;
     }

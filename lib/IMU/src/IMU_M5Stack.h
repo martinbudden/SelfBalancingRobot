@@ -7,17 +7,17 @@ class IMU_M5_STACK : public IMU_Base {
 public:
     explicit IMU_M5_STACK(void* i2cMutex);
 public:
-    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
-    virtual xyz_int16_t readAccRaw() const override;
+    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
-    virtual bool readAccGyroRadians(xyz_t& acc, xyz_t& gyroRadians) const override;
+    virtual xyz_int16_t readAccRaw() const override;
+    virtual bool readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const override;
     virtual int readFIFO_ToBuffer() override;
-    virtual void readFIFO_Item(xyz_t& acc, xyz_t& gyroRadians, size_t index) override;
-    static acc_gyroRadians_t accGyroRadiansFromData(const mpu_6886_data_t& data, const xyz_int16_t& accOffset, const xyz_int16_t& gyroOffset);
+    virtual void readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index) override;
+    static gyroRadiansAcc_t gyroRadiansAccFromData(const mpu_6886_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
 private:
-    xyz_int16_t _accOffset {};
     xyz_int16_t _gyroOffset {};
+    xyz_int16_t _accOffset {};
     uint8_t _fifoBuffer[1024] {};
 };
 

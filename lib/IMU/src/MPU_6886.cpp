@@ -245,7 +245,7 @@ xyz_t MPU_6886::readGyroRadians() const
     };
 }
 
-IMU_Base::acc_gyroRadians_t MPU_6886::readAccGyroRadians() const
+IMU_Base::gyroRadiansAcc_t MPU_6886::readGyroRadiansAcc() const
 {
     mpu_6886_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -253,14 +253,14 @@ IMU_Base::acc_gyroRadians_t MPU_6886::readAccGyroRadians() const
     _I2C.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
-    return accGyroRadiansFromData(data, _accOffset, _gyroOffset);
+    return gyroRadiansAccFromData(data, _gyroOffset, _accOffset);
 }
 
-bool MPU_6886::readAccGyroRadians(xyz_t& acc, xyz_t& gyroRadians) const
+bool MPU_6886::readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const
 {
-    const acc_gyroRadians_t accGyro =  readAccGyroRadians();
-    acc = accGyro.acc;
-    gyroRadians = accGyro.gyroRadians;
+    const gyroRadiansAcc_t gyroAcc =  readGyroRadiansAcc();
+    gyroRadians = gyroAcc.gyroRadians;
+    acc = gyroAcc.acc;
 
     return true;
 }
@@ -393,60 +393,60 @@ int MPU_6886::readFIFO_ToBuffer()
     return 0;
 }
 
-void MPU_6886::readFIFO_Item(xyz_t& acc, xyz_t& gyroRadians, size_t index)
+void MPU_6886::readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index)
 {
 }
 
-IMU_Base::acc_gyroRadians_t MPU_6886::accGyroRadiansFromData(const mpu_6886_data_t& data, const xyz_int16_t& accOffset, const xyz_int16_t& gyroOffset)
+IMU_Base::gyroRadiansAcc_t MPU_6886::gyroRadiansAccFromData(const mpu_6886_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
 {
     static constexpr float ACC_8G_RES { 8.0 / 32768.0 };
     static constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
 
-    return acc_gyroRadians_t {
+    return gyroRadiansAcc_t {
 // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
 #if defined(IMU_Y_AXIS_POINTS_LEFT)
-        .acc {
-            .x = -ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
-        },
-        .gyroRadians {
+        .gyroRadians = {
             .x = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
             .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
             .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
+        },
+        .acc = {
+            .x = -ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
+            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
+            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
         }
 #elif defined(IMU_Y_AXIS_POINTS_RIGHT)
-        .acc {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .y = -ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
-        },
-        .gyroRadians {
+        .gyroRadians = {
             .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
             .y = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
             .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
+        },
+        .acc = {
+            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
+            .y = -ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
+            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
         }
 #elif defined(IMU_Y_AXIS_POINTS_DOWN)
-        .acc {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z),
-            .z = -ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y)
-        },
-        .gyroRadians {
+        .gyroRadians = {
             .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
             .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z),
             .z = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y)
+        },
+        .acc = {
+            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
+            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z),
+            .z = -ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y)
         }
 #else
-        .acc {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
-        },
-        .gyroRadians {
+        .gyroRadians = {
             .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
             .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
             .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
+        },
+        .acc = {
+            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
+            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
+            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
         }
 #endif
 // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)

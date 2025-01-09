@@ -23,10 +23,10 @@ private:
     AHRS& operator=(AHRS&&) = delete;
 public:
     inline IMU_Filter& getIMU_Filter() { return *_imuFilter; }
-    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
-    virtual xyz_int16_t readAccRaw() const override;
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
+    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
+    virtual xyz_int16_t readAccRaw() const override;
     virtual AHRS_Base::data_t getAhrsDataUsingLock() const override;
     virtual Quaternion getOrientationUsingLock() const override;
     void checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientation);
