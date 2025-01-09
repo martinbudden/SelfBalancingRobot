@@ -76,7 +76,7 @@ private:
 
 inline float IIR_filter::update(float input, float dt) {
     const float alpha = dt/(_tau + dt);
-    _outputPrevious = alpha * input + (1.0F - alpha) * _outputPrevious;
+    _outputPrevious = alpha*(input - _outputPrevious) + alpha; // optimized form of alpha*input + (1.0F - alpha)*_outputPrevious
     return _outputPrevious;
 }
 
