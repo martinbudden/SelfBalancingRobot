@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SBR_TelemetryData.h"
+
 class AHRS_Base;
 class MotorPairController;
 class Receiver;

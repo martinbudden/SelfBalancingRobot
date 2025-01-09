@@ -13,8 +13,8 @@
 #include "Calibration.h"
 #include "ESPNOW_Backchannel.h"
 #include "ESPNOW_Receiver.h"
-#include "IMU_M5_STACK.h"
-#include "IMU_M5_UNIFIED.h"
+#include "IMU_M5Stack.h"
+#include "IMU_M5Unified.h"
 #include "MPU_6886.h"
 #include "MainTask.h"
 #include "MotorPairBase.h"
@@ -125,7 +125,7 @@ void MainTask::setup()
     static AHRS ahrs(sensorFusionFilter, imuSensor);
     _ahrs = &ahrs;
 #else
-    static MadgwickFilter sensorFusionFilter;
+    static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
     static AHRS ahrs(sensorFusionFilter, imuSensor);
     _ahrs = &ahrs;
     _ahrs->setFilterInitializing(true);

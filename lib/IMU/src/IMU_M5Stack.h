@@ -1,6 +1,7 @@
 #pragma once
 
 #include <IMU_Base.h>
+#include <MPU_6886.h>
 
 class IMU_M5_STACK : public IMU_Base {
 public:
@@ -13,6 +14,7 @@ public:
     virtual bool readAccGyroRadians(xyz_t& acc, xyz_t& gyroRadians) const override;
     virtual int readFIFO_ToBuffer() override;
     virtual void readFIFO_Item(xyz_t& acc, xyz_t& gyroRadians, size_t index) override;
+    static acc_gyroRadians_t accGyroRadiansFromData(const mpu_6886_data_t& data, const xyz_int16_t& accOffset, const xyz_int16_t& gyroOffset);
 private:
     xyz_int16_t _accOffset {};
     xyz_int16_t _gyroOffset {};

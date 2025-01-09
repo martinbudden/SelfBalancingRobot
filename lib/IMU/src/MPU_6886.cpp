@@ -1,6 +1,7 @@
 #if defined(USE_MPU_6886_DIRECT)
 
 #include "MPU_6886.h"
+
 #include <array>
 #if defined(UNIT_TEST_BUILD)
 void delay(int) {}
@@ -244,7 +245,7 @@ xyz_t MPU_6886::readGyroRadians() const
     };
 }
 
-MPU_6886::acc_gyroRadians_t MPU_6886::readAccGyroRadians() const
+IMU_Base::acc_gyroRadians_t MPU_6886::readAccGyroRadians() const
 {
     mpu_6886_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -386,7 +387,17 @@ uint16_t MPU_6886::readFIFO_count() const
     return ret;
 }
 
-MPU_6886::acc_gyroRadians_t MPU_6886::accGyroRadiansFromData(const mpu_6886_data_t& data, const xyz_int16_t& accOffset, const xyz_int16_t& gyroOffset)
+
+int MPU_6886::readFIFO_ToBuffer()
+{
+    return 0;
+}
+
+void MPU_6886::readFIFO_Item(xyz_t& acc, xyz_t& gyroRadians, size_t index)
+{
+}
+
+IMU_Base::acc_gyroRadians_t MPU_6886::accGyroRadiansFromData(const mpu_6886_data_t& data, const xyz_int16_t& accOffset, const xyz_int16_t& gyroOffset)
 {
     static constexpr float ACC_8G_RES { 8.0 / 32768.0 };
     static constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
@@ -440,14 +451,5 @@ MPU_6886::acc_gyroRadians_t MPU_6886::accGyroRadiansFromData(const mpu_6886_data
 #endif
 // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     };
-}
-
-int MPU_6886::readFIFO_ToBuffer()
-{
-    return 0;
-}
-
-void MPU_6886::readFIFO_Item(xyz_t& acc, xyz_t& gyroRadians, size_t index)
-{
 }
 #endif // USE_MPU_6886_DIRECT

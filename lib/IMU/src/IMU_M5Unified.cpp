@@ -1,7 +1,7 @@
 #if defined(M5_UNIFIED)
 #include <M5Unified.h>
 
-#include <IMU_M5_UNIFIED.h>
+#include <IMU_M5Unified.h>
 
 IMU_M5_UNIFIED::IMU_M5_UNIFIED(void* i2cMutex) :
     IMU_Base(i2cMutex)

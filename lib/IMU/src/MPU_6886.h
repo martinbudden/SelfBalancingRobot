@@ -29,10 +29,6 @@ public:
     enum acc_scale_t { AFS_2G = 0, AFS_4G, AFS_8G, AFS_16G };
     enum gyro_scale_t { GFS_250DPS = 0, GFS_500DPS, GFS_1000DPS, GFS_2000DPS };
 
-    struct acc_gyroRadians_t {
-        xyz_t acc;
-        xyz_t gyroRadians;
-    };
 #pragma pack(push, 1)
     struct mems_sensor_data_t {
         uint8_t x_h;

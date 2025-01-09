@@ -15,6 +15,10 @@ IMU virtual base class.
 */
 class IMU_Base {
 public:
+    struct acc_gyroRadians_t {
+        xyz_t acc;
+        xyz_t gyroRadians;
+    };
 public:
     virtual void setAccOffset(const xyz_int16_t& accOffset) = 0;
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) = 0;
