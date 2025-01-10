@@ -31,7 +31,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
         return false;
     }
 
-    xyz_t gyroRadiansSum {0., 0.0, 0.0};
+    xyz_t gyroRadiansSum {0.0, 0.0, 0.0};
     xyz_t accSum {0.0, 0.0, 0.0};
     for (auto ii = 0; ii < _fifoCount; ++ii) {
         _IMU.readFIFO_Item(gyroRadians, acc, ii);
@@ -44,7 +44,6 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     gyroRadians = gyroRadiansSum * fifoCountReciprocal;
     acc = accSum * fifoCountReciprocal;
     const Quaternion orientation = _sensorFusionFilter.getOrientation();
-
 #else
     const bool dataRead = _IMU.readGyroRadiansAcc(gyroRadians, acc);
     if (dataRead == false) {
@@ -52,7 +51,6 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     }
     _imuFilters->filter(gyroRadians, acc, deltaT);
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
-
 #endif
 
     if (filterIsInitializing()) {

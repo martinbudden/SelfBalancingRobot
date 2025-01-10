@@ -46,6 +46,8 @@ protected:
     float q1 { 0.0 };
     float q2 { 0.0 };
     float q3 { 0.0 };
+    float _accMagnitudeSquaredMin {0.9};
+    float _accMagnitudeSquaredMax {1.1};
 };
 
 /*!

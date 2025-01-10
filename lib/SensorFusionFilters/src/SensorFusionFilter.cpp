@@ -37,12 +37,13 @@ inline float reciprocalSqrt(float x)
 /*!
 Normalize a vector
 */
-inline void normalize(xyz_t& v)
+inline float normalize(xyz_t& v)
 {
     const float magnitudeSquared = v.magnitude_squared();
     if (magnitudeSquared != 0.0F) { // [[likely]]
         v *= reciprocalSqrt(magnitudeSquared);
     }
+    return magnitudeSquared;
 }
 
 /*!
@@ -197,7 +198,7 @@ Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerom
 
     // Normalize acceleration
     xyz_t acc = accelerometer;
-    normalize(acc);
+    (void)normalize(acc);
 
     // Calculate estimated direction of gravity in the sensor coordinate frame
     const xyz_t gravity = q.gravity();
@@ -259,6 +260,13 @@ For computation efficiency this code refactors the code used in many implementat
 */
 Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, float deltaT)
 {
+    // Calculate quaternion derivative (qDot) from the angular rate
+    // Twice the actual value is used to reduce the number of multiplications needed
+    float _2qDot0 = -q1*gyroRadians.x - q2*gyroRadians.y - q3*gyroRadians.z;
+    float _2qDot1 =  q0*gyroRadians.x + q2*gyroRadians.z - q3*gyroRadians.y;
+    float _2qDot2 =  q0*gyroRadians.y - q1*gyroRadians.z + q3*gyroRadians.x;
+    float _2qDot3 =  q0*gyroRadians.z + q1*gyroRadians.y - q2*gyroRadians.x;
+
     xyz_t a = accelerometer;
     // Normalize acceleration if it is non-zero
     const float accMagnitudeSquared = a.x*a.x + a.y*a.y + a.z*a.z;
@@ -269,24 +277,28 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& acceler
         a.z *= accMagnitudeReciprocal;
     }
 
-    // Auxiliary variables to avoid repeated arithmetic
-    const float _2q1q1_plus_2q2q2 = 2.0F*(q1*q1 + q2*q2);
-    const float common = 2.0F*(q0*q0 + q3*q3 - 1.0F + _2q1q1_plus_2q2q2 + a.z);
+    // Acceleration is an unreliable indicator of orientation when in high-g or low-g maneuvers,
+    // so exclude it from the calculation in these cases 
+    if ((accMagnitudeSquared >= _accMagnitudeSquaredMin) && (accMagnitudeSquared <= _accMagnitudeSquaredMax)) {
+        // Auxiliary variables to avoid repeated arithmetic
+        const float _2q1q1_plus_2q2q2 = 2.0F*(q1*q1 + q2*q2);
+        const float common = 2.0F*(q0*q0 + q3*q3 - 1.0F + _2q1q1_plus_2q2q2 + a.z);
 
-    // Gradient decent algorithm corrective step
-    const float s0 = q0*(_2q1q1_plus_2q2q2) + q2*a.x - q1*a.y;
-    const float s1 = q1*common              - q3*a.x - q0*a.y;
-    const float s2 = q2*common              + q0*a.x - q3*a.y;
-    const float s3 = q3*(_2q1q1_plus_2q2q2) - q1*a.x - q2*a.y;
+        // Gradient decent algorithm corrective step
+        const float s0 = q0*(_2q1q1_plus_2q2q2) + q2*a.x - q1*a.y;
+        const float s1 = q1*common              - q3*a.x - q0*a.y;
+        const float s2 = q2*common              + q0*a.x - q3*a.y;
+        const float s3 = q3*(_2q1q1_plus_2q2q2) - q1*a.x - q2*a.y;
 
-    const float _2betaMagnitudeReciprocal = 2.0F * _beta * reciprocalSqrt(s0*s0 + s1*s1 + s2*s2 + s3*s3);
+        const float _2betaMagnitudeReciprocal = 2.0F * _beta * reciprocalSqrt(s0*s0 + s1*s1 + s2*s2 + s3*s3);
 
-    // Calculate quaternion derivative (qDot) from the angular rate and the corrective step
-    // Twice the actual value is used to reduce the number of multiplications needed
-    const float _2qDot0 = -q1*gyroRadians.x - q2*gyroRadians.y - q3*gyroRadians.z - s0 * _2betaMagnitudeReciprocal;
-    const float _2qDot1 =  q0*gyroRadians.x + q2*gyroRadians.z - q3*gyroRadians.y - s1 * _2betaMagnitudeReciprocal;
-    const float _2qDot2 =  q0*gyroRadians.y - q1*gyroRadians.z + q3*gyroRadians.x - s2 * _2betaMagnitudeReciprocal;
-    const float _2qDot3 =  q0*gyroRadians.z + q1*gyroRadians.y - q2*gyroRadians.x - s3 * _2betaMagnitudeReciprocal;
+        // Add the corrective step to the quaternion derivative
+        // Twice the actual value is used to reduce the number of multiplications needed
+        _2qDot0 -= s0 * _2betaMagnitudeReciprocal;
+        _2qDot1 -= s1 * _2betaMagnitudeReciprocal;
+        _2qDot2 -= s2 * _2betaMagnitudeReciprocal;
+        _2qDot3 -= s3 * _2betaMagnitudeReciprocal;
+    }
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*halfDeltaT.
@@ -313,10 +325,17 @@ For computation efficiency this code refactors the code used in many implementat
 Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
 {
     xyz_t a = accelerometer;
-    normalize(a);
+    const float accMagnitudeSquared = normalize(a);
+    // Acceleration is an unreliable indicator of orientation when in high-g or low-g maneuvers,
+    // so exclude it from the calculation in these cases 
+    if ((accMagnitudeSquared < _accMagnitudeSquaredMin) || (accMagnitudeSquared > _accMagnitudeSquaredMax)) {
+        a.x = 0.0F;
+        a.y = 0.0F;
+        a.z = 0.0F;
+    }
 
     xyz_t m = magnetometer;
-    normalize(m);
+    (void)normalize(m);
 
     // Auxiliary variables to avoid repeated arithmetic
     const float q0q0 = q0*q0;

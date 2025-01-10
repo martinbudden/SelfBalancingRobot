@@ -144,7 +144,7 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
     }
 #else
     // no encoders, so estimate speed from power output
-    _speedDPS = MotorPairBase::clip((_powerLeft + _powerRight) * 0.5F, -1.0, 1.0) * _motorMaxSpeedDPS;
+    _speedDPS = MotorPairBase::clip((_powerLeft + _powerRight) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
 #endif
 
     bool orientationUpdated;
@@ -164,15 +164,15 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
     _rollAngleDegreesRaw = orientation.calculatePitchDegrees();
     _yawAngleDegreesRaw = orientation.calculateYawDegrees();
 #endif
-    const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
-
-    // Disable the motors if the pitchAngle exceeds the switchOffAngle.
+    // Disable the motors if the raw pitchAngle exceeds the switchOffAngle.
     // Don't switch on again for at least 2 seconds after robot falls over (ie don't switch on if it falls over and bounces back up again).
     constexpr uint32_t robotDebounceIntervalMs = 2000;
-    _motorsDisabled = (fabs(pitchAngleDegrees) < _motorSwitchOffAngleDegrees) && ((tickCount - _motorSwitchOffTickCount) > robotDebounceIntervalMs);
+    _motorsDisabled = (fabs(_pitchAngleDegreesRaw) < _motorSwitchOffAngleDegrees) && ((tickCount - _motorSwitchOffTickCount) > robotDebounceIntervalMs);
 
     if (motorsIsOn() && !_motorsDisabled) {
         _motorSwitchOffTickCount = 0; // reset the bounce prevention tickcount
+
+        const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
         if (fabs(pitchAngleDegrees) > _pitchMaxAngleDegrees) {
             // we are way off balance, and the I-term is now a hindrance
             _pitchPID.resetIntegral();
@@ -181,7 +181,7 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
         if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
             _speedPID.setSetpoint(Q4dot12_to_float(_throttleStickQ4dot12));
             const float speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
-            // feed the speedUpdate back into the pitchPID and set speedUpdate to zero
+            // feed the speedUpdate back into the pitchPID and set _speedUpdate to zero
             _pitchPID.setSetpoint(speedUpdate);
             _speedUpdate = 0.0F;
         } else if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
@@ -227,7 +227,7 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
 
         // Note the negative multiplier, since pushing the yaw stick to the right results in a clockwise rotation, ie a negative yaw rate
         _yawRatePID.setSetpoint(-mapYawStick(Q4dot12_to_float(_yawStickQ4dot12)) * _yawStickMultiplier); // limit yaw rate to sensible range.
-        _yawRateUpdate = _yawRatePID.update(0.0, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
+        _yawRateUpdate = _yawRatePID.update(0.0F, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
     } else {
         // Motors switched off, so set everything to zero, ready for motors to be switched on again.
         _pitchUpdate = 0.0F;
