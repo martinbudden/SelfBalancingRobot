@@ -24,7 +24,7 @@ struct mpu_6886_data_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-
 };
 #pragma pack(pop)
 
-class MPU_6886 : public IMU_Base {
+class IMU_MPU6886 : public IMU_Base {
 public:
     enum acc_scale_t { AFS_2G = 0, AFS_4G, AFS_8G, AFS_16G };
     enum gyro_scale_t { GFS_250DPS = 0, GFS_500DPS, GFS_1000DPS, GFS_2000DPS };
@@ -40,8 +40,8 @@ public:
     };
 #pragma pack(pop)
 public:
-    MPU_6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
-    MPU_6886(uint8_t SDA_pin, uint8_t SCL_pin) : MPU_6886(SDA_pin, SCL_pin, nullptr) {}
+    IMU_MPU6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
+    IMU_MPU6886(uint8_t SDA_pin, uint8_t SCL_pin) : IMU_MPU6886(SDA_pin, SCL_pin, nullptr) {}
     void init();
 public:
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
@@ -71,7 +71,7 @@ private:
     xyz_t readAcc() const;
     xyz_t readGyroRadians() const;
 private:
-    I2C _I2C;
+    I2C _bus;
     float _accResolution {0.0};
     float _gyroResolution {0.0};
     xyz_int16_t _accOffset {};

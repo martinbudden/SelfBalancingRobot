@@ -1,6 +1,6 @@
-#if defined(USE_MPU_6886_DIRECT)
+#if defined(USE_IMU_MPU6886_DIRECT)
 
-#include "MPU_6886.h"
+#include "IMU_MPU6886.h"
 
 #include <array>
 #if defined(UNIT_TEST_BUILD)
@@ -83,70 +83,70 @@ constexpr uint8_t REG_YA_OFFSET_L           = 0x7B;
 constexpr uint8_t REG_ZA_OFFSET_H           = 0x7D;
 constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 
-MPU_6886::MPU_6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
+IMU_MPU6886::IMU_MPU6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     IMU_Base(i2cMutex),
-    _I2C(I2C_ADDRESS, SDA_pin, SCL_pin)
+    _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
     static_assert(sizeof(mems_sensor_data_t) == 6);
     init();
 }
 
-void MPU_6886::init()
+void IMU_MPU6886::init()
 {
     static_assert(sizeof(mpu_6886_data_t) == mpu_6886_data_t::DATA_SIZE);
 
     i2cSemaphoreTake();
 
-    _imuID = _I2C.readByte(REG_WHOAMI);
+    _imuID = _bus.readByte(REG_WHOAMI);
     delay(1);
 
-    _I2C.writeByte(REG_PWR_MGMT_1, 0); // clear the power management register
+    _bus.writeByte(REG_PWR_MGMT_1, 0); // clear the power management register
     delay(10);
 
     constexpr uint8_t DEVICE_RESET = 0x01 << 7;
-    _I2C.writeByte(REG_PWR_MGMT_1, DEVICE_RESET); // reset the device
+    _bus.writeByte(REG_PWR_MGMT_1, DEVICE_RESET); // reset the device
     delay(10);
 
     constexpr uint8_t CLKSEL_1 = 0x01;
-    _I2C.writeByte(REG_PWR_MGMT_1, CLKSEL_1); // CLKSEL must be set to 001 to achieve full gyroscope performance.
+    _bus.writeByte(REG_PWR_MGMT_1, CLKSEL_1); // CLKSEL must be set to 001 to achieve full gyroscope performance.
     delay(10);
 
-    _I2C.writeByte(REG_GYRO_CONFIG, GFS_2000DPS << 3);
+    _bus.writeByte(REG_GYRO_CONFIG, GFS_2000DPS << 3);
     _gyroResolution = 2000.0F / 32768.0F;
     delay(1);
 
-    _I2C.writeByte(REG_ACCEL_CONFIG, AFS_8G << 3);
+    _bus.writeByte(REG_ACCEL_CONFIG, AFS_8G << 3);
     _accResolution = 8.0F / 32768.0F;
     delay(1);
 
-    _I2C.writeByte(REG_ACCEL_CONFIG2, 0x00); // no filtering
+    _bus.writeByte(REG_ACCEL_CONFIG2, 0x00); // no filtering
     delay(1);
 
     constexpr uint8_t DLPF_CFG_1 = 0x01; // 1khz output
-    _I2C.writeByte(REG_CONFIG, DLPF_CFG_1);
+    _bus.writeByte(REG_CONFIG, DLPF_CFG_1);
     delay(1);
 
     // divider is two, FIFO 500hz out
-    _I2C.writeByte(REG_SAMPLE_RATE_DIVIDER, 0x01);
+    _bus.writeByte(REG_SAMPLE_RATE_DIVIDER, 0x01);
     delay(1);
 
-    _I2C.writeByte(REG_FIFO_ENABLE, 0x00); // FIFO disabled
+    _bus.writeByte(REG_FIFO_ENABLE, 0x00); // FIFO disabled
     delay(1);
 
-    _I2C.writeByte(REG_INT_PIN_CFG, 0x22);
+    _bus.writeByte(REG_INT_PIN_CFG, 0x22);
     delay(1);
 
     constexpr uint8_t DATA_RDY_INT_EN {0x01};
-    _I2C.writeByte(REG_INT_ENABLE, DATA_RDY_INT_EN); // data ready interrupt enabled
+    _bus.writeByte(REG_INT_ENABLE, DATA_RDY_INT_EN); // data ready interrupt enabled
     delay(10);
 
-    _I2C.writeByte(REG_USER_CTRL, 0x00);
+    _bus.writeByte(REG_USER_CTRL, 0x00);
 
     i2cSemaphoreGive();
     delay(1);
 }
 
-void MPU_6886::setAccOffset(const xyz_int16_t& accOffset)
+void IMU_MPU6886::setAccOffset(const xyz_int16_t& accOffset)
 {
     _accOffset = accOffset;
 }
@@ -157,7 +157,7 @@ These values are used to remove DC bias from the sensor output. The values are
 added to the gyroscope sensor value before going into the sensor register.
 So the offset value is negated.
 */
-MPU_6886::mems_sensor_data_t MPU_6886::gyroOffsetFromXYZ(const xyz_int16_t& data)
+IMU_MPU6886::mems_sensor_data_t IMU_MPU6886::gyroOffsetFromXYZ(const xyz_int16_t& data)
 {
     return mems_sensor_data_t {
         .x_h = static_cast<uint8_t>((-data.x) >> 8),
@@ -169,24 +169,24 @@ MPU_6886::mems_sensor_data_t MPU_6886::gyroOffsetFromXYZ(const xyz_int16_t& data
     };
 }
 
-void MPU_6886::setGyroOffset(const xyz_int16_t& gyroOffset)
+void IMU_MPU6886::setGyroOffset(const xyz_int16_t& gyroOffset)
 {
 #if false
     // Setting the XG_OFFS registers seems to have no effect, so this code disabled
     const mems_sensor_data_t offset = gyroOffsetFromXYZ(gyroOffset);
-    _I2C.writeBytes(REG_XG_OFFS_USRH, reinterpret_cast<const uint8_t*>(&offset), sizeof(offset)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.writeBytes(REG_XG_OFFS_USRH, reinterpret_cast<const uint8_t*>(&offset), sizeof(offset)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     delay(1);
 #else
     _gyroOffset = gyroOffset;
 #endif
 }
 
-xyz_int16_t MPU_6886::readAccRaw() const
+xyz_int16_t IMU_MPU6886::readAccRaw() const
 {
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _I2C.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return xyz_int16_t {
@@ -196,7 +196,7 @@ xyz_int16_t MPU_6886::readAccRaw() const
     };
 }
 
-xyz_t MPU_6886::readAcc() const
+xyz_t IMU_MPU6886::readAcc() const
 {
     const xyz_int16_t acc = readAccRaw();
 
@@ -207,12 +207,12 @@ xyz_t MPU_6886::readAcc() const
     };
 }
 
-xyz_int16_t MPU_6886::readGyroRaw() const
+xyz_int16_t IMU_MPU6886::readGyroRaw() const
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _I2C.readBytes(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readBytes(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return xyz_int16_t {
@@ -222,7 +222,7 @@ xyz_int16_t MPU_6886::readGyroRaw() const
     };
 }
 
-xyz_t MPU_6886::readGyro() const
+xyz_t IMU_MPU6886::readGyro() const
 {
     const xyz_int16_t gyro = readGyroRaw();
 
@@ -233,7 +233,7 @@ xyz_t MPU_6886::readGyro() const
     };
 }
 
-xyz_t MPU_6886::readGyroRadians() const
+xyz_t IMU_MPU6886::readGyroRadians() const
 {
     const xyz_int16_t gyro = readGyroRaw();
 
@@ -245,18 +245,18 @@ xyz_t MPU_6886::readGyroRadians() const
     };
 }
 
-IMU_Base::gyroRadiansAcc_t MPU_6886::readGyroRadiansAcc() const
+IMU_Base::gyroRadiansAcc_t IMU_MPU6886::readGyroRadiansAcc() const
 {
     mpu_6886_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _I2C.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return gyroRadiansAccFromData(data, _gyroOffset, _accOffset);
 }
 
-bool MPU_6886::readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const
+bool IMU_MPU6886::readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const
 {
     const gyroRadiansAcc_t gyroAcc =  readGyroRadiansAcc();
     gyroRadians = gyroAcc.gyroRadians;
@@ -265,12 +265,12 @@ bool MPU_6886::readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const
     return true;
 }
 
-int16_t MPU_6886::readTemperatureRaw() const
+int16_t IMU_MPU6886::readTemperatureRaw() const
 {
     std::array<uint8_t, 2> data;
 
     i2cSemaphoreTake();
-    _I2C.readBytes(REG_TEMP_OUT_H, &data[0], sizeof(data));
+    _bus.readBytes(REG_TEMP_OUT_H, &data[0], sizeof(data));
     i2cSemaphoreGive();
 
     const int16_t temperature = static_cast<int16_t>((data[0] << 8) | data[1]); // NOLINT(hicpp-use-auto,modernize-use-auto)
@@ -278,7 +278,7 @@ int16_t MPU_6886::readTemperatureRaw() const
 
 }
 
-float MPU_6886::readTemperature() const
+float IMU_MPU6886::readTemperature() const
 {
     const int16_t temperature = readTemperatureRaw();
 
@@ -288,13 +288,13 @@ float MPU_6886::readTemperature() const
 /*!
 Set the gyro Force Sensitive Resistor
 */
-void MPU_6886::setGyroFSR(gyro_scale_t gyroScale)
+void IMU_MPU6886::setGyroFSR(gyro_scale_t gyroScale)
 {
     i2cSemaphoreTake();
-    uint8_t data = _I2C.readByte(REG_GYRO_CONFIG);
+    uint8_t data = _bus.readByte(REG_GYRO_CONFIG);
     delay(1);
     data |= gyroScale << 3;
-    _I2C.writeByte(REG_GYRO_CONFIG, data);
+    _bus.writeByte(REG_GYRO_CONFIG, data);
     i2cSemaphoreGive();
     delay(1);
 
@@ -314,13 +314,13 @@ void MPU_6886::setGyroFSR(gyro_scale_t gyroScale)
     }
 }
 
-void MPU_6886::setAccFSR(acc_scale_t accScale)
+void IMU_MPU6886::setAccFSR(acc_scale_t accScale)
 {
     i2cSemaphoreGive();
-    uint8_t data = _I2C.readByte(REG_ACCEL_CONFIG);
+    uint8_t data = _bus.readByte(REG_ACCEL_CONFIG);
     delay(1);
     data |= accScale << 3;
-    _I2C.writeByte(REG_ACCEL_CONFIG, data);
+    _bus.writeByte(REG_ACCEL_CONFIG, data);
     i2cSemaphoreGive();
     delay(1);
 
@@ -340,46 +340,46 @@ void MPU_6886::setAccFSR(acc_scale_t accScale)
     }
 }
 
-void MPU_6886::setFIFOEnable(bool enableflag)
+void IMU_MPU6886::setFIFOEnable(bool enableflag)
 {
     i2cSemaphoreTake();
-    _I2C.writeByte(REG_FIFO_ENABLE, enableflag ? 0x18 : 0x00);
+    _bus.writeByte(REG_FIFO_ENABLE, enableflag ? 0x18 : 0x00);
     delay(1);
-    _I2C.writeByte(REG_USER_CTRL, enableflag ? 0x40 : 0x00);
+    _bus.writeByte(REG_USER_CTRL, enableflag ? 0x40 : 0x00);
     i2cSemaphoreGive();
     delay(1);
 }
 
-void MPU_6886::readFIFO(uint8_t *data, size_t len) const
+void IMU_MPU6886::readFIFO(uint8_t *data, size_t len) const
 {
     constexpr size_t chunkSize = 15*sizeof(mpu_6886_data_t);
     const auto count = len / chunkSize;
     i2cSemaphoreTake();
     for(auto ii = 0; ii < count; ++ii) {
-        _I2C.readBytes(REG_FIFO_R_W, &data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        _bus.readBytes(REG_FIFO_R_W, &data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
-    _I2C.readBytes(REG_FIFO_R_W, &data[count * chunkSize], len % chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    _bus.readBytes(REG_FIFO_R_W, &data[count * chunkSize], len % chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     i2cSemaphoreGive();
 }
 
-void MPU_6886::resetFIFO()
+void IMU_MPU6886::resetFIFO()
 {
     i2cSemaphoreTake();
 
-    uint8_t data = _I2C.readByte(REG_USER_CTRL);
+    uint8_t data = _bus.readByte(REG_USER_CTRL);
     data |= 0x04;
-    _I2C.writeByte(REG_USER_CTRL, data);
+    _bus.writeByte(REG_USER_CTRL, data);
 
     i2cSemaphoreGive();
 }
 
-uint16_t MPU_6886::readFIFO_count() const
+uint16_t IMU_MPU6886::readFIFO_count() const
 {
     std::array<uint8_t, 2> data;
 
     i2cSemaphoreTake();
 
-    _I2C.readBytes(REG_FIFO_COUNT_H, &data[0], sizeof(data));
+    _bus.readBytes(REG_FIFO_COUNT_H, &data[0], sizeof(data));
 
     i2cSemaphoreGive();
 
@@ -388,16 +388,16 @@ uint16_t MPU_6886::readFIFO_count() const
 }
 
 
-int MPU_6886::readFIFO_ToBuffer()
+int IMU_MPU6886::readFIFO_ToBuffer()
 {
     return 0;
 }
 
-void MPU_6886::readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index)
+void IMU_MPU6886::readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index)
 {
 }
 
-IMU_Base::gyroRadiansAcc_t MPU_6886::gyroRadiansAccFromData(const mpu_6886_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
+IMU_Base::gyroRadiansAcc_t IMU_MPU6886::gyroRadiansAccFromData(const mpu_6886_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
 {
     static constexpr float ACC_8G_RES { 8.0 / 32768.0 };
     static constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
@@ -452,4 +452,4 @@ IMU_Base::gyroRadiansAcc_t MPU_6886::gyroRadiansAccFromData(const mpu_6886_data_
 // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     };
 }
-#endif // USE_MPU_6886_DIRECT
+#endif // USE_IMU_MPU6886_DIRECT

@@ -15,7 +15,7 @@
 #include "ESPNOW_Receiver.h"
 #include "IMU_M5Stack.h"
 #include "IMU_M5Unified.h"
-#include "MPU_6886.h"
+#include "IMU_MPU6886.h"
 #include "MainTask.h"
 #include "MotorPairBase.h"
 #include "MotorPairController.h"
@@ -52,7 +52,7 @@ enum { MPC_TASK_PRIORITY = 4, AHRS_TASK_PRIORITY = 5 };
 #endif
 
 
-#if defined(USE_MPU_6886_DIRECT)
+#if defined(USE_IMU_MPU6886_DIRECT)
     enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
 #else
     enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TAsK must be set to run slower.
@@ -104,19 +104,19 @@ void MainTask::setup()
 
     // Statically allocate the IMU according the the build flags
 #if defined(M5_STACK)
-#if defined(USE_MPU_6886_DIRECT)
-    static MPU_6886 imuSensor(MPU_6886_SDA_PIN, MPU_6886_SCL_PIN, i2cMutex);
+#if defined(USE_IMU_MPU6886_DIRECT)
+    static IMU_MPU6886 imuSensor(IMU_MPU6886_SDA_PIN, IMU_MPU6886_SCL_PIN, i2cMutex);
 #else
     static IMU_M5_STACK imuSensor(i2cMutex);
 #endif
 #elif defined(M5_UNIFIED)
-#if defined(USE_MPU_6886_DIRECT)
-    static MPU_6886 imuSensor(M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex);
+#if defined(USE_IMU_MPU6886_DIRECT)
+    static IMU_MPU6886 imuSensor(M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex);
 #else
     static IMU_M5_UNIFIED imuSensor(i2cMutex);
 #endif
 #else
-    static MPU_6886 imuSensor(MPU_6886_SDA_PIN, MPU_6886_SCL_PIN, i2cMutex);
+    static IMU_MPU6886 imuSensor(IMU_MPU6886_SDA_PIN, IMU_MPU6886_SCL_PIN, i2cMutex);
 #endif
 
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
@@ -215,8 +215,8 @@ void MainTask::checkGyroCalibration()
         // Calibration manually activated, so calibrate accelerometer and gyroscope.
         calibrateGyro(*_ahrs, *_preferences, CALIBRATE_ACC_AND_GYRO);
     }
-#if defined(M5_STACK) || defined(USE_MPU_6886_DIRECT)
-    // For M5_STACK and USE_MPU_6886_DIRECT, the gyro offsets are stored in preferences.
+#if defined(M5_STACK) || defined(USE_IMU_MPU6886_DIRECT)
+    // For M5_STACK and USE_IMU_MPU6886_DIRECT, the gyro offsets are stored in preferences.
     xyz_int16_t gyroOffset {};
     if (_preferences->getGyroOffset(&gyroOffset)) {
         _ahrs->setGyroOffset(gyroOffset);

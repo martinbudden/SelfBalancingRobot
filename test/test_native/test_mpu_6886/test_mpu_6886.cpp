@@ -1,4 +1,4 @@
-#include <MPU_6886.h>
+#include <IMU_MPU6886.h>
 #include <unity.h>
 
 void setUp() {
@@ -9,7 +9,7 @@ void tearDown() {
 
 void test_mpu_6886() {
     xyz_int16_t input { .x =70, .y = -70, .z = 400 };
-    MPU_6886::mems_sensor_data_t output = MPU_6886::gyroOffsetFromXYZ(input);
+    IMU_MPU6886::mems_sensor_data_t output = IMU_MPU6886::gyroOffsetFromXYZ(input);
 
     TEST_ASSERT_EQUAL_UINT8(0xFF, output.x_h);
     TEST_ASSERT_EQUAL_UINT8(0xBA, output.x_l);

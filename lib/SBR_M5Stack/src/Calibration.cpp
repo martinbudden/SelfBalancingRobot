@@ -8,7 +8,7 @@
 #include "SBR_Preferences.h"
 
 
-#if !defined(M5_UNIFIED) || defined(USE_MPU_6886_DIRECT)
+#if !defined(M5_UNIFIED) || defined(USE_IMU_MPU6886_DIRECT)
 static void calibrate(AHRS_Base& ahrs, SBR_Preferences& preferences, calibrate_t calibrationType)
 {
     int64_t gyroX = 0;
@@ -102,7 +102,7 @@ void calibrateGyro([[maybe_unused]] AHRS_Base& ahrs, [[maybe_unused]] SBR_Prefer
     M5.Lcd.printf("still for 10 seconds\r\n\r\n");
     delay(2000);
 
-#if defined(M5_STACK) || defined(USE_MPU_6886_DIRECT)
+#if defined(M5_STACK) || defined(USE_IMU_MPU6886_DIRECT)
     calibrate(ahrs, preferences, calibrationType);
 #elif defined(M5_UNIFIED)
     calibrate();

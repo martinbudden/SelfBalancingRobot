@@ -1,8 +1,8 @@
 #if defined(M5_STACK)
 
 #include "IMU_M5Stack.h"
+#include <IMU_MPU6886.h>
 #include <M5Stack.h>
-#include <MPU_6886.h>
 #include <xyz_int16_type.h>
 
 static constexpr float degreesToRadians {M_PI / 180.0};

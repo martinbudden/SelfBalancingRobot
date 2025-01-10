@@ -1,7 +1,7 @@
 #pragma once
 
 #include <IMU_Base.h>
-#include <MPU_6886.h>
+#include <IMU_MPU6886.h>
 
 class IMU_M5_STACK : public IMU_Base {
 public:
