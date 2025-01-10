@@ -13,8 +13,9 @@ static_assert(false);
 
 /*!
 Main AHRS task function. Reads the IMU and uses the sensor fusion filter to update the orientation quaternion.
+Returns false if there was no new data to be read from the IMU.
 */
-void AHRS::loop(float deltaT)
+bool AHRS::readIMUandUpdateOrientation(float deltaT)
 {
     xyz_t gyroRadians; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     xyz_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
@@ -27,20 +28,27 @@ void AHRS::loop(float deltaT)
     constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
     _fifoCount = _IMU.readFIFO_ToBuffer();
     if (_fifoCount == 0) {
-        return;
+        return false;
     }
 
+    xyz_t gyroRadiansSum {0., 0.0, 0.0};
+    xyz_t accSum {0.0, 0.0, 0.0};
     for (auto ii = 0; ii < _fifoCount; ++ii) {
         _IMU.readFIFO_Item(gyroRadians, acc, ii);
         _imuFilters->filter(gyroRadians, acc, deltaT);
+        gyroRadiansSum += gyroRadians;
+        accSum += acc;
         (void)_sensorFusionFilter.update(gyroRadians, acc, dT);
     }
+    const float fifoCountReciprocal = 1.0F / static_cast<float>(_fifoCount);
+    gyroRadians = gyroRadiansSum * fifoCountReciprocal;
+    acc = accSum * fifoCountReciprocal;
     const Quaternion orientation = _sensorFusionFilter.getOrientation();
 
 #else
     const bool dataRead = _IMU.readGyroRadiansAcc(gyroRadians, acc);
     if (dataRead == false) {
-        return;
+        return false;
     }
     _imuFilters->filter(gyroRadians, acc, deltaT);
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
@@ -52,10 +60,13 @@ void AHRS::loop(float deltaT)
     }
 
     LOCK();
+    _ahrsDataUpdatedSinceLastRead = true;
+    _orientationUpdatedSinceLastRead = true;
     _orientation = orientation;
     _gyroRadians = gyroRadians;
     _acc = acc;
     UNLOCK();
+    return true;
 }
 
 /*!
@@ -79,7 +90,7 @@ void AHRS::Task(const TaskParameters* taskParameters)
 
         if (_tickCountDelta > 0) { // guard against the case of the while loop executing twice on the same tick interval
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
-            loop(deltaT);
+            (void)readIMUandUpdateOrientation(deltaT);
         }
     }
 #endif
@@ -128,7 +139,18 @@ void AHRS::setAccOffset(const xyz_int16_t& accOffset)
     _IMU.setAccOffset(accOffset);
 }
 
-Quaternion AHRS::getOrientationUsingLock() const
+Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
+{
+    LOCK();
+    updatedSinceLastRead = _orientationUpdatedSinceLastRead;
+    _orientationUpdatedSinceLastRead = false;
+    const Quaternion ret = _orientation;
+    UNLOCK();
+
+    return ret;
+}
+
+Quaternion AHRS::getOrientationForInstrumentationUsingLock() const
 {
     LOCK();
     const Quaternion ret = _orientation;
@@ -137,7 +159,22 @@ Quaternion AHRS::getOrientationUsingLock() const
     return ret;
 }
 
-AHRS_Base::data_t AHRS::getAhrsDataUsingLock() const
+AHRS_Base::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
+{
+    LOCK();
+    updatedSinceLastRead = _ahrsDataUpdatedSinceLastRead;
+    _ahrsDataUpdatedSinceLastRead = false;
+    const AHRS_Base::data_t ret {
+        .tickCountDelta = _tickCountDelta,
+        .gyroRadians = _gyroRadians,
+        .acc = _acc
+    };
+    UNLOCK();
+
+    return ret;
+}
+
+AHRS_Base::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
 {
     LOCK();
     const AHRS_Base::data_t ret {

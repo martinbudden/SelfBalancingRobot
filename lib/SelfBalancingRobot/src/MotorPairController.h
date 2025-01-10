@@ -2,7 +2,10 @@
 
 #include "MotorControllerBase.h"
 #include "MotorPairBase.h"
-#include "MotorPairControllerTelemetry.h"
+#include <PIDF.h>
+
+struct motor_pair_controller_telemetry_t;
+
 
 class AHRS_Base;
 
@@ -54,7 +57,7 @@ public:
     inline const PIDF::PIDF_t& getSpeedPIDTelemetryScaleFactors() const { return _speedPIDTelemetryScaleFactors; }
     inline const PIDF::PIDF_t& getYawRatePIDTelemetryScaleFactors() const { return _yawRatePIDTelemetryScaleFactors; }
 
-    const motor_pair_controller_telemetry_t& getTelemetryData() const;
+    void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
 
     static float mapYawStick(float yawStick);
 public:
@@ -65,32 +68,27 @@ public:
     static void Task(void* arg);
     static MotorPairBase& motors();
     void loop(float deltaT, uint32_t tickCount);
-private:
+public:
     bool updatePIDs(float deltaT, uint32_t tickCount);
-    void updateMotors(bool motorsOn);
-    void updateTelemetry(bool motorsOn);
-
+    void updateMotors();
 private:
     void Task(const TaskParameters* taskParameters);
 private:
     const AHRS_Base& _ahrs;
     MotorPairBase& _motors;
+    int32_t _motorsDisabled {false};
     float _powerLeft {0.0};
     float _powerRight {0.0};
 
-
-
     int32_t _encoderLeft {0}; //!< value read from left motor encoder, raw
     int32_t _encoderRight {0}; //!< value read from right motor encoder, raw
-    int16_t _encoderLeftDelta {0}; //!< difference between current left motor encoder value and previous value, raw
-    int16_t _encoderRightDelta {0}; //!< difference between current right motor encoder value and previous value, raw
     int32_t _encoderLeftPrevious {0};
     int32_t _encoderRightPrevious {0};
+    int16_t _encoderLeftDelta {0}; //!< difference between current left motor encoder value and previous value, raw
+    int16_t _encoderRightDelta {0}; //!< difference between current right motor encoder value and previous value, raw
+
     float _speedLeftDPS {0}; //!< rotation speed of left motor, degrees per second
     float _speedRightDPS {0}; //!< rotation speed of right motor, degrees per second
-
-    float _positionSetpointDegrees {0.0};
-    float _positionDegrees {0.0};
     float _speedDPS {0.0}; //<!< filtered average of left and right motor speeds
 
     const float _motorMaxSpeedDPS;
@@ -99,6 +97,9 @@ private:
     const float _motorSwitchOffAngleDegrees; //!< Pitch angle at which the motors switch off. So if the robot flips over it won't lie on its back with its motors spinning.
 
     ControlMode_t _controlMode;
+
+    float _positionSetpointDegrees {0.0};
+    float _positionDegrees {0.0};
 
     float _pitchAngleDegreesPrevious {0.0};
     float _pitchBalanceAngleDegrees {0.0};
@@ -118,6 +119,4 @@ private:
     PIDF::PIDF_t _pitchPIDTelemetryScaleFactors;
     PIDF::PIDF_t _speedPIDTelemetryScaleFactors;
     PIDF::PIDF_t _yawRatePIDTelemetryScaleFactors;
-
-    motor_pair_controller_telemetry_t _telemetry;
 };

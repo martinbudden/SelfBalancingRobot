@@ -24,7 +24,7 @@ xyz_int16_t  AHRS_Test::readGyroRaw() const
     return xyz_int16_t {};
 }
 
-void AHRS_Test::setAccOffset([[maybe_unused]] const xyz_int16_t& gyroOffset)
+void AHRS_Test::setAccOffset([[maybe_unused]] const xyz_int16_t& accOffset)
 {
 }
 
@@ -33,12 +33,22 @@ xyz_int16_t  AHRS_Test::readAccRaw() const
     return xyz_int16_t {};
 }
 
-AHRS_Base::data_t AHRS_Test::getAhrsDataUsingLock() const
+AHRS_Base::data_t AHRS_Test::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
 {
     return AHRS_Base::data_t{};
 }
 
-Quaternion AHRS_Test::getOrientationUsingLock() const
+AHRS_Base::data_t AHRS_Test::getAhrsDataForInstrumentationUsingLock() const
+{
+    return AHRS_Base::data_t{};
+}
+
+Quaternion AHRS_Test::getOrientationUsingLock(bool& updatedSinceLastRead) const
+{
+    return Quaternion {};
+}
+
+Quaternion AHRS_Test::getOrientationForInstrumentationUsingLock() const
 {
     return Quaternion {};
 }

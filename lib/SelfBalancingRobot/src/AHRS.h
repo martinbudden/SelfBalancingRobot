@@ -27,8 +27,10 @@ public:
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
     virtual xyz_int16_t readAccRaw() const override;
-    virtual AHRS_Base::data_t getAhrsDataUsingLock() const override;
-    virtual Quaternion getOrientationUsingLock() const override;
+    virtual AHRS_Base::data_t getAhrsDataUsingLock(bool& updatedSinceLastRead) const override;
+    virtual AHRS_Base::data_t getAhrsDataForInstrumentationUsingLock() const override;
+    virtual Quaternion getOrientationUsingLock(bool& updatedSinceLastRead) const override;
+    virtual Quaternion getOrientationForInstrumentationUsingLock() const override;
     void checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientation);
 public:
     struct TaskParameters {
@@ -36,7 +38,7 @@ public:
         uint32_t tickIntervalMilliSeconds;
     };
     static void Task(void* arg);
-    void loop(float deltaT);
+    bool readIMUandUpdateOrientation(float deltaT);
 private:
     void Task(const TaskParameters* taskParameters);
 private:

@@ -3,6 +3,7 @@
 #include "MotorPairController.h"
 
 #include "AHRS_Base.h"
+#include "MotorPairControllerTelemetry.h"
 #include <Filters.h>
 
 //#define SERIAL_OUTPUT
@@ -17,22 +18,6 @@
 #endif
 
 /*!
-Use the joystick values provided by the receiver to set the setpoints for motor speed, pitch angle, and yaw rate.
-
-Note all setpoints are scaled to be in the range [-1.0, 1.0]. This in particular means we can feed back the speedUpdate into the pitch setpoint.
-
-NOTE: this function runs in the context of the MAIN_LOOP_TASK, so use of the FPU is avoided so that the ESP32 FPU registers don't have to be saved on a context switch.
-The values are converted to floats in the range [-1.0, 1.0] in the MotorPairController::loop() function, which runs in the context of the MPC_TASK.
-*/
-void MotorControllerBase::setSetpoints(int32_t throttleStickQ4dot12, int32_t rollStickQ4dot12, int32_t pitchStickQ4dot12, int32_t yawStickQ4dot12) // NOLINT(bugprone-easily-swappable-parameters)
-{
-    _throttleStickQ4dot12 = throttleStickQ4dot12;
-    _rollStickQ4dot12 = rollStickQ4dot12;
-    _pitchStickQ4dot12 = pitchStickQ4dot12;
-    _yawStickQ4dot12 = yawStickQ4dot12;
-}
-
-/*!
 Return a reference to the MPC telemetry data.
 
 The telemetry object is shared between this task (the MPC task) and the MAIN_LOOP_TASK, however it is deliberately not protected by a mutex.
@@ -42,9 +27,27 @@ This is because:
    all the member data are continuous, and so a partially updated object is still meaningful to display.
 3. The overhead of a mutex is thus avoided.
 */
-const motor_pair_controller_telemetry_t& MotorPairController::getTelemetryData() const
+void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const
 {
-    return _telemetry;
+   if (motorsIsOn()) {
+        telemetry.pitchError = _pitchPID.getError();
+        telemetry.speedError = _speedPID.getError();
+   } else {
+        telemetry.pitchError = { 0.0F, 0.0F, 0.0F };
+        telemetry.speedError = { 0.0F, 0.0F, 0.0F };
+   }
+    telemetry.powerLeft = _powerLeft;
+    telemetry.powerRight = _powerRight;
+    telemetry.encoderLeft =_encoderLeft;
+    telemetry.encoderRight =_encoderRight;
+    telemetry.encoderLeftDelta =_encoderLeftDelta;
+    telemetry.encoderRightDelta =_encoderRightDelta;
+    telemetry.speedLeftDPS = _speedLeftDPS;
+    telemetry.speedRightDPS = _speedRightDPS;
+    telemetry.speedDPS_Filtered = _speedDPS;
+    // copy of motorMaxSpeedDPS, so telemetry viewer can scale motor speed
+    telemetry.motorMaxSpeedDPS = _motorMaxSpeedDPS;
+
 }
 
 /*!
@@ -60,24 +63,27 @@ float MotorPairController::mapYawStick(float yawStick)
     return ret;
 }
 
-void MotorPairController::updateTelemetry(bool motorsOn)
+void MotorPairController::updateMotors()
 {
-   if (motorsOn) {
-        _telemetry.pitchError = _pitchPID.getError();
-        _telemetry.speedError = _speedPID.getError();
-   } else {
-        _telemetry.pitchError = { 0.0F, 0.0F, 0.0F };
-        _telemetry.speedError = { 0.0F, 0.0F, 0.0F };
-   }
-    _telemetry.powerLeft = _powerLeft;
-    _telemetry.powerRight = _powerRight;
-    _telemetry.encoderLeft =_encoderLeft;
-    _telemetry.encoderRight =_encoderRight;
-    _telemetry.encoderLeftDelta =_encoderLeftDelta;
-    _telemetry.encoderRightDelta =_encoderRightDelta;
-    _telemetry.speedLeftDPS = _speedLeftDPS;
-    _telemetry.speedRightDPS = _speedRightDPS;
-    _telemetry.speedDPS_Filtered = _speedDPS;
+    static FilterMovingAverage<4> powerLeftFilter; // filter length of 4 means division is not used in calculating average.
+    static FilterMovingAverage<4> powerRightFilter;
+
+    if (motorsIsOn() && !_motorsDisabled) {
+        _powerLeft  = _pitchUpdate + _speedUpdate - _yawRateUpdate;
+        _powerRight = _pitchUpdate + _speedUpdate + _yawRateUpdate;
+
+        // filter the power input into the motors so they run more smoothly.
+        const float powerLeftFiltered = powerLeftFilter.update(_powerLeft);
+        const float powerRightFiltered = powerRightFilter.update(_powerRight);
+        _motors.setPower(powerLeftFiltered, powerRightFiltered);
+    } else {
+        // Motors switched off, so set everything to zero, ready for motors to be switched on again.
+        _motors.setPower(0.0F, 0.0F);
+        _powerLeft  = 0.0F;
+        _powerRight = 0.0F;
+        powerLeftFilter.reset();
+        powerRightFilter.reset();
+    }
 #if defined(SERIAL_OUTPUT)
     static int loopCount {0};
     ++loopCount;
@@ -85,12 +91,6 @@ void MotorPairController::updateTelemetry(bool motorsOn)
         loopCount = 0;
 
     //Serial.printf(">pitchAngleDegrees:%6.2f, pitchRate:%8.4f\r\n", pitchAngleDegrees, pitchRate);
-
-    //Serial.printf(">pidErrorP:%8.2f, pidErrorI:%8.2f, pidErrorD:%8.2f, pitchAngleDegreesDelta:%8.2f, pitchAngleDegreesDeltaFiltered:%8.2f, pitchRate:%8.2f\r\n",
-    //    _pitchPID.getErrorRaw().P, _pitchPID.getErrorRaw().I, _pitchPID.getErrorRaw().D, pitchAngleDegreesDelta / deltaT, pitchAngleDegreesDeltaFiltered / deltaT, -pitchRate);
-
-    //Serial.printf(">pitchAngleDegreesDelta:%8.2f, pitchAngleDegreesDeltaFiltered:%8.2f, pitchRate:%8.2f, deltaT:%6.3f\r\n",
-    //    pitchAngleDegreesDelta / deltaT, pitchAngleDegreesDeltaFiltered / deltaT, -pitchRate, deltaT);
 
     //Serial.printf(">pitchPidErrorP:%8.2f, pidErrorI:%8.2f, pidErrorD:%8.2f, update:%8.2f\r\n",
     //    _pitchPID.getError().P, _pitchPID.getError().I, _pitchPID.getError().D, _telemetry.pitchUpdate);
@@ -113,29 +113,6 @@ void MotorPairController::updateTelemetry(bool motorsOn)
     //    pitchAngleDegrees, _telemetry.pitchUpdate, _telemetry.speedDPS_Filtered, speedPowerEquivalent, _telemetry.speedUpdate);
     }
 #endif
-}
-
-void MotorPairController::updateMotors(bool motorsOn)
-{
-    static FilterMovingAverage<4> powerLeftFilter; // filter length of 4 means division is not used in calculating average.
-    static FilterMovingAverage<4> powerRightFilter;
-
-    if (motorsOn) {
-        _powerLeft  = _pitchUpdate + _speedUpdate - _yawRateUpdate;
-        _powerRight = _pitchUpdate + _speedUpdate + _yawRateUpdate;
-
-        // filter the power input into the motors so they run more smoothly.
-        const float powerLeftFiltered = powerLeftFilter.update(_powerLeft);
-        const float powerRightFiltered = powerRightFilter.update(_powerRight);
-        _motors.setPower(powerLeftFiltered, powerRightFiltered);
-    } else {
-        // Motors switched off, so set everything to zero, ready for motors to be switched on again.
-        _motors.setPower(0.0F, 0.0F);
-        _powerLeft  = 0.0F;
-        _powerRight = 0.0F;
-        powerLeftFilter.reset();
-        powerRightFilter.reset();
-    }
 }
 
 bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
@@ -161,8 +138,8 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
         _speedRightDPS = static_cast<float>(_encoderRightDelta) * speedMultiplier;
 
         // encoders are very noisy, so the calculated speed value needs to be filtered
-        const float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
         static FilterMovingAverage<4> speedFilter;
+        const float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
         _speedDPS = speedFilter.update(speedDPS);
     }
 #else
@@ -170,7 +147,12 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
     _speedDPS = MotorPairBase::clip((_powerLeft + _powerRight) * 0.5F, -1.0, 1.0) * _motorMaxSpeedDPS;
 #endif
 
-    const Quaternion orientation = _ahrs.getOrientationUsingLock();
+    bool orientationUpdated;
+    const Quaternion orientation = _ahrs.getOrientationUsingLock(orientationUpdated);
+    if (!orientationUpdated) {
+        return false;
+    }
+
     // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.
     // For the Self Balancing Robot, pitch is rotation around the x-axis and roll is rotation around the y-axis,
     // so ROLL and PITCH are REVERSED.
@@ -183,12 +165,14 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
     _yawAngleDegreesRaw = orientation.calculateYawDegrees();
 #endif
     const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
-    const float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
-    _pitchAngleDegreesPrevious = pitchAngleDegrees;
 
-    constexpr uint32_t robotDebounceIntervalMs = 2000; // don't switch on again for at least 2 seconds after robot falls over.
-    if (motorsIsOn() && (fabs(pitchAngleDegrees) < _motorSwitchOffAngleDegrees) && ((tickCount - _motorSwitchOffTickCount) > robotDebounceIntervalMs)) {
-        _motorSwitchOffTickCount = 0;
+    // Disable the motors if the pitchAngle exceeds the switchOffAngle.
+    // Don't switch on again for at least 2 seconds after robot falls over (ie don't switch on if it falls over and bounces back up again).
+    constexpr uint32_t robotDebounceIntervalMs = 2000;
+    _motorsDisabled = (fabs(pitchAngleDegrees) < _motorSwitchOffAngleDegrees) && ((tickCount - _motorSwitchOffTickCount) > robotDebounceIntervalMs);
+
+    if (motorsIsOn() && !_motorsDisabled) {
+        _motorSwitchOffTickCount = 0; // reset the bounce prevention tickcount
         if (fabs(pitchAngleDegrees) > _pitchMaxAngleDegrees) {
             // we are way off balance, and the I-term is now a hindrance
             _pitchPID.resetIntegral();
@@ -209,7 +193,7 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
             static float motorSpeedDPS {0.0};
             //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
             motorSpeedDPS = motorSpeedWeighting * motorSpeed + (1.0F - motorSpeedWeighting) * _speedDPS;
-            _speedUpdate = _speedPID.update(motorSpeedDPS / _telemetry.motorMaxSpeedDPS, deltaT);
+            _speedUpdate = _speedPID.update(motorSpeedDPS / _motorMaxSpeedDPS, deltaT);
             #endif
             _speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
         } else if (_controlMode == CONTROL_MODE_POSITION) {
@@ -228,8 +212,13 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
             _speedUpdate = _speedPID.update(_positionDegrees, deltaT);
         }
 
-        if (getPitchRateIsFiltered()) {
+        if (_pitchRateIsFiltered) {
+            // Calculate the pitchAngleDelta and filter it.
+            // Use the filtered value as input into the PID, so the D-term is calculated using the filtered value.
+            // This is beneficial because the D-term is especially susceptible to noise.
             static FilterMovingAverage<4> pitchAngleDegreesDeltaFilter;
+            const float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
+            _pitchAngleDegreesPrevious = pitchAngleDegrees;
             const float pitchAngleDegreesDeltaFiltered = pitchAngleDegreesDeltaFilter.update(pitchAngleDegreesDelta);
             _pitchUpdate = _pitchPID.updateDelta(pitchAngleDegrees, pitchAngleDegreesDeltaFiltered, deltaT);
         } else {
@@ -239,24 +228,23 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
         // Note the negative multiplier, since pushing the yaw stick to the right results in a clockwise rotation, ie a negative yaw rate
         _yawRatePID.setSetpoint(-mapYawStick(Q4dot12_to_float(_yawStickQ4dot12)) * _yawStickMultiplier); // limit yaw rate to sensible range.
         _yawRateUpdate = _yawRatePID.update(0.0, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
-        return true;
+    } else {
+        // Motors switched off, so set everything to zero, ready for motors to be switched on again.
+        _pitchUpdate = 0.0F;
+        _pitchPID.resetIntegral();
+
+        _speedUpdate = 0.0F;
+        _speedPID.resetIntegral();
+
+        _yawRateUpdate = 0.0F;
+        _yawRatePID.resetIntegral();
+
+        // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.
+        if (_motorSwitchOffTickCount == 0) {
+            _motorSwitchOffTickCount = tickCount;
+        }
     }
-
-    // Motors switched off, so set everything to zero, ready for motors to be switched on again.
-    // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.
-    if (_motorSwitchOffTickCount == 0) {
-        _motorSwitchOffTickCount = tickCount;
-    }
-    _pitchUpdate = 0.0F;
-    _pitchPID.resetIntegral();
-
-    _speedUpdate = 0.0F;
-    _speedPID.resetIntegral();
-
-    _yawRateUpdate = 0.0F;
-    _yawRatePID.resetIntegral();
-
-    return false;
+    return true;
 }
 
 /*!
@@ -265,14 +253,13 @@ Task loop for the MotorPairController. Uses PID controllers to update the motor 
 Setpoints are provided by the receiver(joystick), and inputs(process variables) come from the AHRS and the motor encoders.
 
 There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
-
-The MPC also stores its state in a telemetry variable. This can be used for display on the screen, or sent via the backchannel.
 */
-void MotorPairController::loop(float deltaT, uint32_t tickCount)
+inline void MotorPairController::loop(float deltaT, uint32_t tickCount)
 {
-    const bool motorsOn = updatePIDs(deltaT, tickCount);
-    updateMotors(motorsOn);
-    updateTelemetry(motorsOn);
+    const bool PIDsUpdated = updatePIDs(deltaT, tickCount);
+    if (PIDsUpdated) {
+        updateMotors();
+    }
 }
 
 /*!

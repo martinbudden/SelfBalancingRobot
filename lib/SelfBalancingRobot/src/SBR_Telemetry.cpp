@@ -88,7 +88,7 @@ int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS_Ba
     td->type = TD_AHRS::TYPE;
     td->len = sizeof(TD_AHRS);
 
-    const AHRS_Base::data_t ahrsData = ahrs.getAhrsDataUsingLock();
+    const AHRS_Base::data_t ahrsData = ahrs.getAhrsDataForInstrumentationUsingLock();
     td->data = {
         .pitch = motorController.getPitchAngleDegreesRaw(),
         .roll = motorController.getRollAngleDegreesRaw(),
@@ -119,7 +119,9 @@ int packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, const MotorPai
     td->flags = motorPairController.motorsIsOn() ? TD_MPC::MOTORS_ON_FLAG : 0x00;
     td->flags |= (TD_MPC::CONTROL_MODE_MASK & motorPairController.getControlMode());
 
-    memcpy(&td->data, &motorPairController.getTelemetryData(), sizeof(motor_pair_controller_telemetry_t));
+    motor_pair_controller_telemetry_t telemetryData;
+    motorPairController.getTelemetryData(telemetryData);
+    memcpy(&td->data, &telemetryData, sizeof(motor_pair_controller_telemetry_t));
 
     return td->len;
 };

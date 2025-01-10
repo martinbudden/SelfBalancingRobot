@@ -15,8 +15,10 @@ public:
 public:
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
-    virtual void setAccOffset(const xyz_int16_t& gyroOffset) override;
+    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readAccRaw() const override;
-    virtual AHRS_Base::data_t getAhrsDataUsingLock() const override;
-    virtual Quaternion getOrientationUsingLock() const override;
+    virtual AHRS_Base::data_t getAhrsDataUsingLock(bool& updatedSinceLastRead) const override;
+    virtual AHRS_Base::data_t getAhrsDataForInstrumentationUsingLock() const override;
+    virtual Quaternion getOrientationUsingLock(bool& updatedSinceLastRead) const override;
+    virtual Quaternion getOrientationForInstrumentationUsingLock() const override;
 };

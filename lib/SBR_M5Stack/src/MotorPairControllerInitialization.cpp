@@ -114,10 +114,7 @@ MotorPairController::MotorPairController(const AHRS_Base& ahrsBase, [[maybe_unus
 
     _yawRatePID.setPID(yawRatePID_Default);
 
-    // copy of motorMaxSpeedDPS for telemetry, so telemetry viewer can scale motor speed
-    _telemetry.motorMaxSpeedDPS = _motorMaxSpeedDPS;
-
-    const float yawRateDPS_AtMaxPower = _telemetry.motorMaxSpeedDPS * wheelDiameterMM / wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
+    const float yawRateDPS_AtMaxPower = _motorMaxSpeedDPS * wheelDiameterMM / wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
     static constexpr float maxDesiredYawRateDPS {720.0};
     _yawStickMultiplier = maxDesiredYawRateDPS / yawRateDPS_AtMaxPower;
 }

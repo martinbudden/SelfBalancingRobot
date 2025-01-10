@@ -491,7 +491,8 @@ void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.setCursor(36, yPos);
     M5.Lcd.printf("%5.2f ay:%5.2f az:%5.2f", ahrsData.acc.x, ahrsData.acc.y, ahrsData.acc.z);
 
-    const motor_pair_controller_telemetry_t& mpcTelemetry = _motorPairController.getTelemetryData();
+    motor_pair_controller_telemetry_t mpcTelemetry;
+    _motorPairController.getTelemetryData(mpcTelemetry);
 #if defined(MOTORS_HAVE_ENCODERS)
     yPos = 180;
     M5.Lcd.setCursor(48, yPos);
@@ -580,7 +581,7 @@ Update the screen with data from the AHRS and the receiver.
 */
 void Screen::update(bool packetReceived) const
 {
-    const AHRS_Base::data_t ahrsData = _ahrs.getAhrsDataUsingLock();
+    const AHRS_Base::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
     const TD_AHRS::Data tdAhrsData {
         .pitch = _motorPairController.getPitchAngleDegreesRaw(),
         .roll = _motorPairController.getRollAngleDegreesRaw(),
