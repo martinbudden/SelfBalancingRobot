@@ -14,7 +14,7 @@ public:
     virtual bool readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const override;
     virtual int readFIFO_ToBuffer() override;
     virtual void readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index) override;
-    static gyroRadiansAcc_t gyroRadiansAccFromData(const mpu_6886_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
+    static gyroRadiansAcc_t gyroRadiansAccFromData(const IMU_MPU6886::acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
 private:
     xyz_int16_t _gyroOffset {};
     xyz_int16_t _accOffset {};

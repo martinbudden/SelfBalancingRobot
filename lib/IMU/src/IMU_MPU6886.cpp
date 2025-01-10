@@ -93,7 +93,7 @@ IMU_MPU6886::IMU_MPU6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
 
 void IMU_MPU6886::init()
 {
-    static_assert(sizeof(mpu_6886_data_t) == mpu_6886_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temp_gyro_data_t) == acc_temp_gyro_data_t::DATA_SIZE);
 
     i2cSemaphoreTake();
 
@@ -247,7 +247,7 @@ xyz_t IMU_MPU6886::readGyroRadians() const
 
 IMU_Base::gyroRadiansAcc_t IMU_MPU6886::readGyroRadiansAcc() const
 {
-    mpu_6886_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    acc_temp_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
     _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -352,7 +352,7 @@ void IMU_MPU6886::setFIFOEnable(bool enableflag)
 
 void IMU_MPU6886::readFIFO(uint8_t *data, size_t len) const
 {
-    constexpr size_t chunkSize = 15*sizeof(mpu_6886_data_t);
+    constexpr size_t chunkSize = 15*sizeof(IMU_MPU6886::acc_temp_gyro_data_t);
     const auto count = len / chunkSize;
     i2cSemaphoreTake();
     for(auto ii = 0; ii < count; ++ii) {
@@ -397,7 +397,7 @@ void IMU_MPU6886::readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index)
 {
 }
 
-IMU_Base::gyroRadiansAcc_t IMU_MPU6886::gyroRadiansAccFromData(const mpu_6886_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
+IMU_Base::gyroRadiansAcc_t IMU_MPU6886::gyroRadiansAccFromData(const acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
 {
     static constexpr float ACC_8G_RES { 8.0 / 32768.0 };
     static constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };

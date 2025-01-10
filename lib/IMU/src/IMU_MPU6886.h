@@ -4,25 +4,6 @@
 #include <IMU_Base.h>
 #include <xyz_int16_type.h>
 
-#pragma pack(push, 1)
-struct mpu_6886_data_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    enum { DATA_SIZE = 14 };
-    uint8_t acc_x_h;
-    uint8_t acc_x_l;
-    uint8_t acc_y_h;
-    uint8_t acc_y_l;
-    uint8_t acc_z_h;
-    uint8_t acc_z_l;
-    uint8_t temp_h;
-    uint8_t temp_l;
-    uint8_t gyro_x_h;
-    uint8_t gyro_x_l;
-    uint8_t gyro_y_h;
-    uint8_t gyro_y_l;
-    uint8_t gyro_z_h;
-    uint8_t gyro_z_l;
-};
-#pragma pack(pop)
 
 class IMU_MPU6886 : public IMU_Base {
 public:
@@ -37,6 +18,23 @@ public:
         uint8_t y_l;
         uint8_t z_h;
         uint8_t z_l;
+    };
+    struct acc_temp_gyro_data_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+        enum { DATA_SIZE = 14 };
+        uint8_t acc_x_h;
+        uint8_t acc_x_l;
+        uint8_t acc_y_h;
+        uint8_t acc_y_l;
+        uint8_t acc_z_h;
+        uint8_t acc_z_l;
+        uint8_t temp_h;
+        uint8_t temp_l;
+        uint8_t gyro_x_h;
+        uint8_t gyro_x_l;
+        uint8_t gyro_y_h;
+        uint8_t gyro_y_l;
+        uint8_t gyro_z_h;
+        uint8_t gyro_z_l;
     };
 #pragma pack(pop)
 public:
@@ -63,7 +61,7 @@ public:
     void setGyroFSR(gyro_scale_t gyroScale);
     void setAccFSR(acc_scale_t accScale);
 
-    static gyroRadiansAcc_t gyroRadiansAccFromData(const mpu_6886_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
+    static gyroRadiansAcc_t gyroRadiansAccFromData(const acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
     static mems_sensor_data_t gyroOffsetFromXYZ(const xyz_int16_t& data);
 private:
     gyroRadiansAcc_t readGyroRadiansAcc() const;
