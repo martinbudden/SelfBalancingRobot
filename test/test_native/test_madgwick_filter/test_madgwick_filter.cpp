@@ -18,6 +18,7 @@ void test_arduino_madgwick() {
     float gy = 0.55f;
     float gz = -0.19f;
     xyz_t acc = { .x =0.66f, .y = 0.77f, .z = 0.88f };
+    acc *= 1.0F / sqrtf(acc.x*acc.x + acc.y*acc.y +acc.z*acc.z);
 
     const float q0 = 3.0f;
     const float q1 = 5.0f;
@@ -52,6 +53,7 @@ void test_arduino_madgwick() {
     arduinoMadgwick.begin(1.0F / deltaT, beta);
     madgwickFilter.setBeta(beta);
     acc = { .x = -0.66f, .y = 1.77f, .z = 3.88f };
+    acc *= 1.0F / sqrtf(acc.x*acc.x + acc.y*acc.y +acc.z*acc.z);
 
     arduinoMadgwick._setAndNormalizeQ(q0, q1, q2, q3);
     arduinoMadgwick.updateIMU(gx, gy, gz, acc.x, acc.y, acc.z);
