@@ -60,55 +60,114 @@ float MotorPairController::mapYawStick(float yawStick)
     return ret;
 }
 
-/*!
-Task loop for the MotorPairController. Uses PID controllers to update the motor pair.
+void MotorPairController::updateTelemetry(bool motorsOn)
+{
+   if (motorsOn) {
+        _telemetry.pitchError = _pitchPID.getError();
+        _telemetry.speedError = _speedPID.getError();
+   } else {
+        _telemetry.pitchError = { 0.0F, 0.0F, 0.0F };
+        _telemetry.speedError = { 0.0F, 0.0F, 0.0F };
+   }
+    _telemetry.powerLeft = _powerLeft;
+    _telemetry.powerRight = _powerRight;
+    _telemetry.encoderLeft =_encoderLeft;
+    _telemetry.encoderRight =_encoderRight;
+    _telemetry.encoderLeftDelta =_encoderLeftDelta;
+    _telemetry.encoderRightDelta =_encoderRightDelta;
+    _telemetry.speedLeftDPS = _speedLeftDPS;
+    _telemetry.speedRightDPS = _speedRightDPS;
+    _telemetry.speedDPS_Filtered = _speedDPS;
+#if defined(SERIAL_OUTPUT)
+    static int loopCount {0};
+    ++loopCount;
+    if (loopCount == 10) {
+        loopCount = 0;
 
-Setpoints are provided by the receiver(joystick), and inputs(process variables) come from the AHRS and the motor encoders.
+    //Serial.printf(">pitchAngleDegrees:%6.2f, pitchRate:%8.4f\r\n", pitchAngleDegrees, pitchRate);
 
-There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
+    //Serial.printf(">pidErrorP:%8.2f, pidErrorI:%8.2f, pidErrorD:%8.2f, pitchAngleDegreesDelta:%8.2f, pitchAngleDegreesDeltaFiltered:%8.2f, pitchRate:%8.2f\r\n",
+    //    _pitchPID.getErrorRaw().P, _pitchPID.getErrorRaw().I, _pitchPID.getErrorRaw().D, pitchAngleDegreesDelta / deltaT, pitchAngleDegreesDeltaFiltered / deltaT, -pitchRate);
 
-The MPC also stores its state in a telemetry variable. This can be used for display on the screen, or sent via the backchannel.
-*/
-void MotorPairController::loop(float deltaT, uint32_t tickCount)
+    //Serial.printf(">pitchAngleDegreesDelta:%8.2f, pitchAngleDegreesDeltaFiltered:%8.2f, pitchRate:%8.2f, deltaT:%6.3f\r\n",
+    //    pitchAngleDegreesDelta / deltaT, pitchAngleDegreesDeltaFiltered / deltaT, -pitchRate, deltaT);
+
+    //Serial.printf(">pitchPidErrorP:%8.2f, pidErrorI:%8.2f, pidErrorD:%8.2f, update:%8.2f\r\n",
+    //    _pitchPID.getError().P, _pitchPID.getError().I, _pitchPID.getError().D, _telemetry.pitchUpdate);
+
+    //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchUpdate:%8.4f, speedSetpoint:%7.2f, speedUpdate:%7.3f, speedUpdateRaw:%7.3f, speedError:%7.3f, deltaT:%6.3f\r\n",
+    //   _pitchPID.getSetpoint(), pitchAngleDegrees, _telemetry.pitchUpdate, _speedPID.getSetpoint(), _telemetry.speedUpdate, speedUpdate, _speedPID.getError().P/_speedPID.getP(), deltaT);
+
+    //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchUpdate:%8.4f, speedSetpoint:%7.2f, speedUpdate:%7.3f, deltaT:%6.3f\r\n",
+    //   _pitchPID.getSetpoint(), pitchAngleDegrees, _telemetry.pitchUpdate, _speedPID.getSetpoint(), _telemetry.speedUpdate, deltaT);
+
+    //Serial.printf(">speed:%8.2f, setpoint:%8.2f, pidErrorP:%8.2f, pidErrorI:%8.2f, update:%8.2f\r\n",
+    //    _speedDPS / _telemetry.motorMaxSpeedDPS, _speedPID.getSetpoint(), _speedPID.getError().P, _speedPID.getError().I, _telemetry.speedUpdate);
+
+    /*if (fabs(_yawRatePID.getSetpoint()) > 0.01f) {
+        Serial.printf(">yawRateSetpoint:%7.2f, yawRate:%6.2f, yawRatePower:%6.2f, yawRateUpdate:%f\r\n",
+            _yawRatePID.getSetpoint(), yawRate, yawRatePower, _telemetry.yawRateUpdate);
+    }*/
+
+    //Serial.printf(">pitchAngleDegrees:%6.2f, pitchUpdate:%6.3f, speedDPS:%5.0F, spdPE:%7.3f, speedUpdate:%8.5f\r\n",
+    //    pitchAngleDegrees, _telemetry.pitchUpdate, _telemetry.speedDPS_Filtered, speedPowerEquivalent, _telemetry.speedUpdate);
+    }
+#endif
+}
+
+void MotorPairController::updateMotors(bool motorsOn)
 {
     static FilterMovingAverage<4> powerLeftFilter; // filter length of 4 means division is not used in calculating average.
     static FilterMovingAverage<4> powerRightFilter;
 
+    if (motorsOn) {
+        _powerLeft  = _pitchUpdate + _speedUpdate - _yawRateUpdate;
+        _powerRight = _pitchUpdate + _speedUpdate + _yawRateUpdate;
+
+        // filter the power input into the motors so they run more smoothly.
+        const float powerLeftFiltered = powerLeftFilter.update(_powerLeft);
+        const float powerRightFiltered = powerRightFilter.update(_powerRight);
+        _motors.setPower(powerLeftFiltered, powerRightFiltered);
+    } else {
+        // Motors switched off, so set everything to zero, ready for motors to be switched on again.
+        _motors.setPower(0.0F, 0.0F);
+        _powerLeft  = 0.0F;
+        _powerRight = 0.0F;
+        powerLeftFilter.reset();
+        powerRightFilter.reset();
+    }
+}
+
+bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
+{
 #if defined(MOTORS_HAVE_ENCODERS)
     _motors.readEncoder();
 
-    _telemetry.encoderLeft = _motors.getLeftEncoder();
-    _telemetry.encoderLeftDelta = static_cast<int16_t>(_telemetry.encoderLeft - _encoderLeftPrevious);
-    _encoderLeftPrevious = _telemetry.encoderLeft;
+    _encoderLeft = _motors.getLeftEncoder();
+    _encoderLeftDelta = static_cast<int16_t>(_encoderLeft - _encoderLeftPrevious);
+    _encoderLeftPrevious = _encoderLeft;
 
-    _telemetry.encoderRight = _motors.getRightEncoder();
-    _telemetry.encoderRightDelta = static_cast<int16_t>(_telemetry.encoderRight - _encoderRightPrevious);
-    _encoderRightPrevious = _telemetry.encoderRight;
+    _encoderRight = _motors.getRightEncoder();
+    _encoderRightDelta = static_cast<int16_t>(_encoderRight - _encoderRightPrevious);
+    _encoderRightPrevious = _encoderRight;
 
     if (_motors.canAccuratelyEstimateSpeed()) {
-        _telemetry.speedLeftDPS = _motors.getLeftSpeed();
-        _telemetry.speedRightDPS = _motors.getRightSpeed();
-
-        const float speedDPS = (_telemetry.speedLeftDPS + _telemetry.speedRightDPS)/2;
-        _telemetry.speedDPS_Filtered = speedDPS;
+        _speedLeftDPS = _motors.getLeftSpeed();
+        _speedRightDPS = _motors.getRightSpeed();
+        _speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
     } else {
-        const float speedMultiplier =  360.0F / (_motorStepsPerRevolution * deltaT);
-        _telemetry.speedLeftDPS = static_cast<float>(_telemetry.encoderLeftDelta) * speedMultiplier;
-        _telemetry.speedRightDPS = static_cast<float>(_telemetry.encoderRightDelta) * speedMultiplier;
+        const float speedMultiplier = 360.0F / (_motorStepsPerRevolution * deltaT);
+        _speedLeftDPS = static_cast<float>(_encoderLeftDelta) * speedMultiplier;
+        _speedRightDPS = static_cast<float>(_encoderRightDelta) * speedMultiplier;
 
-        // the encoders are very noisy, so the calculated speed value needs to be filtered
-        const float speedDPS = (_telemetry.speedLeftDPS + _telemetry.speedRightDPS)/2;
+        // encoders are very noisy, so the calculated speed value needs to be filtered
+        const float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
         static FilterMovingAverage<4> speedFilter;
-        _telemetry.speedDPS_Filtered = speedFilter.update(speedDPS);
-        //Serial.printf(">speedDPS:%7.3f, speedDPSFiltered:%7.3f\r\n", speedDPS/60.0F, _telemetry.speedDPS_Filtered/60.0F);
+        _speedDPS = speedFilter.update(speedDPS);
     }
-
-    //Serial.printf(">elDelta:%d, erDelta:%d, elRotDelta:%f, elRotDelta2:%f, tickDelta:%d\r\n",
-      //  _telemetry.encoderLeftDelta, _telemetry.encoderRightDelta, (1.0F * _telemetry.encoderLeftDelta) / (_motorStepsPerRevolution * deltaT), (1.0F * _telemetry.encoderLeftDelta) / (_motorStepsPerRevolution * deltaT), tickCountDelta);
-    _speedDPS = _telemetry.speedDPS_Filtered;
 #else
     // no encoders, so estimate speed from power output
-    _speedDPS = MotorPairBase::clip((_telemetry.powerLeft + _telemetry.powerRight) / 2, -1.0, 1.0) * _motorMaxSpeedDPS;
+    _speedDPS = MotorPairBase::clip((_powerLeft + _powerRight) * 0.5F, -1.0, 1.0) * _motorMaxSpeedDPS;
 #endif
 
     const Quaternion orientation = _ahrs.getOrientationUsingLock();
@@ -126,8 +185,6 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
     const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
     const float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
     _pitchAngleDegreesPrevious = pitchAngleDegrees;
-    static FilterMovingAverage<4> pitchAngleDegreesDeltaFilter;
-    const float pitchAngleDegreesDeltaFiltered = pitchAngleDegreesDeltaFilter.update(pitchAngleDegreesDelta);
 
     constexpr uint32_t robotDebounceIntervalMs = 2000; // don't switch on again for at least 2 seconds after robot falls over.
     if (motorsIsOn() && (fabs(pitchAngleDegrees) < _motorSwitchOffAngleDegrees) && ((tickCount - _motorSwitchOffTickCount) > robotDebounceIntervalMs)) {
@@ -137,13 +194,12 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
             _pitchPID.resetIntegral();
         }
 
-        float speedUpdate {0.0};
         if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
             _speedPID.setSetpoint(Q4dot12_to_float(_throttleStickQ4dot12));
-            _telemetry.speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
+            const float speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
             // feed the speedUpdate back into the pitchPID and set speedUpdate to zero
-            _pitchPID.setSetpoint(_telemetry.speedUpdate);
-            speedUpdate = 0.0F;
+            _pitchPID.setSetpoint(speedUpdate);
+            _speedUpdate = 0.0F;
         } else if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
             _speedPID.setSetpoint(Q4dot12_to_float(_throttleStickQ4dot12));
             _pitchPID.setSetpoint(-Q4dot12_to_float(_pitchStickQ4dot12) * _pitchMaxAngleDegrees);
@@ -151,16 +207,16 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
             // motor_speed filter
             static constexpr float motorSpeedWeighting {0.8};
             static float motorSpeedDPS {0.0};
-            //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_telemetry.encoderLeftDelta + _telemetry.encoderRightDelta);
+            //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
             motorSpeedDPS = motorSpeedWeighting * motorSpeed + (1.0F - motorSpeedWeighting) * _speedDPS;
-            _telemetry.speedUpdate = _speedPID.update(motorSpeedDPS / _telemetry.motorMaxSpeedDPS, deltaT);
+            _speedUpdate = _speedPID.update(motorSpeedDPS / _telemetry.motorMaxSpeedDPS, deltaT);
             #endif
-            _telemetry.speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
-            speedUpdate = _telemetry.speedUpdate;
+            _speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
         } else if (_controlMode == CONTROL_MODE_POSITION) {
+            // NOTE: THIS IS NOT YET FULLY IMPLEMENTED
             _pitchPID.setSetpoint(-Q4dot12_to_float(_pitchStickQ4dot12) * _pitchMaxAngleDegrees);
 #if defined(MOTORS_HAVE_ENCODERS)
-            _positionDegrees = static_cast<float>(_telemetry.encoderLeft + _telemetry.encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
+            _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
 #else
             _positionDegrees += _speedDPS * deltaT;
 #endif
@@ -169,91 +225,54 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
             _positionSetpointDegrees += speedSetpointDPS * deltaT;
             // repurpose the speed PID as a position PID, since it is not being used for speed regulation in this mode
             _speedPID.setSetpoint(_positionSetpointDegrees);
-            _telemetry.speedUpdate = _speedPID.update(_positionDegrees, deltaT);
-            speedUpdate = _telemetry.speedUpdate;
+            _speedUpdate = _speedPID.update(_positionDegrees, deltaT);
         }
 
-        _telemetry.pitchUpdate = getPitchRateIsFiltered() ?
-            _pitchPID.updateDelta(pitchAngleDegrees, pitchAngleDegreesDeltaFiltered, deltaT) :
-            _pitchPID.update(pitchAngleDegrees, deltaT);
+        if (getPitchRateIsFiltered()) {
+            static FilterMovingAverage<4> pitchAngleDegreesDeltaFilter;
+            const float pitchAngleDegreesDeltaFiltered = pitchAngleDegreesDeltaFilter.update(pitchAngleDegreesDelta);
+            _pitchUpdate = _pitchPID.updateDelta(pitchAngleDegrees, pitchAngleDegreesDeltaFiltered, deltaT);
+        } else {
+            _pitchUpdate = _pitchPID.update(pitchAngleDegrees, deltaT);
+        }
 
         // Note the negative multiplier, since pushing the yaw stick to the right results in a clockwise rotation, ie a negative yaw rate
         _yawRatePID.setSetpoint(-mapYawStick(Q4dot12_to_float(_yawStickQ4dot12)) * _yawStickMultiplier); // limit yaw rate to sensible range.
-        _telemetry.yawRateUpdate = _yawRatePID.update(0.0, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
-
-        _telemetry.powerLeft  = _telemetry.pitchUpdate + speedUpdate - _telemetry.yawRateUpdate;
-        _telemetry.powerRight = _telemetry.pitchUpdate + speedUpdate + _telemetry.yawRateUpdate;
-
-        // filter the power input into the motors so they run more smoothly.
-        const float powerLeftFiltered = powerLeftFilter.update(_telemetry.powerLeft);
-        const float powerRightFiltered = powerRightFilter.update(_telemetry.powerRight);
-        _motors.setPower(powerLeftFiltered, powerRightFiltered);
-        //_motors.setPower(_telemetry.powerLeft, _telemetry.powerRight);
-
-        // update the telemetry error data, yawRateError not updated, since yawRate is controlled by feed forward
-        _telemetry.pitchError = _pitchPID.getError();
-        _telemetry.speedError = _speedPID.getError();
-
-#if defined(SERIAL_OUTPUT)
-        static int loopCount {0};
-        ++loopCount;
-        if (loopCount == 10) {
-            loopCount = 0;
-
-        //Serial.printf(">pitchAngleDegrees:%6.2f, pitchRate:%8.4f\r\n", pitchAngleDegrees, pitchRate);
-
-        //Serial.printf(">pidErrorP:%8.2f, pidErrorI:%8.2f, pidErrorD:%8.2f, pitchAngleDegreesDelta:%8.2f, pitchAngleDegreesDeltaFiltered:%8.2f, pitchRate:%8.2f\r\n",
-        //    _pitchPID.getErrorRaw().P, _pitchPID.getErrorRaw().I, _pitchPID.getErrorRaw().D, pitchAngleDegreesDelta / deltaT, pitchAngleDegreesDeltaFiltered / deltaT, -pitchRate);
-
-        //Serial.printf(">pitchAngleDegreesDelta:%8.2f, pitchAngleDegreesDeltaFiltered:%8.2f, pitchRate:%8.2f, deltaT:%6.3f\r\n",
-        //    pitchAngleDegreesDelta / deltaT, pitchAngleDegreesDeltaFiltered / deltaT, -pitchRate, deltaT);
-
-        //Serial.printf(">pitchPidErrorP:%8.2f, pidErrorI:%8.2f, pidErrorD:%8.2f, update:%8.2f\r\n",
-        //    _pitchPID.getError().P, _pitchPID.getError().I, _pitchPID.getError().D, _telemetry.pitchUpdate);
-
-        //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchUpdate:%8.4f, speedSetpoint:%7.2f, speedUpdate:%7.3f, speedUpdateRaw:%7.3f, speedError:%7.3f, deltaT:%6.3f\r\n",
-        //   _pitchPID.getSetpoint(), pitchAngleDegrees, _telemetry.pitchUpdate, _speedPID.getSetpoint(), _telemetry.speedUpdate, speedUpdate, _speedPID.getError().P/_speedPID.getP(), deltaT);
-
-        //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchUpdate:%8.4f, speedSetpoint:%7.2f, speedUpdate:%7.3f, deltaT:%6.3f\r\n",
-        //   _pitchPID.getSetpoint(), pitchAngleDegrees, _telemetry.pitchUpdate, _speedPID.getSetpoint(), _telemetry.speedUpdate, deltaT);
-
-        //Serial.printf(">speed:%8.2f, setpoint:%8.2f, pidErrorP:%8.2f, pidErrorI:%8.2f, update:%8.2f\r\n",
-        //    _speedDPS / _telemetry.motorMaxSpeedDPS, _speedPID.getSetpoint(), _speedPID.getError().P, _speedPID.getError().I, _telemetry.speedUpdate);
-
-        /*if (fabs(_yawRatePID.getSetpoint()) > 0.01f) {
-            Serial.printf(">yawRateSetpoint:%7.2f, yawRate:%6.2f, yawRatePower:%6.2f, yawRateUpdate:%f\r\n",
-               _yawRatePID.getSetpoint(), yawRate, yawRatePower, _telemetry.yawRateUpdate);
-        }*/
-
-        //Serial.printf(">pitchAngleDegrees:%6.2f, pitchUpdate:%6.3f, speedDPS:%5.0F, spdPE:%7.3f, speedUpdate:%8.5f\r\n",
-        //    pitchAngleDegrees, _telemetry.pitchUpdate, _telemetry.speedDPS_Filtered, speedPowerEquivalent, _telemetry.speedUpdate);
-        }
-#endif
-
-    } else {
-
-        // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.
-        if (_motorSwitchOffTickCount == 0) {
-            _motorSwitchOffTickCount = tickCount;
-        }
-        // Motors switched off, so set everything to zero, ready for motors to be switched on again.
-        _motors.setPower(0.0F, 0.0F);
-        _telemetry.powerLeft = 0.0F;
-        _telemetry.powerRight = 0.0F;
-        powerLeftFilter.reset();
-        powerRightFilter.reset();
-
-        _telemetry.pitchUpdate = 0.0F;
-        _telemetry.pitchError = { 0.0F, 0.0F, 0.0F };
-        _pitchPID.resetIntegral();
-
-        _telemetry.speedUpdate = 0.0F;
-        _telemetry.speedError = { 0.0F, 0.0F, 0.0F };
-        _speedPID.resetIntegral();
-
-        _telemetry.yawRateUpdate = 0.0F;
-        _yawRatePID.resetIntegral();
+        _yawRateUpdate = _yawRatePID.update(0.0, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
+        return true;
     }
+
+    // Motors switched off, so set everything to zero, ready for motors to be switched on again.
+    // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.
+    if (_motorSwitchOffTickCount == 0) {
+        _motorSwitchOffTickCount = tickCount;
+    }
+    _pitchUpdate = 0.0F;
+    _pitchPID.resetIntegral();
+
+    _speedUpdate = 0.0F;
+    _speedPID.resetIntegral();
+
+    _yawRateUpdate = 0.0F;
+    _yawRatePID.resetIntegral();
+
+    return false;
+}
+
+/*!
+Task loop for the MotorPairController. Uses PID controllers to update the motor pair.
+
+Setpoints are provided by the receiver(joystick), and inputs(process variables) come from the AHRS and the motor encoders.
+
+There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
+
+The MPC also stores its state in a telemetry variable. This can be used for display on the screen, or sent via the backchannel.
+*/
+void MotorPairController::loop(float deltaT, uint32_t tickCount)
+{
+    const bool motorsOn = updatePIDs(deltaT, tickCount);
+    updateMotors(motorsOn);
+    updateTelemetry(motorsOn);
 }
 
 /*!

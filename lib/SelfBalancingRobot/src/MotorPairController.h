@@ -66,16 +66,32 @@ public:
     static MotorPairBase& motors();
     void loop(float deltaT, uint32_t tickCount);
 private:
+    bool updatePIDs(float deltaT, uint32_t tickCount);
+    void updateMotors(bool motorsOn);
+    void updateTelemetry(bool motorsOn);
+
+private:
     void Task(const TaskParameters* taskParameters);
 private:
     const AHRS_Base& _ahrs;
     MotorPairBase& _motors;
+    float _powerLeft {0.0};
+    float _powerRight {0.0};
 
+
+
+    int32_t _encoderLeft {0}; //!< value read from left motor encoder, raw
+    int32_t _encoderRight {0}; //!< value read from right motor encoder, raw
+    int16_t _encoderLeftDelta {0}; //!< difference between current left motor encoder value and previous value, raw
+    int16_t _encoderRightDelta {0}; //!< difference between current right motor encoder value and previous value, raw
     int32_t _encoderLeftPrevious {0};
     int32_t _encoderRightPrevious {0};
+    float _speedLeftDPS {0}; //!< rotation speed of left motor, degrees per second
+    float _speedRightDPS {0}; //!< rotation speed of right motor, degrees per second
+
     float _positionSetpointDegrees {0.0};
     float _positionDegrees {0.0};
-    float _speedDPS {0.0};
+    float _speedDPS {0.0}; //<!< filtered average of left and right motor speeds
 
     const float _motorMaxSpeedDPS;
     const float _motorMaxSpeedDPS_reciprocal;
@@ -90,13 +106,17 @@ private:
     int _pitchRateIsFiltered {true}; //!< set to true to cause _pitchPID to use the filtered pitch rate in its update function
 
     PIDF _pitchPID;
-    PIDF::PIDF_t _pitchPIDTelemetryScaleFactors;
+    float _pitchUpdate {0.0};
 
     PIDF _speedPID;
-    PIDF::PIDF_t _speedPIDTelemetryScaleFactors;
+    float _speedUpdate {0.0};
 
     float _yawStickMultiplier {1.0};
     PIDF _yawRatePID;
+    float _yawRateUpdate {0.0};
+
+    PIDF::PIDF_t _pitchPIDTelemetryScaleFactors;
+    PIDF::PIDF_t _speedPIDTelemetryScaleFactors;
     PIDF::PIDF_t _yawRatePIDTelemetryScaleFactors;
 
     motor_pair_controller_telemetry_t _telemetry;
