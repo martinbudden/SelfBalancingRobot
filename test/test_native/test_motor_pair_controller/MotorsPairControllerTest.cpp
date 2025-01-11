@@ -57,8 +57,9 @@ MotorPairBase& MotorPairController::motors()
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(const AHRS_Base& ahrsBase, void* i2cMutex) :
+MotorPairController::MotorPairController(const AHRS_Base& ahrsBase, const ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
     _ahrs(ahrsBase),
+    _receiver(receiver),
     _motors(motors()),
     _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),

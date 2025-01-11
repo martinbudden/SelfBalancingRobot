@@ -4,6 +4,7 @@
 
 #include "AHRS_Base.h"
 #include "MotorPairControllerTelemetry.h"
+#include "ReceiverBase.h"
 #include <Filters.h>
 
 //#define SERIAL_OUTPUT
@@ -48,19 +49,6 @@ void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& te
     // copy of motorMaxSpeedDPS, so telemetry viewer can scale motor speed
     telemetry.motorMaxSpeedDPS = _motorMaxSpeedDPS;
 
-}
-
-/*!
-Map the yaw stick non-linearly to give more control for small values of yaw.
-*/
-float MotorPairController::mapYawStick(float yawStick)
-{
-    // map the yaw stick to a quadratic curve to give more control for small values of yaw.
-    // higher values of a increase the effect
-    // a=0 gives a linear response, a=1 gives and x^2 curve
-    static constexpr float a { 0.2 };
-    const float ret = (1.0F - a) * yawStick + (yawStick < 0.0F ? -a*yawStick*yawStick : a*yawStick*yawStick);
-    return ret;
 }
 
 void MotorPairController::updateMotors()
@@ -117,6 +105,10 @@ void MotorPairController::updateMotors()
 
 bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
 {
+    if (_newStickValuesAvailable) {
+        _receiver.mapControls(_throttleStick, _rollStick, _pitchStick, _yawStick);
+        _newStickValuesAvailable = false;
+    }
 #if defined(MOTORS_HAVE_ENCODERS)
     _motors.readEncoder();
 
@@ -150,6 +142,8 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
     bool orientationUpdated;
     const Quaternion orientation = _ahrs.getOrientationUsingLock(orientationUpdated);
     if (!orientationUpdated) {
+        // no need to update the PIDs if the orientation has not been updated.
+        YIELD_TASK();
         return false;
     }
 
@@ -168,67 +162,12 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
     // Don't switch on again for at least 2 seconds after robot falls over (ie don't switch on if it falls over and bounces back up again).
     constexpr uint32_t robotDebounceIntervalMs = 2000;
     _motorsDisabled = (fabs(_pitchAngleDegreesRaw) < _motorSwitchOffAngleDegrees) && ((tickCount - _motorSwitchOffTickCount) > robotDebounceIntervalMs);
-
-    if (motorsIsOn() && !_motorsDisabled) {
-        _motorSwitchOffTickCount = 0; // reset the bounce prevention tickcount
-
-        const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
-        if (fabs(pitchAngleDegrees) > _pitchMaxAngleDegrees) {
-            // we are way off balance, and the I-term is now a hindrance
-            _pitchPID.resetIntegral();
+    if (!motorsIsOn() || !_motorsDisabled) { // [[unlikely]]
+        // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.
+        if (_motorSwitchOffTickCount == 0) {
+            _motorSwitchOffTickCount = tickCount;
         }
 
-        if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
-            _speedPID.setSetpoint(Q4dot12_to_float(_throttleStickQ4dot12));
-            const float speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
-            // feed the speedUpdate back into the pitchPID and set _speedUpdate to zero
-            _pitchPID.setSetpoint(speedUpdate);
-            _speedUpdate = 0.0F;
-        } else if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-            _speedPID.setSetpoint(Q4dot12_to_float(_throttleStickQ4dot12));
-            _pitchPID.setSetpoint(-Q4dot12_to_float(_pitchStickQ4dot12) * _pitchMaxAngleDegrees);
-            #if 0
-            // motor_speed filter
-            static constexpr float motorSpeedWeighting {0.8};
-            static float motorSpeedDPS {0.0};
-            //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
-            motorSpeedDPS = motorSpeedWeighting * motorSpeed + (1.0F - motorSpeedWeighting) * _speedDPS;
-            _speedUpdate = _speedPID.update(motorSpeedDPS / _motorMaxSpeedDPS, deltaT);
-            #endif
-            _speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
-        } else if (_controlMode == CONTROL_MODE_POSITION) {
-            // NOTE: THIS IS NOT YET FULLY IMPLEMENTED
-            _pitchPID.setSetpoint(-Q4dot12_to_float(_pitchStickQ4dot12) * _pitchMaxAngleDegrees);
-#if defined(MOTORS_HAVE_ENCODERS)
-            _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
-#else
-            _positionDegrees += _speedDPS * deltaT;
-#endif
-            // get the speed setpoint set in setSetPoints()
-            const float speedSetpointDPS = Q4dot12_to_float(_throttleStickQ4dot12) * _motorMaxSpeedDPS;
-            _positionSetpointDegrees += speedSetpointDPS * deltaT;
-            // repurpose the speed PID as a position PID, since it is not being used for speed regulation in this mode
-            _speedPID.setSetpoint(_positionSetpointDegrees);
-            _speedUpdate = _speedPID.update(_positionDegrees, deltaT);
-        }
-
-        if (_pitchRateIsFiltered) {
-            // Calculate the pitchAngleDelta and filter it.
-            // Use the filtered value as input into the PID, so the D-term is calculated using the filtered value.
-            // This is beneficial because the D-term is especially susceptible to noise.
-            static FilterMovingAverage<4> pitchAngleDegreesDeltaFilter;
-            const float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
-            _pitchAngleDegreesPrevious = pitchAngleDegrees;
-            const float pitchAngleDegreesDeltaFiltered = pitchAngleDegreesDeltaFilter.update(pitchAngleDegreesDelta);
-            _pitchUpdate = _pitchPID.updateDelta(pitchAngleDegrees, pitchAngleDegreesDeltaFiltered, deltaT);
-        } else {
-            _pitchUpdate = _pitchPID.update(pitchAngleDegrees, deltaT);
-        }
-
-        // Note the negative multiplier, since pushing the yaw stick to the right results in a clockwise rotation, ie a negative yaw rate
-        _yawRatePID.setSetpoint(-mapYawStick(Q4dot12_to_float(_yawStickQ4dot12)) * _yawStickMultiplier); // limit yaw rate to sensible range.
-        _yawRateUpdate = _yawRatePID.update(0.0F, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
-    } else {
         // Motors switched off, so set everything to zero, ready for motors to be switched on again.
         _pitchUpdate = 0.0F;
         _pitchPID.resetIntegral();
@@ -239,11 +178,69 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
         _yawRateUpdate = 0.0F;
         _yawRatePID.resetIntegral();
 
-        // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.
-        if (_motorSwitchOffTickCount == 0) {
-            _motorSwitchOffTickCount = tickCount;
-        }
+        YIELD_TASK();
+        return true;
     }
+
+    _motorSwitchOffTickCount = 0; // reset the bounce prevention tickcount
+
+    const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
+    if (fabs(pitchAngleDegrees) > _pitchMaxAngleDegrees) {
+        // we are way off balance, and the I-term is now a hindrance
+        _pitchPID.resetIntegral();
+    }
+
+    if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
+        _speedPID.setSetpoint(_throttleStick);
+        const float speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
+        // feed the speedUpdate back into the pitchPID and set _speedUpdate to zero
+        _pitchPID.setSetpoint(speedUpdate);
+        _speedUpdate = 0.0F;
+    } else if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
+        _speedPID.setSetpoint(_throttleStick);
+        _pitchPID.setSetpoint(_pitchStick * _pitchMaxAngleDegrees);
+        #if 0
+        // motor_speed filter
+        static constexpr float motorSpeedWeighting {0.8};
+        static float motorSpeedDPS {0.0};
+        //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
+        motorSpeedDPS = motorSpeedWeighting * motorSpeed + (1.0F - motorSpeedWeighting) * _speedDPS;
+        _speedUpdate = _speedPID.update(motorSpeedDPS / _motorMaxSpeedDPS, deltaT);
+        #endif
+        _speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
+    } else if (_controlMode == CONTROL_MODE_POSITION) {
+        // NOTE: THIS IS NOT YET FULLY IMPLEMENTED
+        _pitchPID.setSetpoint(_pitchStick * _pitchMaxAngleDegrees);
+#if defined(MOTORS_HAVE_ENCODERS)
+        _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
+#else
+        _positionDegrees += _speedDPS * deltaT;
+#endif
+        // get the speed setpoint set in setSetPoints()
+        const float speedSetpointDPS = _throttleStick * _motorMaxSpeedDPS;
+        _positionSetpointDegrees += speedSetpointDPS * deltaT;
+        // repurpose the speed PID as a position PID, since it is not being used for speed regulation in this mode
+        _speedPID.setSetpoint(_positionSetpointDegrees);
+        _speedUpdate = _speedPID.update(_positionDegrees, deltaT);
+    }
+
+    if (_pitchRateIsFiltered) {
+        // Calculate the pitchAngleDelta and filter it.
+        // Use the filtered value as input into the PID, so the D-term is calculated using the filtered value.
+        // This is beneficial because the D-term is especially susceptible to noise.
+        static FilterMovingAverage<4> pitchAngleDegreesDeltaFilter;
+        const float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
+        _pitchAngleDegreesPrevious = pitchAngleDegrees;
+        const float pitchAngleDegreesDeltaFiltered = pitchAngleDegreesDeltaFilter.update(pitchAngleDegreesDelta);
+        _pitchUpdate = _pitchPID.updateDelta(pitchAngleDegrees, pitchAngleDegreesDeltaFiltered, deltaT);
+    } else {
+        _pitchUpdate = _pitchPID.update(pitchAngleDegrees, deltaT);
+    }
+
+    // Note the negative multiplier, since pushing the yaw stick to the right results in a clockwise rotation, ie a negative yaw rate
+    _yawRatePID.setSetpoint(-_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
+    _yawRateUpdate = _yawRatePID.update(0.0F, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
+
     return true;
 }
 

@@ -4,15 +4,20 @@
 #include "MotorPairBase.h"
 #include <PIDF.h>
 
+#if defined(USE_FREERTOS)
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+#endif
+
 struct motor_pair_controller_telemetry_t;
-
-
+class ReceiverBase;
 class AHRS_Base;
+
 
 class MotorPairController : public MotorControllerBase {
 public:
-    MotorPairController(const AHRS_Base& ahrsBase, void* i2cMutex);
-    explicit MotorPairController(const AHRS_Base& ahrsBase) : MotorPairController(ahrsBase, nullptr) {}
+    MotorPairController(const AHRS_Base& ahrs, const ReceiverBase& receiver, void* i2cMutex);
+    MotorPairController(const AHRS_Base& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -58,8 +63,6 @@ public:
     inline const PIDF::PIDF_t& getYawRatePIDTelemetryScaleFactors() const { return _yawRatePIDTelemetryScaleFactors; }
 
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
-
-    static float mapYawStick(float yawStick);
 public:
     struct TaskParameters {
         MotorPairController* motorPairController;
@@ -73,8 +76,14 @@ public:
     void updateMotors();
 private:
     void Task(const TaskParameters* taskParameters);
+#if defined(USE_FREERTOS)
+    inline void YIELD_TASK() const { taskYIELD(); }
+#else
+    inline void YIELD_TASK() const {}
+#endif
 private:
     const AHRS_Base& _ahrs;
+    const ReceiverBase& _receiver;
     MotorPairBase& _motors;
     int32_t _motorsDisabled {false};
     float _powerLeft {0.0};

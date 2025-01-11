@@ -8,9 +8,8 @@
 #include <HardwareSerial.h>
 
 
-Receiver::Receiver(MotorControllerBase& motorController, const uint8_t* macAddress) :
-    _atomJoyStickReceiver(macAddress),
-    _motorController(motorController)
+Receiver::Receiver(const uint8_t* macAddress) :
+    _atomJoyStickReceiver(macAddress)
     {}
 
 /*!
@@ -50,6 +49,7 @@ bool Receiver::update(uint32_t tickCountDelta)
     _droppedPacketCountPrevious = _droppedPacketCount;
 
     if (_atomJoyStickReceiver.unpackPacket()) {
+        assert(_motorController != nullptr);
         if (_packetCount == 5) {
             // set the JoyStick bias so that the current readings are zero.
             _atomJoyStickReceiver.setCurrentReadingsToBias();
@@ -60,36 +60,52 @@ bool Receiver::update(uint32_t tickCountDelta)
         } else {
             if (_flipPressed) {
                 // flipButton being released, so toggle the motor state
-                _motorController.motorsToggleOnOff();
+                _motorController->motorsToggleOnOff();
                 _flipPressed = static_cast<int>(false);
             }
         }
 
-        // use the stick values to set the MPC setpoints
-        const int32_t throttleStickQ4dot12 = _atomJoyStickReceiver.getThrottleQ4dot12();
-        const int32_t rollStickQ4dot12 = _atomJoyStickReceiver.getRollQ4dot12();
-        const int32_t pitchStickQ4dot12 = _atomJoyStickReceiver.getPitchQ4dot12();
-        const int32_t yawStickQ4dot12 = _atomJoyStickReceiver.getYawQ4dot12();
-        _motorController.setSetpoints(throttleStickQ4dot12, rollStickQ4dot12, pitchStickQ4dot12, yawStickQ4dot12);
+        // Save the stick values.
+        _controls.throttleStickQ4dot12 = _atomJoyStickReceiver.getThrottleQ4dot12();
+        _controls.rollStickQ4dot12 = _atomJoyStickReceiver.getRollQ4dot12();
+        _controls.pitchStickQ4dot12 = _atomJoyStickReceiver.getPitchQ4dot12();
+        _controls.yawStickQ4dot12 = _atomJoyStickReceiver.getYawQ4dot12();
+
+        // Inform the motor controller that new stick values are available.
+        _motorController->newStickValuesReceived();
         return true;
     }
     Serial.printf("Receiver::update Bad packet\r\n");
     return false;
 }
 
-ReceiverBase::controls_t Receiver::getControls() const
+/*!
+Map the yaw stick non-linearly to give more control for small values of yaw.
+
+Runs in the context of the MotorPairController.
+*/
+float Receiver::mapYawStick(float yawStick)
 {
-    return controls_t {
-        .throttleStickQ4dot12 =_atomJoyStickReceiver.getThrottleQ4dot12(),
-        .rollStickQ4dot12 = _atomJoyStickReceiver.getRollQ4dot12(),
-        .pitchStickQ4dot12 = _atomJoyStickReceiver.getPitchQ4dot12(),
-        .yawStickQ4dot12 = _atomJoyStickReceiver.getYawQ4dot12()
-    };
+    // map the yaw stick to a quadratic curve to give more control for small values of yaw.
+    // higher values of a increase the effect
+    // a=0 gives a linear response, a=1 gives a parabolic (x^2) curve
+    static constexpr float a { 0.2 };
+    const float ret = (1.0F - a) * yawStick + (yawStick < 0.0F ? -a*yawStick*yawStick : a*yawStick*yawStick);
+    return ret;
 }
 
-uint32_t Receiver::getFlags() const
+/*!
+Maps the joystick values from Q4dot12 format in the range [-2048, 2047] to floats in the range [-1, 1].
+
+NOTE: this function runs in the context of the MotorPairController task, in particular the FPU usage is in that context, so this avoids the
+need to save the ESP32 FPU registers on a context switch.
+*/
+void Receiver::mapControls(float&  throttleStick, float&  rollStick, float&  pitchStick, float&  yawStick) const
 {
-    return 0;
+    throttleStick = Q4dot12_to_float(_controls.throttleStickQ4dot12);
+    rollStick = Q4dot12_to_float(_controls.rollStickQ4dot12);
+    pitchStick = Q4dot12_to_float(_controls.pitchStickQ4dot12);
+    yawStick = mapYawStick(Q4dot12_to_float(_controls.yawStickQ4dot12));
 }
 
 #endif // USE_ESPNOW

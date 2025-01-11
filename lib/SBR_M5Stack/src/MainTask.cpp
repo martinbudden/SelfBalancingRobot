@@ -26,29 +26,32 @@
 #include <cfloat>
 
 /*!
-The ESP32 is dual core containing a Protocol CPU (known as CPU 0 or PRO_CPU) and an Application CPU (known as CPU 1 or APP_CPU).
+The ESP32S3 is dual core containing a Protocol CPU (known as CPU 0 or PRO_CPU) and an Application CPU (known as CPU 1 or APP_CPU).
 
 The core affinities, priorities, and tick intervals and priorities for the 3 application tasks (AHRS_TASK, MPC_TASK, and MAIN_LOOP_TASK).
-1. The AHRS_TASK must have a higher priority than the MPC_TASK.
-2. The MPC_TASK has a higher priority than the MAIN_LOOP_TASK
-3. The AHRS_TASK runs on the Application CPU (CPU 1).
-4. The MPC_TASK runs on the  Protocol CPU (CPU 0).
+1. The AHRS_TASK must have a higher priority than the MAIN_LOOP_TASK.
+2. The MPC_TASK must have a higher priority than the MAIN_LOOP_TASK
+3. For single-processors the AHRS_TASK and the MPC_TASK must have the same priority.
+4. For dual-core processors
+    1. The AHRS_TASK runs on the Application CPU (CPU 1).
+    2. The MPC_TASK runs on the  Protocol CPU (CPU 0).
 5. The MAIN_LOOP_TASK runs on the Application CPU (CPU 1) with priority 1 (this is set by the ESP32 Arduino framework).
 
-The AHRS_TASK and the MPC_TASK are deliberately chosen to run on different cores. This is so that a context switch between the AHRS_TASK and
-the MPC_TASK does not require saving the FPU(Floating Point Unit) registers
+The AHRS_TASK and the MPC_TASK are deliberately chosen to run on different cores on ESP32 dual-core processors. This is so
+that a context switch between the AHRS_TASK and the MPC_TASK does not require saving the FPU(Floating Point Unit) registers
 (see https://docs.espressif.com/projects/esp-idf/en/v4.4.3/esp32/api-guides/freertos-smp.html#floating-point-usage).
 
 The Atom JoyStick transmits a packet every 10ms, so the MAIN_LOOP_TASK must run at least every 10m to ensure no dropped packets.
 Updating the screen takes approximately 50 ticks, so packets will be dropped if the screen is not in QRCODE mode.
 */
 
-enum { MPC_TASK_PRIORITY = 4, AHRS_TASK_PRIORITY = 5 };
+enum { MPC_TASK_PRIORITY = 5, AHRS_TASK_PRIORITY = 5 };
 
+enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #if defined(APP_CPU_NUM) // The processor has two cores
-    enum { MPC_TASK_CORE = PRO_CPU_NUM, AHRS_TASK_CORE = APP_CPU_NUM };
+    enum { AHRS_TASK_CORE = APP_CPU_NUM };
 #else // single core processor
-    enum { MPC_TASK_CORE = PRO_CPU_NUM, AHRS_TASK_CORE = PRO_CPU_NUM };
+    enum { AHRS_TASK_CORE = PRO_CPU_NUM };
 #endif
 
 
@@ -131,17 +134,6 @@ void MainTask::setup()
     _ahrs->setFilterInitializing(true);
 #endif
 
-    static SBR_Preferences preferences;
-    _preferences = &preferences;
-
-    checkGyroCalibration();
-
-    // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(ahrs, i2cMutex);
-    _motorPairController = &motorPairController;
-
-    loadPreferences();
-
     // Set WiFi to station mode
     WiFi.mode(WIFI_STA);
     // Disconnect from Access Point if it was previously connected
@@ -151,7 +143,7 @@ void MainTask::setup()
     WiFi.macAddress(&myMacAddress[0]);
 
     // Statically allocate and setup the receiver.
-    static Receiver receiver(motorPairController, &myMacAddress[0]);
+    static Receiver receiver(&myMacAddress[0]);
     _receiver = &receiver;
 #if !defined(JOYSTICK_CHANNEL)
     constexpr uint8_t JOYSTICK_CHANNEL {3};
@@ -159,6 +151,18 @@ void MainTask::setup()
     const esp_err_t err = receiver.setup(JOYSTICK_CHANNEL);
     Serial.printf("**** ESP-NOW Ready:%X\r\n\r\n", err);
     assert(err == ESP_OK && "Unable to setup receiver.");
+
+    // Statically allocate the motorPairController.
+    static MotorPairController motorPairController(ahrs, receiver, i2cMutex);
+    _motorPairController = &motorPairController;
+    receiver.setMotorController(_motorPairController);
+
+    static SBR_Preferences preferences;
+    _preferences = &preferences;
+
+    checkGyroCalibration();
+
+    loadPreferences();
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)
     // Statically allocate the backchannel.
@@ -238,6 +242,9 @@ void MainTask::checkGyroCalibration()
 #endif
 }
 
+/*!
+Loads the PID settings for the MotorPairController. Must be called *after* the MPC is created.
+*/
 void MainTask::loadPreferences()
 {
     assert(_motorPairController != nullptr); // loadPreferences must be called after the MPC is created
