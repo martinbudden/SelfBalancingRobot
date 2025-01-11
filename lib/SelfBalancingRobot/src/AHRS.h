@@ -61,4 +61,9 @@ private:
     inline void LOCK() const {}
     inline void UNLOCK() const {}
 #endif
+#if defined(USE_FREERTOS)
+    inline void YIELD_TASK() const { taskYIELD(); }
+#else
+    inline void YIELD_TASK() const {}
+#endif
 };

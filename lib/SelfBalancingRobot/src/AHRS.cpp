@@ -28,25 +28,27 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
     _fifoCount = _IMU.readFIFO_ToBuffer();
     if (_fifoCount == 0) {
+        YIELD_TASK();
         return false;
     }
 
     xyz_t gyroRadiansSum {0.0, 0.0, 0.0};
     xyz_t accSum {0.0, 0.0, 0.0};
+    const float fifoCountReciprocal = 1.0F / static_cast<float>(_fifoCount);
+    const float fifoDeltaT = deltaT * fifoCountReciprocal;
     for (auto ii = 0; ii < _fifoCount; ++ii) {
         _IMU.readFIFO_Item(gyroRadians, acc, ii);
-        _imuFilters->filter(gyroRadians, acc, deltaT);
+        _imuFilters->filter(gyroRadians, acc, fifoDeltaT);
         gyroRadiansSum += gyroRadians;
         accSum += acc;
-        (void)_sensorFusionFilter.update(gyroRadians, acc, dT);
     }
-    const float fifoCountReciprocal = 1.0F / static_cast<float>(_fifoCount);
     gyroRadians = gyroRadiansSum * fifoCountReciprocal;
     acc = accSum * fifoCountReciprocal;
-    const Quaternion orientation = _sensorFusionFilter.getOrientation();
+    const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
 #else
     const bool dataRead = _IMU.readGyroRadiansAcc(gyroRadians, acc);
     if (dataRead == false) {
+        YIELD_TASK();
         return false;
     }
     _imuFilters->filter(gyroRadians, acc, deltaT);
