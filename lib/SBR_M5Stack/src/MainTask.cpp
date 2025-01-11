@@ -93,7 +93,6 @@ void MainTask::setup()
     const char*  taskName = pcTaskGetName(taskHandle);
     Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
 
-
     // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
     // The mutex is created statically, ie without dynamic memory allocation.
     // If the motors and the AHRS are on separate busses (for example the motors were on a CAN bus, or the AHRS was on an SPI bus),
@@ -105,34 +104,7 @@ void MainTask::setup()
     SemaphoreHandle_t i2cMutex = nullptr;
 #endif
 
-    // Statically allocate the IMU according the the build flags
-#if defined(M5_STACK)
-#if defined(USE_IMU_MPU6886_DIRECT)
-    static IMU_MPU6886 imuSensor(IMU_MPU6886_SDA_PIN, IMU_MPU6886_SCL_PIN, i2cMutex);
-#else
-    static IMU_M5_STACK imuSensor(i2cMutex);
-#endif
-#elif defined(M5_UNIFIED)
-#if defined(USE_IMU_MPU6886_DIRECT)
-    static IMU_MPU6886 imuSensor(M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex);
-#else
-    static IMU_M5_UNIFIED imuSensor(i2cMutex);
-#endif
-#else
-    static IMU_MPU6886 imuSensor(IMU_MPU6886_SDA_PIN, IMU_MPU6886_SCL_PIN, i2cMutex);
-#endif
-
-    // Statically allocate the Sensor Fusion Filter and the AHRS object.
-#if defined(USE_COMPLEMENTARY_FILTER)
-    static ComplementaryFilter sensorFusionFilter;
-    static AHRS ahrs(sensorFusionFilter, imuSensor);
-    _ahrs = &ahrs;
-#else
-    static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
-    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
-    _ahrs = &ahrs;
-    _ahrs->setFilterInitializing(true);
-#endif
+    setupAHRS(i2cMutex);
 
     // Set WiFi to station mode
     WiFi.mode(WIFI_STA);
@@ -153,9 +125,9 @@ void MainTask::setup()
     assert(err == ESP_OK && "Unable to setup receiver.");
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(ahrs, receiver, i2cMutex);
+    static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
     _motorPairController = &motorPairController;
-    receiver.setMotorController(_motorPairController);
+    _receiver->setMotorController(_motorPairController);
 
     static SBR_Preferences preferences;
     _preferences = &preferences;
@@ -167,12 +139,12 @@ void MainTask::setup()
 #if defined(BACKCHANNEL_MAC_ADDRESS)
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, motorPairController, ahrs, *this, receiver, _preferences);
+    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, *_ahrs, *this, *_receiver, _preferences);
     _backchannel = &backchannel;
 #endif
 
     // Statically allocate the screen.
-    static Screen screen(ahrs, motorPairController, receiver);
+    static Screen screen(*_ahrs, motorPairController, receiver);
     _screen = &screen;
     screen.updateTemplate();
 
@@ -187,28 +159,38 @@ void MainTask::setup()
     }
 
     // And finally set up the AHRS and MotorPairController tasks.
+    setupTasks();
+}
 
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .ahrs = &ahrs,
-        .tickIntervalMilliSeconds = AHRS_TASK_TICK_INTERVAL_MILLISECONDS
-    };
-    enum { AHRS_TASK_STACK_DEPTH = 4096 };
-    static StaticTask_t ahrsTaskBuffer;
-    static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
-    const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
-    assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
+void MainTask::setupAHRS(void* i2cMutex)
+{
+    // Statically allocate the IMU according the the build flags
+#if defined(M5_STACK)
+#if defined(USE_IMU_MPU6886_DIRECT)
+    static IMU_MPU6886 imuSensor(IMU_MPU6886_SDA_PIN, IMU_MPU6886_SCL_PIN, i2cMutex);
+#else
+    static IMU_M5_STACK imuSensor(i2cMutex); // NOLINT(misc-const-correctness) false positive
+#endif
+#elif defined(M5_UNIFIED)
+#if defined(USE_IMU_MPU6886_DIRECT)
+    static IMU_MPU6886 imuSensor(M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex); // NOLINT(misc-const-correctness) false positive
+#else
+    static IMU_M5_UNIFIED imuSensor(i2cMutex);
+#endif
+#endif
 
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .motorPairController = &motorPairController,
-        .tickIntervalMilliSeconds = MPC_TASK_TICK_INTERVAL_MILLISECONDS
-    };
-    enum { MPC_TASK_STACK_DEPTH = 4096 };
-    static StaticTask_t mpcTaskBuffer;
-    static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
-    const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
-    assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
+    // Statically allocate the Sensor Fusion Filter and the AHRS object.
+#if defined(USE_COMPLEMENTARY_FILTER)
+    static ComplementaryFilter sensorFusionFilter;
+    static AHRS ahrs(sensorFusionFilter, imuSensor);
+#elif defined(USE_MAHONY_FILTER)
+    static MahonyFilter sensorFusionFilter;
+    static AHRS ahrs(sensorFusionFilter, imuSensor);
+#else
+    static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
+    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
+#endif
+    _ahrs = &ahrs;
 }
 
 void MainTask::checkGyroCalibration()
@@ -277,6 +259,30 @@ void MainTask::loadPreferences()
     }
 }
 
+void MainTask::setupTasks()
+{
+    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
+        .ahrs = _ahrs,
+        .tickIntervalMilliSeconds = AHRS_TASK_TICK_INTERVAL_MILLISECONDS
+    };
+    enum { AHRS_TASK_STACK_DEPTH = 4096 };
+    static StaticTask_t ahrsTaskBuffer;
+    static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
+    const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
+    assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
+
+    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
+        .motorPairController = _motorPairController,
+        .tickIntervalMilliSeconds = MPC_TASK_TICK_INTERVAL_MILLISECONDS
+    };
+    enum { MPC_TASK_STACK_DEPTH = 4096 };
+    static StaticTask_t mpcTaskBuffer;
+    static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
+    const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
+    assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
+}
 
 /*!
 The main loop handles:

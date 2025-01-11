@@ -99,7 +99,7 @@ int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS_Ba
 
     td->tickInterval = ahrsData.tickCountDelta;
 
-    td->flags = ahrs.filterIsInitializing() ? TD_AHRS::FILTER_INITIALIZING_FLAG : 0x00;
+    td->flags = ahrs.sensorFusionFilterIsInitializing() ? TD_AHRS::FILTER_INITIALIZING_FLAG : 0x00;
 
     return td->len;
 }

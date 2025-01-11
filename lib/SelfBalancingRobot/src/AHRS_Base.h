@@ -30,13 +30,13 @@ public:
     virtual Quaternion getOrientationUsingLock(bool& updatedSinceLastRead) const = 0;
     virtual Quaternion getOrientationForInstrumentationUsingLock() const = 0;
 
-    inline bool filterIsInitializing() const { return _filterInitializing != 0; }
-    inline void setFilterInitializing(bool filterInitializing) { _filterInitializing = filterInitializing; }
+    inline bool sensorFusionFilterIsInitializing() const { return _sensorFusionFilterInitializing; }
+    inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
 protected:
     SensorFusionFilterBase& _sensorFusionFilter;
     Quaternion _orientation;
-    uint32_t _filterInitializing {false};
+    uint32_t _sensorFusionFilterInitializing {true};
     uint32_t _fifoCount {0};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
     mutable int32_t _orientationUpdatedSinceLastRead {false};

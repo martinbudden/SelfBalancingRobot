@@ -55,7 +55,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
 #endif
 
-    if (filterIsInitializing()) {
+    if (sensorFusionFilterIsInitializing()) {
         checkMadgwickConvergence(acc, orientation);
     }
 
@@ -196,7 +196,7 @@ void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientat
     const float accPitchAngleRadians = std::atan2(acc.y, acc.z);
     if (fabs(accPitchAngleRadians - madgwickPitchAngleRadians) < twoDegreesInRadians && accPitchAngleRadians != madgwickPitchAngleRadians) {
         // the angles have converged to within 2 degrees, so set we can reduce the gain.
-        setFilterInitializing(false);
+        setSensorFusionFilterInitializing(false);
         _sensorFusionFilter.setFreeParameters(0.1F, 0.0F);
     }
 }
@@ -211,6 +211,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint
     , _imuDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 {
+    setSensorFusionFilterInitializing(true);
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
     static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(tickIntervalMicroSeconds) * 1.0e-6F);

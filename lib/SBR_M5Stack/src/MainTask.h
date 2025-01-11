@@ -3,7 +3,7 @@
 #include <TaskBase.h>
 #include <cstdint>
 
-class AHRS_Base;
+class AHRS;
 class Backchannel;
 class MotorPairController;
 class Receiver;
@@ -16,10 +16,12 @@ public:
     void setup();
     void loop();
 private:
+    void setupAHRS(void* i2cMutex);
     void checkGyroCalibration();
     void loadPreferences();
+    void setupTasks();
 private:
-    AHRS_Base* _ahrs {nullptr};
+    AHRS* _ahrs {nullptr};
     MotorPairController* _motorPairController {nullptr};
     Receiver* _receiver {nullptr};
     SBR_Preferences* _preferences {nullptr};
