@@ -83,10 +83,10 @@ void MainTask::setup()
     auto cfg = M5.config(); // NOLINT(readability-static-accessed-through-instance)
     M5.begin(cfg);
     M5.Power.begin();
-#endif
 #if defined(MOTORS_BALA_C)
     // with additional battery, we need to increase charge current
     M5.Power.setChargeCurrent(360);
+#endif
 #endif
 
     //Serial.begin(115200);
@@ -183,6 +183,8 @@ void MainTask::setupAHRS(void* i2cMutex)
 #elif defined(M5_UNIFIED)
 #if defined(USE_IMU_MPU6886_DIRECT)
     static IMU_MPU6886 imuSensor(M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex); // NOLINT(misc-const-correctness) false positive
+#elif defined(USE_IMU_BMI270)
+    static IMU_M5_UNIFIED imuSensor(i2cMutex);
 #else
     static IMU_M5_UNIFIED imuSensor(i2cMutex);
 #endif
