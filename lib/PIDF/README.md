@@ -11,10 +11,13 @@ The PID controller has the following features:
     `output = kp*error + Ki*errorIntegral + kd*_errorDerivative + kf*setpoint`<br>
     Setting `kf` to zero gives a traditional PID controller.
 2. Calculation of derivative on measurement, avoiding "derivative kick" when the setpoint changes.
-3. _delta-t_ input parameter to PID `update` function. This allows for jitter in the timing of the call to the `update` function.
-4. A choice of two methods of controlling integral windup. Either the integral term can be limited to a maximum value,
+3. Optional `measurementDelta` input to the `update` function. Using this parameter allows filtering of the measurement delta
+    before the PID calculation. (It is also possible to use `-inputDelta` rather than `measurementDelta` to calculate derivative on input
+    rather than derivative on measurement.)
+4. _delta-t_ input parameter to PID `update` function. This allows for jitter in the timing of the call to the `update` function.
+5. A choice of two methods of controlling integral windup. Either the integral term can be limited to a maximum value,
     or it can be set to zero when the output saturates. Both methods can be used together, if desired.
-5. Functions to return the current error terms. These can be used for PID tuning, telemetry, and test code.
+6. Functions to return the current error terms. These can be used for PID tuning, telemetry, and test code.
 
 The PID controller deliberately does not implement these features:
 
