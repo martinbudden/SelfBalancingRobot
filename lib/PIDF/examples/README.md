@@ -1,3 +1,3 @@
 # Examples
 
-See [the test directory](../test/README.md) for examples.
+See [the test directory](../test) for examples.
