@@ -44,10 +44,11 @@ private:
     esp_err_t setPrimaryPeerMacAddress(const uint8_t* macAddress);
     inline void setSendStatus(esp_now_send_status_t status) { _sendStatus = status; }
 private:
-    friend void onDataSent(const uint8_t* macAddress, esp_now_send_status_t status);
-    friend void onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len);
+    static void onDataSent(const uint8_t* macAddress, esp_now_send_status_t status);
+    static void onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len);
 private:
     static const uint8_t broadcastMacAddress[ESP_NOW_ETH_ALEN];
+    static ESPNOW_Transceiver* transceiver; // alias of `this` to be used in onDataSent and onDataReceived callback functions
     // tick counts are used for instrumentation
     uint32_t _tickCountPrevious {0};
     uint32_t _tickCountDelta {0};

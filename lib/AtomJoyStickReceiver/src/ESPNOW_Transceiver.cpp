@@ -12,18 +12,15 @@
 
 constexpr uint8_t ESPNOW_Transceiver::broadcastMacAddress[ESP_NOW_ETH_ALEN] {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-namespace { // use anonymous namespace to make items local to this translation unit
 /*!
 Pointer to the transceiver used by the callback functions.
 */
-ESPNOW_Transceiver* transceiver;
-} // end namespace
-
+ESPNOW_Transceiver* ESPNOW_Transceiver::transceiver;
 
 /*!
 Callback when data is sent.
 */
-void onDataSent(const uint8_t* macAddress, esp_now_send_status_t status)
+void ESPNOW_Transceiver::onDataSent(const uint8_t* macAddress, esp_now_send_status_t status)
 {
     // status can be ESP_NOW_SEND_SUCCESS or ESP_NOW_SEND_FAIL
     transceiver->setSendStatus(status);
@@ -34,7 +31,7 @@ Callback when data is received.
 
 This runs in the high priority WiFi task, and so should not perform any lengthy operations.
 */
-void onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len)
+void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len)
 {
     if (!transceiver->isPrimaryPeerMacAddressSet()) {
         // If data is received when the primary peer MAC address is not yet set, it means we are in the binding process
@@ -68,12 +65,12 @@ esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
     if (err != ESP_OK) {
         return err;
     }
-    err = esp_now_register_recv_cb(onDataReceived);
+    err = esp_now_register_recv_cb(ESPNOW_Transceiver::onDataReceived);
     if (err != ESP_OK) {
         Serial.printf("esp_now_register_recv_cb failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
     }
-    err = esp_now_register_send_cb(onDataSent);
+    err = esp_now_register_send_cb(ESPNOW_Transceiver::onDataSent);
     if (err != ESP_OK) {
         Serial.printf("esp_now_register_send_cb failed: %X\r\n", err);
         return err;
