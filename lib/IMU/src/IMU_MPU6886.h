@@ -12,6 +12,7 @@ public:
 
 #pragma pack(push, 1)
     struct mems_sensor_data_t {
+        enum { DATA_SIZE = 6 };
         uint8_t x_h;
         uint8_t x_l;
         uint8_t y_h;
@@ -36,6 +37,11 @@ public:
         uint8_t gyro_z_h;
         uint8_t gyro_z_l;
     };
+    union acc_temp_gyro_array_t {
+        enum { DATA_SIZE = 1036 };
+        acc_temp_gyro_data_t accTempGyro[74];
+        uint8_t data[DATA_SIZE];
+    };
 #pragma pack(pop)
 public:
     IMU_MPU6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
@@ -54,25 +60,19 @@ public:
     int16_t readTemperatureRaw() const;
 
     void setFIFOEnable(bool enableflag);
-    void readFIFO(uint8_t* data, size_t len) const;
-    uint16_t readFIFO_count() const;
     void resetFIFO();
-
-    void setGyroFSR(gyro_scale_t gyroScale);
-    void setAccFSR(acc_scale_t accScale);
 
     static gyroRadiansAcc_t gyroRadiansAccFromData(const acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
     static mems_sensor_data_t gyroOffsetFromXYZ(const xyz_int16_t& data);
 private:
     gyroRadiansAcc_t readGyroRadiansAcc() const;
     xyz_t readGyro() const;
-    xyz_t readAcc() const;
     xyz_t readGyroRadians() const;
+    xyz_t readAcc() const;
 private:
     I2C _bus;
-    float _accResolution {0.0};
-    float _gyroResolution {0.0};
     xyz_int16_t _accOffset {};
     xyz_int16_t _gyroOffset {};
+    acc_temp_gyro_array_t _fifoBuffer {};
     uint8_t _imuID {0};
 };

@@ -10,7 +10,13 @@ void delay(int) {}
 #endif
 #include <cmath>
 
+namespace { // use anonymous namespace to make items local to this translation unit
 constexpr float degreesToRadians {M_PI / 180.0};
+constexpr float ACC_8G_RES { 8.0 / 32768.0 };
+constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
+constexpr float GYRO_2000DPS_RES_RADIANS { degreesToRadians * GYRO_2000DPS_RES };
+} // end namespace
+
 
 constexpr uint8_t I2C_ADDRESS               = 0x68;
 
@@ -34,13 +40,24 @@ constexpr uint8_t REG_ZG_OFFS_USRH          = 0x17;
 constexpr uint8_t REG_ZG_OFFS_USRL          = 0x18;
 
 constexpr uint8_t REG_SAMPLE_RATE_DIVIDER   = 0x19;
+    constexpr uint8_t DIVIDE_BY_1 = 0x00;
+    constexpr uint8_t DIVIDE_BY_2 = 0x01;
 constexpr uint8_t REG_CONFIG                = 0x1A;
+    // Update rate: 1kHz, Filter:176 3-DB BW (Hz), default value used by M5Stack, the least filtered 1kHz update variant
+    constexpr uint8_t DLPF_CFG_1 = 0x01;
+    // Update rate: 8kHz, Filter:3281 3-DB BW (Hz) - only non-32kHz variant less filtered than DLPF_CFG_1
+    constexpr uint8_t DLPF_CFG_7 = 0x07;
 constexpr uint8_t REG_GYRO_CONFIG           = 0x1B;
 constexpr uint8_t REG_ACCEL_CONFIG          = 0x1C;
 constexpr uint8_t REG_ACCEL_CONFIG2         = 0x1D;
 
+constexpr uint8_t REG_FIFO_ENABLE           = 0x23;
+    constexpr uint8_t GYRO_FIFO_EN = 0b00001000;
+    constexpr uint8_t ACC_FIFO_EN  = 0b00000100;
+
 constexpr uint8_t REG_INT_PIN_CFG           = 0x37;
 constexpr uint8_t REG_INT_ENABLE            = 0x38;
+constexpr uint8_t FIFO_WM_INT_STATUS        = 0x39; // FIFO watermark interrupt status
 
 constexpr uint8_t REG_ACCEL_XOUT_H          = 0x3B;
 constexpr uint8_t REG_ACCEL_XOUT_L          = 0x3C;
@@ -60,7 +77,7 @@ constexpr uint8_t REG_GYRO_YOUT_L           = 0x46;
 constexpr uint8_t REG_GYRO_ZOUT_H           = 0x47;
 constexpr uint8_t REG_GYRO_ZOUT_L           = 0x48;
 
-constexpr uint8_t REG_FIFO_WM_TH1           = 0x60;
+constexpr uint8_t REG_FIFO_WM_TH1           = 0x60; // FIFO watermark threshold in number of bytes
 constexpr uint8_t REG_FIFO_WM_TH2           = 0x61;
 
 constexpr uint8_t REG_SIGNAL_PATH_RESET     = 0x68;
@@ -69,7 +86,6 @@ constexpr uint8_t REG_USER_CTRL             = 0x6A;
 constexpr uint8_t REG_PWR_MGMT_1            = 0x6B;
 constexpr uint8_t REG_PWR_MGMT_2            = 0x6C;
 
-constexpr uint8_t REG_FIFO_ENABLE           = 0x23;
 constexpr uint8_t REG_FIFO_COUNT_H          = 0x72;
 constexpr uint8_t REG_FIFO_COUNT_L          = 0x73;
 constexpr uint8_t REG_FIFO_R_W              = 0x74;
@@ -87,7 +103,9 @@ IMU_MPU6886::IMU_MPU6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     IMU_Base(i2cMutex),
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
-    static_assert(sizeof(mems_sensor_data_t) == 6);
+    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temp_gyro_data_t) == acc_temp_gyro_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temp_gyro_array_t) == acc_temp_gyro_array_t::DATA_SIZE);
     init();
 }
 
@@ -111,32 +129,36 @@ void IMU_MPU6886::init()
     _bus.writeByte(REG_PWR_MGMT_1, CLKSEL_1); // CLKSEL must be set to 001 to achieve full gyroscope performance.
     delay(10);
 
-    _bus.writeByte(REG_GYRO_CONFIG, GFS_2000DPS << 3);
-    _gyroResolution = 2000.0F / 32768.0F;
+    // Gyro scale is fixed at 2000DPS, the maximum supported.
+    constexpr uint8_t GYRO_FCHOICE_B = 0x00; // enables gyro update rate and filter configuration using REG_CONFIG
+    _bus.writeByte(REG_GYRO_CONFIG, (GFS_2000DPS << 3) | GYRO_FCHOICE_B); // cppcheck-suppress badBitmaskCheck
     delay(1);
 
+    // Accelerometer scale is fixe at 8G, the maximum supported.
     _bus.writeByte(REG_ACCEL_CONFIG, AFS_8G << 3);
-    _accResolution = 8.0F / 32768.0F;
     delay(1);
 
-    _bus.writeByte(REG_ACCEL_CONFIG2, 0x00); // no filtering
+    constexpr uint8_t ACC_FCHOICE_B = 0x00; // Filter:218.1 3-DB BW (Hz), least filtered 1kHz update variant
+    _bus.writeByte(REG_ACCEL_CONFIG2, ACC_FCHOICE_B);
     delay(1);
 
-    constexpr uint8_t DLPF_CFG_1 = 0x01; // 1khz output
-    _bus.writeByte(REG_CONFIG, DLPF_CFG_1);
+    constexpr uint8_t FIFO_MODE_OVERWRITE = 0b01000000;
+    _bus.writeByte(REG_CONFIG, DLPF_CFG_1 | FIFO_MODE_OVERWRITE);
     delay(1);
 
-    // divider is two, FIFO 500hz out
-    _bus.writeByte(REG_SAMPLE_RATE_DIVIDER, 0x01);
+    // M5Stack default divider is two, giving 500Hz output rate
+    _bus.writeByte(REG_SAMPLE_RATE_DIVIDER, DIVIDE_BY_2);
     delay(1);
 
     _bus.writeByte(REG_FIFO_ENABLE, 0x00); // FIFO disabled
     delay(1);
 
+    // M5 Unified settings
+    //_bus.writeByte(REG_INT_PIN_CFG, 0b11000000); // Active low, open drain 50us pulse width, clear on read
     _bus.writeByte(REG_INT_PIN_CFG, 0x22);
     delay(1);
 
-    constexpr uint8_t DATA_RDY_INT_EN {0x01};
+    constexpr uint8_t DATA_RDY_INT_EN = 0x01;
     _bus.writeByte(REG_INT_ENABLE, DATA_RDY_INT_EN); // data ready interrupt enabled
     delay(10);
 
@@ -201,9 +223,9 @@ xyz_t IMU_MPU6886::readAcc() const
     const xyz_int16_t acc = readAccRaw();
 
     return xyz_t {
-        .x = static_cast<float>(acc.x - _accOffset.x) * _accResolution,
-        .y = static_cast<float>(acc.y - _accOffset.y) * _accResolution,
-        .z = static_cast<float>(acc.z - _accOffset.z) * _accResolution
+        .x = static_cast<float>(acc.x - _accOffset.x) * ACC_8G_RES,
+        .y = static_cast<float>(acc.y - _accOffset.y) * ACC_8G_RES,
+        .z = static_cast<float>(acc.z - _accOffset.z) * ACC_8G_RES
     };
 }
 
@@ -227,9 +249,9 @@ xyz_t IMU_MPU6886::readGyro() const
     const xyz_int16_t gyro = readGyroRaw();
 
     return xyz_t {
-        .x = static_cast<float>(gyro.x - _gyroOffset.x) * _gyroResolution,
-        .y = static_cast<float>(gyro.y - _gyroOffset.y) * _gyroResolution,
-        .z = static_cast<float>(gyro.z - _gyroOffset.z) * _gyroResolution
+        .x = static_cast<float>(gyro.x - _gyroOffset.x) * GYRO_2000DPS_RES,
+        .y = static_cast<float>(gyro.y - _gyroOffset.y) * GYRO_2000DPS_RES,
+        .z = static_cast<float>(gyro.z - _gyroOffset.z) * GYRO_2000DPS_RES
     };
 }
 
@@ -237,11 +259,10 @@ xyz_t IMU_MPU6886::readGyroRadians() const
 {
     const xyz_int16_t gyro = readGyroRaw();
 
-    const float scaleFactor = degreesToRadians * _gyroResolution;
     return xyz_t {
-        .x = static_cast<float>(gyro.x - _gyroOffset.x) * scaleFactor,
-        .y = static_cast<float>(gyro.y - _gyroOffset.y) * scaleFactor,
-        .z = static_cast<float>(gyro.z - _gyroOffset.z) * scaleFactor
+        .x = static_cast<float>(gyro.x - _gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+        .y = static_cast<float>(gyro.y - _gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
+        .z = static_cast<float>(gyro.z - _gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
     };
 }
 
@@ -285,61 +306,6 @@ float IMU_MPU6886::readTemperature() const
     return static_cast<float>(temperature) / 326.8F + 25.0F;
 }
 
-/*!
-Set the gyro Force Sensitive Resistor
-*/
-void IMU_MPU6886::setGyroFSR(gyro_scale_t gyroScale)
-{
-    i2cSemaphoreTake();
-    uint8_t data = _bus.readByte(REG_GYRO_CONFIG);
-    delay(1);
-    data |= gyroScale << 3;
-    _bus.writeByte(REG_GYRO_CONFIG, data);
-    i2cSemaphoreGive();
-    delay(1);
-
-    switch (gyroScale) {
-    case GFS_250DPS:
-        _gyroResolution = 250.0F / 32768.0F;
-        break;
-    case GFS_500DPS:
-        _gyroResolution = 500.0F / 32768.0F;
-        break;
-    case GFS_1000DPS:
-        _gyroResolution = 1000.0F / 32768.0F;
-        break;
-    case GFS_2000DPS:
-        _gyroResolution = 2000.0F / 32768.0F;
-        break;
-    }
-}
-
-void IMU_MPU6886::setAccFSR(acc_scale_t accScale)
-{
-    i2cSemaphoreGive();
-    uint8_t data = _bus.readByte(REG_ACCEL_CONFIG);
-    delay(1);
-    data |= accScale << 3;
-    _bus.writeByte(REG_ACCEL_CONFIG, data);
-    i2cSemaphoreGive();
-    delay(1);
-
-    switch (accScale) {
-    case AFS_2G:
-        _accResolution = 2.0F / 32768.0F;
-        break;
-    case AFS_4G:
-        _accResolution = 4.0F / 32768.0F;
-        break;
-    case AFS_8G:
-        _accResolution = 8.0F / 32768.0F;
-        break;
-    case AFS_16G:
-        _accResolution = 16.0F / 32768.0F;
-        break;
-    }
-}
-
 void IMU_MPU6886::setFIFOEnable(bool enableflag)
 {
     i2cSemaphoreTake();
@@ -348,18 +314,6 @@ void IMU_MPU6886::setFIFOEnable(bool enableflag)
     _bus.writeByte(REG_USER_CTRL, enableflag ? 0x40 : 0x00);
     i2cSemaphoreGive();
     delay(1);
-}
-
-void IMU_MPU6886::readFIFO(uint8_t *data, size_t len) const
-{
-    constexpr size_t chunkSize = 15*sizeof(IMU_MPU6886::acc_temp_gyro_data_t);
-    const auto count = len / chunkSize;
-    i2cSemaphoreTake();
-    for(auto ii = 0; ii < count; ++ii) {
-        _bus.readBytes(REG_FIFO_R_W, &data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    }
-    _bus.readBytes(REG_FIFO_R_W, &data[count * chunkSize], len % chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    i2cSemaphoreGive();
 }
 
 void IMU_MPU6886::resetFIFO()
@@ -373,80 +327,84 @@ void IMU_MPU6886::resetFIFO()
     i2cSemaphoreGive();
 }
 
-uint16_t IMU_MPU6886::readFIFO_count() const
+int IMU_MPU6886::readFIFO_ToBuffer()
 {
-    std::array<uint8_t, 2> data;
+    std::array<uint8_t, 2> lengthData;
 
     i2cSemaphoreTake();
 
-    _bus.readBytes(REG_FIFO_COUNT_H, &data[0], sizeof(data));
+    _bus.readBytes(REG_FIFO_COUNT_H, &lengthData[0], sizeof(lengthData));
+    const uint16_t fifoLength = lengthData[0] << 8 | lengthData[1];
+
+    constexpr size_t chunkSize = 8*sizeof(acc_temp_gyro_data_t);
+    const int count = fifoLength / chunkSize;
+    for (int ii = 0; ii < count; ++ii) {
+        _bus.readBytes(REG_FIFO_R_W, &_fifoBuffer.data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
+    }
+    _bus.readBytes(REG_FIFO_R_W, &_fifoBuffer.data[count * chunkSize], fifoLength - count*chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access)
 
     i2cSemaphoreGive();
 
-    const uint16_t ret = data[0] << 8 | data[1];
-    return ret;
-}
-
-
-int IMU_MPU6886::readFIFO_ToBuffer()
-{
-    return 0;
+     // return the number of acc_temp_gyro_data_t items read
+    return fifoLength  / acc_temp_gyro_data_t::DATA_SIZE;
 }
 
 void IMU_MPU6886::readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index)
 {
+    const acc_temp_gyro_data_t& accTempGyro = _fifoBuffer.accTempGyro[index]; // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
+    const gyroRadiansAcc_t gyroRadiansAcc = gyroRadiansAccFromData(accTempGyro, _gyroOffset, _accOffset);
+
+    gyroRadians = gyroRadiansAcc.gyroRadians;
+    acc = gyroRadiansAcc.acc;
 }
 
 IMU_Base::gyroRadiansAcc_t IMU_MPU6886::gyroRadiansAccFromData(const acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
 {
-    static constexpr float ACC_8G_RES { 8.0 / 32768.0 };
-    static constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
-
     return gyroRadiansAcc_t {
 // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
 #if defined(IMU_Y_AXIS_POINTS_LEFT)
         .gyroRadians = {
-            .x = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
-            .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
-            .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
+            .x = -(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
+            .y =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+            .z =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
         },
         .acc = {
-            .x = -ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
+            .x = -(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y) * ACC_8G_RES,
+            .y =  (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x) * ACC_8G_RES,
+            .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES
         }
 #elif defined(IMU_Y_AXIS_POINTS_RIGHT)
         .gyroRadians = {
-            .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
-            .y = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
-            .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
+            .x =  (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
+            .y = -(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+            .z =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
         },
         .acc = {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .y = -ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
+            .x =  (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y) * ACC_8G_RES,
+            .y = -(static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x) * ACC_8G_RES,
+            .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES
         }
 #elif defined(IMU_Y_AXIS_POINTS_DOWN)
         .gyroRadians = {
-            .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
-            .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z),
-            .z = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y)
+            .x =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+            .y =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS,
+            .z = -(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS
         },
         .acc = {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z),
-            .z = -ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y)
+            .x =  (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x) * ACC_8G_RES,
+            .y =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES,
+            .z = -(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y) * ACC_8G_RES
         }
 #else
         .gyroRadians = {
-            .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
-            .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
-            .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
+            .x =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+            .y =  (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
+            .z =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
         },
         .acc = {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
+            .x =  (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x) * ACC_8G_RES,
+            .y =  (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y) * ACC_8G_RES,
+            .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES
         }
 #endif
 // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
