@@ -41,20 +41,35 @@ public:
     bool readIMUandUpdateOrientation(float deltaT);
 private:
     void Task(const TaskParameters* taskParameters);
+    static IRAM_ATTR void imuDataReadyInterruptServiceRoutine();
 private:
+    static AHRS* ahrs; // alias of `this` to be used in imuDataReceivedInterruptServiceRoutine 
+    uint32_t _imuDataReadyCount {0};
+    uint32_t _timeMicroSeconds {0};
+    uint32_t _timeMicroSecondsPrevious {0};
+
     xyz_t _acc {0.0, 0.0, 0.0};
     xyz_t _gyroRadians {0.0, 0.0, 0.0};
 
     IMU_Base& _IMU;
     IMU_Filters* _imuFilters;
 
+#if defined(USE_IMU_DATA_READY_MUTEX)
+    StaticSemaphore_t _imuDataReadyMutexBuffer {}; // _imuDataReadyMutexBuffer must be declared before _imuDataReadyMutex
+    SemaphoreHandle_t _imuDataReadyMutex {};
+    inline void LOCK_IMU_DATA_READY() const { xSemaphoreTake(_imuDataReadyMutex, portMAX_DELAY); }
+    inline void UNLOCK_IMU_DATA_READY() const { xSemaphoreGive(_imuDataReadyMutex); }
+#else
+    inline void LOCK_IMU_DATA_READY() const {}
+    inline void UNLOCK_IMU_DATA_READY() const {}
+#endif
 #if defined(USE_AHRS_DATA_MUTEX)
-    StaticSemaphore_t _ahrsDataMutexBuffer {};
-    mutable SemaphoreHandle_t _ahrsDataMutex {}; // _ahrsDataMutexBuffer must be declared before _ahrsDataMutex
+    StaticSemaphore_t _ahrsDataMutexBuffer {}; // _ahrsDataMutexBuffer must be declared before _ahrsDataMutex
+    mutable SemaphoreHandle_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { xSemaphoreTake(_ahrsDataMutex, portMAX_DELAY); }
     inline void UNLOCK_AHRS_DATA() const { xSemaphoreGive(_ahrsDataMutex); }
 #elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
-    mutable portMUX_TYPE _imuDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
+    mutable portMUX_TYPE _ahrsDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
     inline void LOCK_AHRS_DATA() const { taskENTER_CRITICAL(&_ahrsDataSpinlock); }
     inline void UNLOCK_AHRS_DATA() const { taskEXIT_CRITICAL(&_ahrsDataSpinlock); }
 #else

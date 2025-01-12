@@ -1,13 +1,18 @@
 #include "AHRS.h"
 #include "IMU_Base.h"
 #include "IMU_Filters.h"
+#include "driver/gpio.h"
 #include <cmath>
+#include <esp32-hal-gpio.h>
 
 // Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
 // The critical section variant seems to give better performance.
 #if defined(USE_AHRS_DATA_MUTEX) && defined(USE_AHRS_DATA_CRITICAL_SECTION)
 static_assert(false);
 #endif
+
+
+AHRS* AHRS::ahrs {nullptr};
 
 
 /*!
@@ -81,9 +86,19 @@ void AHRS::Task(const TaskParameters* taskParameters)
     _previousWakeTime = xTaskGetTickCount();
 
     while (true) {
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+        LOCK_IMU_DATA_READY();
+        _imuDataReadyCount = 0;
+
+        _timeMicroSecondsPrevious = _timeMicroSeconds;
+        _timeMicroSeconds = micros();
+        const float deltaT = static_cast<float>(_timeMicroSeconds - _timeMicroSecondsPrevious) * 0.000001F;
+        if (deltaT > 0.0F) {
+            (void)readIMUandUpdateOrientation(deltaT);
+        }
+#else
         // delay until the end of the next tickIntervalTicks
         vTaskDelayUntil(&_previousWakeTime, _tickIntervalTicks);
-
         // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than _tickIntervalTicks
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
@@ -93,6 +108,7 @@ void AHRS::Task(const TaskParameters* taskParameters)
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
             (void)readIMUandUpdateOrientation(deltaT);
         }
+#endif
     }
 #endif
 }
@@ -205,26 +221,47 @@ void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientat
     }
 }
 
+IRAM_ATTR void AHRS::imuDataReadyInterruptServiceRoutine()
+{
+    //AHRS* ahrs = reinterpret_cast<AHRS*>(arg);
+    ++ahrs->_imuDataReadyCount;
+    ahrs->UNLOCK_IMU_DATA_READY();
+}
+
 /*!
 Constructor: set the sensor fusion filter and IMU to be used by the AHRS.
 */
 AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint32_t tickIntervalMicroSeconds) :
     AHRS_Base(sensorFusionFilter),
     _IMU(imuSensor)
+#if defined(USE_IMU_DATA_READY_MUTEX)
+    ,_imuDataReadyMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataReadyMutexBuffer)) // statically allocate the imuDataMutex
+#endif
 #if defined(USE_AHRS_DATA_MUTEX)
     , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 {
+    ahrs = this;
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+    attachInterrupt(IMU_INTERRUPT_PIN, imuDataReadyInterruptServiceRoutine, FALLING);
+#endif
+
     setSensorFusionFilterInitializing(true);
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
     static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(tickIntervalMicroSeconds) * 1.0e-6F);
     _imuFilters = &imuFilters;
-#if defined(USE_AHRS_DATA_MUTEX)
+
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
-     // ensure _imuDataMutexBuffer declared before _imuDataMutex
-    static_assert(offsetof(AHRS, _ahrsDataMutex) > offsetof(AHRS, _ahrsDataMutexBuffer));
-#pragma GCC diagnostic pop
+#if defined(USE_IMU_DATA_READY_MUTEX)
+     // ensure _imuDataReadyMutexBuffer declared before _imuDataReadyMutex
+    static_assert(offsetof(AHRS, _imuDataReadyMutex) > offsetof(AHRS, _imuDataReadyMutexBuffer));
 #endif
+#if defined(USE_AHRS_DATA_MUTEX)
+     // ensure _ahrsDataMutexBuffer declared before _ahrsDataMutex
+    static_assert(offsetof(AHRS, _ahrsDataMutex) > offsetof(AHRS, _ahrsDataMutexBuffer));
+#endif
+#pragma GCC diagnostic pop
 }
