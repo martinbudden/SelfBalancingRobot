@@ -45,7 +45,7 @@ The Atom JoyStick transmits a packet every 10ms, so the MAIN_LOOP_TASK must run 
 Updating the screen takes approximately 50 ticks, so packets will be dropped if the screen is not in QRCODE mode.
 */
 
-enum { MPC_TASK_PRIORITY = 5, AHRS_TASK_PRIORITY = 5 };
+enum { MPC_TASK_PRIORITY = 4, AHRS_TASK_PRIORITY = 5 };
 
 enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #if defined(APP_CPU_NUM) // The processor has two cores
@@ -55,12 +55,17 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #endif
 
 
+#if !defined(MPC_TASK_TICK_INTERVAL_MILLISECONDS)
 #if defined(USE_IMU_MPU6886_DIRECT)
     enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
 #else
     enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TAsK must be set to run slower.
 #endif
+#endif
+
+#if !defined(AHRS_TASK_TICK_INTERVAL_MILLISECONDS)
 enum { AHRS_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
+#endif
 
 
 /*!
@@ -153,10 +158,14 @@ void MainTask::setup()
     _buttons = &buttons;
 
     // Holding BtnB down while switching on initiates binding.
-    // The Atom has no BtnB, it always broadcasts address for binding on startup
-    if (M5.BtnB.wasPressed() || screen.getScreenSize() == Screen::SIZE_128x128) {
+    // The Atom has no BtnB, so it always broadcasts address for binding on startup.
+#if defined(M5_ATOM)
+    receiver.broadcastMyMacAddressForBinding();
+#else
+    if (M5.BtnB.wasPressed()) {
         receiver.broadcastMyMacAddressForBinding();
     }
+#endif
 
     // And finally set up the AHRS and MotorPairController tasks.
     setupTasks();
@@ -195,12 +204,12 @@ void MainTask::setupAHRS(void* i2cMutex)
 
 void MainTask::checkGyroCalibration()
 {
-    // Set the gyro offsets from non-volatile storage.
+    // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
-        // Holding BtnA down while switching on enters calibration mode.
-        // Calibration manually activated, so calibrate accelerometer and gyroscope.
         calibrateGyro(*_ahrs, *_preferences, CALIBRATE_ACC_AND_GYRO);
     }
+
+    // Set the gyro offsets from non-volatile storage.
 #if defined(M5_STACK) || defined(USE_IMU_MPU6886_DIRECT)
     // For M5_STACK and USE_IMU_MPU6886_DIRECT, the gyro offsets are stored in preferences.
     xyz_int16_t gyroOffset {};
