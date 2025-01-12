@@ -26,7 +26,6 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     // reading the FIFO blocks the I2C bus, which in turn blocks the MPC_TASK.
     // I'm starting to come to the conclusion that, for M5Stack devices, better overall performance is obtained by not using the FIFO.
 
-    constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
     _fifoCount = _IMU.readFIFO_ToBuffer();
     if (_fifoCount == 0) {
         YIELD_TASK();
@@ -37,6 +36,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     xyz_t accSum {0.0, 0.0, 0.0};
     const float fifoCountReciprocal = 1.0F / static_cast<float>(_fifoCount);
     const float fifoDeltaT = deltaT * fifoCountReciprocal;
+    // constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
     for (auto ii = 0; ii < _fifoCount; ++ii) {
         _IMU.readFIFO_Item(gyroRadians, acc, ii);
         _imuFilters->filter(gyroRadians, acc, fifoDeltaT);
