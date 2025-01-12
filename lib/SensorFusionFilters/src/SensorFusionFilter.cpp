@@ -35,7 +35,7 @@ inline float reciprocalSqrt(float x)
 }
 
 /*!
-Normalize a vector
+Normalize a vector. Return the square of the magnitude.
 */
 inline float normalize(xyz_t& v)
 {
@@ -47,7 +47,7 @@ inline float normalize(xyz_t& v)
 }
 
 /*!
-Normalize quaternion
+Normalize a quaternion.
 */
 inline void normalize(Quaternion& q)
 {
@@ -71,7 +71,7 @@ void SensorFusionFilterBase::_setAndNormalizeQ(float q0_, float q1_, float q2_, 
     q1 = q1_;
     q2 = q2_;
     q3 = q3_;
-    const float magnitudeReciprocal = reciprocalSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+    const float magnitudeReciprocal = reciprocalSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
     q0 *= magnitudeReciprocal;
     q1 *= magnitudeReciprocal;
     q2 *= magnitudeReciprocal;
@@ -110,7 +110,7 @@ Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& ac
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*deltaT*0.5.
-    q += _2qDot * deltaT * 0.5F;
+    q += _2qDot * (deltaT * 0.5F); // note brackets to ensure scalar multiplication is performed before vector multiplication
 
     // use the normalized accelerometer data to calculate an estimate of the attitude
     xyz_t acc = accelerometer;
@@ -118,7 +118,7 @@ Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& ac
     const Quaternion a = Quaternion::fromEulerAnglesRadians(rollRadiansFromAccNormalized(acc), pitchRadiansFromAccNormalized(acc));
 
     // use a complementary filter to combine the gyro attitude estimate(q) with the accelerometer attitude estimate(a)
-    q = (q - a) * _alpha + a; // optimized form of `_alpha * q + (1.0F - _alpha) * a` : uses fewer operations and can take advantage of multiply-add instruction
+    q = (q - a)*_alpha + a; // optimized form of `_alpha * q + (1.0F - _alpha) * a` : uses fewer operations and can take advantage of multiply-add instruction
 
     // normalize the orientation quaternion
     normalize(q);
@@ -143,10 +143,10 @@ Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& ac
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*deltaT*0.5.
-    q += _2qDot * deltaT * 0.5F;
+    q += _2qDot * (deltaT * 0.5F); // note brackets to ensure scalar multiplication is performed before vector multiplication
 
     xyz_t acc = accelerometer;
-    normalize(acc);
+    (void)normalize(acc);
 
     // Calculate roll(phi) and pitch(theta) from normalized accelerometer values
     const float roll = rollRadiansFromAccNormalized(acc);
@@ -158,7 +158,7 @@ Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& ac
 
     //  Calculate magnetic field vector, b. See https://ahrs.readthedocs.io/en/latest/filters/tilt.html#module-ahrs.filters.tilt
     xyz_t mag = magnetometer;
-    normalize(mag);
+    (void)normalize(mag);
     const xyz_t b {
         .x =  mag.x*cosTheta + sinTheta*(mag.y*sinPhi + mag.z*cosPhi),
         .y =  mag.y*cosPhi - mag.z*sinPhi,
@@ -173,7 +173,7 @@ Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& ac
     const Quaternion am = Quaternion::fromEulerAnglesRadians(roll, pitch, yaw);
 
     // use a complementary filter to combine the gyro attitude estimate(q) with the accelerometer/magnetometer attitude estimate(am)
-    q = (q - am) * _alpha + am; // optimized form of `_alpha * q + (1.0F - _alpha) * am` : uses fewer operations and can take advantage of multiply-add instruction
+    q = (q - am)*_alpha + am; // optimized form of `_alpha * q + (1.0F - _alpha) * am` : uses fewer operations and can take advantage of multiply-add instruction
 
     // normalize the orientation quaternion
     normalize(q);
@@ -212,7 +212,7 @@ Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerom
 
     // Apply integral feedback if _ki set
     if (_ki > 0.0F) {
-        _errorIntegral += error * _ki * deltaT;
+        _errorIntegral += error * (_ki * deltaT); // note brackets to ensure scalar multiplication is performed before vector multiplication
         gyro += _errorIntegral;
     }
 
@@ -220,7 +220,7 @@ Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerom
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and deltaT*0.5 are used, ie qNew = qOld +_2qDot*deltaT*0.5F
-    q += _2qDot * deltaT * 0.5F;
+    q += _2qDot * (deltaT * 0.5F); // note brackets to ensure scalar multiplication is performed before vector multiplication
 
     // Normalize the orientation quaternion
     normalize(q);

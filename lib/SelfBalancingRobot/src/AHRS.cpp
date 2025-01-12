@@ -10,10 +10,11 @@ static_assert(false);
 #endif
 
 
-
 /*!
 Main AHRS task function. Reads the IMU and uses the sensor fusion filter to update the orientation quaternion.
 Returns false if there was no new data to be read from the IMU.
+
+NOTE: calls to YIELD_TASK have no effect on multi-core implementations, but are useful for single-core variants.
 */
 bool AHRS::readIMUandUpdateOrientation(float deltaT)
 {
@@ -150,6 +151,9 @@ Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
     return ret;
 }
 
+/*!
+Returns orientation without clearing _orientationUpdatedSinceLastRead.
+*/
 Quaternion AHRS::getOrientationForInstrumentationUsingLock() const
 {
     LOCK();

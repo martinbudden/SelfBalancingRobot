@@ -105,18 +105,19 @@ void MotorPairController::updateMotors()
 
 bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
 {
+    [[maybe_unused]] bool newStickValuesSet = false;
     if (_newStickValuesAvailable) {
         _receiver.mapControls(_throttleStick, _rollStick, _pitchStick, _yawStick);
         _newStickValuesAvailable = false;
+        newStickValuesSet = true;
     }
 #if defined(MOTORS_HAVE_ENCODERS)
     _motors.readEncoder();
-
     _encoderLeft = _motors.getLeftEncoder();
+    _encoderRight = _motors.getRightEncoder();
+
     _encoderLeftDelta = static_cast<int16_t>(_encoderLeft - _encoderLeftPrevious);
     _encoderLeftPrevious = _encoderLeft;
-
-    _encoderRight = _motors.getRightEncoder();
     _encoderRightDelta = static_cast<int16_t>(_encoderRight - _encoderRightPrevious);
     _encoderRightPrevious = _encoderRight;
 
@@ -141,11 +142,13 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
 
     bool orientationUpdated;
     const Quaternion orientation = _ahrs.getOrientationUsingLock(orientationUpdated);
-    if (!orientationUpdated) {
-        // no need to update the PIDs if the orientation has not been updated.
+#if !defined(MOTORS_HAVE_ENCODERS)
+    if ((orientationUpdated == false) && (newStickValuesSet == false)) {
+        // no need to update the PIDs if the orientation and the stick values have not changed
         YIELD_TASK();
         return false;
     }
+#endif
 
     // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.
     // For the Self Balancing Robot, pitch is rotation around the x-axis and roll is rotation around the y-axis,
@@ -228,7 +231,7 @@ bool MotorPairController::updatePIDs(float deltaT, uint32_t tickCount)
         // Calculate the pitchAngleDelta and filter it.
         // Use the filtered value as input into the PID, so the D-term is calculated using the filtered value.
         // This is beneficial because the D-term is especially susceptible to noise.
-        static FilterMovingAverage<4> pitchAngleDegreesDeltaFilter;
+        static FilterMovingAverage<4> pitchAngleDegreesDeltaFilter; // moving average of length 4 involves no division, only addition and multiplication
         const float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
         _pitchAngleDegreesPrevious = pitchAngleDegrees;
         const float pitchAngleDegreesDeltaFiltered = pitchAngleDegreesDeltaFilter.update(pitchAngleDegreesDelta);
@@ -254,7 +257,7 @@ There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
 inline void MotorPairController::loop(float deltaT, uint32_t tickCount)
 {
     const bool PIDsUpdated = updatePIDs(deltaT, tickCount);
-    if (PIDsUpdated) {
+    if (PIDsUpdated) { // cppcheck-suppress knownConditionTrueFalse
         updateMotors();
     }
 }
