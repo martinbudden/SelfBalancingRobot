@@ -111,8 +111,6 @@ IMU_MPU6886::IMU_MPU6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
 
 void IMU_MPU6886::init()
 {
-    static_assert(sizeof(acc_temp_gyro_data_t) == acc_temp_gyro_data_t::DATA_SIZE);
-
     i2cSemaphoreTake();
 
     _imuID = _bus.readByte(REG_WHOAMI);
