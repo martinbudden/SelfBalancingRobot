@@ -24,7 +24,7 @@ public:
 
     // Unary operations
     inline Quaternion operator+() const { return *this; } //<!Unary plus
-    inline Quaternion operator-() const { return Quaternion(-w, -x, -y, -z); } //<! Unary minus
+    inline Quaternion operator-() const { return Quaternion(-w, -x, -y, -z); } //<! Unary negation
 
     inline Quaternion operator+=(const Quaternion& q) {
         w += q.w;
@@ -40,7 +40,7 @@ public:
         z -= q.z;
         return *this;
     }
-    inline Quaternion operator*=(float k) { w*=k; x*=k; y*=k; z*=k; return *this; } //<! Multiplication by a constant
+    inline Quaternion operator*=(float k) { w*=k; x*=k; y*=k; z*=k; return *this; } //<! Multiplication by a scalar
     inline Quaternion operator*=(const Quaternion& q) {
         const float wt = w*q.w - x*q.x - y*q.y - z*q.z;
         const float xt = w*q.x + x*q.w + y*q.z - z*q.y;
@@ -59,7 +59,7 @@ public:
     inline Quaternion operator-(const Quaternion& q) const {
         return Quaternion(w - q.w, x - q.x, y - q.y, z - q.z);
     }
-    inline Quaternion operator*(float k) const {//<! Multiplication by a constant
+    inline Quaternion operator*(float k) const {//<! Multiplication by a scalar
         return Quaternion(w*k, x*k, y*k, z*k);
     }
     inline Quaternion operator*(const Quaternion& q) const {
