@@ -12,3 +12,5 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 8. Get ODrive versions going.
 9. Get TWAI versions going.
 10. Writer driver for LSM6DSOX IMU.
+11. Implement BMI270 IMU driver.
+12. Implement AtomS3R variant. AtomS3R has IMU using pins G0 and G45, whereas AtomMotionBase attaches to pins G38 and G39, so no I2C mutex is required.
