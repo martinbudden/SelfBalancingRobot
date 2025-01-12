@@ -60,13 +60,13 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
         checkMadgwickConvergence(acc, orientation);
     }
 
-    LOCK();
+    LOCK_AHRS_DATA();
     _ahrsDataUpdatedSinceLastRead = true;
     _orientationUpdatedSinceLastRead = true;
     _orientation = orientation;
     _gyroRadians = gyroRadians;
     _acc = acc;
-    UNLOCK();
+    UNLOCK_AHRS_DATA();
     return true;
 }
 
@@ -142,11 +142,11 @@ void AHRS::setAccOffset(const xyz_int16_t& accOffset)
 
 Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
 {
-    LOCK();
+    LOCK_AHRS_DATA();
     updatedSinceLastRead = _orientationUpdatedSinceLastRead;
     _orientationUpdatedSinceLastRead = false;
     const Quaternion ret = _orientation;
-    UNLOCK();
+    UNLOCK_AHRS_DATA();
 
     return ret;
 }
@@ -156,16 +156,16 @@ Returns orientation without clearing _orientationUpdatedSinceLastRead.
 */
 Quaternion AHRS::getOrientationForInstrumentationUsingLock() const
 {
-    LOCK();
+    LOCK_AHRS_DATA();
     const Quaternion ret = _orientation;
-    UNLOCK();
+    UNLOCK_AHRS_DATA();
 
     return ret;
 }
 
 AHRS_Base::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
 {
-    LOCK();
+    LOCK_AHRS_DATA();
     updatedSinceLastRead = _ahrsDataUpdatedSinceLastRead;
     _ahrsDataUpdatedSinceLastRead = false;
     const AHRS_Base::data_t ret {
@@ -173,20 +173,20 @@ AHRS_Base::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
         .gyroRadians = _gyroRadians,
         .acc = _acc
     };
-    UNLOCK();
+    UNLOCK_AHRS_DATA();
 
     return ret;
 }
 
 AHRS_Base::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
 {
-    LOCK();
+    LOCK_AHRS_DATA();
     const AHRS_Base::data_t ret {
         .tickCountDelta = _tickCountDelta,
         .gyroRadians = _gyroRadians,
         .acc = _acc
     };
-    UNLOCK();
+    UNLOCK_AHRS_DATA();
 
     return ret;
 }
@@ -212,7 +212,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint
     AHRS_Base(sensorFusionFilter),
     _IMU(imuSensor)
 #if defined(USE_AHRS_DATA_MUTEX)
-    , _imuDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataMutexBuffer)) // statically allocate the imuDataMutex
+    , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 {
     setSensorFusionFilterInitializing(true);
@@ -224,7 +224,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
      // ensure _imuDataMutexBuffer declared before _imuDataMutex
-    static_assert(offsetof(AHRS, _imuDataMutex) > offsetof(AHRS, _imuDataMutexBuffer));
+    static_assert(offsetof(AHRS, _ahrsDataMutex) > offsetof(AHRS, _ahrsDataMutexBuffer));
 #pragma GCC diagnostic pop
 #endif
 }

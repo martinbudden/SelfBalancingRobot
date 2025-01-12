@@ -49,17 +49,17 @@ private:
     IMU_Filters* _imuFilters;
 
 #if defined(USE_AHRS_DATA_MUTEX)
-    StaticSemaphore_t _imuDataMutexBuffer {};
-    mutable SemaphoreHandle_t _imuDataMutex {}; // _imuDataMutexBuffer must be declared before _imuDataMutex
-    inline void LOCK() const { xSemaphoreTake(_imuDataMutex, portMAX_DELAY); }
-    inline void UNLOCK() const { xSemaphoreGive(_imuDataMutex); }
+    StaticSemaphore_t _ahrsDataMutexBuffer {};
+    mutable SemaphoreHandle_t _ahrsDataMutex {}; // _ahrsDataMutexBuffer must be declared before _ahrsDataMutex
+    inline void LOCK_AHRS_DATA() const { xSemaphoreTake(_ahrsDataMutex, portMAX_DELAY); }
+    inline void UNLOCK_AHRS_DATA() const { xSemaphoreGive(_ahrsDataMutex); }
 #elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
     mutable portMUX_TYPE _imuDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
-    inline void LOCK() const { taskENTER_CRITICAL(&_imuDataSpinlock); }
-    inline void UNLOCK() const { taskEXIT_CRITICAL(&_imuDataSpinlock); }
+    inline void LOCK_AHRS_DATA() const { taskENTER_CRITICAL(&_ahrsDataSpinlock); }
+    inline void UNLOCK_AHRS_DATA() const { taskEXIT_CRITICAL(&_ahrsDataSpinlock); }
 #else
-    inline void LOCK() const {}
-    inline void UNLOCK() const {}
+    inline void LOCK_AHRS_DATA() const {}
+    inline void UNLOCK_AHRS_DATA() const {}
 #endif
 #if defined(USE_FREERTOS)
     inline void YIELD_TASK() const { taskYIELD(); }
