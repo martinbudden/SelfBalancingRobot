@@ -6,7 +6,7 @@
 
 class MotorsBalaC final : public MotorPairBase {
 public:
-    MotorsBalaC();
+    MotorsBalaC(uint8_t SDA_pin, uint8_t SCL_pin);
 public:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
 public:
@@ -14,7 +14,6 @@ public:
 private:
     virtual void readEncoder() override;
 private:
-    enum { SDA_PIN = 0, SCL_PIN = 26 };
     enum : uint8_t { I2C_ADDRESS = 0x38 };
     enum : uint8_t { REGISTER_MOTOR_0 = 0x00, REGISTER_MOTOR_1 = 0x01 };
 

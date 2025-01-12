@@ -10,9 +10,9 @@
 // and https://github.com/m5stack/M5Core2/blob/ede1d33798e6bfa1117a7a346176ed9d24e54178/examples/Module/4EncoderMotor/4EncoderMotor.ino
 
 
-Motors4EncoderMotor::Motors4EncoderMotor(float encoderStepsPerRevolution) :
+Motors4EncoderMotor::Motors4EncoderMotor(uint8_t SDA_pin, uint8_t SCL_pin, float encoderStepsPerRevolution) :
     MotorPairBase(encoderStepsPerRevolution, CANNOT_ACCURATELY_ESTIMATE_SPEED),
-    _I2C(I2C_ADDRESS, SDA_PIN, SCL_PIN)
+    _I2C(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
     // cppcheck-suppress badBitmaskCheck
     _I2C.writeByte(REGISTER_CONFIGURE | (MOTOR_LEFT << 4), NORMAL_MODE);

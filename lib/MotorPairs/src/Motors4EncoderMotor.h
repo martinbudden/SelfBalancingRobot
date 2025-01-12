@@ -6,7 +6,7 @@
 
 class Motors4EncoderMotor final : public MotorPairBase {
 public:
-    explicit Motors4EncoderMotor(float encoderStepsPerRevolution);
+    Motors4EncoderMotor(uint8_t SDA_pin, uint8_t SCL_pin, float encoderStepsPerRevolution);
 public:
     virtual void readEncoder() override;
     virtual void setPower(float leftPower, float rightPower) override;
@@ -15,7 +15,6 @@ public:
 private:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
 
-    enum { SDA_PIN = 21, SCL_PIN = 22 };
     static constexpr uint8_t I2C_ADDRESS = 0x24;
 
     enum : uint8_t { MOTOR_0 = 0, MOTOR_1 = 1, MOTOR_2 = 2, MOTOR_3 = 3 };

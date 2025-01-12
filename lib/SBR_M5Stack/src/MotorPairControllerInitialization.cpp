@@ -35,15 +35,15 @@ MotorPairBase& MotorPairController::motors()
 {
     // Statically allocate the MotorPair object as defined by the build flags.
 #if defined(MOTORS_BALA_2)
-    static MotorsBala2 motors;// NOLINT(misc-const-correctness) false positive
+    static MotorsBala2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_BALA_C)
-    static MotorsBalaC motors;// NOLINT(misc-const-correctness) false positive
+    static MotorsBalaC motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_4_ENCODER_MOTOR)
-    static Motors4EncoderMotor motors(encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
+    static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_GO_PLUS_2)
-    static MotorsGoPlus2 motors;// NOLINT(misc-const-correctness) false positive
+    static MotorsGoPlus2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_ATOMIC_MOTION_BASE)
-    static MotorsAtomicMotionBase motors;// NOLINT(misc-const-correctness) false positive
+    static MotorsAtomicMotionBase motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_PWR_CAN)
     static MotorsPwrCAN motors;// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_O_DRIVE_CAN)

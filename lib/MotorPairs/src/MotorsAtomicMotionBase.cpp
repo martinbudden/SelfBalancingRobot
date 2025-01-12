@@ -9,9 +9,9 @@
 // and https://github.com/m5stack/M5AtomS3/blob/main/src/M5AtomS3.h
 
 
-MotorsAtomicMotionBase::MotorsAtomicMotionBase() :
+MotorsAtomicMotionBase::MotorsAtomicMotionBase(uint8_t SDA_pin, uint8_t SCL_pin) :
     MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED),
-    _I2C(I2C_ADDRESS, SDA_PIN, SCL_PIN)
+    _I2C(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
 }
 

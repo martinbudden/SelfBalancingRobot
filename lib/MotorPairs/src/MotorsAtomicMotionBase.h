@@ -5,7 +5,7 @@
 
 class MotorsAtomicMotionBase final : public MotorPairBase {
 public:
-    MotorsAtomicMotionBase();
+    MotorsAtomicMotionBase(uint8_t SDA_pin, uint8_t SCL_pin);
 public:
     virtual void setPower(float leftPower, float rightPower) override;
 private:
@@ -14,7 +14,6 @@ private:
 private:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
 
-    enum { SDA_PIN = 38, SCL_PIN =39 };
     enum : uint8_t { I2C_ADDRESS = 0x38 };
     enum : uint8_t { REGISTER_MOTOR_0 = 0x20, REGISTER_MOTOR_1 = 0x21 };
 

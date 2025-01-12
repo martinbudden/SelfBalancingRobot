@@ -5,14 +5,13 @@
 
 class MotorsGoPlus2 final : public MotorPairBase {
 public:
-    MotorsGoPlus2();
+    MotorsGoPlus2(uint8_t SDA_pin, uint8_t SCL_pin);
 public:
     virtual void readEncoder() override;
     virtual void setPower(float leftPower, float rightPower) override;
 private:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
 
-    enum { SDA_PIN = 21, SCL_PIN = 22 };
     enum : uint8_t { I2C_ADDRESS = 0x38 };
     enum : uint8_t { REGISTER_MOTOR_A = 0x30, REGISTER_MOTOR_B = 0x31 };
 
