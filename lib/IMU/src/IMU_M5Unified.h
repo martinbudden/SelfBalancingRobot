@@ -13,5 +13,8 @@ public:
     virtual bool readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const override;
     virtual int readFIFO_ToBuffer() override;
     virtual void readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index) override;
+private:
+    xyz_int16_t _gyroOffset {};
+    xyz_int16_t _accOffset {};
+    uint8_t _fifoBuffer[1024] {};
 };
-
