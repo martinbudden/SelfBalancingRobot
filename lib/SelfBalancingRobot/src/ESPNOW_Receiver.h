@@ -16,8 +16,8 @@ private:
     Receiver(Receiver&&) = delete;
     Receiver& operator=(Receiver&&) = delete;
 public:
-    void setMotorController(MotorControllerBase* motorController) { _motorController = motorController; } //!< Sets the motorController, which must be set before update() is called.
     esp_err_t setup(int channel);
+    void setMotorController(MotorControllerBase* motorController) { _motorController = motorController; } //!< Sets the motorController, which must be set before update() is called.
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     void broadcastMyMacAddressForBinding() const { _atomJoyStickReceiver.broadcastMyMacAddressForBinding(); }
