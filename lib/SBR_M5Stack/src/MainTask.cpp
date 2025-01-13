@@ -55,16 +55,16 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #endif
 
 
-#if !defined(MPC_TASK_TICK_INTERVAL_MILLISECONDS)
+#if !defined(MPC_TASK_TICK_INTERVAL_MICROSECONDS)
 #if defined(USE_IMU_MPU6886_DIRECT)
-    enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
+    enum { MPC_TASK_TICK_INTERVAL_MICROSECONDS = 5000 };
 #else
-    enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TAsK must be set to run slower.
+    enum { MPC_TASK_TICK_INTERVAL_MICROSECONDS = 10000 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TAsK must be set to run slower.
 #endif
 #endif
 
-#if !defined(AHRS_TASK_TICK_INTERVAL_MILLISECONDS)
-enum { AHRS_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
+#if !defined(AHRS_TASK_TICK_INTERVAL_MICROSECONDS)
+enum { AHRS_TASK_TICK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
 
@@ -133,6 +133,7 @@ void MainTask::setup()
     static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
     _motorPairController = &motorPairController;
     _receiver->setMotorController(_motorPairController);
+    _ahrs->setMotorController(_motorPairController);
 
     static SBR_Preferences preferences;
     _preferences = &preferences;
@@ -193,13 +194,13 @@ void MainTask::setupAHRS(void* i2cMutex)
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
 #if defined(USE_COMPLEMENTARY_FILTER)
     static ComplementaryFilter sensorFusionFilter;
-    static AHRS ahrs(sensorFusionFilter, imuSensor);
+    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MICROSECONDS);
 #elif defined(USE_MAHONY_FILTER)
     static MahonyFilter sensorFusionFilter;
-    static AHRS ahrs(sensorFusionFilter, imuSensor);
+    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MICROSECONDS);
 #else
     static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
-    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
+    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MICROSECONDS);
 #endif
     _ahrs = &ahrs;
 }
@@ -275,7 +276,7 @@ void MainTask::setupTasks()
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
         .ahrs = _ahrs,
-        .tickIntervalMilliSeconds = AHRS_TASK_TICK_INTERVAL_MILLISECONDS
+        .tickIntervalMilliSeconds = AHRS_TASK_TICK_INTERVAL_MICROSECONDS / 1000
     };
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t ahrsTaskBuffer;
@@ -286,7 +287,7 @@ void MainTask::setupTasks()
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
         .motorPairController = _motorPairController,
-        .tickIntervalMilliSeconds = MPC_TASK_TICK_INTERVAL_MILLISECONDS
+        .tickIntervalMilliSeconds = MPC_TASK_TICK_INTERVAL_MICROSECONDS / 1000
     };
     enum { MPC_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t mpcTaskBuffer;

@@ -40,6 +40,8 @@ struct TD_TickIntervals {
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_TickIntervals)}; //!< length of whole packet, ie sizeof(TD_TickIntervals)
 
+    uint16_t ahrsTaskMicroSecondInterval {0}; //<! execution interval of AHRS_TASK in microseconds
+    uint16_t mpcTaskMicroSecondInterval {0}; //<! execution interval of MPC_TASK in microseconds
     uint8_t ahrsTaskTickInterval {0}; //<! tick interval of the AHRS_TASK
     uint8_t ahrsTaskFifoCount {0}; //<! tick interval of the AHRS_TASK
     uint8_t mpcTaskTickInterval {0}; //<! tick interval of the MPC_TASK

@@ -22,7 +22,6 @@ private:
     AHRS(AHRS&&) = delete;
     AHRS& operator=(AHRS&&) = delete;
 public:
-    inline IMU_Filters& getIMU_Filters() { return *_imuFilters; }
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
@@ -41,7 +40,9 @@ public:
     bool readIMUandUpdateOrientation(float deltaT);
 private:
     void Task(const TaskParameters* taskParameters);
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
     static IRAM_ATTR void imuDataReadyInterruptServiceRoutine();
+#endif
 private:
     static AHRS* ahrs; // alias of `this` to be used in imuDataReceivedInterruptServiceRoutine 
     uint32_t _imuDataReadyCount {0};

@@ -6,6 +6,8 @@
 #include <xyz_int16_type.h>
 #include <xyz_type.h>
 
+class MotorPairController;
+
 
 /*!
 AHRS (Attitude and Heading Reference System) virtual base class.
@@ -19,6 +21,9 @@ public:
     };
 public:
     AHRS_Base(SensorFusionFilterBase& sensorFusionFilter) : _sensorFusionFilter(sensorFusionFilter) {}
+public:
+    void setMotorController(MotorPairController* motorController) { _motorController = motorController; }
+    const MotorPairController* getMotorController() const { return _motorController; }
 public:
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) = 0;
     virtual void setAccOffset(const xyz_int16_t& accOffset) = 0;
@@ -36,6 +41,7 @@ public:
 protected:
     SensorFusionFilterBase& _sensorFusionFilter;
     Quaternion _orientation;
+    MotorPairController* _motorController {nullptr};
     uint32_t _sensorFusionFilterInitializing {true};
     uint32_t _fifoCount {0};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};

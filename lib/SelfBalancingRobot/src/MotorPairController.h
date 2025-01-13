@@ -12,6 +12,7 @@
 struct motor_pair_controller_telemetry_t;
 class ReceiverBase;
 class AHRS_Base;
+class Quaternion;
 
 
 class MotorPairController : public MotorControllerBase {
@@ -72,7 +73,9 @@ public:
     static MotorPairBase& motors();
     void loop(float deltaT, uint32_t tickCount);
 public:
-    bool updatePIDs(float deltaT, uint32_t tickCount);
+    void updateSetpointsAndMotorSpeedEstimates(float deltaT, uint32_t tickCount);
+    void updatePIDs(float deltaT);
+    void updatePIDs(const Quaternion& orientation, float deltaT);
     void updateMotors();
 private:
     void Task(const TaskParameters* taskParameters);
@@ -125,6 +128,7 @@ private:
     PIDF _yawRatePID;
     float _yawRateUpdate {0.0};
 
+    // Scale factors for telemetry and PID tuning. Not used by any of the update functions.
     PIDF::PIDF_t _pitchPIDTelemetryScaleFactors;
     PIDF::PIDF_t _speedPIDTelemetryScaleFactors;
     PIDF::PIDF_t _yawRatePIDTelemetryScaleFactors;

@@ -81,9 +81,8 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
     case CommandPacketRequestData::REQUEST_TICK_INTERVAL_DATA:
         _sendType = SEND_TICK_INTERVAL_DATA;
         len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
-                _ahrs.getTickCountDelta(),
-                _ahrs.getFifoCount(),
-                _motorPairController.getTickCountDelta(),
+                _ahrs,
+                _motorPairController,
                 _mainTask.getTickCountDelta(),
                 _transceiver.getTickCountDeltaAndReset(),
                 _receiver.getDroppedPacketCountDelta());
@@ -208,9 +207,8 @@ bool Backchannel::update()
         }
         if (_sendType == SEND_TICK_INTERVAL_DATA) {
             const int len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
-                _ahrs.getTickCountDelta(),
-                _ahrs.getFifoCount(),
-                _motorPairController.getTickCountDelta(),
+                _ahrs,
+                _motorPairController,
                 _mainTask.getTickCountDelta(),
                 _transceiver.getTickCountDeltaAndReset(),
                 _receiver.getDroppedPacketCountDelta());

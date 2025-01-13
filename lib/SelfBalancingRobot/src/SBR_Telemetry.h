@@ -10,12 +10,11 @@
 int packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id);
 
 int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
-        uint32_t ahrsTaskTickCountDelta,
-        uint32_t ahrsTaskFifoCount,
-        uint32_t mpcTaskTickCountDelta,
+        const AHRS_Base& ahrs, // NOLINT(readability-avoid-const-params-in-decls)
+        const MotorControllerBase& motorController,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
-        uint32_t receiverDroppedPacketCount);
+        uint32_t receiverDroppedPacketCount); // NOLINT(readability-avoid-const-params-in-decls) false positive
 
 int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPairController& motorPairController); // NOLINT(readability-avoid-const-params-in-decls) false positive
 

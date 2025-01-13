@@ -1,9 +1,13 @@
 #include "AHRS.h"
 #include "IMU_Base.h"
 #include "IMU_Filters.h"
-#include "driver/gpio.h"
+#include "MotorPairController.h"
 #include <cmath>
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+#include <driver/gpio.h>
 #include <esp32-hal-gpio.h>
+#endif
+#include <esp32-hal.h>
 
 // Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
 // The critical section variant seems to give better performance.
@@ -60,7 +64,9 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     _imuFilters->filter(gyroRadians, acc, deltaT);
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
 #endif
-
+    if (_motorController != nullptr) {
+        _motorController->updatePIDs(orientation, deltaT);
+    }
     if (sensorFusionFilterIsInitializing()) {
         checkMadgwickConvergence(acc, orientation);
     }
@@ -83,7 +89,7 @@ void AHRS::Task(const TaskParameters* taskParameters)
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
     _tickIntervalTicks = pdMS_TO_TICKS(taskParameters->tickIntervalMilliSeconds);
-    _previousWakeTime = xTaskGetTickCount();
+    _previousWakeTimeTicks = xTaskGetTickCount();
 
     while (true) {
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
@@ -98,11 +104,14 @@ void AHRS::Task(const TaskParameters* taskParameters)
         }
 #else
         // delay until the end of the next tickIntervalTicks
-        vTaskDelayUntil(&_previousWakeTime, _tickIntervalTicks);
+        vTaskDelayUntil(&_previousWakeTimeTicks, _tickIntervalTicks);
         // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than _tickIntervalTicks
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
         _tickCountPrevious = tickCount;
+        const uint32_t timeMicroSecond = micros();
+        _timeMicroSecondDelta = timeMicroSecond - _timeMicroSecondPrevious;
+        _timeMicroSecondPrevious = timeMicroSecond;
 
         if (_tickCountDelta > 0) { // guard against the case of the while loop executing twice on the same tick interval
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
@@ -221,12 +230,14 @@ void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientat
     }
 }
 
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
 IRAM_ATTR void AHRS::imuDataReadyInterruptServiceRoutine()
 {
     //AHRS* ahrs = reinterpret_cast<AHRS*>(arg);
     ++ahrs->_imuDataReadyCount;
     ahrs->UNLOCK_IMU_DATA_READY();
 }
+#endif
 
 /*!
 Constructor: set the sensor fusion filter and IMU to be used by the AHRS.
@@ -241,8 +252,8 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint
     , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 {
-    ahrs = this;
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
+    ahrs = this;
     attachInterrupt(IMU_INTERRUPT_PIN, imuDataReadyInterruptServiceRoutine, FALLING);
 #endif
 

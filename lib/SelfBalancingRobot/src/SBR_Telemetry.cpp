@@ -26,9 +26,8 @@ int packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id)
 Packs the tick interval telemetry data into a TD_TickIntervals packet. Returns the length of the packet.
 */
 int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
-        uint32_t ahrsTaskTickCountDelta,
-        uint32_t ahrsTaskFifoCount,
-        uint32_t mpcTaskTickCountDelta,
+        const AHRS_Base& ahrs,
+        const MotorControllerBase& motorController,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
         uint32_t receiverDroppedPacketCount)
@@ -39,9 +38,11 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
     td->type = TD_TickIntervals::TYPE;
     td->len = sizeof(TD_TickIntervals);
 
-    td->ahrsTaskTickInterval = ahrsTaskTickCountDelta;
-    td->ahrsTaskFifoCount = ahrsTaskFifoCount;
-    td->mpcTaskTickInterval = mpcTaskTickCountDelta;
+    td->ahrsTaskMicroSecondInterval = ahrs.getTimeMicroSecondDelta();
+    td->mpcTaskMicroSecondInterval = motorController.getTimeMicroSecondDelta();
+    td->ahrsTaskTickInterval = ahrs.getTickCountDelta();
+    td->ahrsTaskFifoCount = ahrs.getFifoCount();
+    td->mpcTaskTickInterval = motorController.getTickCountDelta();
     td->mainTaskTickInterval = mainTaskTickCountDelta;
     td->transceiverTickCountDelta = transceiverTickCountDelta;
     td->receiverDroppedPacketCount = receiverDroppedPacketCount;
