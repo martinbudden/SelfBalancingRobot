@@ -34,9 +34,6 @@ public:
 public:
     inline void motorsResetEncodersToZero(void ) { _motors.resetEncodersToZero(); }
 
-    inline bool getPitchRateIsFiltered() const { return _pitchRateIsFiltered; }
-    inline void setPitchRateIsFiltered(bool pitchRateIsFiltered) { _pitchRateIsFiltered = pitchRateIsFiltered; }
-
     inline ControlMode_t getControlMode() const { return _controlMode; }
     void setControlMode(ControlMode_t controlMode);
 
@@ -88,10 +85,10 @@ private:
     const AHRS_Base& _ahrs;
     const ReceiverBase& _receiver;
     MotorPairBase& _motors;
+
     int32_t _motorsDisabled {false};
     float _powerLeft {0.0};
     float _powerRight {0.0};
-
     int32_t _encoderLeft {0}; //!< value read from left motor encoder, raw
     int32_t _encoderRight {0}; //!< value read from right motor encoder, raw
     int32_t _encoderLeftPrevious {0};
@@ -110,13 +107,12 @@ private:
 
     ControlMode_t _controlMode;
 
-    float _positionSetpointDegrees {0.0};
-    float _positionDegrees {0.0};
+    float _positionSetpointDegrees {0.0}; //!< Position setpoint for CONTROL_MODE_POSITION
+    float _positionDegrees {0.0}; //!< Position for CONTROL_MODE_POSITION
 
     float _pitchAngleDegreesPrevious {0.0};
     float _pitchBalanceAngleDegrees {0.0};
     const float _pitchMaxAngleDegrees {20.0};
-    int _pitchRateIsFiltered {true}; //!< set to true to cause _pitchPID to use the filtered pitch rate in its update function
 
     PIDF _pitchPID;
     float _pitchUpdate {0.0};

@@ -200,12 +200,7 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
         return;
     }
 
-    const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
-    if (fabs(pitchAngleDegrees) > _pitchMaxAngleDegrees) { // !!TODO - probably don't need this, since it is handled by the PID saturation anti-windup code
-        // we are way off balance, and the I-term is now a hindrance
-        _pitchPID.resetIntegral();
-    }
-
+    // calculate _speedUpdate according to the control mode.
     if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
         const float speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
         // feed the speedUpdate back into the pitchPID and set _speedUpdate to zero
@@ -236,16 +231,14 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
         _speedUpdate = _speedPID.update(_positionDegrees, deltaT);
     }
 
-    // Calculate the pitchAngleDelta
+    // update the pitch PID
+    const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
     float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
     _pitchAngleDegreesPrevious = pitchAngleDegrees;
-    if (_pitchRateIsFiltered) {
-        // Calculate the filtered value to use as input into the PID, so the D-term is calculated using the filtered value.
-        // This is beneficial because the D-term is especially susceptible to noise.
-        static FilterMovingAverage<4> pitchAngleDeltaFilter; // moving average of length 4 involves no division, only addition and multiplication
-        pitchAngleDegreesDelta = pitchAngleDeltaFilter.update(pitchAngleDegreesDelta);
-    }
-
+    // Calculate the filtered value to use as input into the PID, so the D-term is calculated using the filtered value.
+    // This is beneficial because the D-term is especially susceptible to noise.
+    static FilterMovingAverage<4> pitchAngleDeltaFilter; // moving average of length 4 involves no division, only addition and multiplication
+    pitchAngleDegreesDelta = pitchAngleDeltaFilter.update(pitchAngleDegreesDelta);
     _pitchUpdate = _pitchPID.updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
 
     _yawRateUpdate = _yawRatePID.update(0.0F, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
