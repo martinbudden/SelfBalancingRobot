@@ -11,12 +11,12 @@ class MotorPairBase;
 class MotorPairController;
 class TaskBase;
 class ReceiverBase;
-class SBR_Preferences;
+class SV_Preferences;
 
 
 class Backchannel {
 public:
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, const AHRS_Base& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, SBR_Preferences* preferences);
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, const AHRS_Base& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, SV_Preferences* preferences);
     Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, const AHRS_Base& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver) :
         Backchannel(transceiver, macAddress, motorPairController, ahrs, mainTask, receiver, nullptr) {}
 private:
@@ -46,7 +46,7 @@ private:
     const AHRS_Base& _ahrs;
     const TaskBase& _mainTask;
     const ReceiverBase& _receiver;
-    SBR_Preferences* _preferences {nullptr};
+    SV_Preferences* _preferences {nullptr};
     uint32_t _telemetryID {0};
     uint32_t _backchannelID {0};
     enum SendType { SEND_NO_DATA, RESET_SCREEN_AND_SEND_NO_DATA, SEND_TICK_INTERVAL_DATA, SEND_PID_DATA, SEND_AHRS_DATA, SEND_MPC_DATA, SEND_RECEIVER_DATA };

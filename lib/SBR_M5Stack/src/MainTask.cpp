@@ -20,7 +20,7 @@
 #include "MainTask.h"
 #include "MotorPairBase.h"
 #include "MotorPairController.h"
-#include "SBR_Preferences.h"
+#include "SV_Preferences.h"
 #include "Screen.h"
 #include "SensorFusionFilter.h"
 
@@ -138,7 +138,7 @@ void MainTask::setup()
     _receiver->setMotorController(_motorPairController);
     _ahrs->setMotorController(_motorPairController);
 
-    static SBR_Preferences preferences;
+    static SV_Preferences preferences;
     _preferences = &preferences;
 
     checkGyroCalibration();

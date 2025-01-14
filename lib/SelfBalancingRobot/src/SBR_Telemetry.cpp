@@ -58,15 +58,15 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
 }
 
 /*!
-Packs the MotorPairController PID telemetry data into a TD_PID packet. Returns the length of the packet.
+Packs the MotorPairController PID telemetry data into a TD_SBR_PIDs packet. Returns the length of the packet.
 */
 int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPairController& motorPairController)
 {
-    TD_PID* td = reinterpret_cast<TD_PID*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
+    TD_SBR_PIDs* td = reinterpret_cast<TD_SBR_PIDs*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
-    td->type = TD_PID::TYPE;
-    td->len = sizeof(TD_PID);
+    td->type = TD_SBR_PIDs::TYPE;
+    td->len = sizeof(TD_SBR_PIDs);
 
     td->data.pitch.setpoint = motorPairController.getPitchPIDSetpoint();
     td->data.pitch.pid = motorPairController.getPitchPIDConstants();

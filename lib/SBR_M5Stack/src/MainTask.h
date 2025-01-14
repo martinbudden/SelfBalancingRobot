@@ -7,7 +7,7 @@ class AHRS;
 class Backchannel;
 class MotorPairController;
 class Receiver;
-class SBR_Preferences;
+class SV_Preferences;
 class Screen;
 class Buttons;
 
@@ -24,7 +24,7 @@ private:
     AHRS* _ahrs {nullptr};
     MotorPairController* _motorPairController {nullptr};
     Receiver* _receiver {nullptr};
-    SBR_Preferences* _preferences {nullptr};
+    SV_Preferences* _preferences {nullptr};
     Backchannel* _backchannel {nullptr};
     uint32_t _failSafeTickCount {UINT32_MAX}; //<! failsafe counter, so the robot doesn't run away if it looses contact with the transmitter (for example by going out of range)
     uint32_t _screenTickCount {0};

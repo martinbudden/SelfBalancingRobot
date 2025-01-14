@@ -7,14 +7,14 @@
 #include "MotorPairBase.h"
 #include "MotorPairController.h"
 #if defined(USE_ESP32_PREFERENCES)
-#include "SBR_Preferences.h"
+#include "SV_Preferences.h"
 #endif
 #include "SBR_Telemetry.h"
 #include "TaskBase.h"
 #include <HardwareSerial.h>
 
 static_assert(sizeof(TD_TickIntervals) <= ESP_NOW_MAX_DATA_LEN);
-static_assert(sizeof(TD_PID) <= ESP_NOW_MAX_DATA_LEN);
+static_assert(sizeof(TD_SBR_PIDs) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN);
 
@@ -24,7 +24,7 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
         const AHRS_Base& ahrs,
         const TaskBase& mainTask, 
         const ReceiverBase& receiver,
-        SBR_Preferences* preferences) :
+        SV_Preferences* preferences) :
     _transceiver(transceiver),
     _received_data(_receivedDataBuffer, sizeof(_receivedDataBuffer)),
     _motorPairController(motorPairController),
@@ -69,7 +69,7 @@ void Backchannel::packetControl(const CommandPacketControl& packet) {
 void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
     //Serial.printf("TransmitRequest packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
     static_assert(sizeof(TD_TickIntervals) < sizeof(_transmitDataBuffer));
-    static_assert(sizeof(TD_PID) < sizeof(_transmitDataBuffer));
+    static_assert(sizeof(TD_SBR_PIDs) < sizeof(_transmitDataBuffer));
     static_assert(sizeof(TD_AHRS) < sizeof(_transmitDataBuffer));
     static_assert(sizeof(TD_MPC) < sizeof(_transmitDataBuffer));
 

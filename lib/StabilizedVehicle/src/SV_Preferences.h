@@ -5,7 +5,7 @@
 #include <xyz_int16_type.h>
 
 
-class SBR_Preferences {
+class SV_Preferences {
 public:
     enum { READ_WRITE=false, READ_ONLY=true };
     enum { MAC_ADDRESS_LEN = 6 };
@@ -16,12 +16,15 @@ public:
     bool isSetPID() const;
     void setPID_PreferencesToZero();
 
+    PIDF::PIDF_t getRollPID() const;
+    void putRollPID(const PIDF::PIDF_t& pid);
     PIDF::PIDF_t getPitchPID() const;
     void putPitchPID(const PIDF::PIDF_t& pid);
-    PIDF::PIDF_t getSpeedPID() const;
-    void putSpeedPID(const PIDF::PIDF_t& pid);
     PIDF::PIDF_t getYawRatePID() const;
     void putYawRatePID(const PIDF::PIDF_t& pid);
+
+    PIDF::PIDF_t getSpeedPID() const;
+    void putSpeedPID(const PIDF::PIDF_t& pid);
 
     float getPitchBalanceAngleDegrees() const;
     void putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees);

@@ -1,14 +1,14 @@
 #if defined(USE_ESP32_PREFERENCES)
 
-#include "SBR_Preferences.h"
+#include "SV_Preferences.h"
 #include <cfloat>
 
 namespace { // use anonymous namespace to make items local to this translation unit
-const char* preferencesNamespace {"SBR"};
+const char* preferencesNamespace {"SV"};
 } // end namespace
 
 
-void SBR_Preferences::clear()
+void SV_Preferences::clear()
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
@@ -17,7 +17,7 @@ void SBR_Preferences::clear()
     _preferences.end();
 }
 
-bool SBR_Preferences::isSetPID() const
+bool SV_Preferences::isSetPID() const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
@@ -27,7 +27,7 @@ bool SBR_Preferences::isSetPID() const
     return ret;
 }
 
-void SBR_Preferences::setPID_PreferencesToZero()
+void SV_Preferences::setPID_PreferencesToZero()
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
     _preferences.putBool("PIDSET", true);
@@ -41,7 +41,35 @@ void SBR_Preferences::setPID_PreferencesToZero()
 
 }
 
-PIDF::PIDF_t SBR_Preferences::getPitchPID() const
+PIDF::PIDF_t SV_Preferences::getRollPID() const
+{
+    _preferences.begin(preferencesNamespace, READ_ONLY);
+
+    const PIDF::PIDF_t pid {
+        .kp = _preferences.getFloat("ROLL_P", 0.0F),
+        .ki = _preferences.getFloat("ROLL_I", 0.0F),
+        .kd = _preferences.getFloat("ROLL_D", 0.0F),
+        .kf = _preferences.getFloat("ROLL_F", 0.0F)
+    };
+
+    _preferences.end();
+    return pid;
+}
+
+void SV_Preferences::putRollPID(const PIDF::PIDF_t& pid)
+{
+    _preferences.begin(preferencesNamespace, READ_WRITE);
+
+    _preferences.putBool("PIDSET", true);
+    _preferences.putFloat("ROLL_P", pid.kp);
+    _preferences.putFloat("ROLL_I", pid.ki);
+    _preferences.putFloat("ROLL_D", pid.kd);
+    _preferences.putFloat("ROLL_F", pid.kf);
+
+    _preferences.end();
+}
+
+PIDF::PIDF_t SV_Preferences::getPitchPID() const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
@@ -56,7 +84,7 @@ PIDF::PIDF_t SBR_Preferences::getPitchPID() const
     return pid;
 }
 
-void SBR_Preferences::putPitchPID(const PIDF::PIDF_t& pid)
+void SV_Preferences::putPitchPID(const PIDF::PIDF_t& pid)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
@@ -69,35 +97,7 @@ void SBR_Preferences::putPitchPID(const PIDF::PIDF_t& pid)
     _preferences.end();
 }
 
-PIDF::PIDF_t SBR_Preferences::getSpeedPID() const
-{
-    _preferences.begin(preferencesNamespace, READ_ONLY);
-
-    const PIDF::PIDF_t pid {
-        .kp = _preferences.getFloat("SPEED_P", 0.0F),
-        .ki = _preferences.getFloat("SPEED_I", 0.0F),
-        .kd = _preferences.getFloat("SPEED_D", 0.0F),
-        .kf = _preferences.getFloat("SPEED_F", 0.0F)
-    };
-
-    _preferences.end();
-    return pid;
-}
-
-void SBR_Preferences::putSpeedPID(const PIDF::PIDF_t& pid)
-{
-    _preferences.begin(preferencesNamespace, READ_WRITE);
-
-    _preferences.putBool("PIDSET", true);
-    _preferences.putFloat("SPEED_P", pid.kp);
-    _preferences.putFloat("SPEED_I", pid.ki);
-    _preferences.putFloat("SPEED_D", pid.kd);
-    _preferences.putFloat("SPEED_F", pid.kf);
-
-    _preferences.end();
-}
-
-PIDF::PIDF_t SBR_Preferences::getYawRatePID() const
+PIDF::PIDF_t SV_Preferences::getYawRatePID() const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
@@ -112,7 +112,7 @@ PIDF::PIDF_t SBR_Preferences::getYawRatePID() const
     return pid;
 }
 
-void SBR_Preferences::putYawRatePID(const PIDF::PIDF_t& pid)
+void SV_Preferences::putYawRatePID(const PIDF::PIDF_t& pid)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
@@ -125,7 +125,35 @@ void SBR_Preferences::putYawRatePID(const PIDF::PIDF_t& pid)
     _preferences.end();
 }
 
-float SBR_Preferences::getPitchBalanceAngleDegrees() const
+PIDF::PIDF_t SV_Preferences::getSpeedPID() const
+{
+    _preferences.begin(preferencesNamespace, READ_ONLY);
+
+    const PIDF::PIDF_t pid {
+        .kp = _preferences.getFloat("SPEED_P", 0.0F),
+        .ki = _preferences.getFloat("SPEED_I", 0.0F),
+        .kd = _preferences.getFloat("SPEED_D", 0.0F),
+        .kf = _preferences.getFloat("SPEED_F", 0.0F)
+    };
+
+    _preferences.end();
+    return pid;
+}
+
+void SV_Preferences::putSpeedPID(const PIDF::PIDF_t& pid)
+{
+    _preferences.begin(preferencesNamespace, READ_WRITE);
+
+    _preferences.putBool("PIDSET", true);
+    _preferences.putFloat("SPEED_P", pid.kp);
+    _preferences.putFloat("SPEED_I", pid.ki);
+    _preferences.putFloat("SPEED_D", pid.kd);
+    _preferences.putFloat("SPEED_F", pid.kf);
+
+    _preferences.end();
+}
+
+float SV_Preferences::getPitchBalanceAngleDegrees() const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
@@ -135,7 +163,7 @@ float SBR_Preferences::getPitchBalanceAngleDegrees() const
     return pitchBalanceAngleDegrees;
 }
 
-void SBR_Preferences::putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees)
+void SV_Preferences::putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
@@ -145,7 +173,7 @@ void SBR_Preferences::putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees
     _preferences.end();
 }
 
-bool SBR_Preferences::getAccOffset(xyz_int16_t* accOffset) const
+bool SV_Preferences::getAccOffset(xyz_int16_t* accOffset) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
@@ -160,7 +188,7 @@ bool SBR_Preferences::getAccOffset(xyz_int16_t* accOffset) const
     return ret;
 }
 
-void SBR_Preferences::putAccOffset(const xyz_int16_t& accOffset)
+void SV_Preferences::putAccOffset(const xyz_int16_t& accOffset)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
@@ -172,7 +200,7 @@ void SBR_Preferences::putAccOffset(const xyz_int16_t& accOffset)
     _preferences.end();
 }
 
-bool SBR_Preferences::getGyroOffset(xyz_int16_t* gyroOffset) const
+bool SV_Preferences::getGyroOffset(xyz_int16_t* gyroOffset) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
@@ -187,7 +215,7 @@ bool SBR_Preferences::getGyroOffset(xyz_int16_t* gyroOffset) const
     return ret;
 }
 
-void SBR_Preferences::putGyroOffset(const xyz_int16_t& gyroOffset)
+void SV_Preferences::putGyroOffset(const xyz_int16_t& gyroOffset)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
@@ -199,7 +227,7 @@ void SBR_Preferences::putGyroOffset(const xyz_int16_t& gyroOffset)
     _preferences.end();
 }
 
-void SBR_Preferences::getTransmitMacAddress(uint8_t* macAddress) const
+void SV_Preferences::getTransmitMacAddress(uint8_t* macAddress) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
@@ -208,7 +236,7 @@ void SBR_Preferences::getTransmitMacAddress(uint8_t* macAddress) const
     _preferences.end();
 }
 
-void SBR_Preferences::putTransmitMacAddress(const uint8_t* macAddress)
+void SV_Preferences::putTransmitMacAddress(const uint8_t* macAddress)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 

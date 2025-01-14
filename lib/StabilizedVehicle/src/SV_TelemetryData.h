@@ -57,27 +57,19 @@ struct TD_TickIntervals {
 };
 
 /*!
-Packet for the the transmission of PID constants, setpoints, and the balance angle, to enable remote tuning.
+Packet for the transmission of Receiver telemetry data.
 */
-struct TD_PID {
+struct TD_Receiver {
     enum { TYPE = 3 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_PID)}; //!< length of whole packet, ie sizeof(TD_PID)
+    uint8_t len {sizeof(TD_Receiver)}; //!< length of whole packet, ie sizeof(TD_Receiver)
 
-    uint8_t filler0 {0};
-    uint8_t filler1 {0};
-    enum { PITCH_PID = 0, SPEED_PID = 1, YAW_RATE_PID = 2, PID_COUNT = 3};
-    struct SPID_t {
-        float setpoint;
-        PIDF::PIDF_t pid;
-        PIDF::PIDF_t scale; //!< factor to scale value to range ~ [0, 100], for consistent display
-    };
+    uint8_t tickInterval {0}; //!< tick number of ticks since last receiver update
+    uint8_t droppedPacketCount {0}; //!< the number of packets dropped by the receiver
     struct Data {
-        SPID_t pitch;
-        SPID_t speed;
-        SPID_t yawRate;
-        float pitchBalanceAngleDegrees;
+        ReceiverBase::controls_t controls;
+        uint32_t flags;
     };
     Data data;
 };
@@ -105,10 +97,36 @@ struct TD_AHRS {
 };
 
 /*!
+Packet for the the transmission of PID constants, setpoints, and the balance angle, for self-balancing robots, to enable remote tuning.
+*/
+struct TD_SBR_PIDs {
+    enum { TYPE = 5 };
+    uint32_t id {0};
+    uint8_t type {TYPE};
+    uint8_t len {sizeof(TD_SBR_PIDs)}; //!< length of whole packet, ie sizeof(TD_PID)
+
+    uint8_t filler0 {0};
+    uint8_t filler1 {0};
+    enum { PITCH_PID = 0, SPEED_PID = 1, YAW_RATE_PID = 2, PID_COUNT = 3};
+    struct SPID_t {
+        float setpoint;
+        PIDF::PIDF_t pid;
+        PIDF::PIDF_t scale; //!< factor to scale value to range ~ [0, 100], for consistent display
+    };
+    struct Data {
+        SPID_t pitch;
+        SPID_t speed;
+        SPID_t yawRate;
+        float pitchBalanceAngleDegrees;
+    };
+    Data data;
+};
+
+/*!
 Packet for the transmission of MotorPairController telemetry data.
 */
 struct TD_MPC {
-    enum { TYPE = 5 };
+    enum { TYPE = 6 };
     uint32_t id {0};
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_MPC)}; //!< length of whole packet, ie sizeof(TD_MPC)
@@ -119,22 +137,5 @@ struct TD_MPC {
     motor_pair_controller_telemetry_t data;
 };
 
-/*!
-Packet for the transmission of Receiver telemetry data.
-*/
-struct TD_Receiver {
-    enum { TYPE = 6 };
-    uint32_t id {0};
-    uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_Receiver)}; //!< length of whole packet, ie sizeof(TD_Receiver)
-
-    uint8_t tickInterval {0}; //!< tick number of ticks since last receiver update
-    uint8_t droppedPacketCount {0}; //!< the number of packets dropped by the receiver
-    struct Data {
-        ReceiverBase::controls_t controls;
-        uint32_t flags;
-    };
-    Data data;
-};
 #pragma pack(pop)
 
