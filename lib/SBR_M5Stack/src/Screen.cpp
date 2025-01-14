@@ -595,9 +595,11 @@ void Screen::update(bool packetReceived) const
         .acc = ahrsData.acc
     };
     // update the screen with the AHRS data
-    update(tdAhrsData);
-    if (packetReceived) {
-        // update the screen with data received from the receiver
-        updateReceivedData();
+    if (_screenMode != Screen::MODE_QRCODE) {
+        update(tdAhrsData);
+        if (packetReceived) {
+            // update the screen with data received from the receiver
+            updateReceivedData();
+        }
     }
 }

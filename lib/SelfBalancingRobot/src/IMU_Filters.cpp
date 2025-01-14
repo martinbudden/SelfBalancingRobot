@@ -1,3 +1,5 @@
+#if defined(USE_AHRS)
+
 #include "IMU_Filters.h"
 
 
@@ -10,3 +12,4 @@ void IMU_Filters::filter(xyz_t& gyroRadians, xyz_t& acc, float deltaT) // cppche
     acc.y = _filterAccY.update(acc.y, deltaT);
     acc.z = _filterAccZ.update(acc.z, deltaT);
 };
+#endif // USE_AHRS

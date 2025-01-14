@@ -13,7 +13,7 @@ struct TD_Reserved {
     enum { TYPE = 0 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_Reserved)}; //<! length of whole packet, ie sizeof(TD_Reserved)
+    uint8_t len {sizeof(TD_Reserved)}; //!< length of whole packet, ie sizeof(TD_Reserved)
     uint8_t filler0 {0};
     uint8_t filler1 {0};
 };
@@ -25,7 +25,7 @@ struct TD_Minimal {
     enum { TYPE = 1 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_Minimal)}; //<! for a minimal packet the rule that len = sizeof(TD_Minimal) is not enforced
+    uint8_t len {sizeof(TD_Minimal)}; //!< for a minimal packet the rule that len = sizeof(TD_Minimal) is not enforced
 
     uint8_t data0 {0};
     uint8_t data1 {0};
@@ -40,14 +40,20 @@ struct TD_TickIntervals {
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_TickIntervals)}; //!< length of whole packet, ie sizeof(TD_TickIntervals)
 
-    uint16_t ahrsTaskMicroSecondInterval {0}; //<! execution interval of AHRS_TASK in microseconds
-    uint16_t mpcTaskMicroSecondInterval {0}; //<! execution interval of MPC_TASK in microseconds
-    uint8_t ahrsTaskTickInterval {0}; //<! tick interval of the AHRS_TASK
-    uint8_t ahrsTaskFifoCount {0}; //<! tick interval of the AHRS_TASK
-    uint8_t mpcTaskTickInterval {0}; //<! tick interval of the MPC_TASK
-    uint8_t mainTaskTickInterval {0}; //<! tick interval of the MAIN_LOOP_TASK
+    uint8_t ahrsTaskTickIntervalTicks {0}; //!< tick interval of the AHRS_TASK
+    uint8_t ahrsTaskFifoCount {0}; //!< tick interval of the AHRS_TASK
+    uint16_t ahrsTaskTickIntervalMicroSeconds {0}; //!< execution interval of AHRS_TASK in microseconds
+    uint16_t ahrsUpdateTimeIMU_ReadMicroSeconds{0}; //!< time taken to read IMU
+    uint16_t ahrsUpdateTimeFiltersMicroSeconds {0}; //!< time taken to filter gyro data
+    uint16_t ahrsUpdateTimeSensorFusionMicroSeconds {0}; //!< time taken to perform sensor fusion
+    uint16_t ahrsUpdateTimePID_MicroSeconds {0}; //!< time taken to update the PIDs fusion
+
+    uint16_t mpcOutputPowerTimeMicroSeconds {0}; //!< time taken to set the motor pair power
+    uint16_t mpcTaskTickIntervalMicroSeconds {0}; //!< tick interval of the MPC_TASK
+    uint8_t mpcTaskTickIntervalTicks {0}; //!< tick interval of the MPC_TASK
+    uint8_t mainTaskTickInterval {0}; //!< tick interval of the MAIN_LOOP_TASK
     uint8_t transceiverTickCountDelta; //<<! tick interval of the ESP_NOW transceiver
-    uint8_t receiverDroppedPacketCount {0}; //<! the number of packets dropped by the receiver
+    uint8_t receiverDroppedPacketCount {0}; //!< the number of packets dropped by the receiver
 };
 
 /*!
@@ -57,7 +63,7 @@ struct TD_PID {
     enum { TYPE = 3 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_PID)}; //<! length of whole packet, ie sizeof(TD_PID)
+    uint8_t len {sizeof(TD_PID)}; //!< length of whole packet, ie sizeof(TD_PID)
 
     uint8_t filler0 {0};
     uint8_t filler1 {0};
@@ -85,7 +91,7 @@ struct TD_AHRS {
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_AHRS)}; //!< length of whole packet, ie sizeof(TD_AHRS)
 
-    uint8_t tickInterval {0}; //<! tick interval of the AHRS task
+    uint8_t tickInterval {0}; //!< tick interval of the AHRS task
     enum : uint8_t { FILTER_INITIALIZING_FLAG = 0x01 };
     uint8_t flags {0};
     struct Data {
@@ -122,8 +128,8 @@ struct TD_Receiver {
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_Receiver)}; //!< length of whole packet, ie sizeof(TD_Receiver)
 
-    uint8_t tickInterval {0}; //<! tick number of ticks since last receiver update
-    uint8_t droppedPacketCount {0}; //<! the number of packets dropped by the receiver
+    uint8_t tickInterval {0}; //!< tick number of ticks since last receiver update
+    uint8_t droppedPacketCount {0}; //!< the number of packets dropped by the receiver
     struct Data {
         ReceiverBase::controls_t controls;
         uint32_t flags;

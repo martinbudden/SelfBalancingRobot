@@ -1,7 +1,10 @@
+#if defined(USE_AHRS)
+
 #include "AHRS.h"
 #include "IMU_Base.h"
 #include "IMU_Filters.h"
 #include "MotorPairController.h"
+#include "SensorFusionFilter.h"
 #include <cmath>
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
 #include <driver/gpio.h>
@@ -56,16 +59,35 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     acc = accSum * fifoCountReciprocal;
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
 #else
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+    const uint32_t timeMicroSeconds0 = micros();
+#endif
     const bool dataRead = _IMU.readGyroRadiansAcc(gyroRadians, acc);
     if (dataRead == false) {
         YIELD_TASK();
         return false;
     }
-    _imuFilters->filter(gyroRadians, acc, deltaT);
-    const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+    const uint32_t timeMicroSeconds1 = micros();
+    _updateTimeIMU_ReadMicroSeconds = timeMicroSeconds1 - timeMicroSeconds0;
 #endif
+    _imuFilters->filter(gyroRadians, acc, deltaT);
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+    const uint32_t timeMicroSeconds2 = micros();
+    _updateTimeFiltersMicroSeconds = timeMicroSeconds2 - timeMicroSeconds1;
+#endif
+    const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+    const uint32_t timeMicroSeconds3 = micros();
+    _updateTimeSensorFusionMicroSeconds = timeMicroSeconds3 - timeMicroSeconds2;
+#endif
+#endif // USE_IMU_FIFO
     if (_motorController != nullptr) {
         _motorController->updatePIDs(orientation, deltaT);
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+        const uint32_t timeMicroSeconds4 = micros();
+        _updateTimePID_MicroSeconds = timeMicroSeconds4 - timeMicroSeconds3;
+#endif
     }
     if (sensorFusionFilterIsInitializing()) {
         checkMadgwickConvergence(acc, orientation);
@@ -276,3 +298,5 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint
 #endif
 #pragma GCC diagnostic pop
 }
+
+#endif // USE_AHRS

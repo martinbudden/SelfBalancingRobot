@@ -54,6 +54,8 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
     enum { AHRS_TASK_CORE = PRO_CPU_NUM };
 #endif
 
+enum { MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
+
 
 #if !defined(MPC_TASK_TICK_INTERVAL_MILLISECONDS)
 #if defined(USE_IMU_MPU6886_DIRECT)
@@ -193,15 +195,16 @@ void MainTask::setupAHRS(void* i2cMutex)
 
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
 #if defined(USE_COMPLEMENTARY_FILTER)
+    // approx 130 microseconds per update
     static ComplementaryFilter sensorFusionFilter;
-    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
 #elif defined(USE_MAHONY_FILTER)
+    // approx 10 microseconds per update
     static MahonyFilter sensorFusionFilter;
-    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
 #else
+    // approx 16 microseconds per update
     static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
-    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
 #endif
+    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
     _ahrs = &ahrs;
 }
 
@@ -310,12 +313,12 @@ The motors are controlled in the MotorPairController task.
 */
 void MainTask::loop()
 {
-    //vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS));
 
     // Delay 1 tick to yield to other tasks.
     // Most of the time this task does nothing, but when we get a packet from the receiver we want to process it immediately,
     // hence the short delay
-    vTaskDelay(1);
+    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS));
+
     const TickType_t tickCount = xTaskGetTickCount();
     // calculate _tickCountDelta for instrumentation
     _tickCountDelta = tickCount - _tickCountPrevious;
@@ -329,9 +332,9 @@ void MainTask::loop()
             _screenTemplateIsUpdated = true;
             _screen->updateTemplate();
         }
-    } else if ((_failSafeTickCount - tickCount > 1000) && (_failSafeTickCount != UINT32_MAX)) {
+    } else if ((_failSafeTickCount - tickCount > 2000) && (_failSafeTickCount != UINT32_MAX)) {
         // _failSafeTickCount is initialized to UINT32_MAX, so the motors won't turn off it the transmitter hasn't been turned on yet.
-        // We've had 1000 ticks (1 second) without a packet, so we seem to have lost contact with the transmitter,
+        // We've had 2000 ticks (2 seconds) without a packet, so we seem to have lost contact with the transmitter,
         // so switch off the motors to prevent the robot from doing a runaway.
         _motorPairController->motorsSwitchOff();
         _failSafeTickCount = UINT32_MAX;
@@ -344,10 +347,7 @@ void MainTask::loop()
     // update the screen every 100 ticks (0.1 seconds)
     if (_screenTickCount - tickCount > 100) {
         _screenTickCount = tickCount;
-        // update the screen if it is not in QRCODE mode
-        if (_screen->getScreenMode() != Screen::MODE_QRCODE) {
-            _screen->update(packetReceived);
-        }
+        _screen->update(packetReceived);
     }
     // update the buttons every 100 ticks (0.1 seconds)
     if (_buttonsTickCount - tickCount > 100) {

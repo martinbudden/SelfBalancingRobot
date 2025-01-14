@@ -15,8 +15,10 @@ public:
     inline float getPitchAngleDegreesRaw() const { return _pitchAngleDegreesRaw; } // not offset by balance angle
     inline float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; } // not offset by balance angle
     inline float getYawAngleDegreesRaw() const { return _yawAngleDegreesRaw; } // not offset by balance angle
+    inline uint32_t getOutputPowerTimeMicroSeconds() const { return _outputPowerTimeMicroSeconds; }
 protected:
     uint32_t _motorSwitchOffTickCount {0};
+    uint32_t _outputPowerTimeMicroSeconds {0}; //!< time taken to set the motor pair power
     int _motorsIsOn {false};
     int _newStickValuesAvailable {false};
     // stick values scaled to the range [-1,0, 1.0]
@@ -28,4 +30,3 @@ protected:
     float _rollAngleDegreesRaw {0.0};
     float _yawAngleDegreesRaw {0.0};
 };
-

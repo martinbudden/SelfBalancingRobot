@@ -38,11 +38,18 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
     td->type = TD_TickIntervals::TYPE;
     td->len = sizeof(TD_TickIntervals);
 
-    td->ahrsTaskMicroSecondInterval = ahrs.getTimeMicroSecondDelta();
-    td->mpcTaskMicroSecondInterval = motorController.getTimeMicroSecondDelta();
-    td->ahrsTaskTickInterval = ahrs.getTickCountDelta();
+    td->ahrsTaskTickIntervalTicks = ahrs.getTickCountDelta();
     td->ahrsTaskFifoCount = ahrs.getFifoCount();
-    td->mpcTaskTickInterval = motorController.getTickCountDelta();
+    td->ahrsTaskTickIntervalMicroSeconds = ahrs.getTimeMicroSecondDelta();
+    td->ahrsUpdateTimeIMU_ReadMicroSeconds = ahrs.getUpdateTimeIMU_ReadMicroSeconds();
+    td->ahrsUpdateTimeFiltersMicroSeconds = ahrs.getUpdateTimeFiltersMicroSeconds();
+    td->ahrsUpdateTimeSensorFusionMicroSeconds = ahrs.getUpdateTimeSensorFusionMicroSeconds();
+    td->ahrsUpdateTimePID_MicroSeconds = ahrs.getUpdateTimePID_MicroSeconds();
+
+    td->mpcTaskTickIntervalTicks = motorController.getTickCountDelta();
+    td->mpcOutputPowerTimeMicroSeconds = motorController.getOutputPowerTimeMicroSeconds();
+    td->mpcTaskTickIntervalMicroSeconds = motorController.getTimeMicroSecondDelta();
+
     td->mainTaskTickInterval = mainTaskTickCountDelta;
     td->transceiverTickCountDelta = transceiverTickCountDelta;
     td->receiverDroppedPacketCount = receiverDroppedPacketCount;

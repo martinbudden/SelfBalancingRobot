@@ -75,8 +75,9 @@ bool Receiver::update(uint32_t tickCountDelta)
         _motorController->newStickValuesReceived();
         return true;
     }
-    Serial.printf("Receiver::update Bad packet\r\n");
-    return false;
+    Serial.printf("BadPacket\r\n");
+    // we've had a packet even though it is a bad one, so we haven't lost contact with the receiver
+    return true;
 }
 
 /*!

@@ -1,13 +1,12 @@
 #pragma once
 
-#include "SensorFusionFilter.h"
 #include "TaskBase.h"
 #include <Quaternion.h>
 #include <xyz_int16_type.h>
 #include <xyz_type.h>
 
 class MotorPairController;
-
+class SensorFusionFilterBase;
 
 /*!
 AHRS (Attitude and Heading Reference System) virtual base class.
@@ -37,13 +36,23 @@ public:
 
     inline bool sensorFusionFilterIsInitializing() const { return _sensorFusionFilterInitializing; }
     inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
+
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
+    inline uint32_t getUpdateTimeIMU_ReadMicroSeconds() const { return _updateTimeIMU_ReadMicroSeconds; } // for instrumentation
+    inline uint32_t getUpdateTimeFiltersMicroSeconds() const { return _updateTimeFiltersMicroSeconds; } // for instrumentation
+    inline uint32_t getUpdateTimeSensorFusionMicroSeconds() const { return _updateTimeSensorFusionMicroSeconds; } // for instrumentation
+    inline uint32_t getUpdateTimePID_MicroSeconds() const { return _updateTimePID_MicroSeconds; } // for instrumentation
 protected:
     SensorFusionFilterBase& _sensorFusionFilter;
     Quaternion _orientation;
     MotorPairController* _motorController {nullptr};
     uint32_t _sensorFusionFilterInitializing {true};
-    uint32_t _fifoCount {0};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
+    // instrumentation member data
+    uint32_t _fifoCount {0};
+    uint32_t _updateTimeIMU_ReadMicroSeconds {0};
+    uint32_t _updateTimeFiltersMicroSeconds {0};
+    uint32_t _updateTimeSensorFusionMicroSeconds {0};
+    uint32_t _updateTimePID_MicroSeconds {0};
 };

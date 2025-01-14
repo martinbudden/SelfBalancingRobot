@@ -64,7 +64,13 @@ void MotorPairController::updateMotors()
         // filter the power input into the motors so they run more smoothly.
         const float powerLeftFiltered = powerLeftFilter.update(_powerLeft);
         const float powerRightFiltered = powerRightFilter.update(_powerRight);
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+        const uint32_t timeMicroSeconds0 = micros();
+#endif
         _motors.setPower(powerLeftFiltered, powerRightFiltered);
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+        _outputPowerTimeMicroSeconds = micros() - timeMicroSeconds0;
+#endif
     } else {
         // Motors switched off, so set everything to zero, ready for motors to be switched on again.
         _motors.setPower(0.0F, 0.0F);
@@ -195,10 +201,12 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
     _yawAngleDegreesRaw = orientation.calculateYawDegrees();
 #endif
 
+#if !defined(AHRS_RECORD_UPDATE_TIMES)
     if (!motorsIsOn() || _motorsDisabled) { // [[unlikely]]
         YIELD_TASK();
         return;
     }
+#endif
 
     // calculate _speedUpdate according to the control mode.
     if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
