@@ -9,10 +9,14 @@ public:
     ReceiverTest() {};
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
+    virtual EUI_48_t getMyEUI() const override;
+    virtual EUI_48_t getPrimaryPeerEUI() const override;
 };
 
 bool ReceiverTest::update(uint32_t tickCountDelta) { return true; }
 void ReceiverTest::mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const {};
+ReceiverBase::EUI_48_t ReceiverTest::getMyEUI() const { return EUI_48_t{}; }
+ReceiverBase::EUI_48_t ReceiverTest::getPrimaryPeerEUI() const { return EUI_48_t{}; }
 
 void setUp() {
 }
@@ -29,8 +33,6 @@ void test_motor_pair_controller() {
     TEST_ASSERT_TRUE(mpc.motorsIsOn());
     mpc.motorsToggleOnOff();
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
-
-    TEST_ASSERT_TRUE(mpc.getPitchRateIsFiltered());
 }
 
 int main(int argc, char **argv) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AHRS_Base.h"
+#include "SensorFusionFilter.h"
 
 
 class SensorFusionFilterTest : public SensorFusionFilterBase {

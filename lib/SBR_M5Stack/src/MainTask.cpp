@@ -13,6 +13,7 @@
 #include "Calibration.h"
 #include "ESPNOW_Backchannel.h"
 #include "ESPNOW_Receiver.h"
+#include "IMU_Filters.h"
 #include "IMU_M5Stack.h"
 #include "IMU_M5Unified.h"
 #include "IMU_MPU6886.h"
@@ -204,7 +205,11 @@ void MainTask::setupAHRS(void* i2cMutex)
     // approx 16 microseconds per update
     static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
 #endif
-    static AHRS ahrs(sensorFusionFilter, imuSensor, AHRS_TASK_TICK_INTERVAL_MILLISECONDS * 1000);
+    // statically allocate the IMU_Filters
+    constexpr float cutoffFrequency = 100.0F;
+    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F); // NOLINT(misc-const-correctness) false positive
+
+    static AHRS ahrs(sensorFusionFilter, imuSensor, imuFilters);
     _ahrs = &ahrs;
 }
 

@@ -3,7 +3,6 @@
 #include "ESPNOW_Receiver.h"
 
 #include "MotorControllerBase.h"
-#include "MotorPairBase.h"
 
 #include <HardwareSerial.h>
 
@@ -28,7 +27,7 @@ esp_err_t Receiver::setup(int channel)
 }
 
 /*!
-If a packet was received from the atomJoyStickReceiver then unpack it and send the stick values to the motorPairController.
+If a packet was received from the atomJoyStickReceiver then unpack it and send the stick values to the MotorController.
 
 Returns true if a packet has been received.
 */
@@ -83,7 +82,7 @@ bool Receiver::update(uint32_t tickCountDelta)
 /*!
 Map the yaw stick non-linearly to give more control for small values of yaw.
 
-Runs in the context of the MotorPairController.
+Runs in the context of the MotorController.
 */
 float Receiver::mapYawStick(float yawStick)
 {
@@ -98,7 +97,7 @@ float Receiver::mapYawStick(float yawStick)
 /*!
 Maps the joystick values from Q4dot12 format in the range [-2048, 2047] to floats in the range [-1, 1].
 
-NOTE: this function runs in the context of the MotorPairController task, in particular the FPU usage is in that context, so this avoids the
+NOTE: this function runs in the context of the MotorController task, in particular the FPU usage is in that context, so this avoids the
 need to save the ESP32 FPU registers on a context switch.
 */
 void Receiver::mapControls(float&  throttleStick, float&  rollStick, float&  pitchStick, float&  yawStick) const
@@ -112,14 +111,14 @@ void Receiver::mapControls(float&  throttleStick, float&  rollStick, float&  pit
 
 ReceiverBase::EUI_48_t Receiver::getMyEUI() const
 {
-    EUI_48_t ret;
+    EUI_48_t ret {};
     memcpy(&ret, _atomJoyStickReceiver.myMacAddress(), sizeof(EUI_48_t));
     return ret;
 }
 
 ReceiverBase::EUI_48_t Receiver::getPrimaryPeerEUI() const
 {
-    EUI_48_t ret;
+    EUI_48_t ret {};
     memcpy(&ret, _atomJoyStickReceiver.getPrimaryPeerMacAddress(), sizeof(EUI_48_t));
     return ret;
 }

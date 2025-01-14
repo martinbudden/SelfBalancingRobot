@@ -5,7 +5,7 @@
 #include <xyz_int16_type.h>
 #include <xyz_type.h>
 
-class MotorPairController;
+class MotorControllerBase;
 class SensorFusionFilterBase;
 
 /*!
@@ -21,8 +21,8 @@ public:
 public:
     AHRS_Base(SensorFusionFilterBase& sensorFusionFilter) : _sensorFusionFilter(sensorFusionFilter) {}
 public:
-    void setMotorController(MotorPairController* motorController) { _motorController = motorController; }
-    const MotorPairController* getMotorController() const { return _motorController; }
+    void setMotorController(MotorControllerBase* motorController) { _motorController = motorController; }
+    const MotorControllerBase* getMotorController() const { return _motorController; }
 public:
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) = 0;
     virtual void setAccOffset(const xyz_int16_t& accOffset) = 0;
@@ -45,7 +45,7 @@ public:
 protected:
     SensorFusionFilterBase& _sensorFusionFilter;
     Quaternion _orientation;
-    MotorPairController* _motorController {nullptr};
+    MotorControllerBase* _motorController {nullptr};
     uint32_t _sensorFusionFilterInitializing {true};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
     mutable int32_t _orientationUpdatedSinceLastRead {false};

@@ -1,16 +1,16 @@
-#if defined(USE_AHRS)
-
 #include "AHRS.h"
 #include "IMU_Base.h"
-#include "IMU_Filters.h"
-#include "MotorPairController.h"
+#include "IMU_FiltersBase.h"
+#include "MotorControllerBase.h"
 #include "SensorFusionFilter.h"
 #include <cmath>
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
 #include <driver/gpio.h>
 #include <esp32-hal-gpio.h>
 #endif
+#if defined(AHRS_RECORD_UPDATE_TIMES)
 #include <esp32-hal.h>
+#endif
 
 // Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
 // The critical section variant seems to give better performance.
@@ -49,16 +49,31 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     const float fifoCountReciprocal = 1.0F / static_cast<float>(_fifoCount);
     const float fifoDeltaT = deltaT * fifoCountReciprocal;
     // constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+    const uint32_t timeMicroSeconds1 = micros();
+#endif
     for (auto ii = 0; ii < _fifoCount; ++ii) {
         _IMU.readFIFO_Item(gyroRadians, acc, ii);
-        _imuFilters->filter(gyroRadians, acc, fifoDeltaT);
+        _imuFilters.filter(gyroRadians, acc, fifoDeltaT);
         gyroRadiansSum += gyroRadians;
         accSum += acc;
     }
     gyroRadians = gyroRadiansSum * fifoCountReciprocal;
     acc = accSum * fifoCountReciprocal;
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+    const uint32_t timeMicroSeconds2 = micros();
+    _updateTimeFiltersMicroSeconds = timeMicroSeconds2 - timeMicroSeconds1;
+#endif
+
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
+
+#if defined(AHRS_RECORD_UPDATE_TIMES)
+    const uint32_t timeMicroSeconds3 = micros();
+    _updateTimeSensorFusionMicroSeconds = timeMicroSeconds3 - timeMicroSeconds2;
+#endif
+
 #else
+
 #if defined(AHRS_RECORD_UPDATE_TIMES)
     const uint32_t timeMicroSeconds0 = micros();
 #endif
@@ -71,16 +86,21 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     const uint32_t timeMicroSeconds1 = micros();
     _updateTimeIMU_ReadMicroSeconds = timeMicroSeconds1 - timeMicroSeconds0;
 #endif
-    _imuFilters->filter(gyroRadians, acc, deltaT);
+
+    _imuFilters.filter(gyroRadians, acc, deltaT);
+
 #if defined(AHRS_RECORD_UPDATE_TIMES)
     const uint32_t timeMicroSeconds2 = micros();
     _updateTimeFiltersMicroSeconds = timeMicroSeconds2 - timeMicroSeconds1;
 #endif
+
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
+
 #if defined(AHRS_RECORD_UPDATE_TIMES)
     const uint32_t timeMicroSeconds3 = micros();
     _updateTimeSensorFusionMicroSeconds = timeMicroSeconds3 - timeMicroSeconds2;
 #endif
+
 #endif // USE_IMU_FIFO
     if (_motorController != nullptr) {
         _motorController->updatePIDs(orientation, deltaT);
@@ -264,26 +284,24 @@ IRAM_ATTR void AHRS::imuDataReadyInterruptServiceRoutine()
 /*!
 Constructor: set the sensor fusion filter and IMU to be used by the AHRS.
 */
-AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint32_t tickIntervalMicroSeconds) :
+AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters) :
     AHRS_Base(sensorFusionFilter),
-    _IMU(imuSensor)
+    _IMU(imuSensor),
+    _imuFilters(imuFilters)
 #if defined(USE_IMU_DATA_READY_MUTEX)
     ,_imuDataReadyMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataReadyMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 #if defined(USE_AHRS_DATA_MUTEX)
     , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
 #endif
+
 {
+
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
     ahrs = this;
     attachInterrupt(IMU_INTERRUPT_PIN, imuDataReadyInterruptServiceRoutine, FALLING);
 #endif
-
     setSensorFusionFilterInitializing(true);
-    // statically allocate the IMU_Filters
-    constexpr float cutoffFrequency = 100.0F;
-    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(tickIntervalMicroSeconds) * 1.0e-6F);
-    _imuFilters = &imuFilters;
 
 
 #pragma GCC diagnostic push
@@ -297,6 +315,5 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint
     static_assert(offsetof(AHRS, _ahrsDataMutex) > offsetof(AHRS, _ahrsDataMutexBuffer));
 #endif
 #pragma GCC diagnostic pop
-}
 
-#endif // USE_AHRS
+}

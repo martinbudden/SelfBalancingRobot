@@ -1,10 +1,11 @@
 #pragma once
 
 #include <Filters.h>
+#include <IMU_FiltersBase.h>
 #include <xyz_type.h>
 
 
-class IMU_Filters {
+class IMU_Filters : public IMU_FiltersBase {
 public:
     IMU_Filters(float frequencyCutoff, float deltaT) :
         _deltaT(deltaT),
@@ -17,7 +18,7 @@ public:
     {}
 public:
 public:
-    void filter(xyz_t& gyroRadians, xyz_t& acc, float deltaT);
+    virtual void filter(xyz_t& gyroRadians, xyz_t& acc, float deltaT) override;
 private:
     float _deltaT;
     IIR_filter _filterGyroX;

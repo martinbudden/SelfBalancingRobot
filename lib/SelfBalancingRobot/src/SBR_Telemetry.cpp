@@ -154,4 +154,3 @@ int packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, const Rec
 
     return td->len;
 };
-

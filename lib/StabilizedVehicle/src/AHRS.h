@@ -9,12 +9,12 @@
 #include <freertos/semphr.h>
 #endif
 
-class IMU_Filters;
+class IMU_FiltersBase;
 
 
-class AHRS final : public AHRS_Base {
+class AHRS : public AHRS_Base {
 public:
-    AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, uint32_t tickIntervalMicroSeconds);
+    AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 private:
     // class is not copyable or moveable
     AHRS(const AHRS&) = delete;
@@ -53,7 +53,7 @@ private:
     xyz_t _gyroRadians {0.0, 0.0, 0.0};
 
     IMU_Base& _IMU;
-    IMU_Filters* _imuFilters;
+    IMU_FiltersBase& _imuFilters;
 
 #if defined(USE_IMU_DATA_READY_MUTEX)
     StaticSemaphore_t _imuDataReadyMutexBuffer {}; // _imuDataReadyMutexBuffer must be declared before _imuDataReadyMutex

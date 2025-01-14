@@ -4,6 +4,9 @@
 #include <cfloat>
 #include <cstdint>
 
+class Quaternion;
+
+
 class MotorControllerBase : public TaskBase {
 public:
     inline bool motorsIsOn() const { return _motorsIsOn; }
@@ -16,6 +19,8 @@ public:
     inline float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; } // not offset by balance angle
     inline float getYawAngleDegreesRaw() const { return _yawAngleDegreesRaw; } // not offset by balance angle
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _outputPowerTimeMicroSeconds; }
+
+    virtual void updatePIDs(const Quaternion& orientation, float deltaT) = 0;
 protected:
     uint32_t _motorSwitchOffTickCount {0};
     uint32_t _outputPowerTimeMicroSeconds {0}; //!< time taken to set the motor pair power

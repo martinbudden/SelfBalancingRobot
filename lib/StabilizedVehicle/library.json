@@ -1,0 +1,13 @@
+{
+    "name": "StabilizedVehicle",
+    "description": "Library for stabilized vehicles such as self-balancing robots and quadcopters",
+    "keywords": "",
+    "authors": {
+        "name": "Martin Budden",
+        "url": "https://github.com/martinbudden/Library-StabilizedVehicle.git"
+    },
+    "license": "MIT",
+    "version": "0.0.1",
+    "frameworks": "*",
+    "platforms": "*"
+}

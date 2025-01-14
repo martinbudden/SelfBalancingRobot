@@ -1,5 +1,3 @@
-#if defined(USE_MOTOR_PAIR_CONTROLLER)
-
 #include "MotorPairController.h"
 
 #include "AHRS_Base.h"
@@ -179,7 +177,7 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT, ui
 }
 
 
-inline void MotorPairController::updatePIDs(float deltaT)
+void MotorPairController::updatePIDs(float deltaT)
 {
     [[maybe_unused]] bool orientationUpdated;
     const Quaternion orientation = _ahrs.getOrientationUsingLock(orientationUpdated);
@@ -259,7 +257,7 @@ Setpoints are provided by the receiver(joystick), and inputs(process variables) 
 
 There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
 */
-inline void MotorPairController::loop(float deltaT, uint32_t tickCount)
+void MotorPairController::loop(float deltaT, uint32_t tickCount)
 {
     updateSetpointsAndMotorSpeedEstimates(deltaT, tickCount);
     if (_ahrs.getMotorController() == nullptr) {
@@ -311,4 +309,3 @@ void MotorPairController::Task(void* arg)
     MotorPairController* mpc = taskParameters->motorPairController;
     mpc->Task(taskParameters);
 }
-#endif // USE_MOTOR_PAIR_CONTROLLER
