@@ -46,7 +46,7 @@ private:
     void updateReceivedData() const;
     void updateReceivedData80x160() const;
     void updateReceivedData128x128() const;
-    //void updateReceivedData135x240() const;
+    void updateReceivedData135x240() const;
     void updateReceivedData320x240() const;
 
     void update80x160(const TD_AHRS::Data& ahrsData) const; // M5StickC
@@ -56,8 +56,8 @@ private:
 
     void update(const TD_AHRS::Data& ahrsData) const;
 
-    static void displayMacAddress(const char* prompt, const uint8_t* macAddress);
-    static void displayMacAddressCompact(const char* prompt, const uint8_t* macAddress);
+    static void displayEUI(const char* prompt, const ReceiverBase::EUI_48_t& eui);
+    static void displayEUI_Compact(const char* prompt, const ReceiverBase::EUI_48_t& eui);
 private:
     screen_size_t _screenSize {SIZE_320x240};
     mode_t _screenMode {MODE_NORMAL};

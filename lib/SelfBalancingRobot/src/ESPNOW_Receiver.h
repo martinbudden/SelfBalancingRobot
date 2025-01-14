@@ -18,12 +18,15 @@ private:
 public:
     esp_err_t setup(int channel);
     void setMotorController(MotorControllerBase* motorController) { _motorController = motorController; } //!< Sets the motorController, which must be set before update() is called.
+
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
+    virtual EUI_48_t getMyEUI() const override;
+    virtual EUI_48_t getPrimaryPeerEUI() const override;
+
     void broadcastMyMacAddressForBinding() const { _atomJoyStickReceiver.broadcastMyMacAddressForBinding(); }
     ESPNOW_Transceiver& getESPNOW_Transceiver() { return _atomJoyStickReceiver.getTransceiver(); }
-    const uint8_t* getMyMacAddress() const { return _atomJoyStickReceiver.myMacAddress(); }
-    const uint8_t* getPrimaryPeerMacAddress() const { return _atomJoyStickReceiver.getPrimaryPeerMacAddress(); }
+
     inline uint8_t getMode() const { return _atomJoyStickReceiver.getMode(); }
     inline uint8_t getAltMode() const { return _atomJoyStickReceiver.getAltMode(); }
     inline uint8_t getFlipButton() const { return _atomJoyStickReceiver.getFlipButton(); }

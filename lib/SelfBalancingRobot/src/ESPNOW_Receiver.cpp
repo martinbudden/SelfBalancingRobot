@@ -108,4 +108,18 @@ void Receiver::mapControls(float&  throttleStick, float&  rollStick, float&  pit
     yawStick = mapYawStick(Q4dot12_to_float(_controls.yawStickQ4dot12));
 }
 
+
+ReceiverBase::EUI_48_t Receiver::getMyEUI() const
+{
+    EUI_48_t ret;
+    memcpy(&ret, _atomJoyStickReceiver.myMacAddress(), sizeof(EUI_48_t));
+    return ret;
+}
+
+ReceiverBase::EUI_48_t Receiver::getPrimaryPeerEUI() const
+{
+    EUI_48_t ret;
+    memcpy(&ret, _atomJoyStickReceiver.getPrimaryPeerMacAddress(), sizeof(EUI_48_t));
+    return ret;
+}
 #endif // USE_ESPNOW

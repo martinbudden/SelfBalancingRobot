@@ -112,25 +112,25 @@ void Screen::nextScreenMode()
 /*!
 Utility function to display a MAC address.
 */
-void Screen::displayMacAddress(const char* prompt, const uint8_t* macAddress)
+void Screen::displayEUI(const char* prompt, const ReceiverBase::EUI_48_t& eui)
 {
-    M5.Lcd.printf("%s%02X:%02X:%02X:%02X:%02X:%02X", prompt, macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    M5.Lcd.printf("%s%02X:%02X:%02X:%02X:%02X:%02X", prompt, eui.octet[0], eui.octet[1], eui.octet[2], eui.octet[3], eui.octet[4], eui.octet[5]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
 
 /*!
 Utility function to display a MAC address in a compact format, for devices with small screens.
 */
-void Screen::displayMacAddressCompact(const char* prompt, const uint8_t* macAddress)
+void Screen::displayEUI_Compact(const char* prompt, const ReceiverBase::EUI_48_t& eui)
 {
-    M5.Lcd.printf("%s%02x%02x%02x:%02x%02x%02x", prompt, macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    M5.Lcd.printf("%s%02x%02x%02x:%02x%02x%02x", prompt, eui.octet[0], eui.octet[1], eui.octet[2], eui.octet[3], eui.octet[4], eui.octet[5]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
 
 void Screen::updateTemplate128x128() const
 {
     M5.Lcd.setCursor(0, 10);
-    displayMacAddress("M:", _receiver.getMyMacAddress());
+    displayEUI("M:", _receiver.getMyEUI());
     M5.Lcd.setCursor(0, 20);
-    displayMacAddress("J:", _receiver.getPrimaryPeerMacAddress());
+    displayEUI("J:", _receiver.getPrimaryPeerEUI());
 
     int yPos = 35;
     M5.Lcd.setCursor(0, yPos);
@@ -205,9 +205,9 @@ void Screen::update128x128(const TD_AHRS::Data& ahrsData) const
 void Screen::updateTemplate80x160() const
 {
     M5.Lcd.setCursor(0, 10);
-    displayMacAddressCompact("", _receiver.getMyMacAddress());
+    displayEUI_Compact("", _receiver.getMyEUI());
     M5.Lcd.setCursor(0, 20);
-    displayMacAddressCompact("", _receiver.getPrimaryPeerMacAddress());
+    displayEUI_Compact("", _receiver.getPrimaryPeerEUI());
 
     int yPos = 30;
     M5.Lcd.setCursor(0, yPos);
@@ -316,9 +316,9 @@ void Screen::update80x160(const TD_AHRS::Data& ahrsData) const
 void Screen::updateTemplate135x240() const
 {
     M5.Lcd.setCursor(0, 0);
-    displayMacAddress("M:", _receiver.getMyMacAddress());
+    displayEUI("M:", _receiver.getMyEUI());
     M5.Lcd.setCursor(0, 20);
-    displayMacAddress("J:", _receiver.getPrimaryPeerMacAddress());
+    displayEUI("J:", _receiver.getPrimaryPeerEUI());
 
     int yPos = 45;
     M5.Lcd.setCursor(0, yPos);
@@ -356,6 +356,11 @@ void Screen::updateTemplate135x240() const
     M5.Lcd.printf("M:");
 }
 
+void Screen::updateReceivedData135x240() const
+{
+    updateReceivedData80x160();
+}
+
 void Screen::update135x240(const TD_AHRS::Data& ahrsData) const
 {
     int yPos = 45;
@@ -390,9 +395,9 @@ void Screen::update135x240(const TD_AHRS::Data& ahrsData) const
 void Screen::updateTemplate320x240() const
 {
     M5.Lcd.setCursor(0, 0);
-    displayMacAddress("MAC:", _receiver.getMyMacAddress());
+    displayEUI("MAC:", _receiver.getMyEUI());
     M5.Lcd.setCursor(0, 20);
-    displayMacAddress("REM:", _receiver.getPrimaryPeerMacAddress());
+    displayEUI("REM:", _receiver.getPrimaryPeerEUI());
 
     int yPos = 45;
     M5.Lcd.setCursor(0, yPos);
@@ -565,7 +570,7 @@ void Screen::update(const TD_AHRS::Data& ahrsData) const
         update128x128(ahrsData);
         break;
     case SIZE_135x240:
-        [[fallthrough]]
+        update135x240(ahrsData);
     case SIZE_80x160:
         update80x160(ahrsData);
         break;
