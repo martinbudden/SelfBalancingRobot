@@ -123,9 +123,9 @@ void AHRS::Task(const TaskParameters* taskParameters)
         LOCK_IMU_DATA_READY(); // wait until the ISR unlocks data ready
         _imuDataReadyCount = 0;
 
-        _timeMicroSecondsPrevious = _timeMicroSeconds;
-        _timeMicroSeconds = micros();
-        const float deltaT = static_cast<float>(_timeMicroSeconds - _timeMicroSecondsPrevious) * 0.000001F;
+        const uint32_t timeMicroSeconds = micros();
+        const float deltaT = static_cast<float>(timeMicroSeconds - _timeMicroSecondsPrevious) * 0.000001F;
+        _timeMicroSecondsPrevious = timeMicroSeconds;
         if (deltaT > 0.0F) {
             (void)readIMUandUpdateOrientation(deltaT);
         }
@@ -136,9 +136,9 @@ void AHRS::Task(const TaskParameters* taskParameters)
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
         _tickCountPrevious = tickCount;
-        const uint32_t timeMicroSecond = micros();
-        _timeMicroSecondDelta = timeMicroSecond - _timeMicroSecondPrevious;
-        _timeMicroSecondPrevious = timeMicroSecond;
+        const uint32_t timeMicroSeconds = micros();
+        _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
+        _timeMicroSecondsPrevious = timeMicroSeconds;
 
         if (_tickCountDelta > 0) { // guard against the case of the while loop executing twice on the same tick interval
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;

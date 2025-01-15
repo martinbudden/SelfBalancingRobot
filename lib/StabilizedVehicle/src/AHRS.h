@@ -85,11 +85,9 @@ private:
     Quaternion _orientation {};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
 
-    // interrupt service routine member data
+    // interrupt service routine data
     static AHRS* ahrs; //!< alias of `this` to be used in imuDataReceivedInterruptServiceRoutine 
     uint32_t _imuDataReadyCount {0}; //<! data ready count, used in interrupt service routine
-    uint32_t _timeMicroSeconds {0}; //<! microsecond timer used by interrupt service routine
-    uint32_t _timeMicroSecondsPrevious {0}; //<! microsecond timer used by interrupt service routine
 
     // instrumentation member data
     uint32_t _fifoCount {0};

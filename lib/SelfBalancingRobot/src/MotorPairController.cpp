@@ -287,9 +287,9 @@ void MotorPairController::Task(const TaskParameters* taskParameters)
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
         _tickCountPrevious = tickCount;
-        const uint32_t timeMicroSecond = micros();
-        _timeMicroSecondDelta = timeMicroSecond - _timeMicroSecondPrevious;
-        _timeMicroSecondPrevious = timeMicroSecond;
+        const uint32_t timeMicroSeconds = micros();
+        _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
+        _timeMicroSecondsPrevious = timeMicroSeconds;
 
         if (_tickCountDelta > 0) { // guard against the case of the while loop executing twice on the same tick interval
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
