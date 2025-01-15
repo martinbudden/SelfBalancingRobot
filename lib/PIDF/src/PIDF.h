@@ -36,7 +36,7 @@ public:
     inline void setSetpoint(float setpoint) { _setpoint = setpoint; }
     inline float getSetpoint() const { return _setpoint; }
 
-    float update(float measurement, float deltaT);
+    inline float update(float measurement, float deltaT) { return updateDelta(measurement, measurement - _measurementPrevious, deltaT); }
     float updateDelta(float measurement, float measurementDelta, float deltaT);
 
     // accessor functions to obtain error values for instrumentation

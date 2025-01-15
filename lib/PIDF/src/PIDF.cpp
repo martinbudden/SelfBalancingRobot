@@ -21,45 +21,6 @@ PIDF::error_t PIDF::getErrorRaw() const
 }
 
 /*!
-Standard PID update. Calculate output based on error.
-Error is defined as setpoint minus the measured variable.
-*/
-float PIDF::update(float measurement, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
-{
-    const float error = _setpoint - measurement;
-
-    if (fabs(error) > _integralThreshold) {
-        // "integrate" the error
-        //_errorIntegral += _pid.ki*_error*deltaT; // Euler integration
-        _errorIntegral += _pid.ki*0.5F*(error + _errorPrevious)*deltaT; // integration using trapezoid rule
-        // Anti-windup via integral clamping
-        if (_integralMax > 0.0F) {
-            _errorIntegral = clip(_errorIntegral, -_integralMax, _integralMax);
-        }
-    }
-    const float pValue = _pid.kp*error;
-    if (_outputSaturationValue != 0.0F && fabs(pValue) > _outputSaturationValue) {
-        // The output is saturated by the pValue, so the integral value will not increase output and will result in overshoot when the pValue eventually comes down,
-        // so set the integral to zero.
-        _errorIntegral = 0.0F;
-    }
-
-    // "differentiate" the error
-    //_errorDerivative = (_error - _errorPrevious) / deltaT;
-
-    // calculate derivative  using the measurement, to avoid derivative "kick" on setpoint change, note the minus sign
-    _errorDerivative = -(measurement - _measurementPrevious) / deltaT;
-    _errorPrevious = error;
-    _measurementPrevious = measurement;
-
-    // The PID calculation with additional feedforward
-    //                   P        I                D                          F
-    const float output = pValue + _errorIntegral + _pid.kd*_errorDerivative + _pid.kf*_setpoint;
-
-    return output;
-}
-
-/*!
 Calculate PID output using the provided measurementRate.
 This allows the measurementRate to be filtered before the PID update is called.
 */
