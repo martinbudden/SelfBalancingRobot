@@ -92,8 +92,7 @@ void MainTask::setup()
 #endif
 #endif
 
-    //Serial.begin(115200);
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     // This task has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
