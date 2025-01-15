@@ -10,11 +10,11 @@ Packs the TD_Minimal packet with zeros. Returns the length of the packet.
 */
 int packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id)
 {
-    TD_Minimal* td = reinterpret_cast<TD_Minimal*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
+    TD_MINIMAL* td = reinterpret_cast<TD_MINIMAL*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
-    td->type = TD_Minimal::TYPE;
-    td->len = sizeof(TD_Minimal);
+    td->type = TD_MINIMAL::TYPE;
+    td->len = sizeof(TD_MINIMAL);
 
     td->data0 = 0;
     td->data1 = 0;
@@ -23,7 +23,7 @@ int packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id)
 }
 
 /*!
-Packs the tick interval telemetry data into a TD_TickIntervals packet. Returns the length of the packet.
+Packs the tick interval telemetry data into a TD_TICK_INTERVALS packet. Returns the length of the packet.
 */
 int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         const AHRS& ahrs,
@@ -32,20 +32,21 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         uint32_t transceiverTickCountDelta,
         uint32_t receiverDroppedPacketCount)
 {
-    TD_TickIntervals* td = reinterpret_cast<TD_TickIntervals*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
+    TD_TICK_INTERVALS* td = reinterpret_cast<TD_TICK_INTERVALS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
-    td->type = TD_TickIntervals::TYPE;
-    td->len = sizeof(TD_TickIntervals);
+    td->type = TD_TICK_INTERVALS::TYPE;
+    td->len = sizeof(TD_TICK_INTERVALS);
 
     td->ahrsTaskTickIntervalTicks = ahrs.getTickCountDelta();
-    td->ahrsTaskFifoCount = ahrs.getFifoCount();
     td->ahrsTaskTickIntervalMicroSeconds = ahrs.getTimeMicroSecondDelta();
-    td->ahrsUpdateTimeIMU_ReadMicroSeconds = ahrs.getUpdateTimeIMU_ReadMicroSeconds();
-    td->ahrsUpdateTimeFiltersMicroSeconds = ahrs.getUpdateTimeFiltersMicroSeconds();
-    td->ahrsUpdateTimeSensorFusionMicroSeconds = ahrs.getUpdateTimeSensorFusionMicroSeconds();
-    td->ahrsUpdateTimePID_MicroSeconds = ahrs.getUpdateTimePID_MicroSeconds();
 
+    static_assert(TD_TICK_INTERVALS::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
+    td->ahrsTaskFifoCount = ahrs.getFifoCount();
+    for (int ii = 0; ii < TD_TICK_INTERVALS::TIME_CHECKS_COUNT; ++ii) {
+        td->ahrsTimeChecksMicroSeconds[ii] = ahrs.getTimeChecksMicroSeconds(ii);
+    }
+ 
     td->mpcTaskTickIntervalTicks = motorController.getTickCountDelta();
     td->mpcOutputPowerTimeMicroSeconds = motorController.getOutputPowerTimeMicroSeconds();
     td->mpcTaskTickIntervalMicroSeconds = motorController.getTimeMicroSecondDelta();
@@ -58,15 +59,15 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
 }
 
 /*!
-Packs the MotorPairController PID telemetry data into a TD_SBR_PIDs packet. Returns the length of the packet.
+Packs the MotorPairController PID telemetry data into a TD_SBR_PIDS packet. Returns the length of the packet.
 */
 int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPairController& motorPairController)
 {
-    TD_SBR_PIDs* td = reinterpret_cast<TD_SBR_PIDs*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
+    TD_SBR_PIDS* td = reinterpret_cast<TD_SBR_PIDS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
-    td->type = TD_SBR_PIDs::TYPE;
-    td->len = sizeof(TD_SBR_PIDs);
+    td->type = TD_SBR_PIDS::TYPE;
+    td->len = sizeof(TD_SBR_PIDS);
 
     td->data.pitch.setpoint = motorPairController.getPitchPIDSetpoint();
     td->data.pitch.pid = motorPairController.getPitchPIDConstants();
@@ -135,15 +136,15 @@ int packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, const MotorPai
 };
 
 /*!
-Packs the Receiver telemetry data into a TD_Receiver packet. Returns the length of the packet.
+Packs the Receiver telemetry data into a TD_RECEIVER packet. Returns the length of the packet.
 */
 int packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, const ReceiverBase& receiver)
 {
-    TD_Receiver* td = reinterpret_cast<TD_Receiver*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
+    TD_RECEIVER* td = reinterpret_cast<TD_RECEIVER*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
-    td->type = TD_Receiver::TYPE;
-    td->len = sizeof(TD_Receiver);
+    td->type = TD_RECEIVER::TYPE;
+    td->len = sizeof(TD_RECEIVER);
     td->tickInterval = receiver.getTickCountDelta();
     td->droppedPacketCount = receiver.getDroppedPacketCountDelta();
 

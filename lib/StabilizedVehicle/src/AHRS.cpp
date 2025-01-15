@@ -8,9 +8,6 @@
 #include <driver/gpio.h>
 #include <esp32-hal-gpio.h>
 #endif
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-#include <esp32-hal.h>
-#endif
 
 // Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
 // The critical section variant seems to give better performance.
@@ -38,20 +35,23 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     // reading the FIFO blocks the I2C bus, which in turn blocks the MPC_TASK.
     // I'm starting to come to the conclusion that, for M5Stack devices, better overall performance is obtained by not using the FIFO.
 
+#if defined(AHRS_RECORD_TIMES_CHECKS)
+    _timeCheck0 = micros();
+#endif
     _fifoCount = _IMU.readFIFO_ToBuffer();
     if (_fifoCount == 0) {
         YIELD_TASK();
         return false;
     }
+    TIME_CHECK(0, _timeCheck0);
+    TIME_CHECK(1);
 
     xyz_t gyroRadiansSum {0.0, 0.0, 0.0};
     xyz_t accSum {0.0, 0.0, 0.0};
     const float fifoCountReciprocal = 1.0F / static_cast<float>(_fifoCount);
     const float fifoDeltaT = deltaT * fifoCountReciprocal;
     // constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-    const uint32_t timeMicroSeconds1 = micros();
-#endif
+
     for (auto ii = 0; ii < _fifoCount; ++ii) {
         _IMU.readFIFO_Item(gyroRadians, acc, ii);
         _imuFilters.filter(gyroRadians, acc, fifoDeltaT);
@@ -60,55 +60,37 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     }
     gyroRadians = gyroRadiansSum * fifoCountReciprocal;
     acc = accSum * fifoCountReciprocal;
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-    const uint32_t timeMicroSeconds2 = micros();
-    _updateTimeFiltersMicroSeconds = timeMicroSeconds2 - timeMicroSeconds1;
-#endif
+    TIME_CHECK(1);
+    TIME_CHECK(2);
 
     const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
 
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-    const uint32_t timeMicroSeconds3 = micros();
-    _updateTimeSensorFusionMicroSeconds = timeMicroSeconds3 - timeMicroSeconds2;
-#endif
+    TIME_CHECK(3);
 
 #else
 
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-    const uint32_t timeMicroSeconds0 = micros();
+#if defined(AHRS_RECORD_TIMES_CHECKS)
+    _timeCheck0 = micros();
 #endif
     const bool dataRead = _IMU.readGyroRadiansAcc(gyroRadians, acc);
     if (dataRead == false) {
         YIELD_TASK();
         return false;
     }
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-    const uint32_t timeMicroSeconds1 = micros();
-    _updateTimeIMU_ReadMicroSeconds = timeMicroSeconds1 - timeMicroSeconds0;
-#endif
+    TIME_CHECK(0, _timeCheck0);
+    TIME_CHECK(1);
 
-    _imuFilters.filter(gyroRadians, acc, deltaT);
+    _imuFilters.filter(gyroRadians, acc, deltaT); // 15us, 207us
+    TIME_CHECK(2);
 
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-    const uint32_t timeMicroSeconds2 = micros();
-    _updateTimeFiltersMicroSeconds = timeMicroSeconds2 - timeMicroSeconds1;
-#endif
-
-    const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
-
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-    const uint32_t timeMicroSeconds3 = micros();
-    _updateTimeSensorFusionMicroSeconds = timeMicroSeconds3 - timeMicroSeconds2;
-#endif
+    const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT); // 15us, 140us
+    TIME_CHECK(3);
 
 #endif // USE_IMU_FIFO
 
     if (_motorController != nullptr) {
-        _motorController->updatePIDs(orientation, deltaT);
-#if defined(AHRS_RECORD_UPDATE_TIMES)
-        const uint32_t timeMicroSeconds4 = micros();
-        _updateTimePID_MicroSeconds = timeMicroSeconds4 - timeMicroSeconds3;
-#endif
+        _motorController->updatePIDs(orientation, deltaT); //25us, 900us
+        TIME_CHECK(4);
     }
 
     if (sensorFusionFilterIsInitializing()) {
@@ -138,7 +120,7 @@ void AHRS::Task(const TaskParameters* taskParameters)
 
     while (true) {
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
-        LOCK_IMU_DATA_READY();
+        LOCK_IMU_DATA_READY(); // wait until the ISR unlocks data ready
         _imuDataReadyCount = 0;
 
         _timeMicroSecondsPrevious = _timeMicroSeconds;

@@ -62,11 +62,11 @@ void MotorPairController::updateMotors()
         // filter the power input into the motors so they run more smoothly.
         const float powerLeftFiltered = powerLeftFilter.update(_powerLeft);
         const float powerRightFiltered = powerRightFilter.update(_powerRight);
-#if defined(AHRS_RECORD_UPDATE_TIMES)
+#if defined(AHRS_RECORD_TIMES_CHECKS)
         const uint32_t timeMicroSeconds0 = micros();
 #endif
         _motors.setPower(powerLeftFiltered, powerRightFiltered);
-#if defined(AHRS_RECORD_UPDATE_TIMES)
+#if defined(AHRS_RECORD_TIMES_CHECKS)
         _outputPowerTimeMicroSeconds = micros() - timeMicroSeconds0;
 #endif
     } else {

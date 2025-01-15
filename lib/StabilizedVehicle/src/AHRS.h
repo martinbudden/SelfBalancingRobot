@@ -7,11 +7,15 @@
 
 #include "AHRS.h"
 #include "IMU_Base.h"
+#include <cassert>
 #include <cfloat>
 
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#endif
+#if defined(AHRS_RECORD_TIMES_CHECKS)
+#include <esp32-hal.h>
 #endif
 
 class MotorControllerBase;
@@ -26,6 +30,7 @@ public:
         xyz_t gyroRadians;
         xyz_t acc;
     };
+    static constexpr int TIME_CHECKS_COUNT = 4;
 public:
     AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
@@ -53,10 +58,7 @@ public:
     inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
 
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
-    inline uint32_t getUpdateTimeIMU_ReadMicroSeconds() const { return _updateTimeIMU_ReadMicroSeconds; } // for instrumentation
-    inline uint32_t getUpdateTimeFiltersMicroSeconds() const { return _updateTimeFiltersMicroSeconds; } // for instrumentation
-    inline uint32_t getUpdateTimeSensorFusionMicroSeconds() const { return _updateTimeSensorFusionMicroSeconds; } // for instrumentation
-    inline uint32_t getUpdateTimePID_MicroSeconds() const { return _updateTimePID_MicroSeconds; } // for instrumentation
+    inline uint32_t getTimeChecksMicroSeconds(size_t index) const { assert(index < TIME_CHECKS_COUNT); return _timeChecksMicroSeconds[index + 1] - _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
 public:
     struct TaskParameters {
         AHRS* ahrs;
@@ -80,7 +82,7 @@ private:
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
 
     uint32_t _sensorFusionFilterInitializing {true};
-    Quaternion _orientation;
+    Quaternion _orientation {};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
 
     // interrupt service routine member data
@@ -91,10 +93,15 @@ private:
 
     // instrumentation member data
     uint32_t _fifoCount {0};
-    uint32_t _updateTimeIMU_ReadMicroSeconds {0};
-    uint32_t _updateTimeFiltersMicroSeconds {0};
-    uint32_t _updateTimeSensorFusionMicroSeconds {0};
-    uint32_t _updateTimePID_MicroSeconds {0};
+    uint32_t _timeCheck0 {0};
+    uint32_t _timeChecksMicroSeconds[TIME_CHECKS_COUNT + 1] {};
+#if defined(AHRS_RECORD_TIMES_CHECKS)
+    inline void TIME_CHECK(size_t index) { _timeChecksMicroSeconds[index] = micros(); }
+    inline void TIME_CHECK(size_t index, uint32_t timeMicroSeconds) { _timeChecksMicroSeconds[index] = timeMicroSeconds; }
+#else
+    inline void TIME_CHECK(size_t index) { (void)index;}
+    inline void TIME_CHECK(size_t index, uint32_t timeMicroSeconds) { (void)index; (void)timeMicroSeconds; }
+#endif
 
     // data synchronization primitives
 #if defined(USE_IMU_DATA_READY_MUTEX)

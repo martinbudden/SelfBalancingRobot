@@ -2,6 +2,7 @@
 
 #include "MotorPairControllerTelemetry.h"
 #include "ReceiverBase.h"
+#include <array>
 #include <cstdint>
 #include <xyz_type.h>
 
@@ -9,11 +10,11 @@
 /*!
 Telemetry data type 0 is reserved for future use.
 */
-struct TD_Reserved {
+struct TD_RESERVED {
     enum { TYPE = 0 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_Reserved)}; //!< length of whole packet, ie sizeof(TD_Reserved)
+    uint8_t len {sizeof(TD_RESERVED)}; //!< length of whole packet, ie sizeof(TD_Reserved)
     uint8_t filler0 {0};
     uint8_t filler1 {0};
 };
@@ -21,32 +22,30 @@ struct TD_Reserved {
 /*!
 Minimal sized packet. May be useful in future.
 */
-struct TD_Minimal {
+struct TD_MINIMAL {
     enum { TYPE = 1 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_Minimal)}; //!< for a minimal packet the rule that len = sizeof(TD_Minimal) is not enforced
+    uint8_t len {sizeof(TD_MINIMAL)}; //!< length of whole packet, ie sizeof(TD_MINIMAL)
 
     uint8_t data0 {0};
     uint8_t data1 {0};
 };
 
 /*!
-Packet for the the transmission of AHRS and MPC tick intervals;
+Packet for the the transmission of AHRS, MPC, and MAIN tick intervals and timings;
 */
-struct TD_TickIntervals {
+struct TD_TICK_INTERVALS {
     enum { TYPE = 2 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_TickIntervals)}; //!< length of whole packet, ie sizeof(TD_TickIntervals)
+    uint8_t len {sizeof(TD_TICK_INTERVALS)}; //!< length of whole packet, ie sizeof(TD_TICK_INTERVALS)
 
     uint8_t ahrsTaskTickIntervalTicks {0}; //!< tick interval of the AHRS_TASK
     uint8_t ahrsTaskFifoCount {0}; //!< tick interval of the AHRS_TASK
     uint16_t ahrsTaskTickIntervalMicroSeconds {0}; //!< execution interval of AHRS_TASK in microseconds
-    uint16_t ahrsUpdateTimeIMU_ReadMicroSeconds{0}; //!< time taken to read IMU
-    uint16_t ahrsUpdateTimeFiltersMicroSeconds {0}; //!< time taken to filter gyro data
-    uint16_t ahrsUpdateTimeSensorFusionMicroSeconds {0}; //!< time taken to perform sensor fusion
-    uint16_t ahrsUpdateTimePID_MicroSeconds {0}; //!< time taken to update the PIDs fusion
+    static constexpr int TIME_CHECKS_COUNT = 4;
+    std::array<uint16_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
 
     uint16_t mpcOutputPowerTimeMicroSeconds {0}; //!< time taken to set the motor pair power
     uint16_t mpcTaskTickIntervalMicroSeconds {0}; //!< tick interval of the MPC_TASK
@@ -59,11 +58,11 @@ struct TD_TickIntervals {
 /*!
 Packet for the transmission of Receiver telemetry data.
 */
-struct TD_Receiver {
+struct TD_RECEIVER {
     enum { TYPE = 3 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_Receiver)}; //!< length of whole packet, ie sizeof(TD_Receiver)
+    uint8_t len {sizeof(TD_RECEIVER)}; //!< length of whole packet, ie sizeof(TD_RECEIVER)
 
     uint8_t tickInterval {0}; //!< tick number of ticks since last receiver update
     uint8_t droppedPacketCount {0}; //!< the number of packets dropped by the receiver
@@ -99,11 +98,11 @@ struct TD_AHRS {
 /*!
 Packet for the the transmission of PID constants, setpoints, and the balance angle, for self-balancing robots, to enable remote tuning.
 */
-struct TD_SBR_PIDs {
+struct TD_SBR_PIDS {
     enum { TYPE = 5 };
     uint32_t id {0};
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_SBR_PIDs)}; //!< length of whole packet, ie sizeof(TD_PID)
+    uint8_t len {sizeof(TD_SBR_PIDS)}; //!< length of whole packet, ie sizeof(TD_SBR_PIDS)
 
     uint8_t filler0 {0};
     uint8_t filler1 {0};
