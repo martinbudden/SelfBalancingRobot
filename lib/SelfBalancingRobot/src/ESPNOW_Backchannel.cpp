@@ -1,6 +1,6 @@
 #if defined(USE_ESPNOW)
 
-#include "AHRS_Base.h"
+#include "AHRS.h"
 #include "CommandPacket.h"
 #include "ESPNOW_Backchannel.h"
 #include "ESPNOW_Receiver.h"
@@ -21,7 +21,7 @@ static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN);
 
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
         MotorPairController& motorPairController,
-        const AHRS_Base& ahrs,
+        const AHRS& ahrs,
         const TaskBase& mainTask, 
         const ReceiverBase& receiver,
         SV_Preferences* preferences) :

@@ -1,6 +1,6 @@
 #include "SBR_Telemetry.h"
 
-#include "AHRS_Base.h"
+#include "AHRS.h"
 #include "MotorPairBase.h"
 
 #include <cstring>
@@ -26,7 +26,7 @@ int packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id)
 Packs the tick interval telemetry data into a TD_TickIntervals packet. Returns the length of the packet.
 */
 int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
-        const AHRS_Base& ahrs,
+        const AHRS& ahrs,
         const MotorControllerBase& motorController,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
@@ -88,7 +88,7 @@ int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPai
 /*!
 Packs the AHRS telemetry data into a TD_AHRS packet. Returns the length of the packet.
 */
-int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS_Base& ahrs, const MotorControllerBase& motorController)
+int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS& ahrs, const MotorControllerBase& motorController)
 {
     TD_AHRS* td = reinterpret_cast<TD_AHRS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
@@ -96,7 +96,7 @@ int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS_Ba
     td->type = TD_AHRS::TYPE;
     td->len = sizeof(TD_AHRS);
 
-    const AHRS_Base::data_t ahrsData = ahrs.getAhrsDataForInstrumentationUsingLock();
+    const AHRS::data_t ahrsData = ahrs.getAhrsDataForInstrumentationUsingLock();
     td->data = {
         .pitch = motorController.getPitchAngleDegreesRaw(),
         .roll = motorController.getRollAngleDegreesRaw(),

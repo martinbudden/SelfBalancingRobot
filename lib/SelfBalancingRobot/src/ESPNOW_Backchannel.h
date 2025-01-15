@@ -6,7 +6,7 @@ class CommandPacketControl;
 class CommandPacketRequestData;
 class CommandPacketSetPID;
 
-class AHRS_Base;
+class AHRS;
 class MotorPairBase;
 class MotorPairController;
 class TaskBase;
@@ -16,8 +16,8 @@ class SV_Preferences;
 
 class Backchannel {
 public:
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, const AHRS_Base& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, SV_Preferences* preferences);
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, const AHRS_Base& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver) :
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, const AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, SV_Preferences* preferences);
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, const AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver) :
         Backchannel(transceiver, macAddress, motorPairController, ahrs, mainTask, receiver, nullptr) {}
 private:
     // Backchannel is not copyable or moveable
@@ -43,7 +43,7 @@ private:
     uint8_t _transmitDataBuffer[ESP_NOW_MAX_DATA_LEN] {};
 private:
     MotorPairController& _motorPairController;
-    const AHRS_Base& _ahrs;
+    const AHRS& _ahrs;
     const TaskBase& _mainTask;
     const ReceiverBase& _receiver;
     SV_Preferences* _preferences {nullptr};

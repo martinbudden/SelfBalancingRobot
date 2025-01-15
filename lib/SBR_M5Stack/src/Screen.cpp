@@ -6,7 +6,7 @@
 #endif
 
 #include "Screen.h"
-#include "AHRS_Base.h"
+#include "AHRS.h"
 #include "ESPNOW_Receiver.h"
 #include "MotorPairController.h"
 
@@ -33,7 +33,7 @@ enum {
 
 constexpr float radiansToDegrees {180.0 / M_PI};
 
-Screen::Screen(const AHRS_Base& ahrs, const MotorPairController& motorPairController, const Receiver& receiver) :
+Screen::Screen(const AHRS& ahrs, const MotorPairController& motorPairController, const Receiver& receiver) :
     _screenSize(screenSize()),
     _screenRotationOffset(
         (_screenSize == SIZE_80x160 || _screenSize == SIZE_135x240) ? 1 :
@@ -586,7 +586,7 @@ Update the screen with data from the AHRS and the receiver.
 */
 void Screen::update(bool packetReceived) const
 {
-    const AHRS_Base::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
+    const AHRS::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
     const TD_AHRS::Data tdAhrsData {
         .pitch = _motorPairController.getPitchAngleDegreesRaw(),
         .roll = _motorPairController.getRollAngleDegreesRaw(),

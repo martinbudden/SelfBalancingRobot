@@ -1,6 +1,11 @@
 #pragma once
 
-#include "AHRS_Base.h"
+#include "TaskBase.h"
+#include <Quaternion.h>
+#include <xyz_int16_type.h>
+#include <xyz_type.h>
+
+#include "AHRS.h"
 #include "IMU_Base.h"
 #include <cfloat>
 
@@ -9,12 +14,23 @@
 #include <freertos/semphr.h>
 #endif
 
+class MotorControllerBase;
+class SensorFusionFilterBase;
 class IMU_FiltersBase;
 
 
-class AHRS : public AHRS_Base {
+class AHRS : public TaskBase {
+public:
+    struct data_t {
+        uint32_t tickCountDelta;
+        xyz_t gyroRadians;
+        xyz_t acc;
+    };
 public:
     AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
+public:
+    void setMotorController(MotorControllerBase* motorController) { _motorController = motorController; }
+    const MotorControllerBase* getMotorController() const { return _motorController; }
 private:
     // class is not copyable or moveable
     AHRS(const AHRS&) = delete;
@@ -22,15 +38,25 @@ private:
     AHRS(AHRS&&) = delete;
     AHRS& operator=(AHRS&&) = delete;
 public:
-    virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
-    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
-    virtual xyz_int16_t readGyroRaw() const override;
-    virtual xyz_int16_t readAccRaw() const override;
-    virtual AHRS_Base::data_t getAhrsDataUsingLock(bool& updatedSinceLastRead) const override;
-    virtual AHRS_Base::data_t getAhrsDataForInstrumentationUsingLock() const override;
-    virtual Quaternion getOrientationUsingLock(bool& updatedSinceLastRead) const override;
-    virtual Quaternion getOrientationForInstrumentationUsingLock() const override;
+    void setGyroOffset(const xyz_int16_t& gyroOffset);
+    void setAccOffset(const xyz_int16_t& accOffset);
+    xyz_int16_t readGyroRaw() const;
+    xyz_int16_t readAccRaw() const;
+
+    data_t getAhrsDataUsingLock(bool& updatedSinceLastRead) const;
+    data_t getAhrsDataForInstrumentationUsingLock() const;
+    Quaternion getOrientationUsingLock(bool& updatedSinceLastRead) const;
+    Quaternion getOrientationForInstrumentationUsingLock() const;
+
     void checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientation);
+    inline bool sensorFusionFilterIsInitializing() const { return _sensorFusionFilterInitializing; }
+    inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
+
+    inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
+    inline uint32_t getUpdateTimeIMU_ReadMicroSeconds() const { return _updateTimeIMU_ReadMicroSeconds; } // for instrumentation
+    inline uint32_t getUpdateTimeFiltersMicroSeconds() const { return _updateTimeFiltersMicroSeconds; } // for instrumentation
+    inline uint32_t getUpdateTimeSensorFusionMicroSeconds() const { return _updateTimeSensorFusionMicroSeconds; } // for instrumentation
+    inline uint32_t getUpdateTimePID_MicroSeconds() const { return _updateTimePID_MicroSeconds; } // for instrumentation
 public:
     struct TaskParameters {
         AHRS* ahrs;
@@ -44,17 +70,33 @@ private:
     static IRAM_ATTR void imuDataReadyInterruptServiceRoutine();
 #endif
 private:
-    static AHRS* ahrs; // alias of `this` to be used in imuDataReceivedInterruptServiceRoutine 
-    uint32_t _imuDataReadyCount {0};
-    uint32_t _timeMicroSeconds {0};
-    uint32_t _timeMicroSecondsPrevious {0};
+    SensorFusionFilterBase& _sensorFusionFilter;
+    IMU_Base& _IMU;
+    IMU_FiltersBase& _imuFilters;
+    MotorControllerBase* _motorController {nullptr};
 
     xyz_t _acc {0.0, 0.0, 0.0};
     xyz_t _gyroRadians {0.0, 0.0, 0.0};
+    mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
 
-    IMU_Base& _IMU;
-    IMU_FiltersBase& _imuFilters;
+    uint32_t _sensorFusionFilterInitializing {true};
+    Quaternion _orientation;
+    mutable int32_t _orientationUpdatedSinceLastRead {false};
 
+    // interrupt service routine member data
+    static AHRS* ahrs; //!< alias of `this` to be used in imuDataReceivedInterruptServiceRoutine 
+    uint32_t _imuDataReadyCount {0}; //<! data ready count, used in interrupt service routine
+    uint32_t _timeMicroSeconds {0}; //<! microsecond timer used by interrupt service routine
+    uint32_t _timeMicroSecondsPrevious {0}; //<! microsecond timer used by interrupt service routine
+
+    // instrumentation member data
+    uint32_t _fifoCount {0};
+    uint32_t _updateTimeIMU_ReadMicroSeconds {0};
+    uint32_t _updateTimeFiltersMicroSeconds {0};
+    uint32_t _updateTimeSensorFusionMicroSeconds {0};
+    uint32_t _updateTimePID_MicroSeconds {0};
+
+    // data synchronization primitives
 #if defined(USE_IMU_DATA_READY_MUTEX)
     StaticSemaphore_t _imuDataReadyMutexBuffer {}; // _imuDataReadyMutexBuffer must be declared before _imuDataReadyMutex
     SemaphoreHandle_t _imuDataReadyMutex {};

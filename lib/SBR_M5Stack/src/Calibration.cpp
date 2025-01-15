@@ -3,13 +3,13 @@
 #elif defined(M5_UNIFIED)
 #include <M5Unified.h>
 #endif
-#include "AHRS_Base.h"
+#include "AHRS.h"
 #include "Calibration.h"
 #include "SV_Preferences.h"
 
 
 #if !defined(M5_UNIFIED) || defined(USE_IMU_MPU6886_DIRECT)
-static void calibrate(AHRS_Base& ahrs, SV_Preferences& preferences, calibrate_t calibrationType)
+static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrationType)
 {
     int64_t gyroX = 0;
     int64_t gyroY = 0;
@@ -88,7 +88,7 @@ static void calibrate()
 }
 #endif
 
-void calibrateGyro([[maybe_unused]] AHRS_Base& ahrs, [[maybe_unused]] SV_Preferences& preferences, [[maybe_unused]] calibrate_t calibrationType)
+void calibrateGyro([[maybe_unused]] AHRS& ahrs, [[maybe_unused]] SV_Preferences& preferences, [[maybe_unused]] calibrate_t calibrationType)
 {
     if (M5.Lcd.width() > 300) {
         M5.Lcd.setTextSize(2);

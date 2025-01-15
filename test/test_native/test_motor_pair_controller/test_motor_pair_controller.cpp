@@ -1,3 +1,4 @@
+#include "AHRS.h"
 #include "AHRS_Test.h"
 #include "MotorPairController.h"
 #include "ReceiverBase.h"
@@ -25,7 +26,10 @@ void tearDown() {
 }
 
 void test_motor_pair_controller() {
-    AHRS_Test ahrs;
+    SensorFusionFilterTest sensorFusionFilter;
+    IMU_Test imu;
+    IMU_Filters_Test imuFilters;
+    AHRS ahrs(sensorFusionFilter, imu, imuFilters);
     ReceiverTest receiver;
     MotorPairController mpc(ahrs, receiver);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());

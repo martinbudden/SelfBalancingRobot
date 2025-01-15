@@ -2,7 +2,7 @@
 
 #include "SV_TelemetryData.h"
 
-class AHRS_Base;
+class AHRS;
 class MotorPairController;
 class Receiver;
 
@@ -19,7 +19,7 @@ public:
     };
     enum mode_t { MODE_NORMAL = 1, MODE_INVERTED = 3, MODE_QRCODE = 5 };
 public:
-    Screen(const AHRS_Base& ahrs, const MotorPairController& motorPairController, const Receiver& receiver);
+    Screen(const AHRS& ahrs, const MotorPairController& motorPairController, const Receiver& receiver);
 private:
     // Screen is not copyable or moveable
     Screen(const Screen&) = delete;
@@ -63,7 +63,7 @@ private:
     mode_t _screenMode {MODE_NORMAL};
     int _screenRotationOffset {0};
 
-    const AHRS_Base& _ahrs;
+    const AHRS& _ahrs;
     const MotorPairController& _motorPairController;
     const Receiver& _receiver;
 };

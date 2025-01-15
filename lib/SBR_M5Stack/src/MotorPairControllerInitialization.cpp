@@ -1,6 +1,6 @@
 #include "MotorPairController.h"
 
-#include "AHRS_Base.h"
+#include "AHRS.h"
 #include "MotorPairBase.h"
 #include "MotorPairControllerDefaults.h"
 
@@ -83,8 +83,8 @@ void MotorPairController::setControlMode(ControlMode_t controlMode)
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(const AHRS_Base& ahrsBase, const ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
-    _ahrs(ahrsBase),
+MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
+    _ahrs(ahrs),
     _receiver(receiver),
     _motors(motors()),
     _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),

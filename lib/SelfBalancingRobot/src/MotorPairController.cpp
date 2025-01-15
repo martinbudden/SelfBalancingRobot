@@ -1,6 +1,6 @@
 #include "MotorPairController.h"
 
-#include "AHRS_Base.h"
+#include "AHRS.h"
 #include "MotorPairControllerTelemetry.h"
 #include "ReceiverBase.h"
 #include <Filters.h>

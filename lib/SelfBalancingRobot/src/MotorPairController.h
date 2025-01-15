@@ -11,14 +11,14 @@
 
 struct motor_pair_controller_telemetry_t;
 class ReceiverBase;
-class AHRS_Base;
+class AHRS;
 class Quaternion;
 
 
 class MotorPairController : public MotorControllerBase {
 public:
-    MotorPairController(const AHRS_Base& ahrs, const ReceiverBase& receiver, void* i2cMutex);
-    MotorPairController(const AHRS_Base& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
+    MotorPairController(const AHRS& ahrs, const ReceiverBase& receiver, void* i2cMutex);
+    MotorPairController(const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -82,7 +82,7 @@ private:
     inline void YIELD_TASK() const {}
 #endif
 private:
-    const AHRS_Base& _ahrs;
+    const AHRS& _ahrs;
     const ReceiverBase& _receiver;
     MotorPairBase& _motors;
 

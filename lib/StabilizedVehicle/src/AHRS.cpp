@@ -102,6 +102,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 #endif
 
 #endif // USE_IMU_FIFO
+
     if (_motorController != nullptr) {
         _motorController->updatePIDs(orientation, deltaT);
 #if defined(AHRS_RECORD_UPDATE_TIMES)
@@ -109,6 +110,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
         _updateTimePID_MicroSeconds = timeMicroSeconds4 - timeMicroSeconds3;
 #endif
     }
+
     if (sensorFusionFilterIsInitializing()) {
         checkMadgwickConvergence(acc, orientation);
     }
@@ -120,6 +122,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     _gyroRadians = gyroRadians;
     _acc = acc;
     UNLOCK_AHRS_DATA();
+
     return true;
 }
 
@@ -230,12 +233,12 @@ Quaternion AHRS::getOrientationForInstrumentationUsingLock() const
     return ret;
 }
 
-AHRS_Base::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
+AHRS::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
 {
     LOCK_AHRS_DATA();
     updatedSinceLastRead = _ahrsDataUpdatedSinceLastRead;
     _ahrsDataUpdatedSinceLastRead = false;
-    const AHRS_Base::data_t ret {
+    const data_t ret {
         .tickCountDelta = _tickCountDelta,
         .gyroRadians = _gyroRadians,
         .acc = _acc
@@ -245,10 +248,10 @@ AHRS_Base::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
     return ret;
 }
 
-AHRS_Base::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
+AHRS::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
 {
     LOCK_AHRS_DATA();
-    const AHRS_Base::data_t ret {
+    const data_t ret {
         .tickCountDelta = _tickCountDelta,
         .gyroRadians = _gyroRadians,
         .acc = _acc
@@ -282,10 +285,10 @@ IRAM_ATTR void AHRS::imuDataReadyInterruptServiceRoutine()
 #endif
 
 /*!
-Constructor: set the sensor fusion filter and IMU to be used by the AHRS.
+Constructor: sets the sensor fusion filter, IMU, and IMU filters
 */
 AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters) :
-    AHRS_Base(sensorFusionFilter),
+    _sensorFusionFilter(sensorFusionFilter),
     _IMU(imuSensor),
     _imuFilters(imuFilters)
 #if defined(USE_IMU_DATA_READY_MUTEX)
@@ -307,11 +310,11 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #if defined(USE_IMU_DATA_READY_MUTEX)
-     // ensure _imuDataReadyMutexBuffer declared before _imuDataReadyMutex
+    // ensure _imuDataReadyMutexBuffer declared before _imuDataReadyMutex
     static_assert(offsetof(AHRS, _imuDataReadyMutex) > offsetof(AHRS, _imuDataReadyMutexBuffer));
 #endif
 #if defined(USE_AHRS_DATA_MUTEX)
-     // ensure _ahrsDataMutexBuffer declared before _ahrsDataMutex
+    // ensure _ahrsDataMutexBuffer declared before _ahrsDataMutex
     static_assert(offsetof(AHRS, _ahrsDataMutex) > offsetof(AHRS, _ahrsDataMutexBuffer));
 #endif
 #pragma GCC diagnostic pop

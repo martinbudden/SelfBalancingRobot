@@ -1,3 +1,4 @@
+#include "AHRS.h"
 #include "AHRS_Test.h"
 #include <unity.h>
 
@@ -8,7 +9,10 @@ void tearDown() {
 }
 
 void test_ahrs() {
-    AHRS_Test ahrs;
+    SensorFusionFilterTest sensorFusionFilter;
+    IMU_Test imu;
+    IMU_Filters_Test imuFilters;
+    AHRS ahrs(sensorFusionFilter, imu, imuFilters);
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing()); // initializing should be set on construction
     ahrs.setSensorFusionFilterInitializing(true);
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());

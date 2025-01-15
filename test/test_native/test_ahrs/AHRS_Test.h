@@ -1,7 +1,8 @@
 #pragma once
 
-#include "AHRS_Base.h"
+#include "IMU_Base.h"
 #include "SensorFusionFilter.h"
+#include "IMU_FiltersBase.h"
 
 
 class SensorFusionFilterTest : public SensorFusionFilterBase {
@@ -11,19 +12,22 @@ public:
     virtual void setFreeParameters(float parameter0, float parameter1) override;
 };
 
-class AHRS_Test : public AHRS_Base {
+class IMU_Test : public IMU_Base {
 public:
-    AHRS_Test() : AHRS_Base(_sensorFusionFilter) {}
+    IMU_Test() : IMU_Base(nullptr) {}
+public:
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
-    virtual xyz_int16_t readGyroRaw() const override;
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;
+
+    virtual xyz_int16_t readGyroRaw() const override;
     virtual xyz_int16_t readAccRaw() const override;
-    virtual AHRS_Base::data_t getAhrsDataUsingLock(bool& updatedSinceLastRead) const override;
-    virtual AHRS_Base::data_t getAhrsDataForInstrumentationUsingLock() const override;
-    virtual Quaternion getOrientationUsingLock(bool& updatedSinceLastRead) const override;
-    virtual Quaternion getOrientationForInstrumentationUsingLock() const override;
-private:
-    SensorFusionFilterTest _sensorFusionFilter;
+
+    virtual bool readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const override;
+
+    virtual int readFIFO_ToBuffer() override;
+    virtual void readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index) override;
 };
 
-
+class IMU_Filters_Test : public IMU_FiltersBase {
+    virtual void filter(xyz_t& gyroRadians, xyz_t& acc, float deltaT) override;
+};
