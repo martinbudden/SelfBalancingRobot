@@ -148,10 +148,12 @@ int packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, const Rec
     td->tickInterval = receiver.getTickCountDelta();
     td->droppedPacketCount = receiver.getDroppedPacketCountDelta();
 
-    td->data = {
-        .controls = receiver.getControls(),
-        .flags = receiver.getFlags()
-    };
+    td->data.controls = receiver.getControls(),
+    td->data.switches = receiver.getSwitches(),
+    td->data.aux[0] = receiver.getAux(0);
+    td->data.aux[1] = receiver.getAux(1);
+    td->data.aux[2] = receiver.getAux(2);
+    td->data.aux[3] = receiver.getAux(3);
 
     return td->len;
 };

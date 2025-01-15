@@ -27,9 +27,6 @@ public:
     void broadcastMyMacAddressForBinding() const { _atomJoyStickReceiver.broadcastMyMacAddressForBinding(); }
     ESPNOW_Transceiver& getESPNOW_Transceiver() { return _atomJoyStickReceiver.getTransceiver(); }
 
-    inline uint8_t getMode() const { return _atomJoyStickReceiver.getMode(); }
-    inline uint8_t getAltMode() const { return _atomJoyStickReceiver.getAltMode(); }
-    inline uint8_t getFlipButton() const { return _atomJoyStickReceiver.getFlipButton(); }
     static float mapYawStick(float yawStick);
 private:
     AtomJoyStickReceiver _atomJoyStickReceiver;

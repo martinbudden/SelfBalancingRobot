@@ -337,9 +337,9 @@ void MainTask::loop()
             _screenTemplateIsUpdated = true;
             _screen->updateTemplate();
         }
-    } else if ((_failSafeTickCount - tickCount > 2000) && _receiverInUse) {
-        // _recieverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
-        // We've had 2000 ticks (2 seconds) without a packet, so we seem to have lost contact with the transmitter,
+    } else if ((tickCount - _failSafeTickCount > 1500) && _receiverInUse) {
+        // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
+        // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
         // so switch off the motors to prevent the robot from doing a runaway.
         _motorPairController->motorsSwitchOff();
         _receiverInUse = false;
@@ -349,13 +349,14 @@ void MainTask::loop()
     (void)_backchannel->update();
 #endif
 
-    // update the screen every 100 ticks (0.1 seconds)
-    if (_screenTickCount - tickCount > 100) {
+    // screen and button update tick counts are coprime, so screen and buttons are not normally updated in same loop
+    // update the screen every 101 ticks (0.1 seconds)
+    if (_screenTickCount - tickCount > 101) {
         _screenTickCount = tickCount;
         _screen->update(packetReceived);
     }
-    // update the buttons every 100 ticks (0.1 seconds)
-    if (_buttonsTickCount - tickCount > 100) {
+    // update the buttons every 149 ticks (0.15 seconds)
+    if (_buttonsTickCount - tickCount > 149) {
         _buttonsTickCount = tickCount;
         M5.update();
         _buttons->update();

@@ -68,7 +68,8 @@ struct TD_RECEIVER {
     uint8_t droppedPacketCount {0}; //!< the number of packets dropped by the receiver
     struct Data {
         ReceiverBase::controls_t controls;
-        uint32_t flags;
+        std::array<uint8_t, 4> aux; //!< 4 8-bit auxiliary channels
+        uint32_t switches;
     };
     Data data;
 };

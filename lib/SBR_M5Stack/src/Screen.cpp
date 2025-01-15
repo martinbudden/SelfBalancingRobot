@@ -257,9 +257,11 @@ void Screen::updateReceivedData80x160() const
     M5.Lcd.printf("%6d", controls.yawStickQ4dot12);
 
     yPos += 10;
-    M5.Lcd.setCursor(0, yPos);
-    const auto mode = _receiver.getMode();
-    M5.Lcd.printf("M%1d%c A%1d F%1d ", mode, mode ==AtomJoyStickReceiver::MODE_STABLE ? 'S' : 'P', _receiver.getAltMode(), _receiver.getFlipButton());
+    M5.Lcd.setCursor(0, yPos);  
+    const uint8_t mode = _receiver.getSwitch(0);
+    const uint8_t altMode = _receiver.getSwitch(1);
+    const uint8_t flipButton =_receiver.getSwitch(2);
+    M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == AtomJoyStickReceiver::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 }
 
 void Screen::update80x160(const TD_AHRS::Data& ahrsData) const
@@ -471,8 +473,10 @@ void Screen::updateReceivedData320x240() const
 
     yPos += 20;
     M5.Lcd.setCursor(0, yPos);
-    const auto mode = _receiver.getMode();
-    M5.Lcd.printf("M%1d%c A%1d F%1d ", mode, mode==AtomJoyStickReceiver::MODE_STABLE ? 'S' : 'P', _receiver.getAltMode(), _receiver.getFlipButton());
+    const uint8_t mode = _receiver.getSwitch(0);
+    const uint8_t altMode = _receiver.getSwitch(1);
+    const uint8_t flipButton =_receiver.getSwitch(2);
+    M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == AtomJoyStickReceiver::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 
     M5.Lcd.setCursor(255, yPos);
     M5.Lcd.printf("%3d", _receiver.getDroppedPacketCountDelta());

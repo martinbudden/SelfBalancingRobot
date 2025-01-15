@@ -70,6 +70,12 @@ bool Receiver::update(uint32_t tickCountDelta)
         _controls.pitchStickQ4dot12 = _atomJoyStickReceiver.getPitchQ4dot12();
         _controls.yawStickQ4dot12 = _atomJoyStickReceiver.getYawQ4dot12();
 
+        // Save the button values.
+        setSwitch(0, _atomJoyStickReceiver.getMode());
+        const uint8_t altMode = _atomJoyStickReceiver.getAltMode(); // this returns a value of 4 or 5
+        setSwitch(1, altMode == 4 ? 0 : 1);
+        setSwitch(2, _atomJoyStickReceiver.getFlipButton());
+
         // Inform the motor controller that new stick values are available.
         _motorController->newStickValuesReceived();
         return true;
