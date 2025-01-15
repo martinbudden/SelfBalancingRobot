@@ -90,6 +90,17 @@ void test_IIR_filter() {
     }
 }
 
+void test_IIR_alpha_filter() {
+    IIR_filter filter;
+    filter.setAlpha(0.8F);
+    float out = filter.update(10);
+    TEST_ASSERT_EQUAL_FLOAT(8.0, out);
+    out = filter.update(10);
+    TEST_ASSERT_EQUAL_FLOAT(0.8*10.0 + 0.2*8.0, out);
+    out = filter.update(15);
+    TEST_ASSERT_EQUAL_FLOAT(0.8*15.0 +0.2*(0.8*10.0 + 0.2*8.0), out);
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
 

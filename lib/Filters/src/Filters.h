@@ -67,17 +67,19 @@ public:
     IIR_filter(float frequencyCutoff, float dT) : _state(0.0F) {
         setCutoffFrequency(frequencyCutoff, dT);
     }
+    IIR_filter() {}
     inline void setCutoffFrequency(float frequencyCutoff, float dT) {
         _omega = 2.0F * M_PI * frequencyCutoff;
         _alpha = _omega*dT/(_omega*dT + 1.0F);
     }
+    inline void setAlpha(float alpha) { _alpha = alpha; }
     inline void reset() { _state = 0.0F; }
     inline float update(float input, float dT);
     inline float update(float input);
 protected:
     float _alpha {0.0};
-    float _omega;
-    float _state;
+    float _omega {0.0};
+    float _state {0.0};
 };
 
 /*!
