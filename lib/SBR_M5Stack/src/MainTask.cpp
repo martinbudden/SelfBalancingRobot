@@ -318,8 +318,7 @@ The motors are controlled in the MotorPairController task.
 */
 void MainTask::loop()
 {
-
-    // Delay 1 tick to yield to other tasks.
+    // Delay task to yield to other tasks.
     // Most of the time this task does nothing, but when we get a packet from the receiver we want to process it immediately,
     // hence the short delay
     vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS));
@@ -331,18 +330,19 @@ void MainTask::loop()
 
     const bool packetReceived = _receiver->update(_tickCountDelta);
     if (packetReceived) {
+        _receiverInUse = true;
         _failSafeTickCount = tickCount;
         // update the screen template the first time we receive a packet
         if (_screenTemplateIsUpdated == false) {
             _screenTemplateIsUpdated = true;
             _screen->updateTemplate();
         }
-    } else if ((_failSafeTickCount - tickCount > 2000) && (_failSafeTickCount != UINT32_MAX)) {
-        // _failSafeTickCount is initialized to UINT32_MAX, so the motors won't turn off it the transmitter hasn't been turned on yet.
+    } else if ((_failSafeTickCount - tickCount > 2000) && _receiverInUse) {
+        // _recieverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
         // We've had 2000 ticks (2 seconds) without a packet, so we seem to have lost contact with the transmitter,
         // so switch off the motors to prevent the robot from doing a runaway.
         _motorPairController->motorsSwitchOff();
-        _failSafeTickCount = UINT32_MAX;
+        _receiverInUse = false;
     }
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)

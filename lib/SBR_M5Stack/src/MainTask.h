@@ -26,7 +26,8 @@ private:
     Receiver* _receiver {nullptr};
     SV_Preferences* _preferences {nullptr};
     Backchannel* _backchannel {nullptr};
-    uint32_t _failSafeTickCount {UINT32_MAX}; //<! failsafe counter, so the robot doesn't run away if it looses contact with the transmitter (for example by going out of range)
+    uint32_t _failSafeTickCount {}; //<! failsafe counter, so the robot doesn't run away if it looses contact with the transmitter (for example by going out of range)
+    int32_t _receiverInUse {false};
     uint32_t _screenTickCount {0};
     Screen* _screen {nullptr};
     int32_t _screenTemplateIsUpdated {false};
