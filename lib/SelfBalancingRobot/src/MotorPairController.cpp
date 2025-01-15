@@ -5,9 +5,11 @@
 #include "ReceiverBase.h"
 #include <Filters.h>
 
+#if !defined(UNIT_TEST_BUILD)
 //#define SERIAL_OUTPUT
 #if defined(SERIAL_OUTPUT)
 #include <HardwareSerial.h>
+#endif
 #endif
 
 #include <cmath>
@@ -80,30 +82,23 @@ void MotorPairController::updateMotors()
 #if defined(SERIAL_OUTPUT)
     static int loopCount {0};
     ++loopCount;
-    if (loopCount == 10) {
+    if (loopCount == 1) {
         loopCount = 0;
 
-    //Serial.printf(">pitchAngleDegrees:%6.2f, pitchRate:%8.4f\r\n", pitchAngleDegrees, pitchRate);
-
     //Serial.printf(">pitchPidErrorP:%8.2f, pidErrorI:%8.2f, pidErrorD:%8.2f, update:%8.2f\r\n",
-    //    _pitchPID.getError().P, _pitchPID.getError().I, _pitchPID.getError().D, _telemetry.pitchUpdate);
+    //    _pitchPID.getError().P, _pitchPID.getError().I, _pitchPID.getError().D, _pitchUpdate);
 
-    //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchUpdate:%8.4f, speedSetpoint:%7.2f, speedUpdate:%7.3f, speedUpdateRaw:%7.3f, speedError:%7.3f, deltaT:%6.3f\r\n",
-    //   _pitchPID.getSetpoint(), pitchAngleDegrees, _telemetry.pitchUpdate, _speedPID.getSetpoint(), _telemetry.speedUpdate, speedUpdate, _speedPID.getError().P/_speedPID.getP(), deltaT);
+    //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchUpdate:%8.4f, speedSetpoint:%7.2f, speedUpdate:%7.3f, speedError:%7.3f\r\n",
+    //   _pitchPID.getSetpoint(), _pitchAngleDegreesRaw, _pitchUpdate, _speedPID.getSetpoint(), _speedUpdate, _speedPID.getError().P/_speedPID.getP());
 
-    //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchUpdate:%8.4f, speedSetpoint:%7.2f, speedUpdate:%7.3f, deltaT:%6.3f\r\n",
-    //   _pitchPID.getSetpoint(), pitchAngleDegrees, _telemetry.pitchUpdate, _speedPID.getSetpoint(), _telemetry.speedUpdate, deltaT);
+    //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchUpdate:%8.4f, speedSetpoint:%7.2f, speedUpdate:%7.3f\r\n",
+    //   _pitchPID.getSetpoint(), _pitchAngleDegreesRaw, _pitchUpdate, _speedPID.getSetpoint(), _speedUpdate);
 
-    //Serial.printf(">speed:%8.2f, setpoint:%8.2f, pidErrorP:%8.2f, pidErrorI:%8.2f, update:%8.2f\r\n",
-    //    _speedDPS / _telemetry.motorMaxSpeedDPS, _speedPID.getSetpoint(), _speedPID.getError().P, _speedPID.getError().I, _telemetry.speedUpdate);
+    //Serial.printf(">pitchAngleDegrees:%6.2f, pitchUpdate:%6.3f, speedDPS:%5.0F, speedUpdate:%8.5f\r\n",
+    //    _pitchAngleDegreesRaw, _pitchUpdate, _speedDPS, _speedUpdate);
 
-    /*if (fabs(_yawRatePID.getSetpoint()) > 0.01f) {
-        Serial.printf(">yawRateSetpoint:%7.2f, yawRate:%6.2f, yawRatePower:%6.2f, yawRateUpdate:%f\r\n",
-            _yawRatePID.getSetpoint(), yawRate, yawRatePower, _telemetry.yawRateUpdate);
-    }*/
-
-    //Serial.printf(">pitchAngleDegrees:%6.2f, pitchUpdate:%6.3f, speedDPS:%5.0F, spdPE:%7.3f, speedUpdate:%8.5f\r\n",
-    //    pitchAngleDegrees, _telemetry.pitchUpdate, _telemetry.speedDPS_Filtered, speedPowerEquivalent, _telemetry.speedUpdate);
+    Serial.printf(">speed:%8.2f, setpoint:%8.2f, pidErrorP:%8.2f, update:%8.2f, eL:%d, eR:%d\r\n",
+        _speedDPS, _speedPID.getSetpoint(), _speedPID.getError().P, _speedUpdate, _encoderLeftDelta, _encoderRightDelta);
     }
 #endif
 }
@@ -142,8 +137,14 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT, ui
 
         // encoders are very noisy, so the calculated speed value needs to be filtered
         static FilterMovingAverage<4> speedFilter;
-        const float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
-        _speedDPS = speedFilter.update(speedDPS);
+        float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
+        speedDPS = speedFilter.update(speedDPS);
+        _speedDPS = _speedFilter.update(speedDPS);
+        
+        //static float motorSpeed {0.0};
+        //static constexpr float motorSpeedWeighting {0.8};
+        //motorSpeed = motorSpeedWeighting * motorSpeed + (1.0F - motorSpeedWeighting) * speedDPS;
+        //_speedDPS = motorSpeed;
     }
 #else
     // no encoders, so estimate speed from power output
@@ -214,14 +215,6 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
         _pitchPID.setSetpoint(-speedUpdate);
         _speedUpdate = 0.0F;
     } else if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-        #if 0
-        // motor_speed filter
-        static constexpr float motorSpeedWeighting {0.8};
-        static float motorSpeedDPS {0.0};
-        //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
-        motorSpeedDPS = motorSpeedWeighting * motorSpeed + (1.0F - motorSpeedWeighting) * _speedDPS;
-        _speedUpdate = _speedPID.update(motorSpeedDPS / _motorMaxSpeedDPS, deltaT);
-        #endif
         _speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     } else if (_controlMode == CONTROL_MODE_POSITION) {
         // NOTE: THIS IS NOT YET FULLY IMPLEMENTED

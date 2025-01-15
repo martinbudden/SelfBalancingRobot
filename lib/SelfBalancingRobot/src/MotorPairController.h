@@ -2,6 +2,7 @@
 
 #include "MotorControllerBase.h"
 #include "MotorPairBase.h"
+#include <Filters.h>
 #include <PIDF.h>
 
 #if defined(USE_FREERTOS)
@@ -93,12 +94,13 @@ private:
     int32_t _encoderRight {0}; //!< value read from right motor encoder, raw
     int32_t _encoderLeftPrevious {0};
     int32_t _encoderRightPrevious {0};
-    int16_t _encoderLeftDelta {0}; //!< difference between current left motor encoder value and previous value, raw
-    int16_t _encoderRightDelta {0}; //!< difference between current right motor encoder value and previous value, raw
+    int32_t _encoderLeftDelta {0}; //!< difference between current left motor encoder value and previous value, raw
+    int32_t _encoderRightDelta {0}; //!< difference between current right motor encoder value and previous value, raw
 
     float _speedLeftDPS {0}; //!< rotation speed of left motor, degrees per second
     float _speedRightDPS {0}; //!< rotation speed of right motor, degrees per second
     float _speedDPS {0.0}; //<!< filtered average of left and right motor speeds
+    IIR_filter _speedFilter;
 
     const float _motorMaxSpeedDPS;
     const float _motorMaxSpeedDPS_reciprocal;
