@@ -17,7 +17,6 @@ public:
         _filterAccZ(frequencyCutoff, deltaT)
     {}
 public:
-public:
     virtual void filter(xyz_t& gyroRadians, xyz_t& acc, float deltaT) override;
 private:
     float _deltaT;
