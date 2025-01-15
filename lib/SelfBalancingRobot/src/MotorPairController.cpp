@@ -116,7 +116,8 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT, ui
         _receiver.mapControls(_throttleStick, _rollStick, _pitchStick, _yawStick);
 
         _speedPID.setSetpoint(_throttleStick);
-        _pitchPID.setSetpoint(_pitchStick * _pitchMaxAngleDegrees);
+        // Note the negative multiplier
+        _pitchPID.setSetpoint(-_pitchStick * _pitchMaxAngleDegrees);
         // Note the negative multiplier, since pushing the yaw stick to the right results in a clockwise rotation, ie a negative yaw rate
         _yawRatePID.setSetpoint(-_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
     }
@@ -210,7 +211,7 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
     if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
         const float speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
         // feed the speedUpdate back into the pitchPID and set _speedUpdate to zero
-        _pitchPID.setSetpoint(speedUpdate);
+        _pitchPID.setSetpoint(-speedUpdate);
         _speedUpdate = 0.0F;
     } else if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
         #if 0
