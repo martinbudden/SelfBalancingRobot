@@ -25,6 +25,7 @@
         "constexpr",
         "constpc",
         "constpv",
+        "coprime",
         "cppcheck",
         "cppcoreguidelines",
         "datasheet",
