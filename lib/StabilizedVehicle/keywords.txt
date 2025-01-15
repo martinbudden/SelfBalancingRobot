@@ -7,12 +7,12 @@
 #######################################
 
 TD_Reserved             KEYWORD1
-TD_Minimal     KEYWORD1
-TD_TickIntervals              KEYWORD1
-TD_PID              KEYWORD1
-TD_AHRS       KEYWORD1
-TD_MPC       KEYWORD1
-TD_Receiver       KEYWORD1
+TD_Minimal              KEYWORD1
+TD_TickIntervals        KEYWORD1
+TD_Receiver             KEYWORD1
+TD_AHRS                 KEYWORD1
+TD_SBR_PIDs             KEYWORD1
+TD_MPC                  KEYWORD1
 
 
 #######################################
