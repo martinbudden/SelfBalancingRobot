@@ -17,8 +17,8 @@ constexpr PIDF::PIDF_t yawRatePID_TelemetryScaleFactors         { 0.1,      1.0,
 constexpr PIDF::PIDF_t speedPID_DefaultSerial                   { 2.0,      0.000,  0.0,     0.0 };
 constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsSerial     { 0.1,      0.001,  0.00001, 0.1 };
 
-constexpr PIDF::PIDF_t speedPID_DefaultParallel                 { 0.05,     0.000,  0.0,     0.0 };
-constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.01,     0.001,  0.0001,  0.1 };
+constexpr PIDF::PIDF_t speedPID_DefaultParallel                 { 0.30,     0.010,  0.0,     0.50 };
+constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.01,     0.001,  0.0001,  0.01 };
 
 constexpr PIDF::PIDF_t speedPID_DefaultPosition                 { 0.050,    0.0,    0.0,     0.0 };
 constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsPosition   { 0.001,    1.0,    0.001,   0.1 };
@@ -27,7 +27,7 @@ constexpr MotorPairController::ControlMode_t CONTROL_MODE = MotorPairController:
 const PIDF::PIDF_t& speedPID_Default = speedPID_DefaultParallel;
 const PIDF::PIDF_t& speedPID_TelemetryScaleFactors = speedPID_TelemetryScaleFactorsParallel;
 
-constexpr float maxMotorRPM                 {500.0};
+constexpr float maxMotorRPM                 {200.0}; // this is an estimate of max RPM under load
 constexpr float wheelDiameterMM             {45.0};
 constexpr float wheelTrackMM                {75.0};
 constexpr float pitchBalanceAngleDegrees    {-2.5};
