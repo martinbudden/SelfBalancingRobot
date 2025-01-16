@@ -74,7 +74,7 @@ public:
 public:
     void updateSetpointsAndMotorSpeedEstimates(float deltaT, uint32_t tickCount);
     void updatePIDs(float deltaT);
-    virtual void updatePIDs(const Quaternion& orientation, float deltaT) override;
+    virtual void updatePIDs(const xyz_t& gyroRadians, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
     void updateMotors();
 private:
     void Task(const TaskParameters* taskParameters);

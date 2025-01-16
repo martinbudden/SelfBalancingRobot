@@ -4,7 +4,7 @@
 #include "MotorControllerBase.h"
 #include "SensorFusionFilter.h"
 #include <cmath>
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+#if defined(AHRS_IS_INTERRUPT_DRIVEN) || defined(USE_FREERTOS)
 #include <driver/gpio.h>
 #include <esp32-hal-gpio.h>
 #endif
@@ -89,7 +89,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 #endif // USE_IMU_FIFO
 
     if (_motorController != nullptr) {
-        _motorController->updatePIDs(orientation, deltaT); //25us, 900us
+        _motorController->updatePIDs(gyroRadians, acc, orientation, deltaT); //25us, 900us
         TIME_CHECK(4);
     }
 

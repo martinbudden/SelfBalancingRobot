@@ -192,10 +192,12 @@ void MotorPairController::updatePIDs(float deltaT)
 {
     [[maybe_unused]] bool orientationUpdated;
     const Quaternion orientation = _ahrs.getOrientationUsingLock(orientationUpdated);
-    updatePIDs(orientation, deltaT);
+    [[maybe_unused]] bool ahrsDataUpdated;
+    const AHRS::data_t data = _ahrs.getAhrsDataUsingLock(ahrsDataUpdated);
+    updatePIDs(data.gyroRadians, data.acc, orientation, deltaT);
 }
 
-void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT)
+void MotorPairController::updatePIDs(const xyz_t& gyroRadians, const xyz_t& acc, const Quaternion& orientation, float deltaT)
 {
 
     // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.

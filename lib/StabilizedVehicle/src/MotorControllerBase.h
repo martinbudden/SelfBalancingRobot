@@ -5,7 +5,7 @@
 #include <cstdint>
 
 class Quaternion;
-
+struct xyz_t;
 
 class MotorControllerBase : public TaskBase {
 public:
@@ -19,7 +19,7 @@ public:
     inline float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; } // not offset by balance angle
     inline float getYawAngleDegreesRaw() const { return _yawAngleDegreesRaw; } // not offset by balance angle
 
-    virtual void updatePIDs(const Quaternion& orientation, float deltaT) = 0;
+    virtual void updatePIDs(const xyz_t& gyroRadians, const xyz_t& acc, const Quaternion& orientation, float deltaT) = 0;
 protected:
     int _motorsIsOn {false};
     int _newStickValuesAvailable {false};
