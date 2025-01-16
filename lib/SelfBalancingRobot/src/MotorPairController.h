@@ -62,6 +62,7 @@ public:
     inline float getYawRatePIDSetpoint() const { return _yawRatePID.getSetpoint(); }
 
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
+    inline uint32_t getOutputPowerTimeMicroSeconds() const { return _outputPowerTimeMicroSeconds; } //<! time taken to write output power to the motors, for instrumentation
 public:
     struct TaskParameters {
         MotorPairController* motorPairController;
@@ -88,8 +89,12 @@ private:
     MotorPairBase& _motors;
 
     int32_t _motorsDisabled {false};
+    uint32_t _motorSwitchOffTickCount {0};
+
     float _powerLeft {0.0};
     float _powerRight {0.0};
+    uint32_t _outputPowerTimeMicroSeconds {0}; //!< for instrumentation, time taken to set the motor pair power
+
     int32_t _encoderLeft {0}; //!< value read from left motor encoder, raw
     int32_t _encoderRight {0}; //!< value read from right motor encoder, raw
     int32_t _encoderLeftPrevious {0};

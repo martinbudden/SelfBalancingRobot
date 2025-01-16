@@ -12,7 +12,7 @@ int packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id);
 
 int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         const AHRS& ahrs, // NOLINT(readability-avoid-const-params-in-decls)
-        const MotorControllerBase& motorController,
+        const MotorPairController& motorController,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
         uint32_t receiverDroppedPacketCount); // NOLINT(readability-avoid-const-params-in-decls) false positive

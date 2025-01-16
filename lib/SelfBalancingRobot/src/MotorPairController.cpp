@@ -254,7 +254,7 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
     _pitchAngleDegreesPrevious = pitchAngleDegrees;
     // Calculate the filtered value to use as input into the PID, so the D-term is calculated using the filtered value.
     // This is beneficial because the D-term is especially susceptible to noise.
-    static FilterMovingAverage<4> pitchAngleDeltaFilter; // moving average of length 4 involves no division, only addition and multiplication
+    static FilterMovingAverage<4> pitchAngleDeltaFilter;
     pitchAngleDegreesDelta = pitchAngleDeltaFilter.update(pitchAngleDegreesDelta);
     _pitchUpdate = _pitchPID.updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
 

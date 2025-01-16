@@ -27,7 +27,7 @@ Packs the tick interval telemetry data into a TD_TICK_INTERVALS packet. Returns 
 */
 int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         const AHRS& ahrs,
-        const MotorControllerBase& motorController,
+        const MotorPairController& motorController,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
         uint32_t receiverDroppedPacketCount)
