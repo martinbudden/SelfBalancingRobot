@@ -77,6 +77,10 @@ int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPai
     td->data.speed.pid = motorPairController.getSpeedPIDConstants();
     td->data.speed.scale = scaleFactors.getSpeedPIDTelemetryScaleFactors();
 
+    td->data.position.setpoint = motorPairController.getPositionPIDSetpoint();
+    td->data.position.pid = motorPairController.getPositionPIDConstants();
+    td->data.position.scale = scaleFactors.getPositionPIDTelemetryScaleFactors();
+
     td->data.yawRate.setpoint = motorPairController.getYawRatePIDSetpoint();
     td->data.yawRate.pid = motorPairController.getYawRatePIDConstants();
     td->data.yawRate.scale = scaleFactors.getYawRatePIDTelemetryScaleFactors();

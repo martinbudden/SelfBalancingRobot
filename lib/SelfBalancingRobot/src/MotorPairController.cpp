@@ -34,22 +34,30 @@ void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& te
    if (motorsIsOn()) {
         telemetry.pitchError = _pitchPID.getError();
         telemetry.speedError = _speedPID.getError();
+        telemetry.positionError = _positionPID.getError();
    } else {
         telemetry.pitchError = { 0.0F, 0.0F, 0.0F };
         telemetry.speedError = { 0.0F, 0.0F, 0.0F };
+        telemetry.positionError = { 0.0F, 0.0F, 0.0F };
    }
+    telemetry.pitchUpdate = _pitchUpdate;
+    telemetry.speedUpdate = _speedUpdate;
+    telemetry.positionUpdate = _positionUpdate;
+    telemetry.yawRateUpdate = _yawRateUpdate;
+
     telemetry.powerLeft = _powerLeft;
     telemetry.powerRight = _powerRight;
-    telemetry.encoderLeft =_encoderLeft;
-    telemetry.encoderRight =_encoderRight;
-    telemetry.encoderLeftDelta =_encoderLeftDelta;
-    telemetry.encoderRightDelta =_encoderRightDelta;
+
+    telemetry.encoderLeft = _encoderLeft;
+    telemetry.encoderRight = _encoderRight;
+    telemetry.encoderLeftDelta = static_cast<int16_t>(_encoderLeftDelta);
+    telemetry.encoderRightDelta = static_cast<int16_t>(_encoderRightDelta);
+
     telemetry.speedLeftDPS = _speedLeftDPS;
     telemetry.speedRightDPS = _speedRightDPS;
     telemetry.speedDPS_Filtered = _speedDPS;
     // copy of motorMaxSpeedDPS, so telemetry viewer can scale motor speed
     telemetry.motorMaxSpeedDPS = _motorMaxSpeedDPS;
-
 }
 
 void MotorPairController::updateMotors()
@@ -218,16 +226,26 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
     } else if (_controlMode == CONTROL_MODE_POSITION) {
         // NOTE: THIS IS NOT YET FULLY IMPLEMENTED
 #if defined(MOTORS_HAVE_ENCODERS)
+        #if true
         _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
+        #else
+        // experimental calculation of position using complementary filter of position and 
+        const float positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
+        const float distanceDegrees = (positionDegrees - _positionDegrees);
+        constexpr float alpha = 0.9;
+        const float  speedEstimate = MotorPairBase::clip((_powerLeft + _powerRight) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
+        _positionDegrees += alpha*distanceDegrees + (1.0F - alpha)*speedEstimate*deltaT;
+        #endif
 #else
         _positionDegrees += _speedDPS * deltaT;
 #endif
-        // scale the throttleStick value to get the speed setpoint
-        const float speedSetpointDPS = _throttleStick * _motorMaxSpeedDPS;
-        _positionSetpointDegrees += speedSetpointDPS * deltaT;
-        // repurpose the speed PID as a position PID, since it is not being used for speed regulation in this mode
-        _speedPID.setSetpoint(_positionSetpointDegrees);
-        _speedUpdate = _speedPID.update(_positionDegrees, deltaT);
+        // scale the throttleStick value to get desired speed
+        const float desiredSpeed = _throttleStick * _motorMaxSpeedDPS;
+        _positionSetpointDegrees += desiredSpeed * deltaT;
+        _positionPID.setSetpoint(_positionSetpointDegrees);
+        const float positionUpdatePrevious = _positionUpdate;
+        _positionUpdate = _positionPID.update(_positionDegrees, deltaT);
+        _speedUpdate = (_positionUpdate - positionUpdatePrevious) / deltaT;
     }
 
     // calculate _pitchUpdate

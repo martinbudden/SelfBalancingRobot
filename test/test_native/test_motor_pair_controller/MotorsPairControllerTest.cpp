@@ -25,20 +25,12 @@ void MotorsTest::setPower([[maybe_unused]] float leftPower,[[maybe_unused]] floa
 }
 
 constexpr PIDF::PIDF_t pitchPID_Default                       { 0.0240,  0.0,    0.00020, 0.0 };
-constexpr PIDF::PIDF_t pitchPID_TelemetryScaleFactors         { 0.0001,  0.001,  0.00001, 0.1 };
 
 constexpr PIDF::PIDF_t yawRatePID_Default                     { 0.0,     0.0,    0.0,     1.00 };
-constexpr PIDF::PIDF_t yawRatePID_TelemetryScaleFactors       { 0.1,     1.0,    0.01,    0.01 };
 
 constexpr PIDF::PIDF_t speedPID_DefaultSerial                 { 0.020,   0.0,    0.0,     0.0 };
-constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsSerial   { 0.001,   0.001,  0.00001, 0.1 };
 
 constexpr PIDF::PIDF_t speedPID_DefaultParallel               { 0.010,   0.0,    0.0,     0.0 };
-constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel { 0.001,   1.0,    0.00001, 0.1 };
-
-constexpr MotorPairController::ControlMode_t CONTROL_MODE = MotorPairController::CONTROL_MODE_SERIAL_PIDS;
-const PIDF::PIDF_t& speedPID_Default = speedPID_DefaultSerial;
-const PIDF::PIDF_t& speedPID_TelemetryScaleFactors = speedPID_TelemetryScaleFactorsSerial;
 
 constexpr float maxMotorRPM                 {620.0};
 constexpr float wheelDiameterMM             {68.0};
@@ -65,23 +57,19 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorStepsPerRevolution(_motors.getStepsPerRevolution()),
     _motorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees),
-    _controlMode(CONTROL_MODE),
-    // scale factors to bring PIDs into approximately the range [0, 100] for telemetry display and PID tuning
-    _pitchPIDTelemetryScaleFactors(pitchPID_TelemetryScaleFactors),
-    _speedPIDTelemetryScaleFactors(speedPID_TelemetryScaleFactors),
-    _yawRatePIDTelemetryScaleFactors(yawRatePID_TelemetryScaleFactors),
+    _controlMode(CONTROL_MODE_SERIAL_PIDS),
     _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
 {
 #if defined(I2C_MUTEX_REQUIRED)
     _motors.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #endif
 
+    setControlMode(_controlMode);
 
     _pitchPID.setPID(pitchPID_Default);
     _pitchPID.setIntegralMax(1.0F);
     _pitchPID.setOutputSaturationValue(1.0F);
 
-    _speedPID.setPID(speedPID_Default);
     _speedPID.setIntegralMax(1.0F);
 
     _yawRatePID.setPID(yawRatePID_Default);
@@ -102,10 +90,8 @@ void MotorPairController::setControlMode(ControlMode_t controlMode)
     _controlMode = controlMode;
     if (controlMode == CONTROL_MODE_SERIAL_PIDS) {
         _speedPID.setPID(speedPID_DefaultSerial);
-        _speedPIDTelemetryScaleFactors = speedPID_TelemetryScaleFactorsSerial;
     } else {
         _speedPID.setPID(speedPID_DefaultParallel);
-        _speedPIDTelemetryScaleFactors = speedPID_TelemetryScaleFactorsParallel;
     }
 }
 

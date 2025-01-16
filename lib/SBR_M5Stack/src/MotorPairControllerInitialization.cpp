@@ -72,8 +72,6 @@ void MotorPairController::setControlMode(ControlMode_t controlMode)
         _speedPID.setPID(speedPID_DefaultSerial);
     } else if (controlMode == CONTROL_MODE_PARALLEL_PIDS) {
         _speedPID.setPID(speedPID_DefaultParallel);
-    } else {
-        _speedPID.setPID(speedPID_DefaultPosition);
     }
 }
 
@@ -88,7 +86,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorStepsPerRevolution(_motors.getStepsPerRevolution()),
     _motorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees),
-    _controlMode(CONTROL_MODE),
+    _controlMode(controlModeDefault),
     _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
 {
     static constexpr float NOT_SET = FLT_MAX;
@@ -99,13 +97,16 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _motors.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #endif
 
+    setControlMode(_controlMode);
+
     _pitchPID.setPID(pitchPID_Default);
     _pitchPID.setIntegralMax(1.0F);
     _pitchPID.setOutputSaturationValue(1.0F);
 
     _speedFilter.setAlpha(0.8F);
-    _speedPID.setPID(speedPID_Default);
     _speedPID.setIntegralMax(1.0F);
+
+    _positionPID.setPID(positionPID_Default);
 
     _yawRatePID.setPID(yawRatePID_Default);
 

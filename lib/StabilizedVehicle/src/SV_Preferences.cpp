@@ -153,6 +153,34 @@ void SV_Preferences::putSpeedPID(const PIDF::PIDF_t& pid)
     _preferences.end();
 }
 
+PIDF::PIDF_t SV_Preferences::getPositionPID() const
+{
+    _preferences.begin(preferencesNamespace, READ_ONLY);
+
+    const PIDF::PIDF_t pid {
+        .kp = _preferences.getFloat("POS_P", 0.0F),
+        .ki = _preferences.getFloat("POS_I", 0.0F),
+        .kd = _preferences.getFloat("POS_D", 0.0F),
+        .kf = _preferences.getFloat("POS_F", 0.0F)
+    };
+
+    _preferences.end();
+    return pid;
+}
+
+void SV_Preferences::putPositionPID(const PIDF::PIDF_t& pid)
+{
+    _preferences.begin(preferencesNamespace, READ_WRITE);
+
+    _preferences.putBool("PIDSET", true);
+    _preferences.putFloat("POS_P", pid.kp);
+    _preferences.putFloat("POS_I", pid.ki);
+    _preferences.putFloat("POS_D", pid.kd);
+    _preferences.putFloat("POS_F", pid.kf);
+
+    _preferences.end();
+}
+
 float SV_Preferences::getPitchBalanceAngleDegrees() const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);

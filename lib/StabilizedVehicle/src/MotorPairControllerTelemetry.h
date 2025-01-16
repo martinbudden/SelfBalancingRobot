@@ -19,9 +19,10 @@ struct motor_pair_controller_telemetry_t {
 
     float pitchUpdate {0}; //!< pitch update value calculated by PID
     float speedUpdate {0}; //!< speed update value calculated by PID
+    float positionUpdate {0}; //!< speed update value calculated by PID
     float yawRateUpdate {0}; //!< yawRate update value calculated by PID
 
     PIDF::error_t pitchError {0, 0, 0}; //!< P, I, and D errors calculated in pitch PID update
     PIDF::error_t speedError {0, 0, 0}; //!< P, I, and D errors calculated in speed PID update
-    PIDF::error_t yawRateError {0, 0, 0}; //!< P, I, and D errors calculated in yawRate PID update
+    PIDF::error_t positionError {0, 0, 0}; //!< P, I, and D errors calculated in yawRate PID update
 };

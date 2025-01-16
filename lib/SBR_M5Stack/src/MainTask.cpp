@@ -146,8 +146,8 @@ void MainTask::setup()
     loadPreferences();
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)
-    static TelemetryScaleFactors telemetryScaleFactors;
-    telemetryScaleFactors.setControlMode(_motorPairController->getControlMode());
+    // Statically allocate the telemetry scale factors
+    static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
     static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, telemetryScaleFactors, *_ahrs, *this, *_receiver, _preferences);
@@ -268,6 +268,11 @@ void MainTask::loadPreferences()
     if (speed_pid.kp != 0.0F) {
         _motorPairController->setSpeedPID(speed_pid);
         Serial.printf("**** speed PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", speed_pid.kp, speed_pid.ki, speed_pid.kd, speed_pid.kf);
+    }
+    const PIDF::PIDF_t position_pid = _preferences->getPositionPID();
+    if (speed_pid.kp != 0.0F) {
+        _motorPairController->setPositionPID(position_pid);
+        Serial.printf("**** position PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", position_pid.kp, position_pid.ki, position_pid.kd, position_pid.kf);
     }
     const PIDF::PIDF_t yawRate_pid = _preferences->getYawRatePID();
     if (yawRate_pid.kf != 0.0F) { // yawRate_pid is feed forward.

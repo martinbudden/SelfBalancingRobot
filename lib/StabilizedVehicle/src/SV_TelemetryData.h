@@ -116,6 +116,7 @@ struct TD_SBR_PIDS {
     struct Data {
         SPID_t pitch;
         SPID_t speed;
+        SPID_t position;
         SPID_t yawRate;
         float pitchBalanceAngleDegrees;
     };

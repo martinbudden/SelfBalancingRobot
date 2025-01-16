@@ -43,18 +43,22 @@ public:
 
     inline PIDF* getPitchPID() { return &_pitchPID; }
     inline PIDF* getSpeedPID() { return &_speedPID; }
+    inline PIDF* getPositionPID() { return &_positionPID; }
     inline PIDF* getYawRatePID() { return &_yawRatePID; }
 
     void setPitchPID(const PIDF::PIDF_t& pid) { _pitchPID.setPID(pid); }
     void setSpeedPID(const PIDF::PIDF_t& pid) { _speedPID.setPID(pid); }
+    void setPositionPID(const PIDF::PIDF_t& pid) { _positionPID.setPID(pid); }
     void setYawRatePID(const PIDF::PIDF_t& pid) { _yawRatePID.setPID(pid); }
 
     inline const PIDF::PIDF_t& getPitchPIDConstants() const { return _pitchPID.getPID(); }
     inline const PIDF::PIDF_t& getSpeedPIDConstants() const { return _speedPID.getPID(); }
+    inline const PIDF::PIDF_t& getPositionPIDConstants() const { return _positionPID.getPID(); }
     inline const PIDF::PIDF_t& getYawRatePIDConstants() const { return _yawRatePID.getPID(); }
 
     inline float getPitchPIDSetpoint() const { return _pitchPID.getSetpoint(); }
     inline float getSpeedPIDSetpoint() const { return _speedPID.getSetpoint(); }
+    inline float getPositionPIDSetpoint() const { return _positionPID.getSetpoint(); }
     inline float getYawRatePIDSetpoint() const { return _yawRatePID.getSetpoint(); }
 
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
@@ -117,6 +121,9 @@ private:
 
     PIDF _speedPID;
     float _speedUpdate {0.0};
+
+    PIDF _positionPID;
+    float _positionUpdate {0.0};
 
     float _yawStickMultiplier {1.0};
     PIDF _yawRatePID;

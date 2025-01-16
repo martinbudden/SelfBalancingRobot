@@ -18,13 +18,18 @@ public:
 
     PIDF::PIDF_t getRollPID() const;
     void putRollPID(const PIDF::PIDF_t& pid);
+
     PIDF::PIDF_t getPitchPID() const;
     void putPitchPID(const PIDF::PIDF_t& pid);
+
     PIDF::PIDF_t getYawRatePID() const;
     void putYawRatePID(const PIDF::PIDF_t& pid);
 
     PIDF::PIDF_t getSpeedPID() const;
     void putSpeedPID(const PIDF::PIDF_t& pid);
+
+    PIDF::PIDF_t getPositionPID() const;
+    void putPositionPID(const PIDF::PIDF_t& pid);
 
     float getPitchBalanceAngleDegrees() const;
     void putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees);
