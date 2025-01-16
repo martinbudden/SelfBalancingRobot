@@ -61,7 +61,7 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
 /*!
 Packs the MotorPairController PID telemetry data into a TD_SBR_PIDS packet. Returns the length of the packet.
 */
-int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPairController& motorPairController)
+int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPairController& motorPairController, const TelemetryScaleFactors& scaleFactors)
 {
     TD_SBR_PIDS* td = reinterpret_cast<TD_SBR_PIDS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
@@ -71,15 +71,15 @@ int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPai
 
     td->data.pitch.setpoint = motorPairController.getPitchPIDSetpoint();
     td->data.pitch.pid = motorPairController.getPitchPIDConstants();
-    td->data.pitch.scale = motorPairController.getPitchPIDTelemetryScaleFactors();
+    td->data.pitch.scale = scaleFactors.getPitchPIDTelemetryScaleFactors();
 
     td->data.speed.setpoint = motorPairController.getSpeedPIDSetpoint();
     td->data.speed.pid = motorPairController.getSpeedPIDConstants();
-    td->data.speed.scale = motorPairController.getSpeedPIDTelemetryScaleFactors();
+    td->data.speed.scale = scaleFactors.getSpeedPIDTelemetryScaleFactors();
 
     td->data.yawRate.setpoint = motorPairController.getYawRatePIDSetpoint();
     td->data.yawRate.pid = motorPairController.getYawRatePIDConstants();
-    td->data.yawRate.scale = motorPairController.getYawRatePIDTelemetryScaleFactors();
+    td->data.yawRate.scale = scaleFactors.getYawRatePIDTelemetryScaleFactors();
 
     td->data.pitchBalanceAngleDegrees = motorPairController.getPitchBalanceAngleDegrees();
 

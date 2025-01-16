@@ -21,6 +21,7 @@ static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN);
 
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
         MotorPairController& motorPairController,
+        TelemetryScaleFactors& telemetryScaleFactors,
         const AHRS& ahrs,
         const TaskBase& mainTask, 
         const ReceiverBase& receiver,
@@ -28,6 +29,7 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
     _transceiver(transceiver),
     _received_data(_receivedDataBuffer, sizeof(_receivedDataBuffer)),
     _motorPairController(motorPairController),
+    _telemetryScaleFactors(telemetryScaleFactors), 
     _ahrs(ahrs),
     _mainTask(mainTask),
     _receiver(receiver),
@@ -59,9 +61,11 @@ void Backchannel::packetControl(const CommandPacketControl& packet) {
         break;
     case CommandPacketControl::MPC_CONTROL_MODE_SERIAL_PIDS:
         _motorPairController.setControlMode(MotorPairController::CONTROL_MODE_SERIAL_PIDS);
+        _telemetryScaleFactors.setControlMode(MotorPairController::CONTROL_MODE_SERIAL_PIDS);
         break;
     case CommandPacketControl::MPC_CONTROL_MODE_PARALLEL_PIDS:
         _motorPairController.setControlMode(MotorPairController::CONTROL_MODE_PARALLEL_PIDS);
+        _telemetryScaleFactors.setControlMode(MotorPairController::CONTROL_MODE_PARALLEL_PIDS);
         break;
     }
 }
@@ -90,7 +94,7 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
         break;
     case CommandPacketRequestData::REQUEST_PID_DATA:
         _sendType = SEND_PID_DATA;
-        len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController);
+        len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController, _telemetryScaleFactors);
         sendData(_transmitDataBuffer, len);
         break;
     case CommandPacketRequestData::REQUEST_AHRS_DATA:
@@ -182,7 +186,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     }
     if (transmit) {
         // send back the new data for display
-        const int len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController);
+        const int len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController, _telemetryScaleFactors);
         sendData(_transmitDataBuffer, len);
     }
 }

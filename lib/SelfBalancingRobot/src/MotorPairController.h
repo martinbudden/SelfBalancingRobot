@@ -57,10 +57,6 @@ public:
     inline float getSpeedPIDSetpoint() const { return _speedPID.getSetpoint(); }
     inline float getYawRatePIDSetpoint() const { return _yawRatePID.getSetpoint(); }
 
-    inline const PIDF::PIDF_t& getPitchPIDTelemetryScaleFactors() const { return _pitchPIDTelemetryScaleFactors; }
-    inline const PIDF::PIDF_t& getSpeedPIDTelemetryScaleFactors() const { return _speedPIDTelemetryScaleFactors; }
-    inline const PIDF::PIDF_t& getYawRatePIDTelemetryScaleFactors() const { return _yawRatePIDTelemetryScaleFactors; }
-
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
 public:
     struct TaskParameters {
@@ -112,8 +108,8 @@ private:
     float _positionSetpointDegrees {0.0}; //!< Position setpoint for CONTROL_MODE_POSITION
     float _positionDegrees {0.0}; //!< Position for CONTROL_MODE_POSITION
 
-    float _pitchAngleDegreesPrevious {0.0};
     float _pitchBalanceAngleDegrees {0.0};
+    float _pitchAngleDegreesPrevious {0.0};
     const float _pitchMaxAngleDegrees {20.0};
 
     PIDF _pitchPID;
@@ -125,9 +121,4 @@ private:
     float _yawStickMultiplier {1.0};
     PIDF _yawRatePID;
     float _yawRateUpdate {0.0};
-
-    // Scale factors for telemetry and PID tuning. Not used by any of the update functions.
-    PIDF::PIDF_t _pitchPIDTelemetryScaleFactors;
-    PIDF::PIDF_t _speedPIDTelemetryScaleFactors;
-    PIDF::PIDF_t _yawRatePIDTelemetryScaleFactors;
 };

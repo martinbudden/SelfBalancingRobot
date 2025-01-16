@@ -23,6 +23,7 @@
 #include "SV_Preferences.h"
 #include "Screen.h"
 #include "SensorFusionFilter.h"
+#include "TelemetryScaleFactors.h"
 
 #include <cfloat>
 
@@ -145,9 +146,11 @@ void MainTask::setup()
     loadPreferences();
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)
+    static TelemetryScaleFactors telemetryScaleFactors;
+    telemetryScaleFactors.setControlMode(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, *_ahrs, *this, *_receiver, _preferences);
+    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, telemetryScaleFactors, *_ahrs, *this, *_receiver, _preferences);
     _backchannel = &backchannel;
 #endif
 

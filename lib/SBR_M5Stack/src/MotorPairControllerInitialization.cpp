@@ -70,13 +70,10 @@ void MotorPairController::setControlMode(ControlMode_t controlMode)
     _controlMode = controlMode;
     if (controlMode == CONTROL_MODE_SERIAL_PIDS) {
         _speedPID.setPID(speedPID_DefaultSerial);
-        _speedPIDTelemetryScaleFactors = speedPID_TelemetryScaleFactorsSerial;
     } else if (controlMode == CONTROL_MODE_PARALLEL_PIDS) {
         _speedPID.setPID(speedPID_DefaultParallel);
-        _speedPIDTelemetryScaleFactors = speedPID_TelemetryScaleFactorsParallel;
     } else {
         _speedPID.setPID(speedPID_DefaultPosition);
-        _speedPIDTelemetryScaleFactors = speedPID_TelemetryScaleFactorsPosition;
     }
 }
 
@@ -92,11 +89,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _motorStepsPerRevolution(_motors.getStepsPerRevolution()),
     _motorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees),
     _controlMode(CONTROL_MODE),
-    _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees),
-    // scale factors to bring PIDs into approximately the range [0, 100] for telemetry display and PID tuning
-    _pitchPIDTelemetryScaleFactors(pitchPID_TelemetryScaleFactors),
-    _speedPIDTelemetryScaleFactors(speedPID_TelemetryScaleFactors),
-    _yawRatePIDTelemetryScaleFactors(yawRatePID_TelemetryScaleFactors)
+    _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
 {
     static constexpr float NOT_SET = FLT_MAX;
     _rollAngleDegreesRaw = NOT_SET;
