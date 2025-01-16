@@ -50,7 +50,8 @@ inline float FilterMovingAverage<N>::update(float input)
         _sum -= oldest;
         oldest = input;
     }
-    return _sum * (1.0F / N);
+    constexpr float nReciprocal = 1.0F / N;
+    return _sum * nReciprocal;
 }
 
 
