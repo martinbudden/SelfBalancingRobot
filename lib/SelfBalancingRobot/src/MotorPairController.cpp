@@ -121,9 +121,9 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT, ui
     _encoderLeft = _motors.getLeftEncoder();
     _encoderRight = _motors.getRightEncoder();
 
-    _encoderLeftDelta = static_cast<int16_t>(_encoderLeft - _encoderLeftPrevious);
+    _encoderLeftDelta = _encoderLeft - _encoderLeftPrevious;
     _encoderLeftPrevious = _encoderLeft;
-    _encoderRightDelta = static_cast<int16_t>(_encoderRight - _encoderRightPrevious);
+    _encoderRightDelta = _encoderRight - _encoderRightPrevious;
     _encoderRightPrevious = _encoderRight;
 
     if (_motors.canAccuratelyEstimateSpeed()) {
@@ -136,13 +136,14 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT, ui
         _speedRightDPS = static_cast<float>(_encoderRightDelta) * speedMultiplier;
 
         // encoders are very noisy, so the calculated speed value needs to be filtered
-        static FilterMovingAverage<4> speedFilter;
+        static FilterMovingAverage<4> speedMovingAverageFilter;
         float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
-        speedDPS = speedFilter.update(speedDPS);
+        speedDPS = speedMovingAverageFilter.update(speedDPS);
         _speedDPS = _speedFilter.update(speedDPS);
         
         //static float motorSpeed {0.0};
         //static constexpr float motorSpeedWeighting {0.8};
+        //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
         //motorSpeed = motorSpeedWeighting * motorSpeed + (1.0F - motorSpeedWeighting) * speedDPS;
         //_speedDPS = motorSpeed;
     }
@@ -209,13 +210,11 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
 #endif
 
     // calculate _speedUpdate according to the control mode.
+    _speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
-        const float speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
         // feed the speedUpdate back into the pitchPID and set _speedUpdate to zero
-        _pitchPID.setSetpoint(-speedUpdate);
+        _pitchPID.setSetpoint(-_speedUpdate);
         _speedUpdate = 0.0F;
-    } else if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-        _speedUpdate = _speedPID.update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     } else if (_controlMode == CONTROL_MODE_POSITION) {
         // NOTE: THIS IS NOT YET FULLY IMPLEMENTED
 #if defined(MOTORS_HAVE_ENCODERS)
@@ -223,7 +222,7 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
 #else
         _positionDegrees += _speedDPS * deltaT;
 #endif
-        // get the speed setpoint set in setSetPoints()
+        // scale the throttleStick value to get the speed setpoint
         const float speedSetpointDPS = _throttleStick * _motorMaxSpeedDPS;
         _positionSetpointDegrees += speedSetpointDPS * deltaT;
         // repurpose the speed PID as a position PID, since it is not being used for speed regulation in this mode
@@ -231,7 +230,7 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
         _speedUpdate = _speedPID.update(_positionDegrees, deltaT);
     }
 
-    // update the pitch PID
+    // calculate _pitchUpdate
     const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
     float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
     _pitchAngleDegreesPrevious = pitchAngleDegrees;
@@ -241,6 +240,7 @@ void MotorPairController::updatePIDs(const Quaternion& orientation, float deltaT
     pitchAngleDegreesDelta = pitchAngleDeltaFilter.update(pitchAngleDegreesDelta);
     _pitchUpdate = _pitchPID.updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
 
+    // calculate _yawRateUpdate
     _yawRateUpdate = _yawRatePID.update(0.0F, deltaT); // yawRate is entirely feedforward, ie only depends on setpoint
 }
 
@@ -254,13 +254,11 @@ There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
 void MotorPairController::loop(float deltaT, uint32_t tickCount)
 {
     updateSetpointsAndMotorSpeedEstimates(deltaT, tickCount);
+    // If the AHRS has a pointer to the MPC then it will run updatePIDs, otherwise the MPC should run updatePIDs here
     if (_ahrs.getMotorController() == nullptr) {
         updatePIDs(deltaT);
-        updateMotors();
-    } else {
-        // if the AHRS has a motor controller set, then it will call updatePIDs, so we don't need to call updatePIDs here.
-        updateMotors();
     }
+    updateMotors();
 }
 
 /*!
