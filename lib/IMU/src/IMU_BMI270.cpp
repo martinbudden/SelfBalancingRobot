@@ -38,48 +38,48 @@ constexpr uint8_t REG_SENSORTIME_3          = 0x1A;
 constexpr uint8_t REG_EVENT                 = 0x1B;
 constexpr uint8_t REG_INT_STATUS_0          = 0x1C;
 constexpr uint8_t REG_INT_STATUS_1          = 0x1D;
-constexpr uint8_t SC_OUT_0                  = 0x1E;
-constexpr uint8_t SC_OUT_1                  = 0x1F;
-constexpr uint8_t WR_GEST_ACT               = 0x20;
-constexpr uint8_t INTERNAL_STATUS           = 0x21;
-constexpr uint8_t TEMPERATURE_0             = 0x22;
-constexpr uint8_t TEMPERATURE_1             = 0x23;
-constexpr uint8_t FIFO_LENGTH_0             = 0x24;
-constexpr uint8_t FIFO_LENGTH_1             = 0x25;
-constexpr uint8_t FIFO_DATA                 = 0x26;
+constexpr uint8_t REG_SC_OUT_0              = 0x1E;
+constexpr uint8_t REG_SC_OUT_1              = 0x1F;
+constexpr uint8_t REG_WR_GEST_ACT           = 0x20;
+constexpr uint8_t REG_INTERNAL_STATUS       = 0x21;
+constexpr uint8_t REG_TEMPERATURE_0         = 0x22;
+constexpr uint8_t REG_TEMPERATURE_1         = 0x23;
+constexpr uint8_t REG_FIFO_LENGTH_0         = 0x24;
+constexpr uint8_t REG_FIFO_LENGTH_1         = 0x25;
+constexpr uint8_t REG_FIFO_DATA             = 0x26;
 
 
-constexpr uint8_t ACC_CONF                  = 0x40;
+constexpr uint8_t REG_ACC_CONF              = 0x40;
     constexpr uint8_t PERFORMANCE_OPTIMIZED = 0b10000000;
     constexpr uint8_t ODR_800_HZ = 0x0B;
     constexpr uint8_t ODR_1600_HZ = 0x0C;
     constexpr uint8_t ACC_OSR4_AVG1 = 0b00000000; // no averaging
     constexpr uint8_t ACC_OSR4_AVG2 = 0b00001000; // average 2 samples
-constexpr uint8_t ACC_RANGE                 = 0x41;
+constexpr uint8_t REG_ACC_RANGE             = 0x41;
     constexpr uint8_t ACC_RANGE_16G = 0x03;
-constexpr uint8_t GYR_CONF                  = 0x42;
+constexpr uint8_t REG_GYR_CONF              = 0x42;
     constexpr uint8_t GYRO_ODR_3200_HZ = 0x0D; // for gyro only, not for acc
     constexpr uint8_t GYRO_OSR4_AVG = 0x00;
-constexpr uint8_t GYR_RANGE                 = 0x43;
+constexpr uint8_t REG_GYR_RANGE             = 0x43;
     constexpr uint8_t GYRO_RANGE_2000 = 0x00;
-constexpr uint8_t AUX_CONF                  = 0x44;
-constexpr uint8_t FIFO_DOWNS                = 0x45;
-constexpr uint8_t FIFO_WTM_0                = 0x46;
-constexpr uint8_t FIFO_WTM_1                = 0x47;
-constexpr uint8_t FIFO_CONFIG_0             = 0x48;
-constexpr uint8_t FIFO_CONFIG_1             = 0x49;
+constexpr uint8_t REG_AUX_CONF              = 0x44;
+constexpr uint8_t REG_FIFO_DOWNS            = 0x45;
+constexpr uint8_t REG_FIFO_WTM_0            = 0x46;
+constexpr uint8_t REG_FIFO_WTM_1            = 0x47;
+constexpr uint8_t REG_FIFO_CONFIG_0         = 0x48;
+constexpr uint8_t REG_FIFO_CONFIG_1         = 0x49;
     constexpr uint8_t FIFO_HEADER_DISABLE   = 0b00000000; // requires output data rates for gyro and acc to be the same
     constexpr uint8_t FIFO_HEADER_ENABLE    = 0b00001000;
     constexpr uint8_t FIFO_AUX_ENABLE       = 0b01000000;
     constexpr uint8_t FIFO_ACC_ENABLE       = 0b01000000;
     constexpr uint8_t FIFO_GYRO_ENABLE      = 0b10000000;
-constexpr uint8_t FIFO_SATURATION           = 0x4A;
-constexpr uint8_t AUX_DEV_ID_ADDR           = 0x4B;
-constexpr uint8_t AUX_IF_CONF_ADDR          = 0x4C;
+constexpr uint8_t REG_FIFO_SATURATION       = 0x4A;
+constexpr uint8_t REG_AUX_DEV_ID_ADDR       = 0x4B;
+constexpr uint8_t REG_AUX_IF_CONF_ADDR      = 0x4C;
 
-constexpr uint8_t IF_CONF_ADDR              = 0x6B;
-constexpr uint8_t PWR_CONF_ADDR             = 0x7C;
-constexpr uint8_t PWR_CTRL_ADDR             = 0x7D;
+constexpr uint8_t REG_IF_CONF_ADDR          = 0x6B;
+constexpr uint8_t REG_PWR_CONF_ADDR         = 0x7C;
+constexpr uint8_t REG_PWR_CTRL_ADDR         = 0x7D;
 
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
@@ -95,8 +95,8 @@ IMU_BMI270::IMU_BMI270(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
 
 void IMU_BMI270::init()
 {
-    _bus.writeByte(PWR_CONF_ADDR, 0x00); // Power save disabled.
-    delay(1); // 450us is min required
+    _bus.writeByte(REG_PWR_CONF_ADDR, 0x00); // Power save disabled.
+    delay(1); // 450us is minimum required
 
     const uint8_t chipID = _bus.readByte(REG_CHIP_ID);
     assert(chipID == 0x24);
@@ -106,19 +106,18 @@ void IMU_BMI270::init()
         uint8_t reg;
         uint8_t value;
     };
+    // cppcheck-suppress-begin badBitmaskCheck so we can OR with zero values without a warning
     static constexpr std::array<setting_t, 6> settings = {
-        PWR_CTRL_ADDR,          0x00, // Enable acquisition of acc, gyro and temperature sensor data.
-        // cppcheck-suppress badBitmaskCheck
-        ACC_CONF,               PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | ODR_1600_HZ,
-        ACC_RANGE,              ACC_RANGE_16G,
-        // cppcheck-suppress badBitmaskCheck
-        GYR_CONF,               PERFORMANCE_OPTIMIZED | GYRO_OSR4_AVG | ODR_1600_HZ,
-        GYR_RANGE,              GYRO_RANGE_2000,
-        // cppcheck-suppress badBitmaskCheck
-        FIFO_CONFIG_1,          FIFO_GYRO_ENABLE | FIFO_ACC_ENABLE | FIFO_HEADER_DISABLE
+        REG_PWR_CTRL_ADDR,          0x00, // Enable acquisition of acc, gyro and temperature sensor data.
+        REG_ACC_CONF,               PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | ODR_1600_HZ,
+        REG_ACC_RANGE,              ACC_RANGE_16G,
+        REG_GYR_CONF,               PERFORMANCE_OPTIMIZED | GYRO_OSR4_AVG | ODR_1600_HZ,
+        REG_GYR_RANGE,              GYRO_RANGE_2000,
+        REG_FIFO_CONFIG_1,          FIFO_GYRO_ENABLE | FIFO_ACC_ENABLE | FIFO_HEADER_DISABLE
     };
+    // cppcheck-suppress-end badBitmaskCheck
 
-    for (setting_t setting : settings) {
+    for (const setting_t setting : settings) {
         _bus.writeByte(setting.reg, setting.value);
         delay(1);
     }
