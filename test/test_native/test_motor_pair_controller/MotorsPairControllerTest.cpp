@@ -56,7 +56,6 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorStepsPerRevolution(_motors.getStepsPerRevolution()),
-    _motorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees),
     _controlMode(CONTROL_MODE_SERIAL_PIDS),
     _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
 {
@@ -64,6 +63,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _motors.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #endif
 
+    _mixer.motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees;
     setControlMode(_controlMode);
 
     _pitchPID.setPID(pitchPID_Default);
