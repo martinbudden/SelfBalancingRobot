@@ -106,16 +106,19 @@ void IMU_BMI270::init()
         uint8_t reg;
         uint8_t value;
     };
-    // cppcheck-suppress-begin badBitmaskCheck so we can OR with zero values without a warning
     static constexpr std::array<setting_t, 6> settings = {
+        // cppcheck-suppress-begin badBitmaskCheck // so we can OR with zero values without a warning
         REG_PWR_CTRL_ADDR,          0x00, // Enable acquisition of acc, gyro and temperature sensor data.
+        // cppcheck-suppress badBitmaskCheck
         REG_ACC_CONF,               PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | ODR_1600_HZ,
         REG_ACC_RANGE,              ACC_RANGE_16G,
+        // cppcheck-suppress badBitmaskCheck
         REG_GYR_CONF,               PERFORMANCE_OPTIMIZED | GYRO_OSR4_AVG | ODR_1600_HZ,
         REG_GYR_RANGE,              GYRO_RANGE_2000,
+        // cppcheck-suppress badBitmaskCheck
         REG_FIFO_CONFIG_1,          FIFO_GYRO_ENABLE | FIFO_ACC_ENABLE | FIFO_HEADER_DISABLE
+        // cppcheck-suppress-end badBitmaskCheck
     };
-    // cppcheck-suppress-end badBitmaskCheck
 
     for (const setting_t setting : settings) {
         _bus.writeByte(setting.reg, setting.value);
