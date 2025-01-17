@@ -7,7 +7,6 @@ class CommandPacketRequestData;
 class CommandPacketSetPID;
 
 class AHRS;
-class MotorPairBase;
 class MotorPairController;
 class TaskBase;
 class TelemetryScaleFactors;

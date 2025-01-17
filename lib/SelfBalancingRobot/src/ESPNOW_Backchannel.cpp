@@ -2,7 +2,6 @@
 
 #include "ESPNOW_Backchannel.h"
 #include "ESPNOW_Receiver.h"
-#include "MotorPairBase.h"
 #include "MotorPairController.h"
 #include "SBR_Telemetry.h"
 #include "SBR_TelemetryData.h"
