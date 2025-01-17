@@ -1,7 +1,8 @@
 #include "MotorPairController.h"
 
-#include "AHRS.h"
+#include "MotorPairBase.h"
 #include "MotorPairControllerTelemetry.h"
+#include <AHRS.h>
 #include <Filters.h>
 
 #if !defined(UNIT_TEST_BUILD)
@@ -10,6 +11,8 @@
 #include <HardwareSerial.h>
 #endif
 #endif
+
+#include <ReceiverBase.h>
 
 #include <cmath>
 #if defined(USE_FREERTOS)
@@ -37,6 +40,11 @@ std::string MotorPairController::getPIDName(pid_index_t pidIndex) const
 std::string MotorPairController::getBalanceAngleName() const
 {
     return "BALANCE_ANGLE";
+}
+
+void MotorPairController::motorsResetEncodersToZero(void)
+{
+    _motors.resetEncodersToZero();
 }
 
 /*!

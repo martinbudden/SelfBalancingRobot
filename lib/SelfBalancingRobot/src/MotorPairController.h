@@ -1,8 +1,6 @@
 #pragma once
 
 #include "MotorControllerBase.h"
-#include "MotorPairBase.h"
-#include "ReceiverBase.h"
 #include <Filters.h>
 #include <PIDF.h>
 #include <array>
@@ -10,6 +8,8 @@
 
 struct motor_pair_controller_telemetry_t;
 class AHRS;
+class MotorPairBase;
+class ReceiverBase;
 class Quaternion;
 
 
@@ -51,7 +51,7 @@ public:
 
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
 
-    inline void motorsResetEncodersToZero(void ) { _motors.resetEncodersToZero(); }
+    void motorsResetEncodersToZero(void);
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.outputPowerTimeMicroSeconds; } //<! time taken to write output power to the motors, for instrumentation
 public:
     struct TaskParameters {
@@ -59,7 +59,6 @@ public:
         uint32_t tickIntervalMilliSeconds;
     };
     static void Task(void* arg);
-    static MotorPairBase& motors();
     void loop(float deltaT, uint32_t tickCount);
 public:
     void updateSetpointsAndMotorSpeedEstimates(float deltaT);
@@ -67,11 +66,18 @@ public:
     virtual void updatePIDs(const xyz_t& gyroRadians, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
     void updateMotors(uint32_t tickCount);
 private:
+    MotorPairBase& motors();
     void Task(const TaskParameters* taskParameters);
 private:
     const AHRS& _ahrs;
     const ReceiverBase& _receiver;
     MotorPairBase& _motors;
+    // stick values scaled to the range [-1,0, 1.0]
+    float _throttleStick {0};
+    float _rollStick {0};
+    float _pitchStick {0};
+    float _yawStick {0};
+
     struct mixer_t {
         float motorSwitchOffAngleDegrees {70.0}; //!< Pitch angle at which the motors switch off. So if the robot flips over it won't lie on its back with its motors spinning.
         int32_t motorsDisabled {false};

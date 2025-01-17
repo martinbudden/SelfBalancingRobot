@@ -7,6 +7,9 @@
 class Quaternion;
 struct xyz_t;
 
+/*!
+Abstract base class defining a motor controller for a stabilized vehicle.
+*/
 class MotorControllerBase : public TaskBase {
 public:
     inline bool motorsIsOn() const { return _motorsIsOn; }
@@ -23,11 +26,6 @@ public:
 protected:
     int _motorsIsOn {false};
     int _newStickValuesAvailable {false};
-    // stick values scaled to the range [-1,0, 1.0]
-    float _throttleStick {0};
-    float _rollStick {0};
-    float _pitchStick {0};
-    float _yawStick {0};
     float _pitchAngleDegreesRaw {0.0};
     float _rollAngleDegreesRaw {0.0};
     float _yawAngleDegreesRaw {0.0};

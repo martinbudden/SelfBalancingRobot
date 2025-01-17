@@ -1,17 +1,20 @@
 #if defined(USE_ESPNOW)
 
-#include "AHRS.h"
-#include "CommandPacket.h"
 #include "ESPNOW_Backchannel.h"
 #include "ESPNOW_Receiver.h"
 #include "MotorPairBase.h"
 #include "MotorPairController.h"
-#if defined(USE_ESP32_PREFERENCES)
-#include "SV_Preferences.h"
-#endif
 #include "SBR_Telemetry.h"
-#include "TaskBase.h"
+#include "SBR_TelemetryData.h"
+
+#include <AHRS.h>
+#include <CommandPacket.h>
 #include <HardwareSerial.h>
+#if defined(USE_ESP32_PREFERENCES)
+#include <SV_Preferences.h>
+#endif
+#include <SV_Telemetry.h>
+#include <TaskBase.h>
 
 static_assert(sizeof(TD_TICK_INTERVALS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN);
@@ -56,14 +59,14 @@ void Backchannel::packetControl(const CommandPacketControl& packet) {
     case CommandPacketControl::MOTORS_SWITCH_ON:
         _motorPairController.motorsSwitchOn();
         break;
-    case CommandPacketControl::ENCODERS_RESET:
+    case CommandPacketControl::RESET:
         _motorPairController.motorsResetEncodersToZero();
         break;
-    case CommandPacketControl::MPC_CONTROL_MODE_SERIAL_PIDS:
+    case CommandPacketControl::CONTROL_MODE_0:
         _motorPairController.setControlMode(MotorPairController::CONTROL_MODE_SERIAL_PIDS);
         _telemetryScaleFactors.setControlMode(MotorPairController::CONTROL_MODE_SERIAL_PIDS);
         break;
-    case CommandPacketControl::MPC_CONTROL_MODE_PARALLEL_PIDS:
+    case CommandPacketControl::CONTROL_MODE_1:
         _motorPairController.setControlMode(MotorPairController::CONTROL_MODE_PARALLEL_PIDS);
         _telemetryScaleFactors.setControlMode(MotorPairController::CONTROL_MODE_PARALLEL_PIDS);
         break;
@@ -87,6 +90,7 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
         len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
                 _ahrs,
                 _motorPairController,
+                _motorPairController.getOutputPowerTimeMicroSeconds(),
                 _mainTask.getTickCountDelta(),
                 _transceiver.getTickCountDeltaAndReset(),
                 _receiver.getDroppedPacketCountDelta());
@@ -102,14 +106,14 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
         len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
         sendData(_transmitDataBuffer, len);
         break;
-    case CommandPacketRequestData::REQUEST_MPC_DATA:
-        _sendType = SEND_MPC_DATA;
-        len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
-        sendData(_transmitDataBuffer, len);
-        break;
     case CommandPacketRequestData::REQUEST_RECEIVER_DATA:
         _sendType = SEND_RECEIVER_DATA;
         len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _receiver);
+        sendData(_transmitDataBuffer, len);
+        break;
+    case CommandPacketRequestData::REQUEST_MOTOR_CONTROLLER_DATA:
+        _sendType = SEND_MPC_DATA;
+        len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
         sendData(_transmitDataBuffer, len);
         break;
     }
@@ -118,30 +122,14 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
 void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     //Serial.printf("SetPID packet type:%d, len:%d, pidType:%d setType:%d value:%f\r\n", packet.type, packet.len, packet.pidType, packet.setType, packet.value);
     bool transmit = false;
-    const MotorPairController::pid_index_t pidIndex =
-        packet.pidType == CommandPacketSetPID::PID_PITCH ? MotorPairController::PITCH_ANGLE :
-        packet.pidType == CommandPacketSetPID::PID_SPEED ? MotorPairController::SPEED :
-        packet.pidType == CommandPacketSetPID::PID_YAW_RATE ? MotorPairController::YAW_RATE :
-        MotorPairController::PID_COUNT;
+    const MotorPairController::pid_index_t pidIndex = static_cast<MotorPairController::pid_index_t>(packet.pidIndex); // NOLINT(hicpp-use-auto,modernize-use-auto)
 
-    if (pidIndex == MotorPairController::PID_COUNT) {
+    if (pidIndex >= MotorPairController::PID_COUNT) {
         //Serial.printf("Backchannel::packetSetPID invalid pidType:%d\r\n", packet.pidType);
         return;
     }
 
     switch (packet.setType) {
-    case CommandPacketSetPID::SET_SETPOINT:
-        _motorPairController.setPIDSetpoint(pidIndex, packet.value);
-        transmit = true;
-        break;
-    case CommandPacketSetPID::RESET_PID:
-        // Not currently implemented.
-        break;
-    case CommandPacketSetPID::SET_PITCH_BALANCE_ANGLE:
-        // Set the balance angel, the value of packet.pidType is ignored.
-        _motorPairController.setPitchBalanceAngleDegrees(packet.value);
-        transmit = true;
-        break;
     case CommandPacketSetPID::SET_P:
         _motorPairController.setPID_P(pidIndex, packet.value);
         transmit = true;
@@ -156,6 +144,18 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         break;
     case CommandPacketSetPID::SET_F:
         _motorPairController.setPID_F(pidIndex, packet.value);
+        transmit = true;
+        break;
+    case CommandPacketSetPID::SET_SETPOINT:
+        _motorPairController.setPIDSetpoint(pidIndex, packet.value);
+        transmit = true;
+        break;
+    case CommandPacketSetPID::RESET_PID:
+        // Not currently implemented.
+        break;
+    case CommandPacketSetPID::SET_PITCH_BALANCE_ANGLE:
+        // Set the balance angel, the value of packet.pidType is ignored.
+        _motorPairController.setPitchBalanceAngleDegrees(packet.value);
         transmit = true;
         break;
 #if defined(USE_ESP32_PREFERENCES)
@@ -206,6 +206,7 @@ bool Backchannel::update()
             const int len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
                 _ahrs,
                 _motorPairController,
+                _motorPairController.getOutputPowerTimeMicroSeconds(),
                 _mainTask.getTickCountDelta(),
                 _transceiver.getTickCountDeltaAndReset(),
                 _receiver.getDroppedPacketCountDelta());

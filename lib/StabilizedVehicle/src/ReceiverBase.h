@@ -3,6 +3,9 @@
 #include <cassert>
 #include <cstdint>
 
+/*!
+Abstract Base Class defining a receiver.
+*/
 class ReceiverBase {
 public:
     enum { STICK_COUNT = 4 };

@@ -9,6 +9,7 @@
 #include "AHRS.h"
 #include "ESPNOW_Receiver.h"
 #include "MotorPairController.h"
+#include "MotorPairControllerTelemetry.h"
 
 #include <cfloat>
 // NOLINTEND(llvm-include-order)
