@@ -60,6 +60,8 @@ struct CommandPacketSetPID {
            SET_PITCH_BALANCE_ANGLE = 11,
            SAVE_PITCH_BALANCE_ANGLE = 12
         };
+    enum { MPC_PITCH_ANGLE=0, MPC_SPEED=1, MPC_YAW_RATE=2, MPC_POSITION=3 };
+    enum { FC_ROLL_RATE=0, FC_PITCH_RATE=1, FC_YAW_RATE=2, FC_ROLL_ANGLE=3, FC_PITCH_ANGLE=4 };
     uint32_t id;
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetPID)
