@@ -5,6 +5,7 @@
 
 class ReceiverBase {
 public:
+    enum { STICK_COUNT = 4 };
 public:
     struct EUI_48_t {
         uint8_t octet[6];

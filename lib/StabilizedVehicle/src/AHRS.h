@@ -124,9 +124,4 @@ private:
     inline void LOCK_AHRS_DATA() const {}
     inline void UNLOCK_AHRS_DATA() const {}
 #endif
-#if defined(USE_FREERTOS)
-    inline void YIELD_TASK() const { taskYIELD(); }
-#else
-    inline void YIELD_TASK() const {}
-#endif
 };

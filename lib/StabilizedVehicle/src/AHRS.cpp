@@ -18,6 +18,12 @@ static_assert(false);
 
 AHRS* AHRS::ahrs {nullptr};
 
+#if defined(USE_FREERTOS)
+inline void YIELD_TASK() { taskYIELD(); }
+#else
+inline void YIELD_TASK() {}
+#endif
+
 
 /*!
 Main AHRS task function. Reads the IMU and uses the sensor fusion filter to update the orientation quaternion.

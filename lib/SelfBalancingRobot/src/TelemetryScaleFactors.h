@@ -8,14 +8,8 @@ public:
     explicit TelemetryScaleFactors(MotorPairController::ControlMode_t controlMode);
 public:
     void setControlMode(MotorPairController::ControlMode_t controlMode);
-    inline const PIDF::PIDF_t& getPitchPIDTelemetryScaleFactors() const { return _pitchPIDTelemetryScaleFactors; }
-    inline const PIDF::PIDF_t& getSpeedPIDTelemetryScaleFactors() const { return _speedPIDTelemetryScaleFactors; }
-    inline const PIDF::PIDF_t& getPositionPIDTelemetryScaleFactors() const { return _positionPIDTelemetryScaleFactors; }
-    inline const PIDF::PIDF_t& getYawRatePIDTelemetryScaleFactors() const { return _yawRatePIDTelemetryScaleFactors; }
+    inline const PIDF::PIDF_t& getPIDTelemetryScaleFactor(MotorPairController::pid_index_t pidIndex) const { return _scaleFactors[pidIndex]; }
 private:
     // Scale factors for telemetry and PID tuning. Not used by any of the update functions.
-    PIDF::PIDF_t _pitchPIDTelemetryScaleFactors;
-    PIDF::PIDF_t _speedPIDTelemetryScaleFactors {};
-    PIDF::PIDF_t _positionPIDTelemetryScaleFactors;
-    PIDF::PIDF_t _yawRatePIDTelemetryScaleFactors;
+    std::array<PIDF::PIDF_t, MotorPairController::PID_COUNT> _scaleFactors;
 };

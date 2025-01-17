@@ -118,72 +118,65 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
 void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     //Serial.printf("SetPID packet type:%d, len:%d, pidType:%d setType:%d value:%f\r\n", packet.type, packet.len, packet.pidType, packet.setType, packet.value);
     bool transmit = false;
-    PIDF* pid =
-        packet.pidType == CommandPacketSetPID::PID_PITCH ? _motorPairController.getPitchPID() :
-        packet.pidType == CommandPacketSetPID::PID_SPEED ? _motorPairController.getSpeedPID() :
-        packet.pidType == CommandPacketSetPID::PID_YAW_RATE ? _motorPairController.getYawRatePID() :
-        nullptr;
+    const MotorPairController::pid_index_t pidIndex =
+        packet.pidType == CommandPacketSetPID::PID_PITCH ? MotorPairController::PITCH_ANGLE :
+        packet.pidType == CommandPacketSetPID::PID_SPEED ? MotorPairController::SPEED :
+        packet.pidType == CommandPacketSetPID::PID_YAW_RATE ? MotorPairController::YAW_RATE :
+        MotorPairController::PID_COUNT;
 
-    switch (packet.pidType) {
-    case CommandPacketSetPID::PID_PITCH:
-    case CommandPacketSetPID::PID_SPEED:
-    case CommandPacketSetPID::PID_YAW_RATE:
-        switch (packet.setType) {
-        case CommandPacketSetPID::SET_SETPOINT:
-            pid->setSetpoint(packet.value);
-            transmit = true;
-            break;
-        case CommandPacketSetPID::RESET_PID:
-            // Not currently implemented.
-            break;
-        case CommandPacketSetPID::SET_PITCH_BALANCE_ANGLE:
-            // Set the balance angel, the value of packet.pidType is ignored.
-            _motorPairController.setPitchBalanceAngleDegrees(packet.value);
-            transmit = true;
-            break;
-        case CommandPacketSetPID::SET_P:
-            pid->setP(packet.value);
-            transmit = true;
-            break;
-        case CommandPacketSetPID::SET_I:
-            pid->setI(packet.value);
-            transmit = true;
-            break;
-        case CommandPacketSetPID::SET_D:
-            pid->setD(packet.value);
-            transmit = true;
-            break;
-        case CommandPacketSetPID::SET_F:
-            pid->setF(packet.value);
-            transmit = true;
-            break;
+    if (pidIndex == MotorPairController::PID_COUNT) {
+        //Serial.printf("Backchannel::packetSetPID invalid pidType:%d\r\n", packet.pidType);
+        return;
+    }
+
+    switch (packet.setType) {
+    case CommandPacketSetPID::SET_SETPOINT:
+        _motorPairController.setPIDSetpoint(pidIndex, packet.value);
+        transmit = true;
+        break;
+    case CommandPacketSetPID::RESET_PID:
+        // Not currently implemented.
+        break;
+    case CommandPacketSetPID::SET_PITCH_BALANCE_ANGLE:
+        // Set the balance angel, the value of packet.pidType is ignored.
+        _motorPairController.setPitchBalanceAngleDegrees(packet.value);
+        transmit = true;
+        break;
+    case CommandPacketSetPID::SET_P:
+        _motorPairController.setPID_P(pidIndex, packet.value);
+        transmit = true;
+        break;
+    case CommandPacketSetPID::SET_I:
+        _motorPairController.setPID_I(pidIndex, packet.value);
+        transmit = true;
+        break;
+    case CommandPacketSetPID::SET_D:
+        _motorPairController.setPID_D(pidIndex, packet.value);
+        transmit = true;
+        break;
+    case CommandPacketSetPID::SET_F:
+        _motorPairController.setPID_F(pidIndex, packet.value);
+        transmit = true;
+        break;
 #if defined(USE_ESP32_PREFERENCES)
-        case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
-            // Save the balance angel, the value of packet.pidType is ignored.
-            _preferences->putPitchBalanceAngleDegrees(_motorPairController.getPitchBalanceAngleDegrees());
-            break;
-        case CommandPacketSetPID::SAVE_P:
-        case CommandPacketSetPID::SAVE_I:
-        case CommandPacketSetPID::SAVE_D:
-        case CommandPacketSetPID::SAVE_F:
-            //Serial.printf("Saved PID packetType:%d pidType:%d  setType:%d\r\n", packet.type, packet.pidType, packet.setType);
-            // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.
-            if (packet.pidType == CommandPacketSetPID::PID_PITCH) {
-                _preferences->putPitchPID(_motorPairController.getPitchPIDConstants());
-            } else if (packet.pidType == CommandPacketSetPID::PID_SPEED) {
-                _preferences->putSpeedPID(_motorPairController.getSpeedPIDConstants());
-            } else if (packet.pidType == CommandPacketSetPID::PID_YAW_RATE) {
-                _preferences->putYawRatePID(_motorPairController.getYawRatePIDConstants());
-            }
-            break;
+    case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
+        // Save the balance angel, the value of packet.pidType is ignored.
+        _preferences->putPitchBalanceAngleDegrees(_motorPairController.getPitchBalanceAngleDegrees());
+        break;
+    case CommandPacketSetPID::SAVE_P:
+    case CommandPacketSetPID::SAVE_I:
+    case CommandPacketSetPID::SAVE_D:
+    case CommandPacketSetPID::SAVE_F:
+        //Serial.printf("Saved PID packetType:%d pidType:%d  setType:%d\r\n", packet.type, packet.pidType, packet.setType);
+        // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.
+        _preferences->putPID(_motorPairController.getPIDName(pidIndex), _motorPairController.getPIDConstants(pidIndex));
+        break;
 #endif
-        default:
-            //Serial.printf("Backchannel::update invalid pidType:%d\r\n", packet.pidType);
-            break;
-        }
     default:
+        //Serial.printf("Backchannel::packetSetPID invalid setType:%d\r\n", packet.pidType);
         break;
     }
+
     if (transmit) {
         // send back the new data for display
         const int len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController, _telemetryScaleFactors);
@@ -243,23 +236,18 @@ bool Backchannel::update()
         const int type = controlPacket->type;
         //Serial.printf("Backchannel::update id:%x, type:%d, len:%d value:%d\r\n", packetControl->id, packetControl->type, packetControl->len, packetControl->value);
         if (type == CommandPacketControl::TYPE) {
-            const CommandPacketControl* packet = reinterpret_cast<const CommandPacketControl*>(_receivedDataBuffer);
-            packetControl(*packet);
+            const CommandPacketControl& packet = *reinterpret_cast<const CommandPacketControl*>(_receivedDataBuffer);
+            packetControl(packet);
         } else if (type == CommandPacketRequestData::TYPE) {
-            const CommandPacketRequestData* packet = reinterpret_cast<const CommandPacketRequestData*>(_receivedDataBuffer);
-            packetRequestData(*packet);
+            const CommandPacketRequestData& packet = *reinterpret_cast<const CommandPacketRequestData*>(_receivedDataBuffer);
+            packetRequestData(packet);
         } else if (type == CommandPacketSetPID::TYPE) {
-            const CommandPacketSetPID* packet = reinterpret_cast<const CommandPacketSetPID*>(_receivedDataBuffer);
-            packetSetPID(*packet);
+            const CommandPacketSetPID& packet = *reinterpret_cast<const CommandPacketSetPID*>(_receivedDataBuffer);
+            packetSetPID(packet);
         }
         _received_data.len = 0;
     }
     return true;
-}
-
-int Backchannel::receivedDataType() const
-{
-    return reinterpret_cast<const CommandPacketControl*>(_receivedDataBuffer)->type;
 }
 
 #endif // USE_ESPNOW

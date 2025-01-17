@@ -63,27 +63,18 @@ Packs the MotorPairController PID telemetry data into a TD_SBR_PIDS packet. Retu
 */
 int packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPairController& motorPairController, const TelemetryScaleFactors& scaleFactors)
 {
+    static_assert(static_cast<int>(TD_SBR_PIDS::PID_COUNT) == static_cast<int>(MotorPairController::PID_COUNT));
     TD_SBR_PIDS* td = reinterpret_cast<TD_SBR_PIDS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
     td->type = TD_SBR_PIDS::TYPE;
     td->len = sizeof(TD_SBR_PIDS);
 
-    td->data.pitch.setpoint = motorPairController.getPitchPIDSetpoint();
-    td->data.pitch.pid = motorPairController.getPitchPIDConstants();
-    td->data.pitch.scale = scaleFactors.getPitchPIDTelemetryScaleFactors();
-
-    td->data.speed.setpoint = motorPairController.getSpeedPIDSetpoint();
-    td->data.speed.pid = motorPairController.getSpeedPIDConstants();
-    td->data.speed.scale = scaleFactors.getSpeedPIDTelemetryScaleFactors();
-
-    td->data.position.setpoint = motorPairController.getPositionPIDSetpoint();
-    td->data.position.pid = motorPairController.getPositionPIDConstants();
-    td->data.position.scale = scaleFactors.getPositionPIDTelemetryScaleFactors();
-
-    td->data.yawRate.setpoint = motorPairController.getYawRatePIDSetpoint();
-    td->data.yawRate.pid = motorPairController.getYawRatePIDConstants();
-    td->data.yawRate.scale = scaleFactors.getYawRatePIDTelemetryScaleFactors();
+    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
+        td->data.spids[ii].setpoint = motorPairController.getPIDSetpoint(static_cast<MotorPairController::pid_index_t>(ii));
+        td->data.spids[ii].pid = motorPairController.getPIDConstants(static_cast<MotorPairController::pid_index_t>(ii));
+        td->data.spids[ii].scale = scaleFactors.getPIDTelemetryScaleFactor(static_cast<MotorPairController::pid_index_t>(ii));
+    }
 
     td->data.pitchBalanceAngleDegrees = motorPairController.getPitchBalanceAngleDegrees();
 

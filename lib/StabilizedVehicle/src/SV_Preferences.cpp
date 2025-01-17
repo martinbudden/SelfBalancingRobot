@@ -21,162 +21,36 @@ bool SV_Preferences::isSetPID() const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
-    const bool ret = _preferences.getBool("PIDSET");
+    const bool ret = _preferences.getBool("PIDS_SET");
 
     _preferences.end();
     return ret;
 }
 
-void SV_Preferences::setPID_PreferencesToZero()
-{
-    _preferences.begin(preferencesNamespace, READ_ONLY);
-    _preferences.putBool("PIDSET", true);
-    _preferences.end();
-
-    static constexpr PIDF::PIDF_t pidZero { 0.0, 0.0, 0.0, 0.0 };
-    putPitchPID(pidZero);
-    putSpeedPID(pidZero);
-    putYawRatePID(pidZero);
-    putPitchBalanceAngleDegrees(FLT_MAX);
-
-}
-
-PIDF::PIDF_t SV_Preferences::getRollPID() const
+PIDF::PIDF_t SV_Preferences::getPID(const std::string& name) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const PIDF::PIDF_t pid {
-        .kp = _preferences.getFloat("ROLL_P", 0.0F),
-        .ki = _preferences.getFloat("ROLL_I", 0.0F),
-        .kd = _preferences.getFloat("ROLL_D", 0.0F),
-        .kf = _preferences.getFloat("ROLL_F", 0.0F)
+        .kp = _preferences.getFloat((name + "_P").c_str(), 0.0F),
+        .ki = _preferences.getFloat((name + "_I").c_str(), 0.0F),
+        .kd = _preferences.getFloat((name + "_D").c_str(), 0.0F),
+        .kf = _preferences.getFloat((name + "_F").c_str(), 0.0F)
     };
 
     _preferences.end();
     return pid;
 }
 
-void SV_Preferences::putRollPID(const PIDF::PIDF_t& pid)
+void SV_Preferences::putPID(const std::string& name, const PIDF::PIDF_t& pid)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
-    _preferences.putBool("PIDSET", true);
-    _preferences.putFloat("ROLL_P", pid.kp);
-    _preferences.putFloat("ROLL_I", pid.ki);
-    _preferences.putFloat("ROLL_D", pid.kd);
-    _preferences.putFloat("ROLL_F", pid.kf);
-
-    _preferences.end();
-}
-
-PIDF::PIDF_t SV_Preferences::getPitchPID() const
-{
-    _preferences.begin(preferencesNamespace, READ_ONLY);
-
-    const PIDF::PIDF_t pid {
-        .kp = _preferences.getFloat("PITCH_P", 0.0F),
-        .ki = _preferences.getFloat("PITCH_I", 0.0F),
-        .kd = _preferences.getFloat("PITCH_D", 0.0F),
-        .kf = _preferences.getFloat("PITCH_F", 0.0F)
-    };
-
-    _preferences.end();
-    return pid;
-}
-
-void SV_Preferences::putPitchPID(const PIDF::PIDF_t& pid)
-{
-    _preferences.begin(preferencesNamespace, READ_WRITE);
-
-    _preferences.putBool("PIDSET", true);
-    _preferences.putFloat("PITCH_P", pid.kp);
-    _preferences.putFloat("PITCH_I", pid.ki);
-    _preferences.putFloat("PITCH_D", pid.kd);
-    _preferences.putFloat("PITCH_F", pid.kf);
-
-    _preferences.end();
-}
-
-PIDF::PIDF_t SV_Preferences::getYawRatePID() const
-{
-    _preferences.begin(preferencesNamespace, READ_ONLY);
-
-    const PIDF::PIDF_t pid {
-        .kp = _preferences.getFloat("YAW_RATE_P", 0.0F),
-        .ki = _preferences.getFloat("YAW_RATE_I", 0.0F),
-        .kd = _preferences.getFloat("YAW_RATE_D", 0.0F),
-        .kf = _preferences.getFloat("YAW_RATE_F", 0.0F)
-    };
-
-    _preferences.end();
-    return pid;
-}
-
-void SV_Preferences::putYawRatePID(const PIDF::PIDF_t& pid)
-{
-    _preferences.begin(preferencesNamespace, READ_WRITE);
-
-    _preferences.putBool("PIDSET", true);
-    _preferences.putFloat("YAW_RATE_P", pid.kp);
-    _preferences.putFloat("YAW_RATE_I", pid.ki);
-    _preferences.putFloat("YAW_RATE_D", pid.kd);
-    _preferences.putFloat("YAW_RATE_F", pid.kf);
-
-    _preferences.end();
-}
-
-PIDF::PIDF_t SV_Preferences::getSpeedPID() const
-{
-    _preferences.begin(preferencesNamespace, READ_ONLY);
-
-    const PIDF::PIDF_t pid {
-        .kp = _preferences.getFloat("SPEED_P", 0.0F),
-        .ki = _preferences.getFloat("SPEED_I", 0.0F),
-        .kd = _preferences.getFloat("SPEED_D", 0.0F),
-        .kf = _preferences.getFloat("SPEED_F", 0.0F)
-    };
-
-    _preferences.end();
-    return pid;
-}
-
-void SV_Preferences::putSpeedPID(const PIDF::PIDF_t& pid)
-{
-    _preferences.begin(preferencesNamespace, READ_WRITE);
-
-    _preferences.putBool("PIDSET", true);
-    _preferences.putFloat("SPEED_P", pid.kp);
-    _preferences.putFloat("SPEED_I", pid.ki);
-    _preferences.putFloat("SPEED_D", pid.kd);
-    _preferences.putFloat("SPEED_F", pid.kf);
-
-    _preferences.end();
-}
-
-PIDF::PIDF_t SV_Preferences::getPositionPID() const
-{
-    _preferences.begin(preferencesNamespace, READ_ONLY);
-
-    const PIDF::PIDF_t pid {
-        .kp = _preferences.getFloat("POS_P", 0.0F),
-        .ki = _preferences.getFloat("POS_I", 0.0F),
-        .kd = _preferences.getFloat("POS_D", 0.0F),
-        .kf = _preferences.getFloat("POS_F", 0.0F)
-    };
-
-    _preferences.end();
-    return pid;
-}
-
-void SV_Preferences::putPositionPID(const PIDF::PIDF_t& pid)
-{
-    _preferences.begin(preferencesNamespace, READ_WRITE);
-
-    _preferences.putBool("PIDSET", true);
-    _preferences.putFloat("POS_P", pid.kp);
-    _preferences.putFloat("POS_I", pid.ki);
-    _preferences.putFloat("POS_D", pid.kd);
-    _preferences.putFloat("POS_F", pid.kf);
+    _preferences.putBool("PIDS_SET", true);
+    _preferences.putFloat((name + "_P").c_str(), pid.kp);
+    _preferences.putFloat((name + "_I").c_str(), pid.ki);
+    _preferences.putFloat((name + "_D").c_str(), pid.kd);
+    _preferences.putFloat((name + "_F").c_str(), pid.kf);
 
     _preferences.end();
 }
@@ -195,7 +69,6 @@ void SV_Preferences::putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
-    _preferences.putBool("PIDSET", true);
     _preferences.putFloat("balAngle", pitchBalanceAngleDegrees);
 
     _preferences.end();

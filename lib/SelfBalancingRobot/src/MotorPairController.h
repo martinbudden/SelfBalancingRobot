@@ -2,16 +2,13 @@
 
 #include "MotorControllerBase.h"
 #include "MotorPairBase.h"
+#include "ReceiverBase.h"
 #include <Filters.h>
 #include <PIDF.h>
-
-#if defined(USE_FREERTOS)
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-#endif
+#include <array>
+#include <string>
 
 struct motor_pair_controller_telemetry_t;
-class ReceiverBase;
 class AHRS;
 class Quaternion;
 
@@ -32,36 +29,28 @@ public:
         CONTROL_MODE_PARALLEL_PIDS, //!< Parallel configuration for pitch and speed PIDs. Pitch and speed are independently set.
         CONTROL_MODE_POSITION //!< The speed PID is used to set position rather than speed. Movement is obtained by incrementing position.
     };
+    enum pid_index_t { PITCH_ANGLE=0, SPEED=1, YAW_RATE=2, POSITION=3, PID_COUNT=4, PID_BEGIN=0 };
 public:
-    inline void motorsResetEncodersToZero(void ) { _motors.resetEncodersToZero(); }
-
     inline ControlMode_t getControlMode() const { return _controlMode; }
     void setControlMode(ControlMode_t controlMode);
+
+    std::string getPIDName(pid_index_t pidIndex);
+    inline const PIDF::PIDF_t& getPIDConstants(pid_index_t pidIndex) const { return _PIDS[pidIndex].getPID(); }
+    inline void setPIDConstants(pid_index_t pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
+    inline void setPID_P(pid_index_t pidIndex, float kp) { _PIDS[pidIndex].setP(kp); }
+    inline void setPID_I(pid_index_t pidIndex, float ki) { _PIDS[pidIndex].setI(ki); }
+    inline void setPID_D(pid_index_t pidIndex, float kd) { _PIDS[pidIndex].setD(kd); }
+    inline void setPID_F(pid_index_t pidIndex, float kf) { _PIDS[pidIndex].setF(kf); }
+
+    inline float getPIDSetpoint(pid_index_t pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
+    void setPIDSetpoint(pid_index_t pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
 
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }
     inline void setPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees) { _pitchBalanceAngleDegrees = pitchBalanceAngleDegrees; }
 
-    inline PIDF* getPitchPID() { return &_pitchAnglePID; }
-    inline PIDF* getSpeedPID() { return &_speedPID; }
-    inline PIDF* getPositionPID() { return &_positionPID; }
-    inline PIDF* getYawRatePID() { return &_yawRatePID; }
-
-    void setPitchPID(const PIDF::PIDF_t& pid) { _pitchAnglePID.setPID(pid); }
-    void setSpeedPID(const PIDF::PIDF_t& pid) { _speedPID.setPID(pid); }
-    void setPositionPID(const PIDF::PIDF_t& pid) { _positionPID.setPID(pid); }
-    void setYawRatePID(const PIDF::PIDF_t& pid) { _yawRatePID.setPID(pid); }
-
-    inline const PIDF::PIDF_t& getPitchPIDConstants() const { return _pitchAnglePID.getPID(); }
-    inline const PIDF::PIDF_t& getSpeedPIDConstants() const { return _speedPID.getPID(); }
-    inline const PIDF::PIDF_t& getPositionPIDConstants() const { return _positionPID.getPID(); }
-    inline const PIDF::PIDF_t& getYawRatePIDConstants() const { return _yawRatePID.getPID(); }
-
-    inline float getPitchPIDSetpoint() const { return _pitchAnglePID.getSetpoint(); }
-    inline float getSpeedPIDSetpoint() const { return _speedPID.getSetpoint(); }
-    inline float getPositionPIDSetpoint() const { return _positionPID.getSetpoint(); }
-    inline float getYawRatePIDSetpoint() const { return _yawRatePID.getSetpoint(); }
-
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
+
+    inline void motorsResetEncodersToZero(void ) { _motors.resetEncodersToZero(); }
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.outputPowerTimeMicroSeconds; } //<! time taken to write output power to the motors, for instrumentation
 public:
     struct TaskParameters {
@@ -78,11 +67,6 @@ public:
     void updateMotors(uint32_t tickCount);
 private:
     void Task(const TaskParameters* taskParameters);
-#if defined(USE_FREERTOS)
-    inline void YIELD_TASK() const { taskYIELD(); }
-#else
-    inline void YIELD_TASK() const {}
-#endif
 private:
     const AHRS& _ahrs;
     const ReceiverBase& _receiver;
@@ -120,17 +104,8 @@ private:
     float _pitchBalanceAngleDegrees {0.0};
     float _pitchAngleDegreesPrevious {0.0};
     const float _pitchMaxAngleDegrees {20.0};
-
-    PIDF _pitchAnglePID;
-    float _pitchAngleUpdate {0.0};
-
-    PIDF _speedPID;
-    float _speedUpdate {0.0};
-
-    PIDF _positionPID;
-    float _positionUpdate {0.0};
-
     float _yawStickMultiplier {1.0};
-    PIDF _yawRatePID;
-    float _yawRateUpdate {0.0};
+
+    std::array<PIDF, PID_COUNT> _PIDS;
+    std::array<float, PID_COUNT> _updates {};
 };

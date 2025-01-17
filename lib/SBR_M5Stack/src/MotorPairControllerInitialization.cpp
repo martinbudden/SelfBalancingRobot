@@ -62,17 +62,13 @@ MotorPairBase& MotorPairController::motors()
 }
 
 /*!
-Sets the control mode and adjusts the _speedPID constants accordingly.
+Sets the control mode and adjusts the _PIDS[SPEED] constants accordingly.
 */
 void MotorPairController::setControlMode(ControlMode_t controlMode)
 {
-    _speedPID.resetIntegral();
     _controlMode = controlMode;
-    if (controlMode == CONTROL_MODE_SERIAL_PIDS) {
-        _speedPID.setPID(speedPID_DefaultSerial);
-    } else if (controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-        _speedPID.setPID(speedPID_DefaultParallel);
-    }
+    _PIDS[SPEED].setPID((controlMode == CONTROL_MODE_SERIAL_PIDS) ? speedPID_DefaultSerial : speedPID_DefaultParallel);
+    _PIDS[SPEED].resetIntegral();
 }
 
 /*!
@@ -99,16 +95,16 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     setControlMode(_controlMode);
     _mixer.motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees;
 
-    _pitchAnglePID.setPID(pitchPID_Default);
-    _pitchAnglePID.setIntegralMax(1.0F);
-    _pitchAnglePID.setOutputSaturationValue(1.0F);
+    _PIDS[PITCH_ANGLE].setPID(pitchPID_Default);
+    _PIDS[PITCH_ANGLE].setIntegralMax(1.0F);
+    _PIDS[PITCH_ANGLE].setOutputSaturationValue(1.0F);
 
     _speedFilter.setAlpha(0.8F);
-    _speedPID.setIntegralMax(1.0F);
+    _PIDS[SPEED].setIntegralMax(1.0F);
 
-    _positionPID.setPID(positionPID_Default);
+    _PIDS[POSITION].setPID(positionPID_Default);
 
-    _yawRatePID.setPID(yawRatePID_Default);
+    _PIDS[YAW_RATE].setPID(yawRatePID_Default);
 
     const float yawRateDPS_AtMaxPower = _motorMaxSpeedDPS * wheelDiameterMM / wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
     static constexpr float maxDesiredYawRateDPS {720.0};

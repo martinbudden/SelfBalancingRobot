@@ -4,20 +4,17 @@
 
 void TelemetryScaleFactors::setControlMode(MotorPairController::ControlMode_t controlMode)
 {
-    if (controlMode == MotorPairController::CONTROL_MODE_SERIAL_PIDS) {
-        _speedPIDTelemetryScaleFactors = speedPID_TelemetryScaleFactorsSerial;
-    } else if (controlMode == MotorPairController::CONTROL_MODE_PARALLEL_PIDS) {
-        _speedPIDTelemetryScaleFactors = speedPID_TelemetryScaleFactorsParallel;
-    }
+    _scaleFactors[MotorPairController::SPEED] = (controlMode == MotorPairController::CONTROL_MODE_SERIAL_PIDS) 
+        ? speedPID_TelemetryScaleFactorsSerial : speedPID_TelemetryScaleFactorsParallel;
 }
 
 /*!
 Constructor. Sets member data.
 */
-TelemetryScaleFactors::TelemetryScaleFactors(MotorPairController::ControlMode_t controlMode) :
-    _pitchPIDTelemetryScaleFactors(pitchPID_TelemetryScaleFactors),
-    _positionPIDTelemetryScaleFactors(positionPID_TelemetryScaleFactors),
-    _yawRatePIDTelemetryScaleFactors(yawRatePID_TelemetryScaleFactors)
+TelemetryScaleFactors::TelemetryScaleFactors(MotorPairController::ControlMode_t controlMode)
 {
     setControlMode(controlMode);
+    _scaleFactors[MotorPairController::PITCH_ANGLE] = pitchPID_TelemetryScaleFactors;
+    _scaleFactors[MotorPairController::YAW_RATE] = yawRatePID_TelemetryScaleFactors;
+    _scaleFactors[MotorPairController::POSITION] = positionPID_TelemetryScaleFactors;
 }

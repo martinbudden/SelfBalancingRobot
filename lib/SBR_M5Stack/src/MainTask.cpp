@@ -255,34 +255,27 @@ void MainTask::loadPreferences()
 
     // Set all the preferences to zero if they have not been set
     if (!_preferences->isSetPID()) {
-        _preferences->setPID_PreferencesToZero();
+        for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
+            std::string pidName = _motorPairController->getPIDName(static_cast<MotorPairController::pid_index_t>(ii));
+            constexpr PIDF::PIDF_t pidZero { 0.0, 0.0, 0.0, 0.0 };
+             _preferences->putPID(pidName, pidZero);
+        }
         Serial.printf("**** preferences set to zero\r\n");
-    }
-    // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
-    const PIDF::PIDF_t pitch_pid = _preferences->getPitchPID();
-    if (pitch_pid.kp != 0.0F) {
-        _motorPairController->setPitchPID(pitch_pid);
-        Serial.printf("**** pitch PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pitch_pid.kp, pitch_pid.ki, pitch_pid.kd, pitch_pid.kf);
-    }
-    const PIDF::PIDF_t speed_pid = _preferences->getSpeedPID();
-    if (speed_pid.kp != 0.0F) {
-        _motorPairController->setSpeedPID(speed_pid);
-        Serial.printf("**** speed PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", speed_pid.kp, speed_pid.ki, speed_pid.kd, speed_pid.kf);
-    }
-    const PIDF::PIDF_t position_pid = _preferences->getPositionPID();
-    if (speed_pid.kp != 0.0F) {
-        _motorPairController->setPositionPID(position_pid);
-        Serial.printf("**** position PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", position_pid.kp, position_pid.ki, position_pid.kd, position_pid.kf);
-    }
-    const PIDF::PIDF_t yawRate_pid = _preferences->getYawRatePID();
-    if (yawRate_pid.kf != 0.0F) { // yawRate_pid is feed forward.
-        _motorPairController->setYawRatePID(yawRate_pid);
-        Serial.printf("**** yawRate PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", yawRate_pid.kp, yawRate_pid.ki, yawRate_pid.kd, yawRate_pid.kf);
     }
     const float pitchBalanceAngleDegrees = _preferences->getPitchBalanceAngleDegrees();
     if (pitchBalanceAngleDegrees != FLT_MAX) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
         Serial.printf("**** pitch balance angle loaded from preferences:%f\r\n", pitchBalanceAngleDegrees);
+    }
+
+    // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
+    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
+        std::string pidName = _motorPairController->getPIDName(static_cast<MotorPairController::pid_index_t>(ii));
+        const PIDF::PIDF_t pid = _preferences->getPID(pidName);
+        if (pid.kp != 0.0F) {
+            _motorPairController->setPIDConstants(static_cast<MotorPairController::pid_index_t>(ii), pid);
+            Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), pid.kp, pid.ki, pid.kd, pid.kf);
+        }
     }
 }
 

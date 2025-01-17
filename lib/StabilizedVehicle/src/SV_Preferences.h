@@ -4,6 +4,7 @@
 #include <Preferences.h>
 #include <xyz_int16_type.h>
 
+#include <string>
 
 class SV_Preferences {
 public:
@@ -14,22 +15,9 @@ public:
 
     void clear();
     bool isSetPID() const;
-    void setPID_PreferencesToZero();
 
-    PIDF::PIDF_t getRollPID() const;
-    void putRollPID(const PIDF::PIDF_t& pid);
-
-    PIDF::PIDF_t getPitchPID() const;
-    void putPitchPID(const PIDF::PIDF_t& pid);
-
-    PIDF::PIDF_t getYawRatePID() const;
-    void putYawRatePID(const PIDF::PIDF_t& pid);
-
-    PIDF::PIDF_t getSpeedPID() const;
-    void putSpeedPID(const PIDF::PIDF_t& pid);
-
-    PIDF::PIDF_t getPositionPID() const;
-    void putPositionPID(const PIDF::PIDF_t& pid);
+    PIDF::PIDF_t getPID(const std::string& name) const;
+    void putPID(const std::string& name, const PIDF::PIDF_t& pid);
 
     float getPitchBalanceAngleDegrees() const;
     void putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees);

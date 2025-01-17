@@ -107,17 +107,14 @@ struct TD_SBR_PIDS {
 
     uint8_t filler0 {0};
     uint8_t filler1 {0};
-    enum { PITCH_PID = 0, SPEED_PID = 1, YAW_RATE_PID = 2, PID_COUNT = 3};
+    enum { PITCH_ANGLE=0, SPEED=1, YAW_RATE=2, POSITION=3, PID_COUNT=4, PID_BEGIN=0 };
     struct SPID_t {
         float setpoint;
         PIDF::PIDF_t pid;
         PIDF::PIDF_t scale; //!< factor to scale value to range ~ [0, 100], for consistent display
     };
     struct Data {
-        SPID_t pitch;
-        SPID_t speed;
-        SPID_t position;
-        SPID_t yawRate;
+        std::array<SPID_t, PID_COUNT> spids;
         float pitchBalanceAngleDegrees;
     };
     Data data;
