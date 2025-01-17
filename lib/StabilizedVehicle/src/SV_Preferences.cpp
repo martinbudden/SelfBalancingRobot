@@ -55,21 +55,21 @@ void SV_Preferences::putPID(const std::string& name, const PIDF::PIDF_t& pid)
     _preferences.end();
 }
 
-float SV_Preferences::getPitchBalanceAngleDegrees() const
+float SV_Preferences::getFloat(const std::string& name) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
-    const float pitchBalanceAngleDegrees = _preferences.getFloat("balAngle", FLT_MAX);
+    const float pitchBalanceAngleDegrees = _preferences.getFloat(name.c_str(), FLT_MAX);
 
     _preferences.end();
     return pitchBalanceAngleDegrees;
 }
 
-void SV_Preferences::putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees)
+void SV_Preferences::putFloat(const std::string& name, float value)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
-    _preferences.putFloat("balAngle", pitchBalanceAngleDegrees);
+    _preferences.putFloat(name.c_str(), value);
 
     _preferences.end();
 }
@@ -128,20 +128,20 @@ void SV_Preferences::putGyroOffset(const xyz_int16_t& gyroOffset)
     _preferences.end();
 }
 
-void SV_Preferences::getTransmitMacAddress(uint8_t* macAddress) const
+void SV_Preferences::getMacAddress(uint8_t* macAddress, const std::string& name) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
-    _preferences.getBytes("tMacAddr", macAddress, MAC_ADDRESS_LEN);
+    _preferences.getBytes(name.c_str(), macAddress, MAC_ADDRESS_LEN);
 
     _preferences.end();
 }
 
-void SV_Preferences::putTransmitMacAddress(const uint8_t* macAddress)
+void SV_Preferences::putMacAddress(const std::string& name, const uint8_t* macAddress)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
-    _preferences.putBytes("tMacAddr", macAddress, MAC_ADDRESS_LEN);
+    _preferences.putBytes(name.c_str(), macAddress, MAC_ADDRESS_LEN);
 
     _preferences.end();
 }

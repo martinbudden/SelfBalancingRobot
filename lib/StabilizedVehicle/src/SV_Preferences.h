@@ -19,8 +19,8 @@ public:
     PIDF::PIDF_t getPID(const std::string& name) const;
     void putPID(const std::string& name, const PIDF::PIDF_t& pid);
 
-    float getPitchBalanceAngleDegrees() const;
-    void putPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees);
+    float getFloat(const std::string& name) const;
+    void putFloat(const std::string& name, float value);
 
     bool getAccOffset(xyz_int16_t* accOffset) const;
     void putAccOffset(const xyz_int16_t& accOffset);
@@ -28,8 +28,8 @@ public:
     bool getGyroOffset(xyz_int16_t* gyroOffset) const;
     void putGyroOffset(const xyz_int16_t& gyroOffset);
 
-    void getTransmitMacAddress(uint8_t* macAddress) const;
-    void putTransmitMacAddress(const uint8_t* macAddress);
+    void getMacAddress(uint8_t* macAddress, const std::string& name) const;
+    void putMacAddress(const std::string& name, const uint8_t* macAddress);
 private:
     mutable Preferences _preferences;
 };

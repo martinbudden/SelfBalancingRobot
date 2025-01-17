@@ -34,7 +34,7 @@ public:
     inline ControlMode_t getControlMode() const { return _controlMode; }
     void setControlMode(ControlMode_t controlMode);
 
-    std::string getPIDName(pid_index_t pidIndex);
+    std::string getPIDName(pid_index_t pidIndex) const;
     inline const PIDF::PIDF_t& getPIDConstants(pid_index_t pidIndex) const { return _PIDS[pidIndex].getPID(); }
     inline void setPIDConstants(pid_index_t pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
     inline void setPID_P(pid_index_t pidIndex, float kp) { _PIDS[pidIndex].setP(kp); }
@@ -45,6 +45,7 @@ public:
     inline float getPIDSetpoint(pid_index_t pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
     void setPIDSetpoint(pid_index_t pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
 
+    std::string getBalanceAngleName() const;
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }
     inline void setPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees) { _pitchBalanceAngleDegrees = pitchBalanceAngleDegrees; }
 

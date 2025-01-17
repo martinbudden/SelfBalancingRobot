@@ -262,7 +262,7 @@ void MainTask::loadPreferences()
         }
         Serial.printf("**** preferences set to zero\r\n");
     }
-    const float pitchBalanceAngleDegrees = _preferences->getPitchBalanceAngleDegrees();
+    const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
     if (pitchBalanceAngleDegrees != FLT_MAX) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
         Serial.printf("**** pitch balance angle loaded from preferences:%f\r\n", pitchBalanceAngleDegrees);

@@ -29,9 +29,14 @@ const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES = {
     "YAW_RATE"
 };
 
-std::string MotorPairController::getPIDName(pid_index_t pidIndex)
+std::string MotorPairController::getPIDName(pid_index_t pidIndex) const
 {
     return PID_NAMES[pidIndex];
+}
+
+std::string MotorPairController::getBalanceAngleName() const
+{
+    return "BALANCE_ANGLE";
 }
 
 /*!

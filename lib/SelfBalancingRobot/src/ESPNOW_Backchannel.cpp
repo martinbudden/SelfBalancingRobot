@@ -161,7 +161,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
 #if defined(USE_ESP32_PREFERENCES)
     case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
         // Save the balance angel, the value of packet.pidType is ignored.
-        _preferences->putPitchBalanceAngleDegrees(_motorPairController.getPitchBalanceAngleDegrees());
+        _preferences->putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
         break;
     case CommandPacketSetPID::SAVE_P:
     case CommandPacketSetPID::SAVE_I:
