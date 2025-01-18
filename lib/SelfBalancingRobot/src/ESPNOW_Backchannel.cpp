@@ -23,10 +23,10 @@ static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN);
 
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
         MotorPairController& motorPairController,
-        TelemetryScaleFactors& telemetryScaleFactors,
         const AHRS& ahrs,
         const TaskBase& mainTask, 
         const ReceiverBase& receiver,
+        TelemetryScaleFactors& telemetryScaleFactors,
         SV_Preferences* preferences) :
     _transceiver(transceiver),
     _received_data(_receivedDataBuffer, sizeof(_receivedDataBuffer)),

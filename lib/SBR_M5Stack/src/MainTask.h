@@ -28,9 +28,11 @@ private:
     Backchannel* _backchannel {nullptr};
     uint32_t _failSafeTickCount {}; //<! failsafe counter, so the robot doesn't run away if it looses contact with the transmitter (for example by going out of range)
     int32_t _receiverInUse {false};
+
     uint32_t _screenTickCount {0};
     Screen* _screen {nullptr};
     int32_t _screenTemplateIsUpdated {false};
+
     uint32_t _buttonsTickCount {0};
     Buttons* _buttons {nullptr};
 };

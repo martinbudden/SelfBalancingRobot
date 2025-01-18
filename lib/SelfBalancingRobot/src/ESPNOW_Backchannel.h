@@ -16,9 +16,9 @@ class SV_Preferences;
 
 class Backchannel {
 public:
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, TelemetryScaleFactors& telemetryScaleFactors, const AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, SV_Preferences* preferences);
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, TelemetryScaleFactors& telemetryScaleFactors, const AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver) :
-        Backchannel(transceiver, macAddress, motorPairController, telemetryScaleFactors, ahrs, mainTask, receiver, nullptr) {}
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& flightController, const AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences* preferences);
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& flightController, const AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors) :
+        Backchannel(transceiver, macAddress, flightController, ahrs, mainTask, receiver, telemetryScaleFactors, nullptr) {}
 private:
     // Backchannel is not copyable or moveable
     Backchannel(const Backchannel&) = delete;
@@ -42,10 +42,10 @@ private:
     uint8_t _transmitDataBuffer[ESP_NOW_MAX_DATA_LEN] {};
 private:
     MotorPairController& _motorPairController;
-    TelemetryScaleFactors& _telemetryScaleFactors;
     const AHRS& _ahrs;
     const TaskBase& _mainTask;
     const ReceiverBase& _receiver;
+    TelemetryScaleFactors& _telemetryScaleFactors;
     SV_Preferences* _preferences {nullptr};
     uint32_t _telemetryID {0};
     uint32_t _backchannelID {0};

@@ -150,7 +150,7 @@ void MainTask::setup()
     static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, telemetryScaleFactors, *_ahrs, *this, *_receiver, _preferences);
+    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, *_ahrs, *this, *_receiver, telemetryScaleFactors, _preferences);
     _backchannel = &backchannel;
 #endif
 
