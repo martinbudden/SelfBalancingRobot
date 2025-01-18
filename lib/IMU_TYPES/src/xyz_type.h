@@ -12,6 +12,8 @@ public:
     inline xyz_t operator*=(float k) { x*=k; y*=k; z*=k; return *this; } //<! Multiplication by a scalar
 
     // Binary operations
+    inline bool operator==(const xyz_t& v) const { return x == v.x &&  y == v.y && z == v.z; }
+    inline bool operator!=(const xyz_t& v) const { return !(*this == v); }
     inline xyz_t operator+(const xyz_t& v) const { return xyz_t{x + v.x, y + v.y, z + v.z}; }
     inline xyz_t operator-(const xyz_t& v) const { return xyz_t{x - v.x, y - v.y, z - v.z}; }
     inline xyz_t operator*(float k) const { return xyz_t{x*k, y*k, z*k}; } //<! Multiplication by a scalar

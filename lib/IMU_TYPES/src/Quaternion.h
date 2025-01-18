@@ -17,7 +17,7 @@ public:
     inline float getX() const { return x; }
     inline float getY() const { return y; }
     inline float getZ() const { return z; }
-    inline void getWXYZ(float& w_, float& x_, float&y_, float& z_) const { w_ = w; x_ = x; y_ = y; z_ = z; } 
+    inline void getWXYZ(float& w_, float& x_, float&y_, float& z_) const { w_ = w; x_ = x; y_ = y; z_ = z; }
 public:
     inline float magnitude_squared() const { return w*w + x*x + y*y +z*z; } //<! The square of the norm
     inline Quaternion conjugate() const { return Quaternion(w, -x, -y, -z); }
@@ -25,6 +25,9 @@ public:
     // Unary operations
     inline Quaternion operator+() const { return *this; } //<!Unary plus
     inline Quaternion operator-() const { return Quaternion(-w, -x, -y, -z); } //<! Unary negation
+
+    bool operator==(const Quaternion& q) const { return w == q.w && x == q.x &&  y == q.y && z == q.z; }
+    bool operator!=(const Quaternion& q) const { return !(*this == q); }
 
     inline Quaternion operator+=(const Quaternion& q) {
         w += q.w;
@@ -80,9 +83,9 @@ public:
     inline float calculatePitchRadians() const { return asinClipped(2.0F*(w*y - x*z)); }
     inline float calculateYawRadians() const   { return atan2f(w*z + x*y, 0.5F - y*y - z*z); } // alternatively atan2f(2*(w*z + x*y), w*w + x*x - y*y - z*z)
 
-    inline float calculateRollDegrees() const { return radiansToDegrees * calculateRollRadians(); }
+    inline float calculateRollDegrees() const  { return radiansToDegrees * calculateRollRadians(); }
     inline float calculatePitchDegrees() const { return radiansToDegrees * calculatePitchRadians(); }
-    inline float calculateYawDegrees() const { return radiansToDegrees * calculateYawRadians(); }
+    inline float calculateYawDegrees() const   { return radiansToDegrees * calculateYawRadians(); }
 protected:
     float w;
     float x;
