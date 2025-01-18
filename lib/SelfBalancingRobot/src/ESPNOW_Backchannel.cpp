@@ -31,10 +31,10 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
     _transceiver(transceiver),
     _received_data(_receivedDataBuffer, sizeof(_receivedDataBuffer)),
     _motorPairController(motorPairController),
-    _telemetryScaleFactors(telemetryScaleFactors), 
     _ahrs(ahrs),
     _mainTask(mainTask),
     _receiver(receiver),
+    _telemetryScaleFactors(telemetryScaleFactors),
     _preferences(preferences)
 {
     _peer_data.receivedDataPtr = &_received_data;

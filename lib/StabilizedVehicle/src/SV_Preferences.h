@@ -2,9 +2,9 @@
 
 #include <PIDF.h>
 #include <Preferences.h>
+#include <string>
 #include <xyz_int16_type.h>
 
-#include <string>
 
 class SV_Preferences {
 public:

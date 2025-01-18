@@ -1,7 +1,9 @@
 #pragma once
+
 #include <array>
 #include <cassert>
 #include <cstdint>
+
 
 /*!
 Abstract Base Class defining a receiver.

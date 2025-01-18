@@ -5,8 +5,6 @@
 #include <xyz_int16_type.h>
 #include <xyz_type.h>
 
-#include "AHRS.h"
-#include "IMU_Base.h"
 #include <cassert>
 #include <cfloat>
 
@@ -18,9 +16,10 @@
 #include <esp32-hal.h>
 #endif
 
+class IMU_Base;
+class IMU_FiltersBase;
 class MotorControllerBase;
 class SensorFusionFilterBase;
-class IMU_FiltersBase;
 
 
 class AHRS : public TaskBase {

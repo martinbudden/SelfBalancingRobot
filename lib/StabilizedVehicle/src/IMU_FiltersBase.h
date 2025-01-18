@@ -1,3 +1,5 @@
+#pragma once
+
 struct xyz_t;
 
 class IMU_FiltersBase {

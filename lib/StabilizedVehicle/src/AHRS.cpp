@@ -1,8 +1,9 @@
 #include "AHRS.h"
-#include "IMU_Base.h"
 #include "IMU_FiltersBase.h"
 #include "MotorControllerBase.h"
-#include "SensorFusionFilter.h"
+
+#include <IMU_Base.h>
+#include <SensorFusionFilter.h>
 #include <cmath>
 #if defined(AHRS_IS_INTERRUPT_DRIVEN) || defined(USE_FREERTOS)
 #include <driver/gpio.h>
