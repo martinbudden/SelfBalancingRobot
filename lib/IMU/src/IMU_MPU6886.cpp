@@ -173,7 +173,7 @@ void IMU_MPU6886::setAccOffset(const xyz_int16_t& accOffset)
 
 /*!
 Gyro offset adjustment.
-These values are used to remove DC bias from the sensor output. The values are 
+These values are used to remove DC bias from the sensor output. The values are
 added to the gyroscope sensor value before going into the sensor register.
 So the offset value is negated.
 */

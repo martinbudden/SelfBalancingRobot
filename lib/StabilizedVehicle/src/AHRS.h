@@ -85,7 +85,7 @@ private:
     mutable int32_t _orientationUpdatedSinceLastRead {false};
 
     // interrupt service routine data
-    static AHRS* ahrs; //!< alias of `this` to be used in imuDataReceivedInterruptServiceRoutine 
+    static AHRS* ahrs; //!< alias of `this` to be used in imuDataReceivedInterruptServiceRoutine
     uint32_t _imuDataReadyCount {0}; //<! data ready count, used in interrupt service routine
 
     // instrumentation member data

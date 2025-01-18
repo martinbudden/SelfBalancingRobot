@@ -8,7 +8,7 @@ Quaternion with added gravity function;
 */
 class QuaternionG : public Quaternion {
 public:
-    explicit QuaternionG(const Quaternion& q) : Quaternion(q) {} 
+    explicit QuaternionG(const Quaternion& q) : Quaternion(q) {}
     QuaternionG(float w, float x, float y, float z) : Quaternion(w, x, y, z) {}
 public:
     inline xyz_t halfGravity() {

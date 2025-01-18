@@ -43,7 +43,7 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
     for (int ii = 0; ii < TD_TICK_INTERVALS::TIME_CHECKS_COUNT; ++ii) {
         td->ahrsTimeChecksMicroSeconds[ii] = ahrs.getTimeChecksMicroSeconds(ii);
     }
- 
+
     td->mcTaskTickIntervalMicroSeconds = motorController.getTimeMicroSecondDelta();
     td->mcOutputPowerTimeMicroSeconds = mcOutputPowerTimeMicroSeconds;
     td->mcTaskTickIntervalTicks = motorController.getTickCountDelta();

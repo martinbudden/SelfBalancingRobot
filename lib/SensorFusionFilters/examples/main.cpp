@@ -9,7 +9,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     const float deltaT = 0.01F; // deltaT should be set to the interval between IMU readings
 
     // this loop should repeat each time new IMU data is available
-    while (true) { 
+    while (true) {
         const xyz_t gyroRPS = {0.0, 0.0, 0.0}; // replace this with actual gyroscope data in radians/s
         const xyz_t accelerometer = {0.0, 0.0, 1.0}; // replace this with actual accelerometer data in g
 

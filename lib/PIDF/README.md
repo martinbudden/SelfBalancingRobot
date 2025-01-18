@@ -12,7 +12,7 @@ The PID controller has the following features:
     Setting `kf` to zero gives a traditional PID controller.
 2. Calculation of derivative on measurement, avoiding "derivative kick" when the setpoint changes.
 3. Two forms of the update function `update` and `updateDelta` with a `measurementDelta` parameter. Providing this parameter allows filtering
-    `measurementDelta` before the PID calculation. 
+    `measurementDelta` before the PID calculation.
 4. _delta-t_ input parameter to PID `update` function. This allows for jitter in the timing of the call to the `update` function.
 5. A choice of two methods of controlling integral windup. Either the integral term can be limited to a maximum value,
     or it can be set to zero when the output saturates. Both methods can be used together, if desired.

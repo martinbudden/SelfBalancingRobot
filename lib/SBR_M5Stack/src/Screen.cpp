@@ -256,7 +256,7 @@ void Screen::updateReceivedData80x160() const
     M5.Lcd.printf("%6d", controls.yawStickQ4dot12);
 
     yPos += 10;
-    M5.Lcd.setCursor(0, yPos);  
+    M5.Lcd.setCursor(0, yPos); 
     const uint8_t mode = _receiver.getSwitch(0);
     const uint8_t altMode = _receiver.getSwitch(1);
     const uint8_t flipButton =_receiver.getSwitch(2);

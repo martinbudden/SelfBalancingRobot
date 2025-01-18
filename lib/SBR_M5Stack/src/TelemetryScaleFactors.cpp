@@ -4,7 +4,7 @@
 
 void TelemetryScaleFactors::setControlMode(MotorPairController::ControlMode_t controlMode)
 {
-    _scaleFactors[MotorPairController::SPEED] = (controlMode == MotorPairController::CONTROL_MODE_SERIAL_PIDS) 
+    _scaleFactors[MotorPairController::SPEED] = (controlMode == MotorPairController::CONTROL_MODE_SERIAL_PIDS)
         ? speedPID_TelemetryScaleFactorsSerial : speedPID_TelemetryScaleFactorsParallel;
 }
 

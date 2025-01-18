@@ -66,6 +66,7 @@ public:
     virtual void updatePIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
     void updateMotors(uint32_t tickCount);
 private:
+    void updatePosition(float deltaT);
     MotorPairBase& motors();
     void Task(const TaskParameters* taskParameters);
 private:

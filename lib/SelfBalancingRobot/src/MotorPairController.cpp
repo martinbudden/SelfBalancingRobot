@@ -191,7 +191,7 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
         speedDPS = speedMovingAverageFilter.update(speedDPS);
         // additionally apply IIR filter.
         _speedDPS = _speedFilter.update(speedDPS);
-        
+       
         //static float motorSpeed {0.0};
         //static constexpr float motorSpeedWeighting {0.8};
         //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
@@ -232,10 +232,8 @@ void MotorPairController::updatePIDs(const xyz_t& gyroRPS, [[maybe_unused]] cons
     if (!motorsIsOn() || _mixer.motorsDisabled) { // [[unlikely]]
         _updates[PITCH_ANGLE] = 0.0F;
         _PIDS[PITCH_ANGLE].resetIntegral();
-
         _updates[SPEED] = 0.0F;
         _PIDS[SPEED].resetIntegral();
-
         _updates[YAW_RATE] = 0.0F;
         _PIDS[YAW_RATE].resetIntegral();
 #if !defined(AHRS_RECORD_UPDATE_TIMES)
@@ -247,32 +245,12 @@ void MotorPairController::updatePIDs(const xyz_t& gyroRPS, [[maybe_unused]] cons
     // calculate _updates[SPEED] according to the control mode.
     _updates[SPEED] = _PIDS[SPEED].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
-        // feed the speedUpdate back into the pitchPID and set _updates[SPEED] to zero
+        // feed the speed update back into the pitchAngle PID and set _updates[SPEED] to zero
         _PIDS[PITCH_ANGLE].setSetpoint(-_updates[SPEED]);
         _updates[SPEED] = 0.0F;
     } else if (_controlMode == CONTROL_MODE_POSITION) {
-        // NOTE: THIS IS NOT YET FULLY IMPLEMENTED
-#if defined(MOTORS_HAVE_ENCODERS)
-        #if true
-        _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
-        #else
-        // experimental calculation of position using complementary filter of position and 
-        const float positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
-        const float distanceDegrees = (positionDegrees - _positionDegrees);
-        constexpr float alpha = 0.9;
-        const float  speedEstimate = MotorPairBase::clip((_powerLeft + _powerRight) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
-        _positionDegrees += alpha*distanceDegrees + (1.0F - alpha)*speedEstimate*deltaT;
-        #endif
-#else
-        _positionDegrees += _speedDPS * deltaT;
-#endif
-        // scale the throttleStick value to get desired speed
-        const float desiredSpeed = _throttleStick * _motorMaxSpeedDPS;
-        _positionSetpointDegrees += desiredSpeed * deltaT;
-        _PIDS[POSITION].setSetpoint(_positionSetpointDegrees);
-        const float positionUpdatePrevious = _updates[POSITION];
-        _updates[POSITION] = _PIDS[POSITION].update(_positionDegrees, deltaT);
-        _updates[SPEED] = (_updates[POSITION] - positionUpdatePrevious) / deltaT;
+        // NOTE: THIS IS EXPERIMENTAL AND NOT YET FULLY IMPLEMENTED
+        updatePosition(deltaT);
     }
 
     // calculate _updates[PITCH_ANGLE]
@@ -288,6 +266,32 @@ void MotorPairController::updatePIDs(const xyz_t& gyroRPS, [[maybe_unused]] cons
     // calculate _updates[YAW_RATE]
     const float yawRate = -gyroRPS.z * Quaternion::radiansToDegrees;
     _updates[YAW_RATE] = _PIDS[YAW_RATE].update(yawRate, deltaT);
+}
+
+void MotorPairController::updatePosition(float deltaT)
+{
+    // NOTE: THIS IS EXPERIMENTAL AND NOT YET FULLY IMPLEMENTED
+#if defined(MOTORS_HAVE_ENCODERS)
+    #if true
+    _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
+    #else
+    // experimental calculation of position using complementary filter of position and
+    const float positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
+    const float distanceDegrees = (positionDegrees - _positionDegrees);
+    constexpr float alpha = 0.9;
+    const float  speedEstimate = MotorPairBase::clip((_powerLeft + _powerRight) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
+    _positionDegrees += alpha*distanceDegrees + (1.0F - alpha)*speedEstimate*deltaT;
+    #endif
+#else
+    _positionDegrees += _speedDPS * deltaT;
+#endif
+    // scale the throttleStick value to get desired speed
+    const float desiredSpeedDPS = _throttleStick * _motorMaxSpeedDPS;
+    _positionSetpointDegrees += desiredSpeedDPS * deltaT;
+    _PIDS[POSITION].setSetpoint(_positionSetpointDegrees);
+    const float updatePositionPrevious = _updates[POSITION];
+    _updates[POSITION] = _PIDS[POSITION].update(_positionDegrees, deltaT);
+    _updates[SPEED] = (_updates[POSITION] - updatePositionPrevious) / deltaT;
 }
 
 /*!

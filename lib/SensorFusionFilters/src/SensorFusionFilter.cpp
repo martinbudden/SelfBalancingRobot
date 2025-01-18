@@ -8,7 +8,7 @@ Implementation of [fast inverse square root](http://en.wikipedia.org/wiki/Fast_i
 using [Pizer’s optimisation](https://pizer.wordpress.com/2008/10/12/fast-inverse-square-root/) and
 using `union` rather than `reinterpret_cast` to avoid breaking strict-aliasing rules.
 
-The Xtensa floating point coprocessor (used on the ESP32) has some hardware support for reciprocal square root: it has 
+The Xtensa floating point coprocessor (used on the ESP32) has some hardware support for reciprocal square root: it has
 an RSQRT0.S (single-precision reciprocal square root initial step) instruction.
 However benchmarking shows that FAST_RECIPROCAL_SQUARE_ROOT is approximately 3.5 times faster than `1.0F / sqrtf()`
 */
@@ -25,7 +25,7 @@ inline float reciprocalSqrt(float x)
     // single iteration gives accuracy to 4.5 significant figures
     u.y *= 1.69000231F - 0.714158168F * x * u.y * u.y; // First iteration
 #if defined(USE_FAST_RECIPROCAL_SQUARE_ROOT_TWO_ITERATIONS)
-    // two iterations gives floating point accuracy to within 2 significant bits, and will pass platformio's Unity TEST_ASSERT_EQUAL_FLOAT 
+    // two iterations gives floating point accuracy to within 2 significant bits, and will pass platformio's Unity TEST_ASSERT_EQUAL_FLOAT
     u.y *= 1.5F - (0.5F * x * u.y * u.y); // Second iteration
 #endif
 
@@ -280,7 +280,7 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& acceleromet
     }
 
     // Acceleration is an unreliable indicator of orientation when in high-g or low-g maneuvers,
-    // so exclude it from the calculation in these cases 
+    // so exclude it from the calculation in these cases
     if ((accMagnitudeSquared >= _accMagnitudeSquaredMin) && (accMagnitudeSquared <= _accMagnitudeSquaredMax)) {
         // Auxiliary variables to avoid repeated arithmetic
         const float _2q1q1_plus_2q2q2 = 2.0F*(q1*q1 + q2*q2);
@@ -329,7 +329,7 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& acceleromet
     xyz_t a = accelerometer;
     const float accMagnitudeSquared = normalize(a);
     // Acceleration is an unreliable indicator of orientation when in high-g or low-g maneuvers,
-    // so exclude it from the calculation in these cases 
+    // so exclude it from the calculation in these cases
     if ((accMagnitudeSquared < _accMagnitudeSquaredMin) || (accMagnitudeSquared > _accMagnitudeSquaredMax)) {
         a.x = 0.0F;
         a.y = 0.0F;
@@ -376,7 +376,7 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& acceleromet
     const float common              = sumSquaresMinusOne + q1q1_plus_q2q2 + a.z;
 
     // Gradient decent algorithm corrective step
-    const float s0 = 
+    const float s0 =
         + q0 * 2.0F * (q1q1_plus_q2q2*(1.0F + bZbZ) + bXbX*q2q2_plus_q3q3)
         - q1 * aY_plus_mYbZ
         + q2 * (aX_plus_mXbZ - mZbX)
@@ -385,11 +385,11 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& acceleromet
     const float s1 =
         - q0 * aY_plus_mYbZ
         + q1 * 2.0F * (common + mZbZ + bXbX*q2q2_plus_q3q3 + bZbZ*(sumSquaresMinusOne + q1q1_plus_q2q2))
-        - q2 * mYbX 
+        - q2 * mYbX
         - q3 * (aX_plus_mXbZ + mZbX + _4bXbZ*(0.5F*sumSquaresMinusOne + q1q1));
 
     const float s2 =
-        + q0 * (aX_plus_mXbZ - mZbX) 
+        + q0 * (aX_plus_mXbZ - mZbX)
         - q1 * mYbX
         + q2 * 2.0F * (common + mZbZ + mXbX + bXbX*(sumSquaresMinusOne + q2q2_plus_q3q3) + bZbZ*(sumSquaresMinusOne + q1q1_plus_q2q2))
         - q3 * (aY_plus_mYbZ + _4bXbZ*q1q2);
