@@ -82,23 +82,84 @@ void test_quaternion()
     Quaternion c = a;
     c *= b;
     TEST_ASSERT_TRUE(c == a*b);
+
+    TEST_ASSERT_TRUE(a.magnitude_squared()*a.magnitude_squared() == (a*a).magnitude_squared());
+    TEST_ASSERT_TRUE(a.magnitude_squared()*a.magnitude_squared() == (a*a.conjugate()).magnitude_squared());
+
 }
 
 void test_quaternion_angles()
 {
-    const float degrees23inRadians = 23.0F * Quaternion::degreesToRadians;
+    const float degrees19inRadians = 19.0F * Quaternion::degreesToRadians;
+    const float degrees43inRadians = 43.0F * Quaternion::degreesToRadians;
     const float degrees67inRadians = 67.0F * Quaternion::degreesToRadians;
-    const float degrees77inRadians = 77.0F * Quaternion::degreesToRadians;
 
-    const Quaternion q0 = Quaternion::fromEulerAnglesRadians(degrees23inRadians, degrees67inRadians, degrees77inRadians);
-    TEST_ASSERT_EQUAL_FLOAT(23.0F, q0.calculateRollDegrees());
-    TEST_ASSERT_EQUAL_FLOAT(67.0F, q0.calculatePitchDegrees());
-    TEST_ASSERT_EQUAL_FLOAT(77.0F, q0.calculateYawDegrees());
+    const Quaternion q0 = Quaternion::fromEulerAnglesRadians(degrees19inRadians, degrees43inRadians, degrees67inRadians);
+    TEST_ASSERT_EQUAL_FLOAT(19.0, q0.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(43.0, q0.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(67.0, q0.calculateYawDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q0.magnitude_squared());
 
-    const Quaternion q1 = Quaternion::fromEulerAnglesRadians(degrees67inRadians, -degrees23inRadians, degrees77inRadians);
-    TEST_ASSERT_EQUAL_FLOAT(67.0F, q1.calculateRollDegrees());
-    TEST_ASSERT_EQUAL_FLOAT(-23.0F, q1.calculatePitchDegrees());
-    TEST_ASSERT_EQUAL_FLOAT(77.0F, q1.calculateYawDegrees());
+    const Quaternion q1 = Quaternion::fromEulerAnglesRadians(degrees43inRadians, -degrees19inRadians, degrees67inRadians);
+    TEST_ASSERT_EQUAL_FLOAT(43.0, q1.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(-19.0, q1.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(67.0, q1.calculateYawDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q1.magnitude_squared());
+
+    const Quaternion q2 = Quaternion::fromEulerAnglesRadians(degrees43inRadians, 0, 0);
+    TEST_ASSERT_EQUAL_FLOAT(43.0, q2.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q2.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q2.calculateYawDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q2.magnitude_squared());
+
+    const Quaternion q3 = Quaternion::fromEulerAnglesRadians(-degrees19inRadians, 0, 0);
+    TEST_ASSERT_EQUAL_FLOAT(-19.0, q3.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q3.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q3.calculateYawDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q3.magnitude_squared());
+
+    Quaternion q2q3 = q2 * q3;
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q2q3.magnitude_squared());
+    TEST_ASSERT_EQUAL_FLOAT(24.0, q2q3.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q2q3.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q2q3.calculateYawDegrees());
+
+    const Quaternion q4 = Quaternion::fromEulerAnglesRadians(0, -degrees67inRadians, 0);
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q4.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(-67.0, q4.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q4.calculateYawDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q4.magnitude_squared());
+
+    const Quaternion q5 = Quaternion::fromEulerAnglesRadians(0, degrees43inRadians, 0);
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q5.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(43.0, q5.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q5.calculateYawDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q5.magnitude_squared());
+
+    Quaternion q4q5 = q4 * q5;
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q4q5.magnitude_squared());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q4q5.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(-24.0, q4q5.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q4q5.calculateYawDegrees());
+
+    const Quaternion q6 = Quaternion::fromEulerAnglesRadians(0, 0, -degrees19inRadians);
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q6.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q6.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(-19.0, q6.calculateYawDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q6.magnitude_squared());
+
+    const Quaternion q7 = Quaternion::fromEulerAnglesRadians(0, 0, degrees43inRadians);
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q7.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q7.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(43.0, q7.calculateYawDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q7.magnitude_squared());
+
+    Quaternion q6q7 = q6 * q7;
+    TEST_ASSERT_EQUAL_FLOAT(1.0, q6q7.magnitude_squared());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q6q7.calculateRollDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, q6q7.calculatePitchDegrees());
+    TEST_ASSERT_EQUAL_FLOAT(24.0, q6q7.calculateYawDegrees());
+
 }
 
 int main(int argc, char **argv)
