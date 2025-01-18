@@ -7,11 +7,11 @@ IMU_M5_UNIFIED::IMU_M5_UNIFIED(void* i2cMutex) :
     IMU_Base(i2cMutex)
 {
     i2cSemaphoreTake();
-#if defined(IMU_Y_AXIS_POINTS_LEFT)
+#if defined(IMU_X_AXIS_FRONT_Y_AXIS_LEFT)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos);
-#elif defined(IMU_Y_AXIS_POINTS_RIGHT)
+#elif defined(IMU_X_AXIS_BACK_Y_AXIS_RIGHT)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_pos);
-#elif defined(IMU_Y_AXIS_POINTS_DOWN)
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg);
 #endif
     i2cSemaphoreGive();

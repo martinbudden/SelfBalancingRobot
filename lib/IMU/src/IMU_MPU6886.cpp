@@ -360,7 +360,7 @@ IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromData(const acc_temp_gyro_dat
 {
     return gyroRPS_Acc_t {
 // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
-#if defined(IMU_Y_AXIS_POINTS_LEFT)
+#if defined(IMU_X_AXIS_FRONT_Y_AXIS_LEFT)
         .gyroRPS = {
             .x = -(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
             .y =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
@@ -371,7 +371,7 @@ IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromData(const acc_temp_gyro_dat
             .y =  (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x) * ACC_8G_RES,
             .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES
         }
-#elif defined(IMU_Y_AXIS_POINTS_RIGHT)
+#elif defined(IMU_X_AXIS_BACK_Y_AXIS_RIGHT)
         .gyroRPS = {
             .x =  (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
             .y = -(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
@@ -382,7 +382,7 @@ IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromData(const acc_temp_gyro_dat
             .y = -(static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x) * ACC_8G_RES,
             .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES
         }
-#elif defined(IMU_Y_AXIS_POINTS_DOWN)
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
         .gyroRPS = {
             .x =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
             .y =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS,
@@ -393,7 +393,7 @@ IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromData(const acc_temp_gyro_dat
             .y =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES,
             .z = -(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y) * ACC_8G_RES
         }
-#else
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_FRONT)
         .gyroRPS = {
             .x =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
             .y =  (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
@@ -404,6 +404,8 @@ IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromData(const acc_temp_gyro_dat
             .y =  (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y) * ACC_8G_RES,
             .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES
         }
+#else
+    static_assert(false && "IMU orientation not implemented for MPU6886.");
 #endif
 // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     };

@@ -182,7 +182,7 @@ IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromData(const acc_gyro_data_t&
 {
     return gyroRPS_Acc_t {
 // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
-#if defined(IMU_Y_AXIS_POINTS_LEFT)
+#if defined(IMU_X_AXIS_FRONT_Y_AXIS_LEFT)
         .gyroRPS = {
             .x = -(data.gyro.y - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
             .y =  (data.gyro.x - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
@@ -193,7 +193,7 @@ IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromData(const acc_gyro_data_t&
             .y =  (data.acc.x - accOffset.x) * ACC_16G_RES,
             .z =  (data.acc.z - accOffset.z) * ACC_16G_RES
         }
-#elif defined(IMU_Y_AXIS_POINTS_RIGHT)
+#elif defined(IMU_X_AXIS_BACK_Y_AXIS_RIGHT)
         .gyroRPS = {
             .x =  (data.gyro.y - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
             .y = -(data.gyro.x - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
@@ -204,7 +204,7 @@ IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromData(const acc_gyro_data_t&
             .y = -(data.acc.x - accOffset.x) * ACC_16G_RES,
             .z =  (data.acc.z - accOffset.z) * ACC_16G_RES)
         }
-#elif defined(IMU_Y_AXIS_POINTS_DOWN)
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
         .gyroRPS = {
             .x =  (data.gyro.x - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
             .y =  (data.gyro.z - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS,
@@ -215,7 +215,7 @@ IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromData(const acc_gyro_data_t&
             .y =  (data.acc.z - accOffset.z) * ACC_16G_RES,
             .z = -(data.acc.y - accOffset.y) * ACC_16G_RES
         }
-#else
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_FRONT)
         .gyroRPS = {
             .x = (data.gyro.x - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
             .y = (data.gyro.y - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
@@ -226,6 +226,8 @@ IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromData(const acc_gyro_data_t&
             .y  = (data.acc.y - accOffset.y) * ACC_16G_RES,
             .z  = (data.acc.z - accOffset.z) * ACC_16G_RES
         }
+#else
+    static_assert(false && "IMU orientation not implemented for BMI270.");
 #endif
 // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     };
