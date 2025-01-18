@@ -42,7 +42,7 @@ std::string MotorPairController::getBalanceAngleName() const
     return "BALANCE_ANGLE";
 }
 
-void MotorPairController::motorsResetEncodersToZero(void)
+void MotorPairController::motorsResetEncodersToZero()
 {
     _motors.resetEncodersToZero();
 }
@@ -212,10 +212,10 @@ void MotorPairController::updatePIDs(float deltaT)
     const Quaternion orientation = _ahrs.getOrientationUsingLock(orientationUpdated);
     [[maybe_unused]] bool ahrsDataUpdated;
     const AHRS::data_t data = _ahrs.getAhrsDataUsingLock(ahrsDataUpdated);
-    updatePIDs(data.gyroRadians, data.acc, orientation, deltaT);
+    updatePIDs(data.gyroRPS, data.acc, orientation, deltaT);
 }
 
-void MotorPairController::updatePIDs(const xyz_t& gyroRadians, [[maybe_unused]] const xyz_t& acc, const Quaternion& orientation, float deltaT)
+void MotorPairController::updatePIDs(const xyz_t& gyroRPS, [[maybe_unused]] const xyz_t& acc, const Quaternion& orientation, float deltaT)
 {
     // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.
     // For the Self Balancing Robot, pitch is rotation around the x-axis and roll is rotation around the y-axis,
@@ -286,7 +286,7 @@ void MotorPairController::updatePIDs(const xyz_t& gyroRadians, [[maybe_unused]] 
     _updates[PITCH_ANGLE] = _PIDS[PITCH_ANGLE].updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
 
     // calculate _updates[YAW_RATE]
-    const float yawRate = -gyroRadians.z * Quaternion::radiansToDegrees;
+    const float yawRate = -gyroRPS.z * Quaternion::radiansToDegrees;
     _updates[YAW_RATE] = _PIDS[YAW_RATE].update(yawRate, deltaT);
 }
 

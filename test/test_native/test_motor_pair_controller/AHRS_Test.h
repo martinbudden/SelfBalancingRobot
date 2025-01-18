@@ -7,8 +7,8 @@
 
 class SensorFusionFilterTest : public SensorFusionFilterBase {
 public:
-    virtual Quaternion update(const xyz_t& gyroRadians, const xyz_t& accelerometer, float deltaT) override;
-    virtual Quaternion update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) override;
+    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT) override;
+    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) override;
     virtual void setFreeParameters(float parameter0, float parameter1) override;
 };
 
@@ -22,12 +22,12 @@ public:
     virtual xyz_int16_t readGyroRaw() const override;
     virtual xyz_int16_t readAccRaw() const override;
 
-    virtual bool readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const override;
+    virtual bool readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const override;
 
     virtual int readFIFO_ToBuffer() override;
-    virtual void readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index) override;
+    virtual void readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index) override;
 };
 
 class IMU_Filters_Test : public IMU_FiltersBase {
-    virtual void filter(xyz_t& gyroRadians, xyz_t& acc, float deltaT) override;
+    virtual void filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) override;
 };

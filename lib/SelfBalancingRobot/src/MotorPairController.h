@@ -51,7 +51,7 @@ public:
 
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
 
-    void motorsResetEncodersToZero(void);
+    void motorsResetEncodersToZero();
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.outputPowerTimeMicroSeconds; } //<! time taken to write output power to the motors, for instrumentation
 public:
     struct TaskParameters {
@@ -63,7 +63,7 @@ public:
 public:
     void updateSetpointsAndMotorSpeedEstimates(float deltaT);
     void updatePIDs(float deltaT);
-    virtual void updatePIDs(const xyz_t& gyroRadians, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
+    virtual void updatePIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
     void updateMotors(uint32_t tickCount);
 private:
     MotorPairBase& motors();

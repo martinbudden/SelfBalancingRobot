@@ -33,7 +33,7 @@ NOTE: calls to YIELD_TASK have no effect on multi-core implementations, but are 
 */
 bool AHRS::readIMUandUpdateOrientation(float deltaT)
 {
-    xyz_t gyroRadians; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    xyz_t gyroRPS; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     xyz_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
 #if defined(USE_IMU_FIFO)
@@ -52,24 +52,24 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     TIME_CHECK(0, _timeCheck0);
     TIME_CHECK(1);
 
-    xyz_t gyroRadiansSum {0.0, 0.0, 0.0};
+    xyz_t gyroRPS_Sum {0.0, 0.0, 0.0};
     xyz_t accSum {0.0, 0.0, 0.0};
     const float fifoCountReciprocal = 1.0F / static_cast<float>(_fifoCount);
     const float fifoDeltaT = deltaT * fifoCountReciprocal;
     // constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
 
     for (auto ii = 0; ii < _fifoCount; ++ii) {
-        _IMU.readFIFO_Item(gyroRadians, acc, ii);
-        _imuFilters.filter(gyroRadians, acc, fifoDeltaT);
-        gyroRadiansSum += gyroRadians;
+        _IMU.readFIFO_Item(gyroRPS, acc, ii);
+        _imuFilters.filter(gyroRPS, acc, fifoDeltaT);
+        gyroRPS_Sum += gyroRPS;
         accSum += acc;
     }
-    gyroRadians = gyroRadiansSum * fifoCountReciprocal;
+    gyroRPS = gyroRPS_Sum * fifoCountReciprocal;
     acc = accSum * fifoCountReciprocal;
     TIME_CHECK(1);
     TIME_CHECK(2);
 
-    const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT);
+    const Quaternion orientation = _sensorFusionFilter.update(gyroRPS, acc, deltaT);
 
     TIME_CHECK(3);
 
@@ -78,7 +78,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 #if defined(AHRS_RECORD_TIMES_CHECKS)
     _timeCheck0 = micros();
 #endif
-    const bool dataRead = _IMU.readGyroRadiansAcc(gyroRadians, acc);
+    const bool dataRead = _IMU.readGyroRPS_Acc(gyroRPS, acc);
     if (dataRead == false) {
         YIELD_TASK();
         return false;
@@ -86,16 +86,16 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     TIME_CHECK(0, _timeCheck0);
     TIME_CHECK(1);
 
-    _imuFilters.filter(gyroRadians, acc, deltaT); // 15us, 207us
+    _imuFilters.filter(gyroRPS, acc, deltaT); // 15us, 207us
     TIME_CHECK(2);
 
-    const Quaternion orientation = _sensorFusionFilter.update(gyroRadians, acc, deltaT); // 15us, 140us
+    const Quaternion orientation = _sensorFusionFilter.update(gyroRPS, acc, deltaT); // 15us, 140us
     TIME_CHECK(3);
 
 #endif // USE_IMU_FIFO
 
     if (_motorController != nullptr) {
-        _motorController->updatePIDs(gyroRadians, acc, orientation, deltaT); //25us, 900us
+        _motorController->updatePIDs(gyroRPS, acc, orientation, deltaT); //25us, 900us
         TIME_CHECK(4);
     }
 
@@ -107,7 +107,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     _ahrsDataUpdatedSinceLastRead = true;
     _orientationUpdatedSinceLastRead = true;
     _orientation = orientation;
-    _gyroRadians = gyroRadians;
+    _gyroRPS = gyroRPS;
     _acc = acc;
     UNLOCK_AHRS_DATA();
 
@@ -228,7 +228,7 @@ AHRS::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
     _ahrsDataUpdatedSinceLastRead = false;
     const data_t ret {
         .tickCountDelta = _tickCountDelta,
-        .gyroRadians = _gyroRadians,
+        .gyroRPS = _gyroRPS,
         .acc = _acc
     };
     UNLOCK_AHRS_DATA();
@@ -241,7 +241,7 @@ AHRS::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
     LOCK_AHRS_DATA();
     const data_t ret {
         .tickCountDelta = _tickCountDelta,
-        .gyroRadians = _gyroRadians,
+        .gyroRPS = _gyroRPS,
         .acc = _acc
     };
     UNLOCK_AHRS_DATA();

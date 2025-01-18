@@ -27,16 +27,16 @@ public:
     IMU_BMI270(uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_BMI270(SDA_pin, SCL_pin, nullptr) {}
     void init();
 public:
-    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
-    virtual xyz_int16_t readAccRaw() const override;
+    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
-    virtual bool readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const override;
+    virtual xyz_int16_t readAccRaw() const override;
+    virtual bool readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const override;
     virtual int readFIFO_ToBuffer() override;
-    virtual void readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index) override;
-    static gyroRadiansAcc_t gyroRadiansAccFromData(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
+    virtual void readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index) override;
+    static gyroRPS_Acc_t gyroRPS_AccFromData(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
 private:
-    gyroRadiansAcc_t readGyroRadiansAcc() const;
+    gyroRPS_Acc_t readGyroRPS_Acc() const;
 private:
     I2C _bus; //!< Serial Communication Bus interface, can be either I2C or SPI
     xyz_int16_t _accOffset {};

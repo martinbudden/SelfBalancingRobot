@@ -242,7 +242,7 @@ xyz_int16_t IMU_MPU6886::readGyroRaw() const
     };
 }
 
-xyz_t IMU_MPU6886::readGyro() const
+xyz_t IMU_MPU6886::readGyroDPS() const
 {
     const xyz_int16_t gyro = readGyroRaw();
 
@@ -253,7 +253,7 @@ xyz_t IMU_MPU6886::readGyro() const
     };
 }
 
-xyz_t IMU_MPU6886::readGyroRadians() const
+xyz_t IMU_MPU6886::readGyroRPS() const
 {
     const xyz_int16_t gyro = readGyroRaw();
 
@@ -264,7 +264,7 @@ xyz_t IMU_MPU6886::readGyroRadians() const
     };
 }
 
-IMU_Base::gyroRadiansAcc_t IMU_MPU6886::readGyroRadiansAcc() const
+IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readGyroRPS_Acc() const
 {
     acc_temp_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -272,13 +272,13 @@ IMU_Base::gyroRadiansAcc_t IMU_MPU6886::readGyroRadiansAcc() const
     _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
-    return gyroRadiansAccFromData(data, _gyroOffset, _accOffset);
+    return gyroRPS_AccFromData(data, _gyroOffset, _accOffset);
 }
 
-bool IMU_MPU6886::readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const
+bool IMU_MPU6886::readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const
 {
-    const gyroRadiansAcc_t gyroAcc =  readGyroRadiansAcc();
-    gyroRadians = gyroAcc.gyroRadians;
+    const gyroRPS_Acc_t gyroAcc =  readGyroRPS_Acc();
+    gyroRPS = gyroAcc.gyroRPS;
     acc = gyroAcc.acc;
 
     return true;
@@ -347,21 +347,21 @@ int IMU_MPU6886::readFIFO_ToBuffer()
     return fifoLength  / acc_temp_gyro_data_t::DATA_SIZE;
 }
 
-void IMU_MPU6886::readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index)
+void IMU_MPU6886::readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index)
 {
     const acc_temp_gyro_data_t& accTempGyro = _fifoBuffer.accTempGyro[index]; // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
-    const gyroRadiansAcc_t gyroRadiansAcc = gyroRadiansAccFromData(accTempGyro, _gyroOffset, _accOffset);
+    const gyroRPS_Acc_t gyroRPSAcc = gyroRPS_AccFromData(accTempGyro, _gyroOffset, _accOffset);
 
-    gyroRadians = gyroRadiansAcc.gyroRadians;
-    acc = gyroRadiansAcc.acc;
+    gyroRPS = gyroRPSAcc.gyroRPS;
+    acc = gyroRPSAcc.acc;
 }
 
-IMU_Base::gyroRadiansAcc_t IMU_MPU6886::gyroRadiansAccFromData(const acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
+IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromData(const acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
 {
-    return gyroRadiansAcc_t {
+    return gyroRPS_Acc_t {
 // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
 #if defined(IMU_Y_AXIS_POINTS_LEFT)
-        .gyroRadians = {
+        .gyroRPS = {
             .x = -(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
             .y =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
             .z =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
@@ -372,7 +372,7 @@ IMU_Base::gyroRadiansAcc_t IMU_MPU6886::gyroRadiansAccFromData(const acc_temp_gy
             .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES
         }
 #elif defined(IMU_Y_AXIS_POINTS_RIGHT)
-        .gyroRadians = {
+        .gyroRPS = {
             .x =  (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
             .y = -(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
             .z =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
@@ -383,7 +383,7 @@ IMU_Base::gyroRadiansAcc_t IMU_MPU6886::gyroRadiansAccFromData(const acc_temp_gy
             .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z) * ACC_8G_RES
         }
 #elif defined(IMU_Y_AXIS_POINTS_DOWN)
-        .gyroRadians = {
+        .gyroRPS = {
             .x =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
             .y =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS,
             .z = -(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS
@@ -394,7 +394,7 @@ IMU_Base::gyroRadiansAcc_t IMU_MPU6886::gyroRadiansAccFromData(const acc_temp_gy
             .z = -(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y) * ACC_8G_RES
         }
 #else
-        .gyroRadians = {
+        .gyroRPS = {
             .x =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
             .y =  (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
             .z =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS

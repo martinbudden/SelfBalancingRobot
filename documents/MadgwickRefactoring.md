@@ -1,11 +1,11 @@
 # Refactoring of Madgwick filter update
 
-The Madgwick filter implementation in `MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, float deltaT)` has been refactored to
+The Madgwick filter implementation in `MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT)` has been refactored to
 improve computational efficiency.
 
 The steps taken in that refactoring are outlined here.
 
-A similar refactoring was done for `MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)`.
+A similar refactoring was done for `MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)`.
 
 ## Derivation
 
@@ -119,10 +119,10 @@ _2qDot3 -= s3 * betaNormReciprocal;
 Add in double the derivative from the gyro:
 
 ```cpp
-_2qDot0 = -q1*gyroRadians.x - q2*gyroRadians.y - q3*gyroRadians.z - s0 * _2betaNormReciprocal;
-_2qDot1 =  q0*gyroRadians.x + q2*gyroRadians.z - q3*gyroRadians.y - s1 * _2betaNormReciprocal;
-_2qDot2 =  q0*gyroRadians.y - q1*gyroRadians.z + q3*gyroRadians.x - s2 * _2betaNormReciprocal;
-_2qDot3 =  q0*gyroRadians.z + q1*gyroRadians.y - q2*gyroRadians.x - s3 * _2betaNormReciprocal;
+_2qDot0 = -q1*gyroRPS.x - q2*gyroRPS.y - q3*gyroRPS.z - s0 * _2betaNormReciprocal;
+_2qDot1 =  q0*gyroRPS.x + q2*gyroRPS.z - q3*gyroRPS.y - s1 * _2betaNormReciprocal;
+_2qDot2 =  q0*gyroRPS.y - q1*gyroRPS.z + q3*gyroRPS.x - s2 * _2betaNormReciprocal;
+_2qDot3 =  q0*gyroRPS.z + q1*gyroRPS.y - q2*gyroRPS.x - s3 * _2betaNormReciprocal;
 ```
 
 Finally, we update the attitude quaternion using simple Euler integration `qNew = qOld + qDot*deltaT`.

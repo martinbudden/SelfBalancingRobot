@@ -92,7 +92,7 @@ struct TD_AHRS {
         float pitch; //!< estimated pitch value calculated by Madgwick Orientation Filter
         float roll; //!< estimated roll value calculated by Madgwick Orientation Filter
         float yaw; //!< estimated yaw value calculated by Madgwick Orientation Filter
-        xyz_t gyroRadians; //!< gyro outputs from IMU
+        xyz_t gyroRPS; //!< gyro outputs from IMU
         xyz_t acc; //!< acceleration outputs from IMU
     };
     Data data;

@@ -71,7 +71,7 @@ int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS& a
         .pitch = motorController.getPitchAngleDegreesRaw(),
         .roll = motorController.getRollAngleDegreesRaw(),
         .yaw = motorController.getYawAngleDegreesRaw(),
-        .gyroRadians = ahrsData.gyroRadians,
+        .gyroRPS = ahrsData.gyroRPS,
         .acc = ahrsData.acc
     };
 

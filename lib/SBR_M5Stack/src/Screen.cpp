@@ -299,14 +299,14 @@ void Screen::update80x160(const TD_AHRS::Data& ahrsData) const
         M5.Lcd.printf("az:%5.2f", ahrsData.acc.z);
     } else {
         M5.Lcd.setCursor(0, yPos);
-        M5.Lcd.printf("gx:%5.0F", ahrsData.gyroRadians.x * radiansToDegrees);
+        M5.Lcd.printf("gx:%5.0F", ahrsData.gyroRPS.x * radiansToDegrees);
 
         yPos += 10;
         M5.Lcd.setCursor(0, yPos);
-        M5.Lcd.printf("gy:%5.0F", ahrsData.gyroRadians.y * radiansToDegrees);
+        M5.Lcd.printf("gy:%5.0F", ahrsData.gyroRPS.y * radiansToDegrees);
 
         M5.Lcd.setCursor(0, yPos);
-        M5.Lcd.printf("gz:%5.0F", ahrsData.gyroRadians.z * radiansToDegrees);
+        M5.Lcd.printf("gz:%5.0F", ahrsData.gyroRPS.z * radiansToDegrees);
     }
 
     M5.Lcd.setCursor(12, 150);
@@ -495,7 +495,7 @@ void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
 
     yPos += 20;
     M5.Lcd.setCursor(36, yPos);
-    M5.Lcd.printf("%5.0F gy:%5.0F gz:%5.0F", ahrsData.gyroRadians.x * radiansToDegrees, ahrsData.gyroRadians.y * radiansToDegrees, ahrsData.gyroRadians.z * radiansToDegrees);
+    M5.Lcd.printf("%5.0F gy:%5.0F gz:%5.0F", ahrsData.gyroRPS.x * radiansToDegrees, ahrsData.gyroRPS.y * radiansToDegrees, ahrsData.gyroRPS.z * radiansToDegrees);
 
     yPos += 20;
     M5.Lcd.setCursor(36, yPos);
@@ -596,7 +596,7 @@ void Screen::update(bool packetReceived) const
         .pitch = _motorPairController.getPitchAngleDegreesRaw(),
         .roll = _motorPairController.getRollAngleDegreesRaw(),
         .yaw = _motorPairController.getYawAngleDegreesRaw(),
-        .gyroRadians = ahrsData.gyroRadians,
+        .gyroRPS = ahrsData.gyroRPS,
         .acc = ahrsData.acc
     };
     // update the screen with the AHRS data

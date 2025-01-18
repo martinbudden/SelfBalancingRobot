@@ -27,7 +27,7 @@ class AHRS : public TaskBase {
 public:
     struct data_t {
         uint32_t tickCountDelta;
-        xyz_t gyroRadians;
+        xyz_t gyroRPS;
         xyz_t acc;
     };
     static constexpr int TIME_CHECKS_COUNT = 4;
@@ -78,7 +78,7 @@ private:
     MotorControllerBase* _motorController {nullptr};
 
     xyz_t _acc {0.0, 0.0, 0.0};
-    xyz_t _gyroRadians {0.0, 0.0, 0.0};
+    xyz_t _gyroRPS {0.0, 0.0, 0.0};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
 
     uint32_t _sensorFusionFilterInitializing {true};

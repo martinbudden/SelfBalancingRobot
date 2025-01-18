@@ -82,13 +82,13 @@ void SensorFusionFilterBase::_setAndNormalizeQ(float q0_, float q1_, float q2_, 
 Calculate quaternion derivative (qDot) from angular rate https://ahrs.readthedocs.io/en/latest/filters/angular.html#quaternion-derivative
 Twice the actual value is returned to reduce the number of multiplications needed in subsequent code.
 */
-Quaternion SensorFusionFilterBase::twoQdot(const xyz_t& gyroRadians) const
+Quaternion SensorFusionFilterBase::twoQdot(const xyz_t& gyroRPS) const
 {
     return Quaternion(
-        -q1*gyroRadians.x - q2*gyroRadians.y - q3*gyroRadians.z,
-         q0*gyroRadians.x + q2*gyroRadians.z - q3*gyroRadians.y,
-         q0*gyroRadians.y - q1*gyroRadians.z + q3*gyroRadians.x,
-         q0*gyroRadians.z + q1*gyroRadians.y - q2*gyroRadians.x
+        -q1*gyroRPS.x - q2*gyroRPS.y - q3*gyroRPS.z,
+         q0*gyroRPS.x + q2*gyroRPS.z - q3*gyroRPS.y,
+         q0*gyroRPS.y - q1*gyroRPS.z + q3*gyroRPS.x,
+         q0*gyroRPS.z + q1*gyroRPS.y - q2*gyroRPS.x
     );
 }
 
@@ -99,14 +99,14 @@ void ComplementaryFilter::setFreeParameters(float parameter0, float parameter1)
      (void)parameter1;
 }
 
-Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, float deltaT)
+Quaternion ComplementaryFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT)
 {
     // Create q from q0, q1, q2, q3
     Quaternion q(q0, q1, q2, q3);
 
     // Calculate quaternion derivative (qDot) from angular rate https://ahrs.readthedocs.io/en/latest/filters/angular.html#quaternion-derivative
     // Twice the actual value is used to reduce the number of multiplications needed
-    const Quaternion _2qDot = twoQdot(gyroRadians);
+    const Quaternion _2qDot = twoQdot(gyroRPS);
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*deltaT*0.5.
@@ -132,14 +132,14 @@ Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& ac
 /*!
 see https://ahrs.readthedocs.io/en/latest/filters/complementary.html
 */
-Quaternion ComplementaryFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
+Quaternion ComplementaryFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
 {
     // Create q from q0, q1, q2, q3
     Quaternion q(q0, q1, q2, q3);
 
     // Calculate quaternion derivative (qDot) from angular rate https://ahrs.readthedocs.io/en/latest/filters/angular.html#quaternion-derivative
     // Twice the actual value is used to reduce the number of multiplications needed
-    const Quaternion _2qDot = twoQdot(gyroRadians);
+    const Quaternion _2qDot = twoQdot(gyroRPS);
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*deltaT*0.5.
@@ -191,7 +191,7 @@ void MahonyFilter::setFreeParameters(float parameter0, float parameter1)
      _ki = parameter1;
 }
 
-Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, float deltaT)
+Quaternion MahonyFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT)
 {
     // Create q from q0, q1, q2, q3
     QuaternionG q(q0, q1, q2, q3);
@@ -207,7 +207,7 @@ Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerom
     const xyz_t error = acc.cross_product(gravity);
 
     // Apply proportional feedback
-    xyz_t gyro = gyroRadians;
+    xyz_t gyro = gyroRPS;
     gyro += error * _kp;
 
     // Apply integral feedback if _ki set
@@ -230,10 +230,10 @@ Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerom
     return q;
 }
 
-Quaternion MahonyFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
+Quaternion MahonyFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
 {
     (void)magnetometer;
-    return update(gyroRadians, accelerometer, deltaT);
+    return update(gyroRPS, accelerometer, deltaT);
 }
 
 
@@ -258,14 +258,14 @@ and also x-io Technologies [sensor fusion library](https://github.com/xioTechnol
 For computation efficiency this code refactors the code used in many implementations (Arduino, Adafruit, M5Stack, Reefwing-AHRS),
 [see MadgwickRefactoring](../../../documents/MadgwickRefactoring.md)
 */
-Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, float deltaT)
+Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT)
 {
     // Calculate quaternion derivative (qDot) from the angular rate
     // Twice the actual value is used to reduce the number of multiplications needed
-    float _2qDot0 = -q1*gyroRadians.x - q2*gyroRadians.y - q3*gyroRadians.z;
-    float _2qDot1 =  q0*gyroRadians.x + q2*gyroRadians.z - q3*gyroRadians.y;
-    float _2qDot2 =  q0*gyroRadians.y - q1*gyroRadians.z + q3*gyroRadians.x;
-    float _2qDot3 =  q0*gyroRadians.z + q1*gyroRadians.y - q2*gyroRadians.x;
+    float _2qDot0 = -q1*gyroRPS.x - q2*gyroRPS.y - q3*gyroRPS.z;
+    float _2qDot1 =  q0*gyroRPS.x + q2*gyroRPS.z - q3*gyroRPS.y;
+    float _2qDot2 =  q0*gyroRPS.y - q1*gyroRPS.z + q3*gyroRPS.x;
+    float _2qDot3 =  q0*gyroRPS.z + q1*gyroRPS.y - q2*gyroRPS.x;
 
     xyz_t a = accelerometer;
     // Normalize acceleration if it is non-zero
@@ -322,7 +322,7 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& acceler
 For computation efficiency this code refactors the code used in many implementations (Arduino, Adafruit, M5Stack, Reefwing-AHRS),
 [see MadgwickRefactoring](../../../documents/MadgwickRefactoring.md)
 */
-Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
+Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
 {
     xyz_t a = accelerometer;
     const float accMagnitudeSquared = normalize(a);
@@ -402,10 +402,10 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRadians, const xyz_t& acceler
 
     // Calculate quaternion derivative (qDot) from the angular rate and the corrective step
     // Twice the actual value is used to reduce the number of multiplications needed
-    const float _2qDot0 = -q1*gyroRadians.x - q2*gyroRadians.y - q3*gyroRadians.z - s0 * _2betaNormReciprocal;
-    const float _2qDot1 =  q0*gyroRadians.x + q2*gyroRadians.z - q3*gyroRadians.y - s1 * _2betaNormReciprocal;
-    const float _2qDot2 =  q0*gyroRadians.y - q1*gyroRadians.z + q3*gyroRadians.x - s2 * _2betaNormReciprocal;
-    const float _2qDot3 =  q0*gyroRadians.z + q1*gyroRadians.y - q2*gyroRadians.x - s3 * _2betaNormReciprocal;
+    const float _2qDot0 = -q1*gyroRPS.x - q2*gyroRPS.y - q3*gyroRPS.z - s0 * _2betaNormReciprocal;
+    const float _2qDot1 =  q0*gyroRPS.x + q2*gyroRPS.z - q3*gyroRPS.y - s1 * _2betaNormReciprocal;
+    const float _2qDot2 =  q0*gyroRPS.y - q1*gyroRPS.z + q3*gyroRPS.x - s2 * _2betaNormReciprocal;
+    const float _2qDot3 =  q0*gyroRPS.z + q1*gyroRPS.y - q2*gyroRPS.x - s3 * _2betaNormReciprocal;
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and halfDeltaT are used, ie qNew = qOld +_2qDot*halfDeltaT.

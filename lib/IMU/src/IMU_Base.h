@@ -15,8 +15,8 @@ IMU virtual base class.
 */
 class IMU_Base {
 public:
-    struct gyroRadiansAcc_t {
-        xyz_t gyroRadians;
+    struct gyroRPS_Acc_t {
+        xyz_t gyroRPS;
         xyz_t acc;
     };
 public:
@@ -26,10 +26,10 @@ public:
     virtual xyz_int16_t readGyroRaw() const = 0;
     virtual xyz_int16_t readAccRaw() const = 0;
 
-    virtual bool readGyroRadiansAcc(xyz_t& gyroRadians, xyz_t& acc) const = 0;
+    virtual bool readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const = 0;
 
     virtual int readFIFO_ToBuffer() = 0;
-    virtual void readFIFO_Item(xyz_t& gyroRadians, xyz_t& acc, size_t index) = 0;
+    virtual void readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index) = 0;
 
 #if defined(I2C_MUTEX_REQUIRED)
     explicit IMU_Base(void* i2cMutex) : _i2cMutex(static_cast<SemaphoreHandle_t>(i2cMutex)) {}
