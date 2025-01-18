@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ESPNOW_Receiver.h"
-#include "MotorPairController.h"
-#include "Screen.h"
+class MotorControllerBase;
+class Receiver;
+class Screen;
 
 
 class Buttons {

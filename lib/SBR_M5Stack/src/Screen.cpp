@@ -1,18 +1,16 @@
-// NOLINTBEGIN(llvm-include-order)
+#include "Screen.h"
+
+#include <AHRS.h>
+#include <ESPNOW_Receiver.h>
 #if defined(M5_STACK)
 #include <M5Stack.h>
 #elif defined(M5_UNIFIED)
 #include <M5Unified.h>
 #endif
-
-#include "Screen.h"
-#include "AHRS.h"
-#include "ESPNOW_Receiver.h"
-#include "MotorPairController.h"
-#include "MotorPairControllerTelemetry.h"
-
+#include <MotorPairController.h>
+#include <MotorPairControllerTelemetry.h>
 #include <cfloat>
-// NOLINTEND(llvm-include-order)
+
 
 enum {
     SCREEN_WIDTH_M5_ATOM_S3 = 128,

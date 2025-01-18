@@ -1,10 +1,13 @@
+#include "Buttons.h"
+
+#include <ESPNOW_Receiver.h>
 #if defined(M5_STACK)
 #include <M5Stack.h>
 #elif defined(M5_UNIFIED)
 #include <M5Unified.h>
 #endif
-
-#include "Buttons.h"
+#include <MotorPairController.h>
+#include <Screen.h>
 
 
 Buttons::Buttons(Screen& screen, MotorControllerBase& motorController, const Receiver& receiver) :

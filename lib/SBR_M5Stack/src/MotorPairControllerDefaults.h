@@ -1,5 +1,6 @@
 #pragma once
 
+#include <MotorPairController.h>
 #include <PIDF.h>
 
 // use anonymous namespace to make items local to this translation unit

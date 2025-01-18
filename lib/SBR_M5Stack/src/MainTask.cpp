@@ -8,23 +8,23 @@
 
 #include <WiFi.h>
 
-#include "AHRS.h"
 #include "Buttons.h"
 #include "Calibration.h"
-#include "ESPNOW_Backchannel.h"
-#include "ESPNOW_Receiver.h"
-#include "IMU_Filters.h"
-#include "IMU_M5Stack.h"
-#include "IMU_M5Unified.h"
-#include "IMU_MPU6886.h"
 #include "MainTask.h"
-#include "MotorPairBase.h"
-#include "MotorPairController.h"
-#include "SV_Preferences.h"
 #include "Screen.h"
-#include "SensorFusionFilter.h"
 #include "TelemetryScaleFactors.h"
 
+#include <AHRS.h>
+#include <ESPNOW_Backchannel.h>
+#include <ESPNOW_Receiver.h>
+#include <IMU_Filters.h>
+#include <IMU_M5Stack.h>
+#include <IMU_M5Unified.h>
+#include <IMU_MPU6886.h>
+#include <MotorPairBase.h>
+#include <MotorPairController.h>
+#include <SV_Preferences.h>
+#include <SensorFusionFilter.h>
 #include <cfloat>
 
 /*!

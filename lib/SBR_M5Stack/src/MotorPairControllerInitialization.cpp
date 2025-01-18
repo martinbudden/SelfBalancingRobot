@@ -1,8 +1,8 @@
-#include "MotorPairController.h"
-
-#include "AHRS.h"
-#include "MotorPairBase.h"
 #include "MotorPairControllerDefaults.h"
+
+#include <AHRS.h>
+#include <MotorPairBase.h>
+#include <MotorPairController.h>
 
 #if defined(MOTORS_4_ENCODER_MOTOR)
 #include "Motors4EncoderMotor.h"
