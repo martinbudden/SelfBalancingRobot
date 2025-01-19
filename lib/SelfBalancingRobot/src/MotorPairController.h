@@ -62,11 +62,11 @@ public:
     void loop(float deltaT, uint32_t tickCount);
 public:
     void updateSetpointsAndMotorSpeedEstimates(float deltaT);
-    void updatePIDs(float deltaT);
-    virtual void updatePIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
-    void updateMotors(uint32_t tickCount);
+    void updateOutputsUsingPIDs(float deltaT);
+    virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
+    void outputToMotors(uint32_t tickCount);
 private:
-    void updatePosition(float deltaT);
+    void updatePositionOutputs(float deltaT);
     MotorPairBase& motors();
     void Task(const TaskParameters* taskParameters);
 private:
@@ -115,5 +115,5 @@ private:
     float _yawStickMultiplier {1.0};
 
     std::array<PIDF, PID_COUNT> _PIDS;
-    std::array<float, PID_COUNT> _updates {};
+    std::array<float, PID_COUNT> _outputs {};
 };

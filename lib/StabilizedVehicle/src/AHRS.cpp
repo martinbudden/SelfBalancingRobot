@@ -70,6 +70,9 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
     const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT);
     TIME_CHECK(3);
+    if (sensorFusionFilterIsInitializing()) {
+        checkMadgwickConvergence(gyroAcc.acc, orientation);
+    }
 
 #else
 
@@ -85,16 +88,15 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
     const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 140us
     TIME_CHECK(3);
+    if (sensorFusionFilterIsInitializing()) {
+        checkMadgwickConvergence(gyroAcc.acc, orientation);
+    }
 
 #endif // USE_IMU_FIFO
 
     if (_motorController != nullptr) {
-        _motorController->updatePIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
+        _motorController->updateOutputsUsingPIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
         TIME_CHECK(4);
-    }
-
-    if (sensorFusionFilterIsInitializing()) {
-        checkMadgwickConvergence(gyroAcc.acc, orientation);
     }
 
     LOCK_AHRS_DATA();
