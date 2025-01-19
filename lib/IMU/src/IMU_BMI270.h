@@ -31,12 +31,18 @@ public:
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
     virtual xyz_int16_t readAccRaw() const override;
-    virtual bool readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const override;
+
+    virtual xyz_t readGyroRPS() const override;
+    virtual xyz_t readGyroDPS() const override;
+    virtual xyz_t readAcc() const override;
+    virtual gyroRPS_Acc_t readGyroRPS_Acc() const override;
+
     virtual int readFIFO_ToBuffer() override;
-    virtual void readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index) override;
-    static gyroRPS_Acc_t gyroRPS_AccFromData(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
+    virtual gyroRPS_Acc_t  readFIFO_Item(size_t index) override;
 private:
-    gyroRPS_Acc_t readGyroRPS_Acc() const;
+    static xyz_t gyroRPS_FromRaw(const mems_sensor_data_t& data, const xyz_int16_t& gyroOffset);
+    static xyz_t accFromRaw(const mems_sensor_data_t& data, const xyz_int16_t& accOffset);
+    static gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
 private:
     I2C _bus; //!< Serial Communication Bus interface, can be either I2C or SPI
     xyz_int16_t _accOffset {};

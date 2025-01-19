@@ -11,10 +11,9 @@ void delay(int) {}
 #include <cmath>
 
 namespace { // use anonymous namespace to make items local to this translation unit
-constexpr float degreesToRadians {M_PI / 180.0};
 constexpr float ACC_8G_RES { 8.0 / 32768.0 };
 constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
-constexpr float GYRO_2000DPS_RES_RADIANS { degreesToRadians * GYRO_2000DPS_RES };
+constexpr float GYRO_2000DPS_RES_RADIANS { IMU_Base::degreesToRadians * GYRO_2000DPS_RES };
 } // end namespace
 
 
@@ -104,8 +103,8 @@ IMU_MPU6886::IMU_MPU6886(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_temp_gyro_data_t) == acc_temp_gyro_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_temp_gyro_array_t) == acc_temp_gyro_array_t::DATA_SIZE);
+    static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
     init();
 }
 
@@ -218,13 +217,13 @@ xyz_int16_t IMU_MPU6886::readAccRaw() const
 
 xyz_t IMU_MPU6886::readAcc() const
 {
-    const xyz_int16_t acc = readAccRaw();
+    mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
-    return xyz_t {
-        .x = static_cast<float>(acc.x - _accOffset.x) * ACC_8G_RES,
-        .y = static_cast<float>(acc.y - _accOffset.y) * ACC_8G_RES,
-        .z = static_cast<float>(acc.z - _accOffset.z) * ACC_8G_RES
-    };
+    i2cSemaphoreTake();
+    _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    i2cSemaphoreGive();
+
+    return accFromRaw(acc, _accOffset);
 }
 
 xyz_int16_t IMU_MPU6886::readGyroRaw() const
@@ -242,46 +241,31 @@ xyz_int16_t IMU_MPU6886::readGyroRaw() const
     };
 }
 
-xyz_t IMU_MPU6886::readGyroDPS() const
-{
-    const xyz_int16_t gyro = readGyroRaw();
-
-    return xyz_t {
-        .x = static_cast<float>(gyro.x - _gyroOffset.x) * GYRO_2000DPS_RES,
-        .y = static_cast<float>(gyro.y - _gyroOffset.y) * GYRO_2000DPS_RES,
-        .z = static_cast<float>(gyro.z - _gyroOffset.z) * GYRO_2000DPS_RES
-    };
-}
-
 xyz_t IMU_MPU6886::readGyroRPS() const
 {
-    const xyz_int16_t gyro = readGyroRaw();
+    mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
-    return xyz_t {
-        .x = static_cast<float>(gyro.x - _gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
-        .y = static_cast<float>(gyro.y - _gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
-        .z = static_cast<float>(gyro.z - _gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
-    };
+    i2cSemaphoreTake();
+    _bus.readBytes(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    i2cSemaphoreGive();
+
+    return gyroRPS_FromRaw(gyro, _gyroOffset);
+}
+
+xyz_t IMU_MPU6886::readGyroDPS() const
+{
+    return readGyroRPS() * radiansToDegrees;
 }
 
 IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readGyroRPS_Acc() const
 {
-    acc_temp_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    acc_temperature_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
     _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
-    return gyroRPS_AccFromData(data, _gyroOffset, _accOffset);
-}
-
-bool IMU_MPU6886::readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const
-{
-    const gyroRPS_Acc_t gyroAcc =  readGyroRPS_Acc();
-    gyroRPS = gyroAcc.gyroRPS;
-    acc = gyroAcc.acc;
-
-    return true;
+    return gyroRPS_AccFromRaw(data, _gyroOffset, _accOffset);
 }
 
 int16_t IMU_MPU6886::readTemperatureRaw() const
@@ -294,7 +278,6 @@ int16_t IMU_MPU6886::readTemperatureRaw() const
 
     const int16_t temperature = static_cast<int16_t>((data[0] << 8) | data[1]); // NOLINT(hicpp-use-auto,modernize-use-auto)
     return temperature;
-
 }
 
 float IMU_MPU6886::readTemperature() const
@@ -334,7 +317,7 @@ int IMU_MPU6886::readFIFO_ToBuffer()
     _bus.readBytes(REG_FIFO_COUNT_H, &lengthData[0], sizeof(lengthData));
     const uint16_t fifoLength = lengthData[0] << 8 | lengthData[1];
 
-    constexpr size_t chunkSize = 8*sizeof(acc_temp_gyro_data_t);
+    constexpr size_t chunkSize = 8*sizeof(acc_temperature_gyro_data_t);
     const int count = fifoLength / chunkSize;
     for (int ii = 0; ii < count; ++ii) {
         _bus.readBytes(REG_FIFO_R_W, &_fifoBuffer.data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
@@ -343,20 +326,71 @@ int IMU_MPU6886::readFIFO_ToBuffer()
 
     i2cSemaphoreGive();
 
-     // return the number of acc_temp_gyro_data_t items read
-    return fifoLength  / acc_temp_gyro_data_t::DATA_SIZE;
+     // return the number of acc_temperature_gyro_data_t items read
+    return fifoLength  / acc_temperature_gyro_data_t::DATA_SIZE;
 }
 
-void IMU_MPU6886::readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index)
+IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readFIFO_Item(size_t index)
 {
-    const acc_temp_gyro_data_t& accTempGyro = _fifoBuffer.accTempGyro[index]; // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
-    const gyroRPS_Acc_t gyroRPSAcc = gyroRPS_AccFromData(accTempGyro, _gyroOffset, _accOffset);
-
-    gyroRPS = gyroRPSAcc.gyroRPS;
-    acc = gyroRPSAcc.acc;
+    const acc_temperature_gyro_data_t& accTempGyro = _fifoBuffer.accTemperatureGyro[index]; // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
+    return gyroRPS_AccFromRaw(accTempGyro, _gyroOffset, _accOffset);
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromData(const acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
+xyz_t IMU_MPU6886::gyroRPS_FromRaw(const mems_sensor_data_t& data, const xyz_int16_t& gyroOffset)
+{
+    return xyz_t {
+        // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
+#if defined(IMU_X_AXIS_FRONT_Y_AXIS_LEFT)
+        .x = -(static_cast<int16_t>((data.y_h << 8) | data.y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
+        .y =  (static_cast<int16_t>((data.x_h << 8) | data.x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+        .z =  (static_cast<int16_t>((data.z_h << 8) | data.z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
+#elif defined(IMU_X_AXIS_BACK_Y_AXIS_RIGHT)
+        .x =  (static_cast<int16_t>((data.y_h << 8) | data.y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
+        .y = -(static_cast<int16_t>((data.x_h << 8) | data.x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+        .z =  (static_cast<int16_t>((data.z_h << 8) | data.z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
+        .x =  (static_cast<int16_t>((data.x_h << 8) | data.x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+        .y =  (static_cast<int16_t>((data.z_h << 8) | data.z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS,
+        .z = -(static_cast<int16_t>((data.y_h << 8) | data.y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_FRONT)
+        .x =  (static_cast<int16_t>((data.x_h << 8) | data.x_l) - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
+        .y =  (static_cast<int16_t>((data.y_h << 8) | data.y_l) - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
+        .z =  (static_cast<int16_t>((data.z_h << 8) | data.z_l) - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
+    // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+#else
+    static_assert(false && "IMU orientation not implemented for MPU6886.");
+#endif
+    };
+}
+
+xyz_t IMU_MPU6886::accFromRaw(const mems_sensor_data_t& data, const xyz_int16_t& accOffset)
+{
+    return xyz_t {
+        // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
+#if defined(IMU_X_AXIS_FRONT_Y_AXIS_LEFT)
+        .x = -(static_cast<int16_t>((data.y_h << 8) | data.y_l) - accOffset.y) * ACC_8G_RES,
+        .y =  (static_cast<int16_t>((data.x_h << 8) | data.x_l) - accOffset.x) * ACC_8G_RES,
+        .z =  (static_cast<int16_t>((data.z_h << 8) | data.z_l) - accOffset.z) * ACC_8G_RES
+#elif defined(IMU_X_AXIS_BACK_Y_AXIS_RIGHT)
+        .x =  (static_cast<int16_t>((data.y_h << 8) | data.y_l) - accOffset.y) * ACC_8G_RES,
+        .y = -(static_cast<int16_t>((data.x_h << 8) | data.x_l) - accOffset.x) * ACC_8G_RES,
+        .z =  (static_cast<int16_t>((data.z_h << 8) | data.z_l) - accOffset.z) * ACC_8G_RES
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
+        .x =  (static_cast<int16_t>((data.x_h << 8) | data.x_l) - accOffset.x) * ACC_8G_RES,
+        .y =  (static_cast<int16_t>((data.z_h << 8) | data.z_l) - accOffset.z) * ACC_8G_RES,
+        .z = -(static_cast<int16_t>((data.y_h << 8) | data.y_l) - accOffset.y) * ACC_8G_RES
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_FRONT)
+        .x =  (static_cast<int16_t>((data.x_h << 8) | data.x_l) - accOffset.x) * ACC_8G_RES,
+        .y =  (static_cast<int16_t>((data.y_h << 8) | data.y_l) - accOffset.y) * ACC_8G_RES,
+        .z =  (static_cast<int16_t>((data.z_h << 8) | data.z_l) - accOffset.z) * ACC_8G_RES
+        // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+#else
+    static_assert(false && "IMU orientation not implemented for MPU6886.");
+#endif
+    };
+}
+
+IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromRaw(const acc_temperature_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
 {
     return gyroRPS_Acc_t {
 // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings

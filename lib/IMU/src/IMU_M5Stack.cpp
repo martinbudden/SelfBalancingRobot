@@ -5,8 +5,6 @@
 #include <M5Stack.h>
 #include <xyz_int16_type.h>
 
-static constexpr float degreesToRadians {M_PI / 180.0};
-
 
 IMU_M5_STACK::IMU_M5_STACK(void* i2cMutex) :
     IMU_Base(i2cMutex)
@@ -40,6 +38,17 @@ xyz_int16_t IMU_M5_STACK::readAccRaw() const
     return acc;
 }
 
+xyz_t IMU_M5_STACK::readAcc() const
+{
+    xyz_t acc {};
+
+    i2cSemaphoreTake();
+    M5.IMU.getAccelData(&acc.x, &acc.y, &acc.z);
+    i2cSemaphoreGive();
+
+    return acc;
+}
+
 xyz_int16_t IMU_M5_STACK::readGyroRaw() const
 {
     xyz_int16_t gyro {};
@@ -51,18 +60,46 @@ xyz_int16_t IMU_M5_STACK::readGyroRaw() const
     return gyro;
 }
 
-bool IMU_M5_STACK::readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const
+xyz_t IMU_M5_STACK::readGyroRPS() const
 {
+    xyz_t gyroRPS {};
+
     i2cSemaphoreTake();
     M5.IMU.getGyroData(&gyroRPS.x, &gyroRPS.y, &gyroRPS.z);
-    M5.IMU.getAccelData(&acc.x, &acc.y, &acc.z);
     i2cSemaphoreGive();
 
     gyroRPS.x *= degreesToRadians;
     gyroRPS.y *= degreesToRadians;
     gyroRPS.z *= degreesToRadians;
 
-    return true;
+    return gyroRPS;
+}
+
+xyz_t IMU_M5_STACK::readGyroDPS() const
+{
+    xyz_t gyroDPS {};
+
+    i2cSemaphoreTake();
+    M5.IMU.getGyroData(&gyroDPS.x, &gyroDPS.y, &gyroDPS.z);
+    i2cSemaphoreGive();
+
+    return gyroDPS;
+}
+
+IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readGyroRPS_Acc() const
+{
+    gyroRPS_Acc_t gyroAcc {};
+
+    i2cSemaphoreTake();
+    M5.IMU.getGyroData(&gyroAcc.gyroRPS.x, &gyroAcc.gyroRPS.y, &gyroAcc.gyroRPS.z);
+    M5.IMU.getAccelData(&gyroAcc.acc.x, &gyroAcc.acc.y, &gyroAcc.acc.z);
+    i2cSemaphoreGive();
+
+    gyroAcc.gyroRPS.x *= degreesToRadians;
+    gyroAcc.gyroRPS.y *= degreesToRadians;
+    gyroAcc.gyroRPS.z *= degreesToRadians;
+
+    return gyroAcc;
 }
 
 int IMU_M5_STACK::readFIFO_ToBuffer()
@@ -73,19 +110,19 @@ int IMU_M5_STACK::readFIFO_ToBuffer()
         M5.IMU.ReadFIFOBuff(&_fifoBuffer[0], fifoCount);
     }
     i2cSemaphoreGive();
-    return fifoCount  / IMU_MPU6886::acc_temp_gyro_data_t::DATA_SIZE;
+    return fifoCount  / IMU_MPU6886::acc_temperature_gyro_data_t::DATA_SIZE;
 }
 
-void IMU_M5_STACK::readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index)
+IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readFIFO_Item(size_t index)
 {
-    const IMU_MPU6886::acc_temp_gyro_data_t* imu_data = reinterpret_cast<IMU_MPU6886::acc_temp_gyro_data_t*>(&_fifoBuffer[0]); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-    const IMU_MPU6886::acc_temp_gyro_data_t& imuData = imu_data[index]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    const gyroRPS_Acc_t gyroAcc = IMU_M5_STACK::gyroRPS_AccFromData(imuData, _gyroOffset, _accOffset);
-    gyroRPS = gyroAcc.gyroRPS;
-    acc = gyroAcc.acc;
+    const IMU_MPU6886::acc_temperature_gyro_data_t* imu_data = reinterpret_cast<IMU_MPU6886::acc_temperature_gyro_data_t*>(&_fifoBuffer[0]); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    const IMU_MPU6886::acc_temperature_gyro_data_t& imuData = imu_data[index]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    const gyroRPS_Acc_t gyroAcc = IMU_M5_STACK::gyroRPS_AccFromRaw(imuData, _gyroOffset, _accOffset);
+
+    return gyroAcc;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromData(const IMU_MPU6886::acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
+IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const IMU_MPU6886::acc_temperature_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
 {
     static constexpr float ACC_8G_RES { 8.0 / 32768.0 };
     static constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };

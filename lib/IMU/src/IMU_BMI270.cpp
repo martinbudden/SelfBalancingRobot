@@ -147,6 +147,18 @@ xyz_int16_t IMU_BMI270::readGyroRaw() const
     return gyro;
 }
 
+xyz_t IMU_BMI270::readGyroRPS() const
+{
+    const gyroRPS_Acc_t gyroAcc = IMU_BMI270::readGyroRPS_Acc();
+    return gyroAcc.gyroRPS;
+}
+
+xyz_t IMU_BMI270::readGyroDPS() const
+{
+    const gyroRPS_Acc_t gyroAcc = IMU_BMI270::readGyroRPS_Acc();
+    return gyroAcc.gyroRPS * radiansToDegrees;
+}
+
 xyz_int16_t IMU_BMI270::readAccRaw() const
 {
     xyz_int16_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
@@ -158,7 +170,13 @@ xyz_int16_t IMU_BMI270::readAccRaw() const
     return acc;
 }
 
-IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc() const
+xyz_t IMU_BMI270::readAcc() const
+{
+    const gyroRPS_Acc_t gyroAcc = IMU_BMI270::readGyroRPS_Acc();
+    return gyroAcc.acc;
+}
+
+IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc() const
 {
     acc_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -166,19 +184,10 @@ IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc() const
     _bus.readBytes(REG_OUTX_L_ACC, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
-    return gyroRPS_AccFromData(data, _gyroOffset, _accOffset);
+    return gyroRPS_AccFromRaw(data, _gyroOffset, _accOffset);
 }
 
-bool IMU_BMI270::readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const
-{
-    const gyroRPS_Acc_t gyroAcc =  readGyroRPS_Acc();
-    gyroRPS = gyroAcc.gyroRPS;
-    acc = gyroAcc.acc;
-
-    return true;
-}
-
-IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromData(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
+IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
 {
     return gyroRPS_Acc_t {
 // NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
@@ -242,11 +251,12 @@ int  IMU_BMI270::readFIFO_ToBuffer()
 }
 
 
-void IMU_BMI270::readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index)
+IMU_Base::gyroRPS_Acc_t IMU_BMI270::readFIFO_Item(size_t index)
 {
-    (void)gyroRPS;
-    (void)acc;
     (void)index;
+
+    gyroRPS_Acc_t gyroAcc {};
+    return gyroAcc;
 }
 
 #endif

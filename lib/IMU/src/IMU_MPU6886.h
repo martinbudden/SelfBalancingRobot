@@ -20,7 +20,7 @@ public:
         uint8_t z_h;
         uint8_t z_l;
     };
-    struct acc_temp_gyro_data_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    struct acc_temperature_gyro_data_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         enum { DATA_SIZE = 14 };
         uint8_t acc_x_h;
         uint8_t acc_x_l;
@@ -28,8 +28,8 @@ public:
         uint8_t acc_y_l;
         uint8_t acc_z_h;
         uint8_t acc_z_l;
-        uint8_t temp_h;
-        uint8_t temp_l;
+        uint8_t temperature_h;
+        uint8_t temperature_l;
         uint8_t gyro_x_h;
         uint8_t gyro_x_l;
         uint8_t gyro_y_h;
@@ -37,9 +37,9 @@ public:
         uint8_t gyro_z_h;
         uint8_t gyro_z_l;
     };
-    union acc_temp_gyro_array_t {
+    union acc_temperature_gyro_array_t {
         enum { DATA_SIZE = 1036 };
-        acc_temp_gyro_data_t accTempGyro[74];
+        acc_temperature_gyro_data_t accTemperatureGyro[74];
         uint8_t data[DATA_SIZE];
     };
 #pragma pack(pop)
@@ -52,27 +52,29 @@ public:
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
     virtual xyz_int16_t readAccRaw() const override;
-    virtual bool readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const override;
+
+    virtual xyz_t readGyroRPS() const override;
+    virtual xyz_t readGyroDPS() const override;
+    virtual xyz_t readAcc() const override;
+    virtual gyroRPS_Acc_t readGyroRPS_Acc() const override;
+
     virtual int readFIFO_ToBuffer() override;
-    virtual void readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index) override;
+    virtual gyroRPS_Acc_t  readFIFO_Item(size_t index) override;
 
     float readTemperature() const;
     int16_t readTemperatureRaw() const;
 
     void setFIFOEnable(bool enableflag);
     void resetFIFO();
-
-    static gyroRPS_Acc_t gyroRPS_AccFromData(const acc_temp_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
     static mems_sensor_data_t gyroOffsetFromXYZ(const xyz_int16_t& data);
 private:
-    gyroRPS_Acc_t readGyroRPS_Acc() const;
-    xyz_t readGyroDPS() const;
-    xyz_t readGyroRPS() const;
-    xyz_t readAcc() const;
+    static xyz_t gyroRPS_FromRaw(const mems_sensor_data_t& data, const xyz_int16_t& gyroOffset);
+    static xyz_t accFromRaw(const mems_sensor_data_t& data, const xyz_int16_t& accOffset);
+    static gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_temperature_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
 private:
     I2C _bus;
     xyz_int16_t _accOffset {};
     xyz_int16_t _gyroOffset {};
-    acc_temp_gyro_array_t _fifoBuffer {};
+    acc_temperature_gyro_array_t _fifoBuffer {};
     uint8_t _imuID {0};
 };

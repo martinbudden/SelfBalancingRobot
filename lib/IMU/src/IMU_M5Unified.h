@@ -10,9 +10,14 @@ public:
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
     virtual xyz_int16_t readAccRaw() const override;
-    virtual bool readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const override;
+
+    virtual xyz_t readGyroRPS() const override;
+    virtual xyz_t readGyroDPS() const override;
+    virtual xyz_t readAcc() const override;
+    virtual gyroRPS_Acc_t readGyroRPS_Acc() const override;
+
     virtual int readFIFO_ToBuffer() override;
-    virtual void readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index) override;
+    virtual gyroRPS_Acc_t  readFIFO_Item(size_t index) override;
 private:
     xyz_int16_t _gyroOffset {};
     xyz_int16_t _accOffset {};

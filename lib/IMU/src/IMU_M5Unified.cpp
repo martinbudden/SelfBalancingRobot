@@ -13,6 +13,10 @@ IMU_M5_UNIFIED::IMU_M5_UNIFIED(void* i2cMutex) :
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_pos);
 #elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg);
+#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_FRONT)
+    M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos);
+#else
+    static_assert(false && "IMU orientation not implemented for M5Unified.");
 #endif
     i2cSemaphoreGive();
 }
@@ -32,6 +36,25 @@ xyz_int16_t IMU_M5_UNIFIED::readAccRaw() const
     return acc;
 }
 
+xyz_t IMU_M5_UNIFIED::readAcc() const
+{
+    // This is very slow on the M5 Atom.
+    i2cSemaphoreTake();
+    [[maybe_unused]] const auto imu_update = M5.Imu.update();
+    i2cSemaphoreGive();
+
+    const m5::IMU_Class::imu_data_t& data = M5.Imu.getImuData();
+    const xyz_t acc = {
+        // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
+        .x = data.accel.x,
+        .y = data.accel.y,
+        .z = data.accel.z
+        // NOLINTEND(cppcoreguidelines-pro-type-union-access)
+    };
+
+    return acc;
+}
+
 xyz_int16_t IMU_M5_UNIFIED::readGyroRaw() const
 {
     xyz_int16_t gyro {};
@@ -39,32 +62,65 @@ xyz_int16_t IMU_M5_UNIFIED::readGyroRaw() const
     return gyro;
 }
 
-bool IMU_M5_UNIFIED::readGyroRPS_Acc(xyz_t& gyroRPS, xyz_t& acc) const
+xyz_t IMU_M5_UNIFIED::readGyroRPS() const
 {
     // This is very slow on the M5 Atom.
     i2cSemaphoreTake();
-    const auto imu_update = M5.Imu.update();
+    [[maybe_unused]] const auto imu_update = M5.Imu.update();
     i2cSemaphoreGive();
-    if (imu_update == 0) {
-        return false;
-    }
 
-// NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
     const m5::IMU_Class::imu_data_t& data = M5.Imu.getImuData();
-    // convert gyro values to radians for Madgwick filter
-    constexpr float degreesToRadians {M_PI / 180.0};
-    gyroRPS = {
+    const xyz_t gyroRPS {
+        // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
         .x = data.gyro.x * degreesToRadians,
         .y = data.gyro.y * degreesToRadians,
         .z = data.gyro.z * degreesToRadians
+        // NOLINTEND(cppcoreguidelines-pro-type-union-access)
     };
-    acc = {
-        .x = data.accel.x,
-        .y = data.accel.y,
-        .z = data.accel.z
+    return gyroRPS;
+}
+
+xyz_t IMU_M5_UNIFIED::readGyroDPS() const
+{
+    // This is very slow on the M5 Atom.
+    i2cSemaphoreTake();
+    [[maybe_unused]] const auto imu_update = M5.Imu.update();
+    i2cSemaphoreGive();
+
+    const m5::IMU_Class::imu_data_t& data = M5.Imu.getImuData();
+    const xyz_t gyroDPS {
+        // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
+        .x = data.gyro.x,
+        .y = data.gyro.y,
+        .z = data.gyro.z
+        // NOLINTEND(cppcoreguidelines-pro-type-union-access)
     };
-// NOLINTEND(cppcoreguidelines-pro-type-union-access)
-    return true;
+    return gyroDPS;
+}
+
+IMU_Base::gyroRPS_Acc_t IMU_M5_UNIFIED::readGyroRPS_Acc() const
+{
+    // This is very slow on the M5 Atom.
+    i2cSemaphoreTake();
+    [[maybe_unused]] const auto imu_update = M5.Imu.update();
+    i2cSemaphoreGive();
+
+    const m5::IMU_Class::imu_data_t& data = M5.Imu.getImuData();
+    gyroRPS_Acc_t gyroAcc {
+        // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
+        .gyroRPS = {
+            .x = data.gyro.x * degreesToRadians,
+            .y = data.gyro.y * degreesToRadians,
+            .z = data.gyro.z * degreesToRadians
+        },
+        .acc = {
+            .x = data.accel.x,
+            .y = data.accel.y,
+            .z = data.accel.z
+        }
+        // NOLINTEND(cppcoreguidelines-pro-type-union-access)
+    };
+    return gyroAcc;
 }
 
 int IMU_M5_UNIFIED::readFIFO_ToBuffer()
@@ -72,10 +128,11 @@ int IMU_M5_UNIFIED::readFIFO_ToBuffer()
     return 0;
 }
 
-void IMU_M5_UNIFIED::readFIFO_Item(xyz_t& gyroRPS, xyz_t& acc, size_t index)
+IMU_Base::gyroRPS_Acc_t IMU_M5_UNIFIED::readFIFO_Item(size_t index)
 {
-    (void)gyroRPS;
-    (void)acc;
     (void)index;
+
+    gyroRPS_Acc_t gyroAcc {};
+    return gyroAcc;
 }
 #endif
