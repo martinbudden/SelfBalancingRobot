@@ -1,0 +1,13 @@
+{
+    "name": "IMU",
+    "description": "IMU",
+    "keywords": "IMU",
+    "authors": {
+        "name": "Martin Budden",
+        "url": "https://github.com/martinbudden/Library-IMU"
+    },
+    "license": "MIT",
+    "version": "0.0.1",
+    "frameworks": "*",
+    "platforms": "*"
+}

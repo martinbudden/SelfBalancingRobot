@@ -27,7 +27,7 @@ public:
     inline Quaternion operator-() const { return Quaternion(-w, -x, -y, -z); } //<! Unary negation
 
     bool operator==(const Quaternion& q) const { return w == q.w && x == q.x &&  y == q.y && z == q.z; }
-    bool operator!=(const Quaternion& q) const { return !(*this == q); }
+    bool operator!=(const Quaternion& q) const { return w != q.w || x != q.x ||  y != q.y || z != q.z; }
 
     inline Quaternion operator+=(const Quaternion& q) {
         w += q.w;

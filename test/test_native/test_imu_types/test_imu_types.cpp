@@ -88,12 +88,12 @@ void test_quaternion()
 
 }
 
+constexpr float degrees19inRadians = 19.0F * Quaternion::degreesToRadians;
+constexpr float degrees43inRadians = 43.0F * Quaternion::degreesToRadians;
+constexpr float degrees67inRadians = 67.0F * Quaternion::degreesToRadians;
+
 void test_quaternion_angles()
 {
-    const float degrees19inRadians = 19.0F * Quaternion::degreesToRadians;
-    const float degrees43inRadians = 43.0F * Quaternion::degreesToRadians;
-    const float degrees67inRadians = 67.0F * Quaternion::degreesToRadians;
-
     const Quaternion q0 = Quaternion::fromEulerAnglesRadians(degrees19inRadians, degrees43inRadians, degrees67inRadians);
     TEST_ASSERT_EQUAL_FLOAT(19.0, q0.calculateRollDegrees());
     TEST_ASSERT_EQUAL_FLOAT(43.0, q0.calculatePitchDegrees());
@@ -105,7 +105,10 @@ void test_quaternion_angles()
     TEST_ASSERT_EQUAL_FLOAT(-19.0, q1.calculatePitchDegrees());
     TEST_ASSERT_EQUAL_FLOAT(67.0, q1.calculateYawDegrees());
     TEST_ASSERT_EQUAL_FLOAT(1.0, q1.magnitude_squared());
+}
 
+void test_quaternion_rotation()
+{
     const Quaternion q2 = Quaternion::fromEulerAnglesRadians(degrees43inRadians, 0, 0);
     TEST_ASSERT_EQUAL_FLOAT(43.0, q2.calculateRollDegrees());
     TEST_ASSERT_EQUAL_FLOAT(0.0, q2.calculatePitchDegrees());
@@ -159,7 +162,6 @@ void test_quaternion_angles()
     TEST_ASSERT_EQUAL_FLOAT(0.0, q6q7.calculateRollDegrees());
     TEST_ASSERT_EQUAL_FLOAT(0.0, q6q7.calculatePitchDegrees());
     TEST_ASSERT_EQUAL_FLOAT(24.0, q6q7.calculateYawDegrees());
-
 }
 
 int main(int argc, char **argv)
@@ -169,6 +171,7 @@ int main(int argc, char **argv)
     RUN_TEST(test_xyz_t);
     RUN_TEST(test_quaternion);
     RUN_TEST(test_quaternion_angles);
+    RUN_TEST(test_quaternion_rotation);
 
     UNITY_END();
 }
