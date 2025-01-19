@@ -34,14 +34,15 @@ NOTE: calls to YIELD_TASK have no effect on multi-core implementations, but are 
 */
 bool AHRS::readIMUandUpdateOrientation(float deltaT)
 {
+#if defined(AHRS_RECORD_TIMES_CHECKS)
+    _timeCheck0 = micros();
+#endif
+
 #if defined(USE_IMU_FIFO)
     // It uses the IMU FIFO. This ensures all IMU readings are processed, but it has the disadvantage that
     // reading the FIFO blocks the I2C bus, which in turn blocks the MPC_TASK.
     // I'm starting to come to the conclusion that, for M5Stack devices, better overall performance is obtained by not using the FIFO.
 
-#if defined(AHRS_RECORD_TIMES_CHECKS)
-    _timeCheck0 = micros();
-#endif
     _fifoCount = _IMU.readFIFO_ToBuffer();
     if (_fifoCount == 0) {
         YIELD_TASK();
@@ -76,9 +77,6 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
 #else
 
-#if defined(AHRS_RECORD_TIMES_CHECKS)
-    _timeCheck0 = micros();
-#endif
     IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc();
     TIME_CHECK(0, _timeCheck0);
     TIME_CHECK(1);
@@ -94,6 +92,8 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
 #endif // USE_IMU_FIFO
 
+    // If _motorController is not nullptr, then things have been configured so that updateOutputsUsingPIDs
+    // is called by the AHRS rather than the motor controller.
     if (_motorController != nullptr) {
         _motorController->updateOutputsUsingPIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
         TIME_CHECK(4);

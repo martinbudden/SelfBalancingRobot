@@ -4,7 +4,9 @@
 
 class MotorPairBase;
 
-
+/*!
+The MotorMixer takes the outputs from the MotorController and "mixes" the values, to set the appropriate power for each motor.
+*/
 class MotorMixer : public MotorMixerBase {
 public:
     explicit MotorMixer(MotorPairBase& motors) : _motors(motors) {}
@@ -18,7 +20,7 @@ public:
     float getPowerRight() const { return _powerRight; } //!< for telemetry
     uint32_t getOutputPowerTimeMicroSeconds() const { return _outputPowerTimeMicroSeconds; } //!< for telemetry
 private:
-    MotorPairBase& _motors;
+    MotorPairBase& _motors; //<! The MotorMixer has a reference to the motors for output, ie setting the motor power.
     uint32_t _motorSwitchOffTickCount {0};
     float _powerLeft {0.0};
     float _powerRight {0.0};

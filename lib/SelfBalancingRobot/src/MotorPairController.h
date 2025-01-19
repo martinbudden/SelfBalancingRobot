@@ -78,7 +78,7 @@ private:
 private:
     const AHRS& _ahrs;
     const ReceiverBase& _receiver;
-    MotorPairBase& _motors;
+    MotorPairBase& _motors; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorMixer _mixer;
     // stick values scaled to the range [-1,0, 1.0]
     float _throttleStick {0};
