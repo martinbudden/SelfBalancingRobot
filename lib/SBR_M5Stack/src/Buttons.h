@@ -1,13 +1,13 @@
 #pragma once
 
-class MotorControllerBase;
+class MotorPairController;
 class Receiver;
 class Screen;
 
 
 class Buttons {
 public:
-    Buttons(Screen& screen, MotorControllerBase& motorController, const Receiver& receiver);
+    Buttons(Screen& screen, MotorPairController& motorController, const Receiver& receiver);
     void update();
 private:
     // Buttons is not copyable or moveable
@@ -17,7 +17,7 @@ private:
     Buttons& operator=(Buttons&&) = delete;
 private:
     Screen& _screen;
-    MotorControllerBase& _motorController;
+    MotorPairController& _motorController;
     const Receiver& _receiver;
     int _drawPosX;
     int _drawPosY;

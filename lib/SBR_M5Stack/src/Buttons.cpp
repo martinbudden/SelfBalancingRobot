@@ -10,7 +10,7 @@
 #include <Screen.h>
 
 
-Buttons::Buttons(Screen& screen, MotorControllerBase& motorController, const Receiver& receiver) :
+Buttons::Buttons(Screen& screen, MotorPairController& motorController, const Receiver& receiver) :
     _screen(screen),
     _motorController(motorController),
     _receiver(receiver)

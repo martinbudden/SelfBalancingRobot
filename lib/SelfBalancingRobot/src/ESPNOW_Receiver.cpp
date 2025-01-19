@@ -2,7 +2,7 @@
 
 #include "ESPNOW_Receiver.h"
 
-#include "MotorControllerBase.h"
+#include "MotorPairController.h"
 
 #include <HardwareSerial.h>
 

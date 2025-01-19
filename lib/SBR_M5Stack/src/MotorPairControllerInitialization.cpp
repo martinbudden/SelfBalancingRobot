@@ -78,6 +78,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _ahrs(ahrs),
     _receiver(receiver),
     _motors(motors()),
+    _mixer(motors()),
     _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorStepsPerRevolution(_motors.getStepsPerRevolution()),
@@ -93,7 +94,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
 #endif
 
     setControlMode(_controlMode);
-    _mixer.motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees;
+    _mixer.setMotorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees);
 
     _PIDS[PITCH_ANGLE].setPID(pitchPID_Default);
     _PIDS[PITCH_ANGLE].setIntegralMax(1.0F);

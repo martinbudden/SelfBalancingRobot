@@ -149,13 +149,13 @@ xyz_int16_t IMU_BMI270::readGyroRaw() const
 
 xyz_t IMU_BMI270::readGyroRPS() const
 {
-    const gyroRPS_Acc_t gyroAcc = IMU_BMI270::readGyroRPS_Acc();
+    const gyroRPS_Acc_t gyroAcc = readGyroRPS_Acc();
     return gyroAcc.gyroRPS;
 }
 
 xyz_t IMU_BMI270::readGyroDPS() const
 {
-    const gyroRPS_Acc_t gyroAcc = IMU_BMI270::readGyroRPS_Acc();
+    const gyroRPS_Acc_t gyroAcc = readGyroRPS_Acc();
     return gyroAcc.gyroRPS * radiansToDegrees;
 }
 
@@ -172,7 +172,7 @@ xyz_int16_t IMU_BMI270::readAccRaw() const
 
 xyz_t IMU_BMI270::readAcc() const
 {
-    const gyroRPS_Acc_t gyroAcc = IMU_BMI270::readGyroRPS_Acc();
+    const gyroRPS_Acc_t gyroAcc = readGyroRPS_Acc();
     return gyroAcc.acc;
 }
 

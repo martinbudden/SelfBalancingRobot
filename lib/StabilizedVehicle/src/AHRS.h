@@ -34,7 +34,7 @@ public:
     AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
     void setMotorController(MotorControllerBase* motorController) { _motorController = motorController; }
-    const MotorControllerBase* getMotorController() const { return _motorController; }
+    bool configuredToUpdateOutputs() const { return (_motorController==nullptr) ? false : true; }
 private:
     // class is not copyable or moveable
     AHRS(const AHRS&) = delete;

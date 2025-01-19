@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MotorControllerBase.h"
+#include "MotorMixer.h"
 #include <Filters.h>
 #include <PIDF.h>
 #include <array>
@@ -11,7 +12,6 @@ class AHRS;
 class MotorPairBase;
 class ReceiverBase;
 class Quaternion;
-
 
 class MotorPairController : public MotorControllerBase {
 public:
@@ -31,6 +31,13 @@ public:
     };
     enum pid_index_t { PITCH_ANGLE=0, SPEED=1, YAW_RATE=2, POSITION=3, PID_COUNT=4, PID_BEGIN=0 };
 public:
+    inline bool motorsIsOn() const { return _mixer.motorsIsOn(); }
+    inline void motorsSwitchOff() { _mixer.motorsSwitchOff(); }
+    inline void motorsSwitchOn() { _mixer.motorsSwitchOn(); }
+    inline void motorsToggleOnOff() { _mixer.motorsToggleOnOff(); }
+    inline bool motorsIsDisabled() const { return _mixer.motorsIsDisabled(); }
+    inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
+
     inline ControlMode_t getControlMode() const { return _controlMode; }
     void setControlMode(ControlMode_t controlMode);
 
@@ -52,7 +59,6 @@ public:
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
 
     void motorsResetEncodersToZero();
-    inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.outputPowerTimeMicroSeconds; } //<! time taken to write output power to the motors, for instrumentation
 public:
     struct TaskParameters {
         MotorPairController* motorPairController;
@@ -64,7 +70,7 @@ public:
     void updateSetpointsAndMotorSpeedEstimates(float deltaT);
     void updateOutputsUsingPIDs(float deltaT);
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
-    void outputToMotors(uint32_t tickCount);
+    void outputToMotors(float deltaT, uint32_t tickCount);
 private:
     void updatePositionOutputs(float deltaT);
     MotorPairBase& motors();
@@ -73,21 +79,13 @@ private:
     const AHRS& _ahrs;
     const ReceiverBase& _receiver;
     MotorPairBase& _motors;
+    MotorMixer _mixer;
     // stick values scaled to the range [-1,0, 1.0]
     float _throttleStick {0};
     float _rollStick {0};
     float _pitchStick {0};
     float _yawStick {0};
 
-    struct mixer_t {
-        float motorSwitchOffAngleDegrees {70.0}; //!< Pitch angle at which the motors switch off. So if the robot flips over it won't lie on its back with its motors spinning.
-        int32_t motorsDisabled {false};
-        uint32_t motorSwitchOffTickCount {0};
-        float powerLeft {0.0};
-        float powerRight {0.0};
-        uint32_t outputPowerTimeMicroSeconds {0}; //!< for instrumentation, time taken to set the motor pair power
-    };
-    mixer_t _mixer;
     int32_t _encoderLeft {0}; //!< value read from left motor encoder, raw
     int32_t _encoderRight {0}; //!< value read from right motor encoder, raw
     int32_t _encoderLeftPrevious {0};
