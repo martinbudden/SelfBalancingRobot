@@ -4,7 +4,7 @@
 
 void TelemetryScaleFactors::setControlMode(MotorPairController::ControlMode_t controlMode)
 {
-    _scaleFactors[MotorPairController::SPEED] = (controlMode == MotorPairController::CONTROL_MODE_SERIAL_PIDS)
+    _scaleFactors[MotorPairController::SPEED_DPS] = (controlMode == MotorPairController::CONTROL_MODE_SERIAL_PIDS)
         ? speedPID_TelemetryScaleFactorsSerial : speedPID_TelemetryScaleFactorsParallel;
 }
 
@@ -14,7 +14,7 @@ Constructor. Sets member data.
 TelemetryScaleFactors::TelemetryScaleFactors(MotorPairController::ControlMode_t controlMode)
 {
     setControlMode(controlMode);
-    _scaleFactors[MotorPairController::PITCH_ANGLE] = pitchPID_TelemetryScaleFactors;
-    _scaleFactors[MotorPairController::YAW_RATE] = yawRatePID_TelemetryScaleFactors;
-    _scaleFactors[MotorPairController::POSITION] = positionPID_TelemetryScaleFactors;
+    _scaleFactors[MotorPairController::PITCH_ANGLE_DEGREES] = pitchPID_TelemetryScaleFactors;
+    _scaleFactors[MotorPairController::YAW_RATE_DPS] = yawRatePID_TelemetryScaleFactors;
+    _scaleFactors[MotorPairController::POSITION_DEGREES] = positionPID_TelemetryScaleFactors;
 }

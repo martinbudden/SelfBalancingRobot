@@ -67,13 +67,13 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     setControlMode(_controlMode);
     _mixer.setMotorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees);
 
-    _PIDS[PITCH_ANGLE].setPID(pitchPID_Default);
-    _PIDS[PITCH_ANGLE].setIntegralMax(1.0F);
-    _PIDS[PITCH_ANGLE].setOutputSaturationValue(1.0F);
+    _PIDS[PITCH_ANGLE_DEGREES].setPID(pitchPID_Default);
+    _PIDS[PITCH_ANGLE_DEGREES].setIntegralMax(1.0F);
+    _PIDS[PITCH_ANGLE_DEGREES].setOutputSaturationValue(1.0F);
 
-    _PIDS[SPEED].setIntegralMax(1.0F);
+    _PIDS[SPEED_DPS].setIntegralMax(1.0F);
 
-    _PIDS[YAW_RATE].setPID(yawRatePID_Default);
+    _PIDS[YAW_RATE_DPS].setPID(yawRatePID_Default);
 
     // copy of motorMaxSpeedDPS for telemetry, so telemetry viewer can scale motor speed
 
@@ -83,16 +83,16 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
 }
 
 /*!
-Sets the control mode and adjusts the _PIDS[SPEED] constants accordingly.
+Sets the control mode and adjusts the _PIDS[SPEED_DPS] constants accordingly.
 */
 void MotorPairController::setControlMode(ControlMode_t controlMode)
 {
-    _PIDS[SPEED].resetIntegral();
+    _PIDS[SPEED_DPS].resetIntegral();
     _controlMode = controlMode;
     if (controlMode == CONTROL_MODE_SERIAL_PIDS) {
-        _PIDS[SPEED].setPID(speedPID_DefaultSerial);
+        _PIDS[SPEED_DPS].setPID(speedPID_DefaultSerial);
     } else {
-        _PIDS[SPEED].setPID(speedPID_DefaultParallel);
+        _PIDS[SPEED_DPS].setPID(speedPID_DefaultParallel);
     }
 }
 

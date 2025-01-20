@@ -17,9 +17,9 @@ struct motor_pair_controller_telemetry_t {
     float powerLeft {0}; //!< power value sent to left motor
     float powerRight {0}; //!< power value sent to right motor
 
-    float pitchOutput {0}; //!< pitch output value calculated by PID
+    float pitchAngleOutput {0}; //!< pitch output value calculated by PID
     float speedOutput {0}; //!< speed output value calculated by PID
-    float positionOutput {0}; //!< speed output value calculated by PID
+    float positionOutput {0}; //!< position output value calculated by PID
     float yawRateOutput {0}; //!< yawRate output value calculated by PID
 
     PIDF::error_t pitchError {0, 0, 0}; //!< P, I, and D errors calculated in pitch PID update

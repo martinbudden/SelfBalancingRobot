@@ -29,7 +29,14 @@ public:
         CONTROL_MODE_PARALLEL_PIDS, //!< Parallel configuration for pitch and speed PIDs. Pitch and speed are independently set.
         CONTROL_MODE_POSITION //!< The speed PID is used to set position rather than speed. Movement is obtained by incrementing position.
     };
-    enum pid_index_t { PITCH_ANGLE=0, SPEED=1, YAW_RATE=2, POSITION=3, PID_COUNT=4, PID_BEGIN=0 };
+    enum pid_index_t { 
+        PITCH_ANGLE_DEGREES=0,
+        SPEED_DPS=1,
+        YAW_RATE_DPS=2,
+        POSITION_DEGREES=3,
+        PID_COUNT=4,
+        PID_BEGIN=0
+    };
 public:
     inline bool motorsIsOn() const { return _mixer.motorsIsOn(); }
     inline void motorsSwitchOff() { _mixer.motorsSwitchOff(); }
