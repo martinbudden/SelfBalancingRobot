@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Filters.h>
 #include <MotorMixerBase.h>
 
 class MotorPairBase;
@@ -27,5 +28,7 @@ private:
     uint32_t _outputPowerTimeMicroSeconds {0}; //!< for instrumentation, time taken to set the motor pair power
     float _motorSwitchOffAngleDegrees {70.0}; //!< Pitch angle at which the motors switch off. So if the robot flips over it won't lie on its back with its motors spinning.
     float _pitchAngleDegreesRaw {};
+    FilterMovingAverage<4> _powerLeftFilter;
+    FilterMovingAverage<4> _powerRightFilter;
 };
 
