@@ -222,7 +222,7 @@ Quaternion MahonyFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer
 
     // Update the attitude quaternion using simple Euler integration (qNew = qOld + qDot*deltaT).
     // Note: to reduce the number of multiplications, _2qDot and deltaT*0.5 are used, ie qNew = qOld +_2qDot*deltaT*0.5F
-    q += _2qDot * (deltaT * 0.5F); // note brackets to ensure scalar multiplication is performed before vector multiplication
+    q += _2qDot * (deltaT * 0.5F); // note brackets to ensure scalar multiplication is performed before quaternion multiplication
 
     // Normalize the orientation quaternion
     normalize(q);
