@@ -49,6 +49,6 @@ private:
     SV_Preferences* _preferences {nullptr};
     uint32_t _telemetryID {0};
     uint32_t _backchannelID {0};
-    enum SendType { SEND_NO_DATA, RESET_SCREEN_AND_SEND_NO_DATA, SEND_TICK_INTERVAL_DATA, SEND_PID_DATA, SEND_AHRS_DATA, SEND_MPC_DATA, SEND_RECEIVER_DATA };
+    enum SendType { SEND_NO_DATA=0, RESET_SCREEN_AND_SEND_NO_DATA=1, SEND_TICK_INTERVAL_DATA=2, SEND_AHRS_DATA=3, SEND_RECEIVER_DATA=4, SEND_PID_DATA=5, SEND_MPC_DATA=6 };
     SendType _sendType { RESET_SCREEN_AND_SEND_NO_DATA };
 };
