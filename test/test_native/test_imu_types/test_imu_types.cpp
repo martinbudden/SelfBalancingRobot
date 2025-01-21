@@ -11,15 +11,43 @@ void tearDown() {
 void test_xyz_t()
 {
     const xyz_t a{2, 3, 5};
+    TEST_ASSERT_TRUE(a == a);
+    TEST_ASSERT_TRUE(a == +a);
+    const xyz_t minusA{-2, -3, -5};
+    TEST_ASSERT_TRUE(minusA == -a);
+
     const xyz_t b{7, 11, 17};
-    TEST_ASSERT_FALSE(a == b);
     TEST_ASSERT_TRUE(a != b);
+    TEST_ASSERT_FALSE(a == b);
 
     const xyz_t a2{4, 6, 10};
     TEST_ASSERT_TRUE(a2 == a*2);
+    TEST_ASSERT_TRUE(a2 == 2*a);
+
+    xyz_t a2dividedBy2 = a2;
+    a2dividedBy2 /= 2;
+    TEST_ASSERT_EQUAL_FLOAT(a.x, a2dividedBy2.x);
+    TEST_ASSERT_EQUAL_FLOAT(a.y, a2dividedBy2.y);
+    TEST_ASSERT_EQUAL_FLOAT(a.z, a2dividedBy2.z);
+
+    TEST_ASSERT_TRUE(a == a2/2);
+    TEST_ASSERT_TRUE(a == a2dividedBy2);
 
     const xyz_t b2{14, 22, 34};
     TEST_ASSERT_TRUE(b2 == b*2);
+
+    xyz_t c = b;
+    c *= 2;
+    TEST_ASSERT_TRUE(c == b*2);
+
+    const xyz_t b2dividedBy2 = b2 / 2;
+    TEST_ASSERT_EQUAL_FLOAT(b.x, b2dividedBy2.x);
+    TEST_ASSERT_EQUAL_FLOAT(b.y, b2dividedBy2.y);
+    TEST_ASSERT_EQUAL_FLOAT(b.z, b2dividedBy2.z);
+
+    TEST_ASSERT_TRUE(b == b2/2);
+    TEST_ASSERT_TRUE(b == b2dividedBy2);
+
 
     const xyz_t a_plus_b =  a + b;
 
@@ -27,11 +55,16 @@ void test_xyz_t()
     TEST_ASSERT_EQUAL(14, a_plus_b.y);
     TEST_ASSERT_EQUAL(22, a_plus_b.z);
 
+    TEST_ASSERT_TRUE(a_plus_b == a + b);
+    TEST_ASSERT_TRUE(a_plus_b == b + a);
+
     const xyz_t a_minus_b =  a - b;
 
     TEST_ASSERT_EQUAL(-5, a_minus_b.x);
     TEST_ASSERT_EQUAL(-8, a_minus_b.y);
     TEST_ASSERT_EQUAL(-12, a_minus_b.z);
+    TEST_ASSERT_TRUE(a_minus_b == a - b);
+    TEST_ASSERT_TRUE(-a_minus_b == b - a);
 
     TEST_ASSERT_TRUE(a2 == a_plus_b + a_minus_b);
     TEST_ASSERT_TRUE(b2 == a_plus_b - a_minus_b);
@@ -52,15 +85,37 @@ void test_xyz_t()
 void test_quaternion()
 {
     Quaternion a{2, 3, 5, 7};
+    TEST_ASSERT_TRUE(a == +a);
+    Quaternion minusA{-2, -3, -5, -7};
+    TEST_ASSERT_TRUE(minusA == -a);
+
     Quaternion b{11, 13, 17, 23};
-    TEST_ASSERT_FALSE(a == b);
     TEST_ASSERT_TRUE(a != b);
+    TEST_ASSERT_FALSE(a == b);
 
     const Quaternion a2{4, 6, 10, 14};
     TEST_ASSERT_TRUE(a2 == a*2);
+    TEST_ASSERT_TRUE(a2 == 2*a);
+
+    Quaternion a2dividedBy2 = a2;
+    a2dividedBy2 /= 2;
+    TEST_ASSERT_EQUAL_FLOAT(a.getW(), a2dividedBy2.getW());
+    TEST_ASSERT_EQUAL_FLOAT(a.getX(), a2dividedBy2.getX());
+    TEST_ASSERT_EQUAL_FLOAT(a.getY(), a2dividedBy2.getY());
+    TEST_ASSERT_EQUAL_FLOAT(a.getZ(), a2dividedBy2.getZ());
 
     const Quaternion b2{22, 26, 34, 46};
     TEST_ASSERT_TRUE(b2 == b*2);
+    TEST_ASSERT_TRUE(b2 == 2*b);
+    const Quaternion b2dividedBy2 = b2 / 2;
+    TEST_ASSERT_EQUAL_FLOAT(b.getW(), b2dividedBy2.getW());
+    TEST_ASSERT_EQUAL_FLOAT(b.getX(), b2dividedBy2.getX());
+    TEST_ASSERT_EQUAL_FLOAT(b.getY(), b2dividedBy2.getY());
+    TEST_ASSERT_EQUAL_FLOAT(b.getZ(), b2dividedBy2.getZ());
+
+    TEST_ASSERT_TRUE(b == b2/2);
+    TEST_ASSERT_TRUE(b == b2dividedBy2);
+
 
     const Quaternion a_plus_b =  a + b;
 
@@ -68,6 +123,7 @@ void test_quaternion()
     TEST_ASSERT_EQUAL(16, a_plus_b.getX());
     TEST_ASSERT_EQUAL(22, a_plus_b.getY());
     TEST_ASSERT_EQUAL(30, a_plus_b.getZ());
+    TEST_ASSERT_TRUE(a_plus_b == a + b);
 
     const Quaternion a_minus_b =  a - b;
 
@@ -75,6 +131,8 @@ void test_quaternion()
     TEST_ASSERT_EQUAL(-10, a_minus_b.getX());
     TEST_ASSERT_EQUAL(-12, a_minus_b.getY());
     TEST_ASSERT_EQUAL(-16, a_minus_b.getZ());
+    TEST_ASSERT_TRUE(a_minus_b == a - b);
+    TEST_ASSERT_TRUE(-a_minus_b == b - a);
 
     TEST_ASSERT_TRUE(a2 == a_plus_b + a_minus_b);
     TEST_ASSERT_TRUE(b2 == a_plus_b - a_minus_b);
