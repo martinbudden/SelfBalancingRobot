@@ -40,8 +40,6 @@ public:
     virtual int readFIFO_ToBuffer() override;
     virtual gyroRPS_Acc_t  readFIFO_Item(size_t index) override;
 private:
-    static xyz_t gyroRPS_FromRaw(const mems_sensor_data_t& data, const xyz_int16_t& gyroOffset);
-    static xyz_t accFromRaw(const mems_sensor_data_t& data, const xyz_int16_t& accOffset);
     static gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
 private:
     I2C _bus; //!< Serial Communication Bus interface, can be either I2C or SPI
