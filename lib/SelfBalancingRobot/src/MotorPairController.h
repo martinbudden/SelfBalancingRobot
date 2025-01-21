@@ -48,16 +48,16 @@ public:
     inline ControlMode_t getControlMode() const { return _controlMode; }
     void setControlMode(ControlMode_t controlMode);
 
-    std::string getPIDName(pid_index_t pidIndex) const;
-    inline const PIDF::PIDF_t& getPIDConstants(pid_index_t pidIndex) const { return _PIDS[pidIndex].getPID(); }
-    inline void setPIDConstants(pid_index_t pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
+    std::string getPID_Name(pid_index_t pidIndex) const;
+    inline const PIDF::PIDF_t& getPID_Constants(pid_index_t pidIndex) const { return _PIDS[pidIndex].getPID(); }
+    inline void setPID_Constants(pid_index_t pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
     inline void setPID_P(pid_index_t pidIndex, float kp) { _PIDS[pidIndex].setP(kp); }
     inline void setPID_I(pid_index_t pidIndex, float ki) { _PIDS[pidIndex].setI(ki); }
     inline void setPID_D(pid_index_t pidIndex, float kd) { _PIDS[pidIndex].setD(kd); }
     inline void setPID_F(pid_index_t pidIndex, float kf) { _PIDS[pidIndex].setF(kf); }
 
-    inline float getPIDSetpoint(pid_index_t pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
-    void setPIDSetpoint(pid_index_t pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
+    inline float getPID_Setpoint(pid_index_t pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
+    void setPID_Setpoint(pid_index_t pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
 
     std::string getBalanceAngleName() const;
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }

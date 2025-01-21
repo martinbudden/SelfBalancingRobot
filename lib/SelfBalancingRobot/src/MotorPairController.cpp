@@ -25,7 +25,7 @@ const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES = {
     "YAW_RATE"
 };
 
-std::string MotorPairController::getPIDName(pid_index_t pidIndex) const
+std::string MotorPairController::getPID_Name(pid_index_t pidIndex) const
 {
     return PID_NAMES[pidIndex];
 }
@@ -41,9 +41,9 @@ void MotorPairController::motorsResetEncodersToZero()
 }
 
 /*!
-Return a reference to the MPC telemetry data.
+Return he MPC telemetry data.
 
-The telemetry object is shared between this task (the MPC task) and the MAIN_LOOP_TASK, however it is deliberately not protected by a mutex.
+The telemetry data is shared between this task (the MPC task) and the MAIN_LOOP_TASK, however it is deliberately not protected by a mutex.
 This is because:
 1. Only this task writes to the telemetry object. The main task only reads it (for display and to send to the backchannel).
 2. The only inconsistency that can occur is that the main task might use a partially updated telemetry object, however this is not a problem because

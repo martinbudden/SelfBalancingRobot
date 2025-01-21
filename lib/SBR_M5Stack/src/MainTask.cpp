@@ -256,7 +256,7 @@ void MainTask::loadPreferences()
     // Set all the preferences to zero if they have not been set
     if (!_preferences->isSetPID()) {
         for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-            std::string pidName = _motorPairController->getPIDName(static_cast<MotorPairController::pid_index_t>(ii));
+            std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
             constexpr PIDF::PIDF_t pidZero { 0.0, 0.0, 0.0, 0.0 };
              _preferences->putPID(pidName, pidZero);
         }
@@ -270,10 +270,10 @@ void MainTask::loadPreferences()
 
     // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        std::string pidName = _motorPairController->getPIDName(static_cast<MotorPairController::pid_index_t>(ii));
+        std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
         const PIDF::PIDF_t pid = _preferences->getPID(pidName);
         if (pid.kp != 0.0F) {
-            _motorPairController->setPIDConstants(static_cast<MotorPairController::pid_index_t>(ii), pid);
+            _motorPairController->setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
             Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), pid.kp, pid.ki, pid.kd, pid.kf);
         }
     }
