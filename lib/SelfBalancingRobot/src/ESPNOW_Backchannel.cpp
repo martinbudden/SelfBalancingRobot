@@ -79,14 +79,13 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
     static_assert(sizeof(TD_AHRS) < sizeof(_transmitDataBuffer));
     static_assert(sizeof(TD_MPC) < sizeof(_transmitDataBuffer));
 
-    int len {0}; // NOLINT(misc-const-correctness) false positive
     switch (packet.value) {
     case CommandPacketRequestData::REQUEST_STOP_SENDING_DATA:
         _sendType = SEND_NO_DATA;
         break;
-    case CommandPacketRequestData::REQUEST_TICK_INTERVAL_DATA:
+    case CommandPacketRequestData::REQUEST_TICK_INTERVAL_DATA: {
         _sendType = SEND_TICK_INTERVAL_DATA;
-        len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
+        const int len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
                 _ahrs,
                 _motorPairController,
                 _motorPairController.getOutputPowerTimeMicroSeconds(),
@@ -95,32 +94,39 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
                 _receiver.getDroppedPacketCountDelta());
         sendData(_transmitDataBuffer, len);
         break;
-    case CommandPacketRequestData::REQUEST_PID_DATA:
-        _sendType = SEND_PID_DATA;
-        len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController, _telemetryScaleFactors);
-        sendData(_transmitDataBuffer, len);
-        break;
-    case CommandPacketRequestData::REQUEST_AHRS_DATA:
+        }
+    case CommandPacketRequestData::REQUEST_AHRS_DATA: {
         _sendType = SEND_AHRS_DATA;
-        len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
-        sendData(_transmitDataBuffer, len);
-        break;
-    case CommandPacketRequestData::REQUEST_RECEIVER_DATA:
-        _sendType = SEND_RECEIVER_DATA;
-        len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _receiver);
-        sendData(_transmitDataBuffer, len);
-        break;
-    case CommandPacketRequestData::REQUEST_MOTOR_CONTROLLER_DATA:
-        _sendType = SEND_MPC_DATA;
-        len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
+        const int len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
         sendData(_transmitDataBuffer, len);
         break;
     }
+    case CommandPacketRequestData::REQUEST_RECEIVER_DATA: {
+        _sendType = SEND_RECEIVER_DATA;
+        const int len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _receiver);
+        sendData(_transmitDataBuffer, len);
+        break;
+    }
+    case CommandPacketRequestData::REQUEST_PID_DATA: {
+        _sendType = SEND_PID_DATA;
+        const int len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController, _telemetryScaleFactors);
+        sendData(_transmitDataBuffer, len);
+        break;
+    }
+    case CommandPacketRequestData::REQUEST_MOTOR_CONTROLLER_DATA: {
+        _sendType = SEND_MPC_DATA;
+        const int len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
+        sendData(_transmitDataBuffer, len);
+        break;
+    }
+    default:
+        // do nothing
+        break;
+    } // end switch
 }
 
 void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     //Serial.printf("SetPID packet type:%d, len:%d, pidType:%d setType:%d value:%f\r\n", packet.type, packet.len, packet.pidType, packet.setType, packet.value);
-    bool transmit = false;
     const MotorPairController::pid_index_t pidIndex = static_cast<MotorPairController::pid_index_t>(packet.pidIndex); // NOLINT(hicpp-use-auto,modernize-use-auto)
 
     if (pidIndex >= MotorPairController::PID_COUNT) {
@@ -128,6 +134,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         return;
     }
 
+    bool transmit = false;
     switch (packet.setType) {
     case CommandPacketSetPID::SET_P:
         _motorPairController.setPID_P(pidIndex, packet.value);
@@ -145,15 +152,15 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         _motorPairController.setPID_F(pidIndex, packet.value);
         transmit = true;
         break;
-    case CommandPacketSetPID::SET_SETPOINT:
-        _motorPairController.setPIDSetpoint(pidIndex, packet.value);
-        transmit = true;
-        break;
     case CommandPacketSetPID::RESET_PID:
         // Not currently implemented.
         break;
+    case CommandPacketSetPID::SET_SETPOINT:
+        _motorPairController.setPID_Setpoint(pidIndex, packet.value);
+        transmit = true;
+        break;
     case CommandPacketSetPID::SET_PITCH_BALANCE_ANGLE:
-        // Set the balance angel, the value of packet.pidType is ignored.
+        // Set the balance angel, the value of packet.pidIndex is ignored.
         _motorPairController.setPitchBalanceAngleDegrees(packet.value);
         transmit = true;
         break;
@@ -163,12 +170,15 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         _preferences->putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
         break;
     case CommandPacketSetPID::SAVE_P:
+        [[fallthrough]]
     case CommandPacketSetPID::SAVE_I:
+        [[fallthrough]]
     case CommandPacketSetPID::SAVE_D:
+        [[fallthrough]]
     case CommandPacketSetPID::SAVE_F:
         //Serial.printf("Saved PID packetType:%d pidType:%d  setType:%d\r\n", packet.type, packet.pidType, packet.setType);
         // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.
-        _preferences->putPID(_motorPairController.getPIDName(pidIndex), _motorPairController.getPIDConstants(pidIndex));
+        _preferences->putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
         break;
 #endif
     default:
@@ -192,62 +202,87 @@ Three types of packets may be received:
 1. A command packet, for example a command to switch off the motors.
 2. A request to transmit telemetry. In this case format the telemetry data and send it.
 3. A request to set a PID value. In this case set the PID value and then send back the value of all the PIDs.
+
+NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
+packet lengths are 10(TICK_INTERVAL), 44(AHRS), and 88(MPC)
 */
 bool Backchannel::update()
 {
-    if (_received_data.len == 0) {
-        // esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
-        // packet lengths are 10(TICK_INTERVAL), 44(AHRS), and 88(MPC)
-        if (_sendType == SEND_NO_DATA) {
+    if (_received_data.len != 0) {
+        // We have a packet, so process it
+        _received_data.len = 0; // Set _received_data.len to indicate we have processed this packet
+
+        const auto controlPacket = reinterpret_cast<const CommandPacketControl*>(_receivedDataBuffer);
+        if (controlPacket->id != _backchannelID) {
+            // not our packet, so don't process it
             return false;
         }
-        if (_sendType == SEND_TICK_INTERVAL_DATA) {
-            const int len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
-                _ahrs,
-                _motorPairController,
-                _motorPairController.getOutputPowerTimeMicroSeconds(),
-                _mainTask.getTickCountDelta(),
-                _transceiver.getTickCountDeltaAndReset(),
-                _receiver.getDroppedPacketCountDelta());
-            //Serial.printf("tiLen:%d\r\n", len);
-            sendData(_transmitDataBuffer, len);
-        } else if (_sendType == SEND_AHRS_DATA) {
-            const int len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
-            //Serial.printf("ahrsLen:%d\r\n", len);
-            sendData(_transmitDataBuffer, len);
-        } else if (_sendType == SEND_MPC_DATA) {
-            const int len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
-            //Serial.printf("mpcLen:%d\r\n", len);
-            sendData(_transmitDataBuffer, len);
-        } else if (_sendType == SEND_RECEIVER_DATA) {
-            const int len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _receiver);
-            //Serial.printf("receiverLen:%d\r\n", len);
-            sendData(_transmitDataBuffer, len);
-        } else if (_sendType == RESET_SCREEN_AND_SEND_NO_DATA) {
-            const int len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID);
-            sendData(_transmitDataBuffer, len);
-            _sendType = SEND_NO_DATA;
-        }
-        return false;
+
+        //Serial.printf("Backchannel::update id:%x, type:%d, len:%d value:%d\r\n", packetControl->id, packetControl->type, packetControl->len, packetControl->value);
+        switch (controlPacket->type) {
+        case CommandPacketControl::TYPE: // NOLINT(bugprone-branch-clone) false positive
+            packetControl(*reinterpret_cast<const CommandPacketControl*>(_receivedDataBuffer));
+            break;
+        case CommandPacketRequestData::TYPE: // NOLINT(bugprone-branch-clone) false positive
+            packetRequestData(*reinterpret_cast<const CommandPacketRequestData*>(_receivedDataBuffer));
+            break;
+        case CommandPacketSetPID::TYPE: // NOLINT(bugprone-branch-clone) false positive
+            packetSetPID(*reinterpret_cast<const CommandPacketSetPID*>(_receivedDataBuffer));
+            break;
+        default:
+            // do nothing
+            break;
+        } // end switch
+
+        return true;
     }
 
-    const auto controlPacket = reinterpret_cast<const CommandPacketControl*>(_receivedDataBuffer);
-    if (controlPacket->id == _backchannelID) {
-        const int type = controlPacket->type;
-        //Serial.printf("Backchannel::update id:%x, type:%d, len:%d value:%d\r\n", packetControl->id, packetControl->type, packetControl->len, packetControl->value);
-        if (type == CommandPacketControl::TYPE) {
-            const CommandPacketControl& packet = *reinterpret_cast<const CommandPacketControl*>(_receivedDataBuffer);
-            packetControl(packet);
-        } else if (type == CommandPacketRequestData::TYPE) {
-            const CommandPacketRequestData& packet = *reinterpret_cast<const CommandPacketRequestData*>(_receivedDataBuffer);
-            packetRequestData(packet);
-        } else if (type == CommandPacketSetPID::TYPE) {
-            const CommandPacketSetPID& packet = *reinterpret_cast<const CommandPacketSetPID*>(_receivedDataBuffer);
-            packetSetPID(packet);
-        }
-        _received_data.len = 0;
+    // We haven't received a packet, so take the opportunity to send a a packet if we have one to send
+    switch (_sendType) {
+    case SEND_NO_DATA: {
+        return false;
     }
-    return true;
+    case RESET_SCREEN_AND_SEND_NO_DATA: {
+        const int len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID);
+        sendData(_transmitDataBuffer, len);
+        _sendType = SEND_NO_DATA;
+        break;
+    }
+    case SEND_TICK_INTERVAL_DATA: {
+        const int len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
+            _ahrs,
+            _motorPairController,
+            _motorPairController.getOutputPowerTimeMicroSeconds(),
+            _mainTask.getTickCountDelta(),
+            _transceiver.getTickCountDeltaAndReset(),
+            _receiver.getDroppedPacketCountDelta());
+        //Serial.printf("tiLen:%d\r\n", len);
+        sendData(_transmitDataBuffer, len);
+        break;
+    } 
+    case SEND_AHRS_DATA: {
+        const int len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
+        //Serial.printf("ahrsLen:%d\r\n", len);
+        sendData(_transmitDataBuffer, len);
+        break;
+    }
+    case SEND_RECEIVER_DATA: {
+        const int len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _receiver);
+        //Serial.printf("receiverLen:%d\r\n", len);
+        sendData(_transmitDataBuffer, len);
+        break;
+    }
+    case SEND_MPC_DATA: {
+        const int len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
+        //Serial.printf("mpcLen:%d\r\n", len);
+        sendData(_transmitDataBuffer, len);
+        break;
+    }
+    default:
+        // do nothing
+        break;
+    } // end switch
+    return false;
 }
 
 #endif // USE_ESPNOW
