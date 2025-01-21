@@ -46,8 +46,7 @@ protected:
     float q1 { 0.0 };
     float q2 { 0.0 };
     float q3 { 0.0 };
-    float _accMagnitudeSquaredMin {0.9};
-    float _accMagnitudeSquaredMax {1.1};
+    float _accMagnitudeSquaredMax {4.0};
 };
 
 /*!
@@ -87,6 +86,7 @@ public:
     virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) override;
     virtual void setFreeParameters(float parameter0, float parameter1) override;
     inline void setBeta(float beta) { setFreeParameters(beta, 0.0f); }
+    inline void setGyroMeasurementError(float gyroMeasurementError) { setBeta(gyroMeasurementError * sqrtf(3.0F / 4.0F)); }
 private:
     float _beta { 1.0 }; // Initially gain is high, to give fast convergence
 };

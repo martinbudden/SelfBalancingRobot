@@ -279,9 +279,9 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& acceleromet
         a.z *= accMagnitudeReciprocal;
     }
 
-    // Acceleration is an unreliable indicator of orientation when in high-g or low-g maneuvers,
+    // Acceleration is an unreliable indicator of orientation when in high-g maneuvers,
     // so exclude it from the calculation in these cases
-    if ((accMagnitudeSquared >= _accMagnitudeSquaredMin) && (accMagnitudeSquared <= _accMagnitudeSquaredMax)) {
+    if (accMagnitudeSquared <= _accMagnitudeSquaredMax) {
         // Auxiliary variables to avoid repeated arithmetic
         const float _2q1q1_plus_2q2q2 = 2.0F*(q1*q1 + q2*q2);
         const float common = 2.0F*(q0*q0 + q3*q3 - 1.0F + _2q1q1_plus_2q2q2 + a.z);
@@ -328,9 +328,9 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& acceleromet
 {
     xyz_t a = accelerometer;
     const float accMagnitudeSquared = normalize(a);
-    // Acceleration is an unreliable indicator of orientation when in high-g or low-g maneuvers,
+    // Acceleration is an unreliable indicator of orientation when in high-g maneuvers,
     // so exclude it from the calculation in these cases
-    if ((accMagnitudeSquared < _accMagnitudeSquaredMin) || (accMagnitudeSquared > _accMagnitudeSquaredMax)) {
+    if (accMagnitudeSquared > _accMagnitudeSquaredMax) {
         a.x = 0.0F;
         a.y = 0.0F;
         a.z = 0.0F;
