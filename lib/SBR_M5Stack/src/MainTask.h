@@ -18,6 +18,7 @@ public:
 private:
     void setupAHRS(void* i2cMutex);
     void checkGyroCalibration();
+    void resetPreferences();
     void loadPreferences();
     void setupTasks();
 private:

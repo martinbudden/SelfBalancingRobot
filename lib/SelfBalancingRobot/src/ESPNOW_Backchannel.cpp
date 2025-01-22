@@ -126,11 +126,11 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
 }
 
 void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
-    //Serial.printf("SetPID packet type:%d, len:%d, pidType:%d setType:%d value:%f\r\n", packet.type, packet.len, packet.pidType, packet.setType, packet.value);
+    //Serial.printf("SetPID packet type:%d, len:%d, pidIndex:%d setType:%d value:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value);
     const MotorPairController::pid_index_t pidIndex = static_cast<MotorPairController::pid_index_t>(packet.pidIndex); // NOLINT(hicpp-use-auto,modernize-use-auto)
 
     if (pidIndex >= MotorPairController::PID_COUNT) {
-        //Serial.printf("Backchannel::packetSetPID invalid pidType:%d\r\n", packet.pidType);
+        //Serial.printf("Backchannel::packetSetPID invalid pidIndex:%d\r\n", packet.pidIndex);
         return;
     }
 
@@ -152,9 +152,6 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         _motorPairController.setPID_F(pidIndex, packet.value);
         transmit = true;
         break;
-    case CommandPacketSetPID::RESET_PID:
-        // Not currently implemented.
-        break;
     case CommandPacketSetPID::SET_SETPOINT:
         _motorPairController.setPID_Setpoint(pidIndex, packet.value);
         transmit = true;
@@ -165,10 +162,6 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         transmit = true;
         break;
 #if defined(USE_ESP32_PREFERENCES)
-    case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
-        // Save the balance angel, the value of packet.pidType is ignored.
-        _preferences->putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
-        break;
     case CommandPacketSetPID::SAVE_P:
         [[fallthrough]]
     case CommandPacketSetPID::SAVE_I:
@@ -176,13 +169,21 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     case CommandPacketSetPID::SAVE_D:
         [[fallthrough]]
     case CommandPacketSetPID::SAVE_F:
-        //Serial.printf("Saved PID packetType:%d pidType:%d  setType:%d\r\n", packet.type, packet.pidType, packet.setType);
+        //Serial.printf("Saved PID packetType:%d pidIndex:%d  setType:%d\r\n", packet.type, packet.pidIndex, packet.setType);
         // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.
         _preferences->putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
         break;
+    case CommandPacketSetPID::RESET_PID:
+        // Save FLT_MAX values for the PID constants, so when next the defaults will be used instead
+        _preferences->putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX });
+        break;
+    case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
+        // Save the balance angel, the value of packet.pidIndex is ignored.
+        _preferences->putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
+        break;
 #endif
     default:
-        //Serial.printf("Backchannel::packetSetPID invalid setType:%d\r\n", packet.pidType);
+        //Serial.printf("Backchannel::packetSetPID invalid setType:%d\r\n", packet.pidIndex);
         break;
     }
 

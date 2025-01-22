@@ -99,7 +99,7 @@ void MainTask::setup()
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
     const char*  taskName = pcTaskGetName(taskHandle);
-    Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
+    Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n\r\n", taskName, taskPriority, configTICK_RATE_HZ);
 
     // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
     // The mutex is created statically, ie without dynamic memory allocation.
@@ -141,8 +141,16 @@ void MainTask::setup()
     static SV_Preferences preferences;
     _preferences = &preferences;
 
+    // Holding BtnA down while switching on enters calibration mode.
+    if (M5.BtnA.isPressed()) {
+        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_ACC_AND_GYRO);
+    }
     checkGyroCalibration();
 
+    // Holding BtnC down while switching on resets the preferences.
+    if (M5.BtnC.isPressed()) {
+        resetPreferences();
+    }
     loadPreferences();
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)
@@ -217,22 +225,17 @@ void MainTask::setupAHRS(void* i2cMutex)
 
 void MainTask::checkGyroCalibration()
 {
-    // Holding BtnA down while switching on enters calibration mode.
-    if (M5.BtnA.isPressed()) {
-        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_ACC_AND_GYRO);
-    }
-
     // Set the gyro offsets from non-volatile storage.
 #if defined(M5_STACK) || defined(USE_IMU_MPU6886_DIRECT)
     // For M5_STACK and USE_IMU_MPU6886_DIRECT, the gyro offsets are stored in preferences.
     xyz_int16_t gyroOffset {};
     if (_preferences->getGyroOffset(&gyroOffset)) {
         _ahrs->setGyroOffset(gyroOffset);
-        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%d, gy:%d, gz:%d\r\n", gyroOffset.x, gyroOffset.y, gyroOffset.z);
+        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", gyroOffset.x, gyroOffset.y, gyroOffset.z);
         xyz_int16_t accOffset {};
         if (_preferences->getAccOffset(&accOffset)) {
             _ahrs->setAccOffset(accOffset);
-            Serial.printf("**** AHRS accOffsets loaded from preferences: ax:%d, ay:%d, az:%d\r\n", accOffset.x, accOffset.y, accOffset.z);
+            Serial.printf("**** AHRS accOffsets  loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", accOffset.x, accOffset.y, accOffset.z);
         }
     } else {
         // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
@@ -247,6 +250,20 @@ void MainTask::checkGyroCalibration()
 }
 
 /*!
+Resets the PID preferences and the Balance Angle to FLT_MAX (which represents unset).
+*/
+void MainTask::resetPreferences()
+{
+    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
+        const std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
+        constexpr PIDF::PIDF_t pidFLT_MAX { FLT_MAX, FLT_MAX, FLT_MAX,FLT_MAX };
+        _preferences->putPID(pidName, pidFLT_MAX);
+    }
+    _preferences->putFloat(_motorPairController->getBalanceAngleName(), FLT_MAX);
+    Serial.printf("**** preferences reset\r\n");
+}
+
+/*!
 Loads the PID settings for the MotorPairController. Must be called *after* the MPC is created.
 */
 void MainTask::loadPreferences()
@@ -255,12 +272,7 @@ void MainTask::loadPreferences()
 
     // Set all the preferences to zero if they have not been set
     if (!_preferences->isSetPID()) {
-        for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-            std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
-            constexpr PIDF::PIDF_t pidZero { 0.0, 0.0, 0.0, 0.0 };
-             _preferences->putPID(pidName, pidZero);
-        }
-        Serial.printf("**** preferences set to zero\r\n");
+        resetPreferences();
     }
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
     if (pitchBalanceAngleDegrees != FLT_MAX) {
@@ -272,7 +284,7 @@ void MainTask::loadPreferences()
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
         const PIDF::PIDF_t pid = _preferences->getPID(pidName);
-        if (pid.kp != 0.0F) {
+        if (pid.kp != FLT_MAX) {
             _motorPairController->setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
             Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), pid.kp, pid.ki, pid.kd, pid.kf);
         }
@@ -291,6 +303,7 @@ void MainTask::setupTasks()
     static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
+    Serial.printf("\r\n**** AHRS_Task, core:%d, priority:%d, tick Interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
@@ -302,6 +315,7 @@ void MainTask::setupTasks()
     static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
+    Serial.printf("**** MPC_Task,  core:%d, priority:%d, tickInterval:%dms\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
 }
 
 /*!

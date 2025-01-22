@@ -32,10 +32,10 @@ PIDF::PIDF_t SV_Preferences::getPID(const std::string& name) const
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const PIDF::PIDF_t pid {
-        .kp = _preferences.getFloat((name + "_P").c_str(), 0.0F),
-        .ki = _preferences.getFloat((name + "_I").c_str(), 0.0F),
-        .kd = _preferences.getFloat((name + "_D").c_str(), 0.0F),
-        .kf = _preferences.getFloat((name + "_F").c_str(), 0.0F)
+        .kp = _preferences.getFloat((name + "_P").c_str(), FLT_MAX),
+        .ki = _preferences.getFloat((name + "_I").c_str(), FLT_MAX),
+        .kd = _preferences.getFloat((name + "_D").c_str(), FLT_MAX),
+        .kf = _preferences.getFloat((name + "_F").c_str(), FLT_MAX)
     };
 
     _preferences.end();
