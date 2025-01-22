@@ -19,7 +19,7 @@ static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calib
     int64_t accY = 0;
     int64_t accZ = 0;
 
-    const int count = 1000;
+    const int count = 2000;
     for (auto ii = 0; ii < count; ++ii) {
         delay(2);
         const xyz_int16_t gyro = ahrs.readGyroRaw();
@@ -101,7 +101,7 @@ void calibrateGyro([[maybe_unused]] AHRS& ahrs, [[maybe_unused]] SV_Preferences&
     M5.Lcd.printf("Starting  gyro calibration\r\n");
     M5.Lcd.printf("Please keep the robot\r\n");
     M5.Lcd.printf("still for 10 seconds\r\n\r\n");
-    delay(2000);
+    delay(3000);
 
 #if defined(M5_STACK) || defined(USE_IMU_MPU6886_DIRECT)
     calibrate(ahrs, preferences, calibrationType);
