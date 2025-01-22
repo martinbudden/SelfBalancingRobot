@@ -488,7 +488,11 @@ void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
     if (ahrsData.roll == FLT_MAX) {
         M5.Lcd.printf("%5.0F", ahrsData.pitch);
     } else {
-        M5.Lcd.printf("%5.0F ro:%5.0F ya:%5.0F", ahrsData.pitch, ahrsData.roll, ahrsData.yaw);
+        if (ahrsData.yaw == FLT_MAX) {
+            M5.Lcd.printf("%5.0F ro:%5.0F", ahrsData.pitch, ahrsData.roll);
+        } else {
+            M5.Lcd.printf("%5.0F ro:%5.0F ya:%5.0F", ahrsData.pitch, ahrsData.roll, ahrsData.yaw);
+        }
     }
 
     yPos += 20;
@@ -514,7 +518,7 @@ void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.setCursor(208, yPos);
     M5.Lcd.printf("%8.0F", mpcTelemetry.speedRightDPS);
     M5.Lcd.setCursor(208, yPos + 20);
-    M5.Lcd.printf("%5.0F", 60.0F * mpcTelemetry.speedDPS_Filtered / 360.0F);
+    M5.Lcd.printf("%8.0F", round(mpcTelemetry.speedDPS_Filtered * (1.0F/6.0F)));
 #else
     yPos = 190;
     M5.Lcd.setCursor(48, yPos);
