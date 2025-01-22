@@ -101,7 +101,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _PIDS[PITCH_ANGLE_DEGREES].setOutputSaturationValue(1.0F);
 
     _speedFilter.setAlpha(0.8F);
-    _PIDS[SPEED_DPS].setIntegralMax(1.0F);
+    //_PIDS[SPEED_DPS].setIntegralMax(1.0F);
 
     _PIDS[POSITION_DEGREES].setPID(positionPID_Default);
 

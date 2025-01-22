@@ -88,9 +88,11 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
         _newStickValuesAvailable = false;
         _receiver.mapControls(_throttleStick, _rollStick, _pitchStick, _yawStick);
 
-        _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
+        // SPEED_DPS setpoint is set later according to _controlMode
+
         // Note the negative multiplier
         _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(-_pitchStick * _pitchMaxAngleDegrees);
+
         // Note the negative multiplier, since pushing the yaw stick to the right results in a clockwise rotation, ie a negative yaw rate
         _PIDS[YAW_RATE_DPS].setSetpoint(-_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
     }
@@ -109,15 +111,18 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
         _speedRightDPS = _motors.getRightSpeed();
         _speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
     } else {
+        // For reference, at 420 steps per revolution, with a 100Hz (10ms) update rate, 1 step per update gives a speed of (360 * 1/420) * 100 = 85 dps
+        // With a 200Hz (5ms) update rate that is 170 DPS.
         const float speedMultiplier = 360.0F / (_motorStepsPerRevolution * deltaT);
         _speedLeftDPS = static_cast<float>(_encoderLeftDelta) * speedMultiplier;
         _speedRightDPS = static_cast<float>(_encoderRightDelta) * speedMultiplier;
 
         // encoders have discrete output and so are subject to digital noise
         // At a speed of 60rpm or 1rps with a 420 steps per revolution we have 420 steps per second,
-        // The MPC task runs at 100Hz or 200Hz, depending on build settings, so that is one or two steps per iteration
-        // So an error of one step is at least a 50% error. So we average over 8 iterations (40ms, or 80ms) to reduce this digital noise.
-        static FilterMovingAverage<8> speedMovingAverageFilter;
+        // If the  MPC task is running at 100Hz, that is four steps per iteration, so an error of 1 step is 25%
+        // If the  MPC task is running at 200Hz, that is two steps per iteration, so an error of 1 step is 50%
+        // So we average over 4 iterations to reduce this digital noise.
+        static FilterMovingAverage<4> speedMovingAverageFilter;
         float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
         speedDPS = speedMovingAverageFilter.update(speedDPS);
         // additionally apply IIR filter.
@@ -162,12 +167,10 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 #endif
 
     if (!motorsIsOn() || motorsIsDisabled()) { // [[unlikely]]
-        _outputs[PITCH_ANGLE_DEGREES] = 0.0F;
-        _PIDS[PITCH_ANGLE_DEGREES].resetIntegral();
-        _outputs[SPEED_DPS] = 0.0F;
-        _PIDS[SPEED_DPS].resetIntegral();
-        _outputs[YAW_RATE_DPS] = 0.0F;
-        _PIDS[YAW_RATE_DPS].resetIntegral();
+        for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
+            _outputs[ii] = 0.0F;
+            _PIDS[ii].resetIntegral();
+        }
 #if !defined(AHRS_RECORD_UPDATE_TIMES)
         YIELD_TASK();
         return;
@@ -175,13 +178,16 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     }
 
     // calculate _outputs[SPEED_DPS] according to the control mode.
-    _outputs[SPEED_DPS] = _PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
-    if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
+    if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
+        _PIDS[SPEED_DPS].setSetpoint(-_throttleStick);
+        _outputs[SPEED_DPS] = _PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
+    } else if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
+        _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
+        const float speedOutput = _PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
         // feed the speed update back into the pitchAngle PID and set _outputs[SPEED_DPS] to zero
-        _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(-_outputs[SPEED_DPS]);
+        _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(speedOutput);
         _outputs[SPEED_DPS] = 0.0F;
     } else if (_controlMode == CONTROL_MODE_POSITION) {
-        // NOTE: THIS IS EXPERIMENTAL AND NOT YET FULLY IMPLEMENTED
         updatePositionOutputs(deltaT);
     }
 
@@ -200,20 +206,22 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     _outputs[YAW_RATE_DPS] = _PIDS[YAW_RATE_DPS].update(yawRate, deltaT);
 }
 
+/*!
+Update the outputs using a position PID controller.
+*/
 void MotorPairController::updatePositionOutputs(float deltaT)
 {
     // NOTE: THIS IS EXPERIMENTAL AND NOT YET FULLY IMPLEMENTED
 #if defined(MOTORS_HAVE_ENCODERS)
-    #if true
     _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
-    #else
-    // experimental calculation of position using complementary filter of position and
-    const float positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
-    const float distanceDegrees = (positionDegrees - _positionDegrees);
-    constexpr float alpha = 0.9;
-    const float  speedEstimate = MotorPairBase::clip((_powerLeft + _powerRight) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
+#if false
+    // experimental calculation of position using complementary filter of position from encoders and position estimated from integrating power output
+    const float distanceDegrees = _positionDegrees - _positionDegreesPrevious;
+    _positionDegreesPrevious = _positionDegrees;
+    constexpr float alpha = 0.9F;
+    const float  speedEstimate = MotorPairBase::clip((_mixer.getPowerLeft() + _mixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
     _positionDegrees += alpha*distanceDegrees + (1.0F - alpha)*speedEstimate*deltaT;
-    #endif
+#endif
 #else
     _positionDegrees += _speedDPS * deltaT;
 #endif

@@ -12,17 +12,17 @@ namespace {// NOLINT(clang-diagnostic-implicit-int) false positive
 constexpr PIDF::PIDF_t pitchPID_Default                         { 0.0300,   0.0,    0.00020, 0.0 };
 constexpr PIDF::PIDF_t pitchPID_TelemetryScaleFactors           { 0.0001,   0.001,  0.00001, 0.1 };
 
-constexpr PIDF::PIDF_t yawRatePID_Default                       { 0.0,      0.0,    0.0,     1.00 };
-constexpr PIDF::PIDF_t yawRatePID_TelemetryScaleFactors         { 0.1,      1.0,    0.01,    0.01 };
+constexpr PIDF::PIDF_t yawRatePID_Default                       { 0.00,     0.00,   0.0,     1.00 };
+constexpr PIDF::PIDF_t yawRatePID_TelemetryScaleFactors         { 0.01,     0.01,   0.01,    0.01 };
 
-constexpr PIDF::PIDF_t speedPID_DefaultSerial                   { 2.0,      0.000,  0.0,     0.0 };
-constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsSerial     { 0.1,      0.001,  0.00001, 0.1 };
+constexpr PIDF::PIDF_t speedPID_DefaultSerial                   { 1.00,     0.00,   0.0,     0.0 };
+constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsSerial     { 0.01,     0.01,   0.00001, 0.1 };
 
-constexpr PIDF::PIDF_t speedPID_DefaultParallel                 { 0.30,     0.010,  0.0,     0.50 };
-constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.01,     0.001,  0.0001,  0.01 };
+constexpr PIDF::PIDF_t speedPID_DefaultParallel                 { 0.30,     1.00,   0.0,     0.00 };
+constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.01,     0.01,   0.0001,  0.01 };
 
-constexpr PIDF::PIDF_t positionPID_Default                      { 0.050,    0.0,    0.0,     0.0 };
-constexpr PIDF::PIDF_t positionPID_TelemetryScaleFactors        { 0.001,    1.0,    0.001,   0.1 };
+constexpr PIDF::PIDF_t positionPID_Default                      { 1.00,     0.00,   0.0,     0.0 };
+constexpr PIDF::PIDF_t positionPID_TelemetryScaleFactors        { 0.10,     0.01,   0.001,   0.1 };
 
 constexpr MotorPairController::ControlMode_t controlModeDefault = MotorPairController::CONTROL_MODE_PARALLEL_PIDS;
 

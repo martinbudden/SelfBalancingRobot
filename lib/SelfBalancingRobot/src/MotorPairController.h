@@ -113,6 +113,7 @@ private:
 
     float _positionSetpointDegrees {0.0}; //!< Position setpoint for CONTROL_MODE_POSITION
     float _positionDegrees {0.0}; //!< Position for CONTROL_MODE_POSITION
+    float _positionDegreesPrevious {0.0}; //!< Previous position for CONTROL_MODE_POSITION
 
     float _pitchBalanceAngleDegrees {0.0};
     float _pitchAngleDegreesPrevious {0.0};
