@@ -40,8 +40,8 @@ public:
 public:
     inline bool motorsIsOn() const { return _mixer.motorsIsOn(); }
     inline void motorsSwitchOff() { _mixer.motorsSwitchOff(); }
-    inline void motorsSwitchOn() { _mixer.motorsSwitchOn(); }
-    inline void motorsToggleOnOff() { _mixer.motorsToggleOnOff(); }
+    void motorsSwitchOn();
+    inline void motorsToggleOnOff() { if (motorsIsOn()) {motorsSwitchOff();} else {motorsSwitchOff();} }
     inline bool motorsIsDisabled() const { return _mixer.motorsIsDisabled(); }
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
 

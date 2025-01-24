@@ -81,6 +81,14 @@ void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& te
     telemetry.motorMaxSpeedDPS = _motorMaxSpeedDPS;
 }
 
+void MotorPairController::motorsSwitchOn()
+{
+    // don't allow motors to be switched on if the sensor fusion has not initialized
+    if (!_ahrs.sensorFusionFilterIsInitializing()) {
+        _mixer.motorsSwitchOn();
+    }
+}
+
 void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
 {
     // If new joystick values are available from the receiver, then map them to the range [-1.0, 1.0] and use them to update the setpoints.
