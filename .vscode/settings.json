@@ -32,6 +32,7 @@
         "DEADBAND",
         "DLPF",
         "drawpix",
+        "DRDY",
         "DSOX",
         "elif",
         "ESPNOW",
@@ -115,8 +116,10 @@
         "WXYZ",
         "XOUT",
         "Xtensa",
+        "YNEG",
         "YOUT",
         "Zipin",
+        "ZNEG",
         "ZOUT"
     ],
     "files.associations": {

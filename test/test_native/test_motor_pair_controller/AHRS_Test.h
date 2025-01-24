@@ -14,7 +14,7 @@ public:
 
 class IMU_Test : public IMU_Base {
 public:
-    IMU_Test() : IMU_Base(nullptr) {}
+    IMU_Test() : IMU_Base(XPOS_YPOS_ZPOS, nullptr) {}
 public:
     virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
     virtual void setAccOffset(const xyz_int16_t& accOffset) override;

@@ -2,14 +2,13 @@
 
 #include "IMU_BMI270.h"
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <esp32-hal.h>
 
 namespace { // use anonymous namespace to make items local to this translation unit
-constexpr float degreesToRadians {M_PI / 180.0};
-constexpr float ACC_16G_RES { 16.0 / 32768.0 };
 constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
-constexpr float GYRO_2000DPS_RES_RADIANS { degreesToRadians * GYRO_2000DPS_RES };
+constexpr float ACC_16G_RES { 16.0 / 32768.0 };
 } // end namespace
 
 
@@ -84,8 +83,8 @@ constexpr uint8_t REG_PWR_CTRL_ADDR         = 0x7D;
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
-IMU_BMI270::IMU_BMI270(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
-    IMU_Base(i2cMutex),
+IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
+    IMU_Base(axisOrder, i2cMutex),
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
@@ -124,16 +123,9 @@ void IMU_BMI270::init()
         _bus.writeByte(setting.reg, setting.value);
         delay(1);
     }
-}
-
-void IMU_BMI270::setGyroOffset(const xyz_int16_t& gyroOffset)
-{
-    _gyroOffset = gyroOffset;
-}
-
-void IMU_BMI270::setAccOffset(const xyz_int16_t& accOffset)
-{
-    _accOffset = accOffset;
+    _gyroResolutionDPS = GYRO_2000DPS_RES;
+    _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
+    _accResolution = ACC_16G_RES;
 }
 
 xyz_int16_t IMU_BMI270::readGyroRaw() const
@@ -147,18 +139,6 @@ xyz_int16_t IMU_BMI270::readGyroRaw() const
     return gyro;
 }
 
-xyz_t IMU_BMI270::readGyroRPS() const
-{
-    const gyroRPS_Acc_t gyroAcc = readGyroRPS_Acc();
-    return gyroAcc.gyroRPS;
-}
-
-xyz_t IMU_BMI270::readGyroDPS() const
-{
-    const gyroRPS_Acc_t gyroAcc = readGyroRPS_Acc();
-    return gyroAcc.gyroRPS * radiansToDegrees;
-}
-
 xyz_int16_t IMU_BMI270::readAccRaw() const
 {
     xyz_int16_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
@@ -170,12 +150,6 @@ xyz_int16_t IMU_BMI270::readAccRaw() const
     return acc;
 }
 
-xyz_t IMU_BMI270::readAcc() const
-{
-    const gyroRPS_Acc_t gyroAcc = readGyroRPS_Acc();
-    return gyroAcc.acc;
-}
-
 IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc() const
 {
     acc_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
@@ -184,79 +158,144 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc() const
     _bus.readBytes(REG_OUTX_L_ACC, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
-    return gyroRPS_AccFromRaw(data, _gyroOffset, _accOffset);
+    return gyroRPS_AccFromRaw(data);
 }
 
-IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
+IMU_BMI270::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const
 {
+#if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
     return gyroRPS_Acc_t {
-// NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
-#if defined(IMU_X_AXIS_FRONT_Y_AXIS_LEFT)
         .gyroRPS = {
-            .x = -(data.gyro.y - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
-            .y =  (data.gyro.x - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
-            .z =  (data.gyro.z - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
+            .x = -(data.gyro.y - _gyroOffset.y) * _gyroResolutionRPS,
+            .y =  (data.gyro.x - _gyroOffset.x) * _gyroResolutionRPS,
+            .z =  (data.gyro.z - _gyroOffset.z) * _gyroResolutionRPS
         },
         .acc = {
-            .x = -(data.acc.y - accOffset.y) * ACC_16G_RES,
-            .y =  (data.acc.x - accOffset.x) * ACC_16G_RES,
-            .z =  (data.acc.z - accOffset.z) * ACC_16G_RES
+            .x = -(data.acc.y - _accOffset.y)* _accResolution,
+            .y =  (data.acc.x - _accOffset.x)* _accResolution,
+            .z =  (data.acc.z - _accOffset.z)* _accResolution
         }
-#elif defined(IMU_X_AXIS_BACK_Y_AXIS_RIGHT)
-        .gyroRPS = {
-            .x =  (data.gyro.y - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
-            .y = -(data.gyro.x - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
-            .z =  (data.gyro.z - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
-        },
-        .acc = {
-            .x =  (data.acc.y - accOffset.y) * ACC_16G_RES,
-            .y = -(data.acc.x - accOffset.x) * ACC_16G_RES,
-            .z =  (data.acc.z - accOffset.z) * ACC_16G_RES)
-        }
-#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
-        .gyroRPS = {
-            .x =  (data.gyro.x - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
-            .y =  (data.gyro.z - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS,
-            .z = -(data.gyro.y - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS
-        },
-        .acc = {
-            .x =  (data.acc.x - accOffset.x) * ACC_16G_RES,
-            .y =  (data.acc.z - accOffset.z) * ACC_16G_RES,
-            .z = -(data.acc.y - accOffset.y) * ACC_16G_RES
-        }
-#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_FRONT)
-        .gyroRPS = {
-            .x = (data.gyro.x - gyroOffset.x) * GYRO_2000DPS_RES_RADIANS,
-            .y = (data.gyro.y - gyroOffset.y) * GYRO_2000DPS_RES_RADIANS,
-            .z = (data.gyro.z - gyroOffset.z) * GYRO_2000DPS_RES_RADIANS
-        },
-        .acc = {
-            .x  = (data.acc.x - accOffset.x) * ACC_16G_RES,
-            .y  = (data.acc.y - accOffset.y) * ACC_16G_RES,
-            .z  = (data.acc.z - accOffset.z) * ACC_16G_RES
-        }
-#else
-    static_assert(false && "IMU orientation not implemented for BMI270.");
-#endif
-// NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     };
-}
+#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
+    return gyroRPS_Acc_t {
+        .gyroRPS = {
+            .x =  (data.gyro.y - _gyroOffset.y) * _gyroResolutionRPS,
+            .y = -(data.gyro.x - _gyroOffset.x) * _gyroResolutionRPS,
+            .z =  (data.gyro.z - _gyroOffset.z) * _gyroResolutionRPS
+        },
+        .acc = {
+            .x =  (data.acc.y - _accOffset.y)* _accResolution,
+            .y = -(data.acc.x - _accOffset.x)* _accResolution,
+            .z =  (data.acc.z - _accOffset.z)* _accResolution)
+        }
+    };
+#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
+    return gyroRPS_Acc_t {
+        .gyroRPS = {
+            .x =  (data.gyro.x - _gyroOffset.x) * _gyroResolutionRPS,
+            .y =  (data.gyro.z - _gyroOffset.z) * _gyroResolutionRPS,
+            .z = -(data.gyro.y - _gyroOffset.y) * _gyroResolutionRPS
+        },
+        .acc = {
+            .x =  (data.acc.x - _accOffset.x)* _accResolution,
+            .y =  (data.acc.z - _accOffset.z)* _accResolution,
+            .z = -(data.acc.y - _accOffset.y)* _accResolution
+        }
+    };
+#elif defined(IMU_BUILD_XPOS_YPOS_ZPOS)
+    return gyroRPS_Acc_t {
+        .gyroRPS = {
+            .x = (data.gyro.x - _gyroOffset.x) * _gyroResolutionRPS,
+            .y = (data.gyro.y - _gyroOffset.y) * _gyroResolutionRPS,
+            .z = (data.gyro.z - _gyroOffset.z) * _gyroResolutionRPS
+        },
+        .acc = {
+            .x  = (data.acc.x - _accOffset.x)* _accResolution,
+            .y  = (data.acc.y - _accOffset.y)* _accResolution,
+            .z  = (data.acc.z - _accOffset.z)* _accResolution
+        }
+    };
+#else
+    // Axis order mapping done at run-time
+    const gyroRPS_Acc_t gyroRPS_Acc {
+        .gyroRPS = {
+            .x =  (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
+            .y =  (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y) * _gyroResolutionRPS,
+            .z =  (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - _gyroOffset.z) * _gyroResolutionRPS
+        },
+        .acc = {
+            .x =  (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - _accOffset.x) * _accResolution,
+            .y =  (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - _accOffset.y) * _accResolution,
+            .z =  (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - _accOffset.z) * _accResolution
+        }
+    };
+    switch (_axisOrder) {
+    case XPOS_YPOS_ZPOS:
+        return gyroRPS_Acc;
+        break;
+    case YNEG_XPOS_ZPOS:
+        return gyroRPS_Acc_t {
+            .gyroRPS = {
+                .x = -gyroRPS_Acc.gyroRPS.y,
+                .y =  gyroRPS_Acc.gyroRPS.x,
+                .z =  gyroRPS_Acc.gyroRPS.z
+            },
+            .acc = {
+                .x = -gyroRPS_Acc.acc.y,
+                .y =  gyroRPS_Acc.acc.x,
+                .z =  gyroRPS_Acc.acc.z
+            }
+        };
+        break;
+    case XNEG_YNEG_ZPOS:
+        return gyroRPS_Acc_t {
+            .gyroRPS = {
+                .x = -gyroRPS_Acc.gyroRPS.x,
+                .y = -gyroRPS_Acc.gyroRPS.y,
+                .z =  gyroRPS_Acc.gyroRPS.z
+            },
+            .acc = {
+                .x = -gyroRPS_Acc.acc.x,
+                .y = -gyroRPS_Acc.acc.y,
+                .z =  gyroRPS_Acc.acc.z
+            }
+        };
+        break;
+    case YPOS_XNEG_ZPOS:
+        return gyroRPS_Acc_t {
+            .gyroRPS = {
+                .x =  gyroRPS_Acc.gyroRPS.y,
+                .y = -gyroRPS_Acc.gyroRPS.x,
+                .z =  gyroRPS_Acc.gyroRPS.z
+            },
+            .acc = {
+                .x =  gyroRPS_Acc.acc.y,
+                .y = -gyroRPS_Acc.acc.x,
+                .z =  gyroRPS_Acc.acc.z
+            }
+        };
+        break;
+    case XPOS_ZPOS_YNEG:
+        return gyroRPS_Acc_t {
+            .gyroRPS = {
+                .x =  gyroRPS_Acc.gyroRPS.x,
+                .y =  gyroRPS_Acc.gyroRPS.z,
+                .z = -gyroRPS_Acc.gyroRPS.y
+            },
+            .acc = {
+                .x = -gyroRPS_Acc.acc.z,
+                .y =  gyroRPS_Acc.acc.z,
+                .z = -gyroRPS_Acc.acc.y
+            }
+        };
+        break;
+    default:
+        assert(false && "IMU axis order not implemented");
+        break;
+    } // end switch
 
-/*!
-It seems the LSM303AGR does not properly support bulk reading from the FIFO.
-*/
-int  IMU_BMI270::readFIFO_ToBuffer()
-{
-    return 0;
-}
-
-
-IMU_Base::gyroRPS_Acc_t IMU_BMI270::readFIFO_Item(size_t index)
-{
-    (void)index;
-
-    gyroRPS_Acc_t gyroAcc {};
-    return gyroAcc;
+    return gyroRPS_Acc;
+#endif
 }
 
 #endif

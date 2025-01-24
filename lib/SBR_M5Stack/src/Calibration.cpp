@@ -9,7 +9,7 @@
 #include <SV_Preferences.h>
 
 
-#if !defined(M5_UNIFIED) || defined(USE_IMU_MPU6886_DIRECT)
+#if !defined(M5_UNIFIED) || defined(USE_IMU_MPU6886)
 static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrationType)
 {
     int64_t gyroX = 0;
@@ -103,7 +103,7 @@ void calibrateGyro([[maybe_unused]] AHRS& ahrs, [[maybe_unused]] SV_Preferences&
     M5.Lcd.printf("still for 10 seconds\r\n\r\n");
     delay(3000);
 
-#if defined(M5_STACK) || defined(USE_IMU_MPU6886_DIRECT)
+#if defined(M5_STACK) || defined(USE_IMU_MPU6886)
     calibrate(ahrs, preferences, calibrationType);
 #elif defined(M5_UNIFIED)
     calibrate();

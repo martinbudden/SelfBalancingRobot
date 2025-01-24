@@ -2,7 +2,6 @@
 
 #include <I2C.h>
 #include <IMU_Base.h>
-#include <xyz_int16_type.h>
 
 
 class  IMU_BMI270 : public IMU_Base {
@@ -23,26 +22,16 @@ public:
     };
 #pragma pack(pop)
 public:
-    IMU_BMI270(uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
-    IMU_BMI270(uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_BMI270(SDA_pin, SCL_pin, nullptr) {}
+    IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
+    IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_BMI270(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     void init();
 public:
-    virtual void setGyroOffset(const xyz_int16_t& gyroOffset) override;
-    virtual void setAccOffset(const xyz_int16_t& accOffset) override;
     virtual xyz_int16_t readGyroRaw() const override;
     virtual xyz_int16_t readAccRaw() const override;
 
-    virtual xyz_t readGyroRPS() const override;
-    virtual xyz_t readGyroDPS() const override;
-    virtual xyz_t readAcc() const override;
     virtual gyroRPS_Acc_t readGyroRPS_Acc() const override;
-
-    virtual int readFIFO_ToBuffer() override;
-    virtual gyroRPS_Acc_t  readFIFO_Item(size_t index) override;
 private:
-    static gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset);
+    gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const;
 private:
     I2C _bus; //!< Serial Communication Bus interface, can be either I2C or SPI
-    xyz_int16_t _accOffset {};
-    xyz_int16_t _gyroOffset {};
 };

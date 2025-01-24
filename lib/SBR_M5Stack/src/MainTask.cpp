@@ -60,7 +60,7 @@ enum { MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
 
 
 #if !defined(MPC_TASK_TICK_INTERVAL_MILLISECONDS)
-#if defined(USE_IMU_MPU6886_DIRECT)
+#if defined(USE_IMU_MPU6886)
     enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
 #else
     enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TAsK must be set to run slower.
@@ -189,18 +189,18 @@ void MainTask::setupAHRS(void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
 #if defined(M5_STACK)
-#if defined(USE_IMU_MPU6886_DIRECT)
-    static IMU_MPU6886 imuSensor(IMU_MPU6886_SDA_PIN, IMU_MPU6886_SCL_PIN, i2cMutex);
+#if defined(USE_IMU_MPU6886)
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #else
-    static IMU_M5_STACK imuSensor(i2cMutex); // NOLINT(misc-const-correctness) false positive
+    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex); // NOLINT(misc-const-correctness) false positive
 #endif
 #elif defined(M5_UNIFIED)
-#if defined(USE_IMU_MPU6886_DIRECT)
-    static IMU_MPU6886 imuSensor(M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex); // NOLINT(misc-const-correctness) false positive
+#if defined(USE_IMU_MPU6886)
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex); // NOLINT(misc-const-correctness) false positive
 #elif defined(USE_IMU_BMI270)
-    static IMU_M5_UNIFIED imuSensor(i2cMutex);
+    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #else
-    static IMU_M5_UNIFIED imuSensor(i2cMutex);
+    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #endif
 #endif
 
@@ -226,8 +226,8 @@ void MainTask::setupAHRS(void* i2cMutex)
 void MainTask::checkGyroCalibration()
 {
     // Set the gyro offsets from non-volatile storage.
-#if defined(M5_STACK) || defined(USE_IMU_MPU6886_DIRECT)
-    // For M5_STACK and USE_IMU_MPU6886_DIRECT, the gyro offsets are stored in preferences.
+#if defined(M5_STACK) || defined(USE_IMU_MPU6886)
+    // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.
     xyz_int16_t gyroOffset {};
     if (_preferences->getGyroOffset(&gyroOffset)) {
         _ahrs->setGyroOffset(gyroOffset);
@@ -303,7 +303,7 @@ void MainTask::setupTasks()
     static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
-    Serial.printf("\r\n**** AHRS_Task, core:%d, priority:%d, tick Interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
+    Serial.printf("\r\n**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
@@ -315,7 +315,7 @@ void MainTask::setupTasks()
     static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
-    Serial.printf("**** MPC_Task,  core:%d, priority:%d, tickInterval:%dms\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
+    Serial.printf("**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
 }
 
 /*!

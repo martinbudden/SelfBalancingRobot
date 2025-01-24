@@ -1,13 +1,16 @@
 #if defined(M5_STACK)
 
 #include "IMU_M5Stack.h"
-#include <IMU_MPU6886.h>
 #include <M5Stack.h>
-#include <xyz_int16_type.h>
+
+namespace { // use anonymous namespace to make items local to this translation unit
+constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
+constexpr float ACC_8G_RES { 8.0 / 32768.0 };
+} // end namespace
 
 
-IMU_M5_STACK::IMU_M5_STACK(void* i2cMutex) :
-    IMU_Base(i2cMutex)
+IMU_M5_STACK::IMU_M5_STACK(axis_order_t axisOrder, void* i2cMutex) :
+    IMU_Base(axisOrder, i2cMutex)
 {
     // Set up FIFO for IMU
     // IMU data frequency is 500Hz
@@ -15,16 +18,9 @@ IMU_M5_STACK::IMU_M5_STACK(void* i2cMutex) :
     M5.IMU.setFIFOEnable(true);
     M5.IMU.RestFIFO();
     i2cSemaphoreGive();
-}
-
-void IMU_M5_STACK::setAccOffset(const xyz_int16_t& accOffset)
-{
-    _accOffset = accOffset;
-}
-
-void IMU_M5_STACK::setGyroOffset(const xyz_int16_t& gyroOffset)
-{
-    _gyroOffset = gyroOffset;
+    _gyroResolutionDPS = GYRO_2000DPS_RES;
+    _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
+    _accResolution = ACC_8G_RES;
 }
 
 xyz_int16_t IMU_M5_STACK::readAccRaw() const
@@ -117,66 +113,79 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readFIFO_Item(size_t index)
 {
     const IMU_MPU6886::acc_temperature_gyro_data_t* imu_data = reinterpret_cast<IMU_MPU6886::acc_temperature_gyro_data_t*>(&_fifoBuffer[0]); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     const IMU_MPU6886::acc_temperature_gyro_data_t& imuData = imu_data[index]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    const gyroRPS_Acc_t gyroAcc = IMU_M5_STACK::gyroRPS_AccFromRaw(imuData, _gyroOffset, _accOffset);
+    const gyroRPS_Acc_t gyroAcc = IMU_M5_STACK::gyroRPS_AccFromRaw(imuData);
 
     return gyroAcc;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const IMU_MPU6886::acc_temperature_gyro_data_t& data, const xyz_int16_t& gyroOffset, const xyz_int16_t& accOffset)
+IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const IMU_MPU6886::acc_temperature_gyro_data_t& data) const
 {
-    static constexpr float ACC_8G_RES { 8.0 / 32768.0 };
-    static constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
-
+#if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
     return gyroRPS_Acc_t {
-// NOLINTBEGIN(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions) avoid "narrowing conversion from int to float" warnings
-#if defined(IMU_X_AXIS_FRONT_Y_AXIS_LEFT)
         .gyroRPS {
-            .x = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
-            .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
-            .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
+            .x = - _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y),
+            .y =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x),
+            .z =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - _gyroOffset.z)
         },
         .acc {
-            .x = -ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
+            .x = -_accResolution * static_cast<float>(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - _accOffset.y),
+            .y =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - _accOffset.x),
+            .z =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - _accOffset.z)
         }
-#elif defined(IMU_X_AXIS_BACK_Y_AXIS_RIGHT)
-        .gyroRPS {
-            .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
-            .y = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
-            .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
-        },
-        .acc {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .y = -ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
-        }
-#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
-        .gyroRPS {
-            .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
-            .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z),
-            .z = -degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y)
-        },
-        .acc {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z),
-            .z = -ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y)
-        }
-#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_FRONT)
-        .gyroRPS {
-            .x =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - gyroOffset.x),
-            .y =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - gyroOffset.y),
-            .z =  degreesToRadians * GYRO_2000DPS_RES * (static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - gyroOffset.z)
-        },
-        .acc {
-            .x =  ACC_8G_RES * (static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - accOffset.x),
-            .y =  ACC_8G_RES * (static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - accOffset.y),
-            .z =  ACC_8G_RES * (static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - accOffset.z)
-        }
-#else
-    static_assert(false && "IMU orientation not implemented for IMU_M5Stack.");
-#endif
-// NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
     };
+#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
+    return gyroRPS_Acc_t {
+        .gyroRPS {
+            .x =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y),
+            .y = - _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x),
+            .z =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - _gyroOffset.z)
+        },
+        .acc {
+            .x =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - _accOffset.y),
+            .y = -_accResolution * static_cast<float>(static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - _accOffset.x),
+            .z =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - _accOffset.z)
+        }
+    };
+#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
+    return gyroRPS_Acc_t {
+        .gyroRPS {
+            .x =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x),
+            .y =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - _gyroOffset.z),
+            .z = - _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y)
+        },
+        .acc {
+            .x =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - _accOffset.x),
+            .y =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - _accOffset.z),
+            .z = -_accResolution * static_cast<float>(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - _accOffset.y)
+        }
+#elif defined(IMU_BUILD_XPOS_YPOS_ZPOS)
+    return gyroRPS_Acc_t {
+        .gyroRPS {
+            .x =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x),
+            .y =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y),
+            .z =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - _gyroOffset.z)
+        },
+        .acc {
+            .x =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - _accOffset.x),
+            .y =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - _accOffset.y),
+            .z =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - _accOffset.z)
+        }
+    };
+#else
+    const xyz_t gyroRPS  {
+        .x =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x),
+        .y =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y),
+        .z =   _gyroResolutionRPS * static_cast<float>(static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - _gyroOffset.z)
+    };
+    const xyz_t acc {
+        .x =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_x_h << 8) | data.acc_x_l) - _accOffset.x),
+        .y =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_y_h << 8) | data.acc_y_l) - _accOffset.y),
+        .z =  _accResolution * static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8) | data.acc_z_l) - _accOffset.z)
+    };
+    return gyroRPS_Acc_t {
+        .gyroRPS = mapAxes(gyroRPS),
+        .acc = mapAxes(acc)
+    };
+#endif
 }
 #endif

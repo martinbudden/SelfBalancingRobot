@@ -2,31 +2,40 @@
 #include <M5Unified.h>
 
 #include <IMU_M5Unified.h>
+#include <cassert>
 
-IMU_M5_UNIFIED::IMU_M5_UNIFIED(void* i2cMutex) :
-    IMU_Base(i2cMutex)
+IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex) :
+    IMU_Base(axisOrder, i2cMutex)
 {
     i2cSemaphoreTake();
-#if defined(IMU_X_AXIS_FRONT_Y_AXIS_LEFT)
+#if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos);
-#elif defined(IMU_X_AXIS_BACK_Y_AXIS_RIGHT)
+#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_pos);
-#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_DOWN)
+#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg);
-#elif defined(IMU_X_AXIS_RIGHT_Y_AXIS_FRONT)
+#elif defined(IMU_BUILD_XPOS_YPOS_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos);
 #else
-    static_assert(false && "IMU orientation not implemented for M5Unified.");
+    switch (axisOrder) {
+    case XPOS_YPOS_ZPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos);
+        break;
+    case YNEG_XPOS_ZPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos);
+        break;
+    case YPOS_XNEG_ZPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_pos);
+        break;
+    case XPOS_ZPOS_YNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg);
+        break;
+    default:
+        assert(false && "IMU orientation not implemented for M5Unified.");
+        break;
+    }
 #endif
     i2cSemaphoreGive();
-}
-
-void IMU_M5_UNIFIED::setAccOffset(const xyz_int16_t& accOffset)
-{
-}
-
-void IMU_M5_UNIFIED::setGyroOffset(const xyz_int16_t& gyroOffset)
-{
 }
 
 xyz_int16_t IMU_M5_UNIFIED::readAccRaw() const
@@ -106,7 +115,7 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_UNIFIED::readGyroRPS_Acc() const
     i2cSemaphoreGive();
 
     const m5::IMU_Class::imu_data_t& data = M5.Imu.getImuData();
-    gyroRPS_Acc_t gyroAcc {
+    return gyroRPS_Acc_t {
         // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
         .gyroRPS = {
             .x = data.gyro.x * degreesToRadians,
@@ -120,19 +129,6 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_UNIFIED::readGyroRPS_Acc() const
         }
         // NOLINTEND(cppcoreguidelines-pro-type-union-access)
     };
-    return gyroAcc;
 }
 
-int IMU_M5_UNIFIED::readFIFO_ToBuffer()
-{
-    return 0;
-}
-
-IMU_Base::gyroRPS_Acc_t IMU_M5_UNIFIED::readFIFO_Item(size_t index)
-{
-    (void)index;
-
-    gyroRPS_Acc_t gyroAcc {};
-    return gyroAcc;
-}
 #endif
