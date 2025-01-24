@@ -179,8 +179,8 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 
     // calculate _outputs[SPEED_DPS] according to the control mode.
     if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-        _PIDS[SPEED_DPS].setSetpoint(-_throttleStick);
-        _outputs[SPEED_DPS] = _PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
+        _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
+        _outputs[SPEED_DPS] = -_PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     } else if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
         _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
         const float speedOutput = _PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
