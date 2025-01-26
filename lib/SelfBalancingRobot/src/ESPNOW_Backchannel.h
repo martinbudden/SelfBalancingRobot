@@ -29,7 +29,7 @@ public:
     bool update();
 private:
     inline esp_err_t addToTransceiverAsSecondaryPeer(const uint8_t* macAddress = nullptr) { return _transceiver.addSecondaryPeer(_received_data, macAddress); }
-    inline esp_err_t sendData(uint8_t* data, uint16_t len) const {return _transceiver.sendDataSecondary(data, len);}
+    inline esp_err_t sendData(const uint8_t* data, size_t len) const {return _transceiver.sendDataSecondary(data, len);}
     void packetControl(const CommandPacketControl& packet);
     void packetRequestData(const CommandPacketRequestData& packet);
     void packetSetPID(const CommandPacketSetPID& packet);

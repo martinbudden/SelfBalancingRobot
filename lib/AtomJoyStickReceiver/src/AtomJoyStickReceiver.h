@@ -20,7 +20,7 @@ private:
     enum { THROTTLE = 0, ROLL = 1, PITCH = 2, YAW = 3, CONTROL_COUNT = 4 };
 public:
     inline ESPNOW_Transceiver& getTransceiver() { return _transceiver; }
-    inline esp_err_t sendData(uint8_t* data, uint16_t len) const {return _transceiver.sendData(data, len);}
+    inline esp_err_t sendData(const uint8_t* data, size_t len) const {return _transceiver.sendData(data, len);}
     inline bool isPrimaryPeerMacAddressSet() const { return _transceiver.isPrimaryPeerMacAddressSet(); }
     inline const uint8_t* getPrimaryPeerMacAddress() const { return _transceiver.getPrimaryPeerMacAddress(); }
     inline bool isPacketEmpty() const { return _received_data.len == 0 ? true : false;  }

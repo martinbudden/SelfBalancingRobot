@@ -30,6 +30,8 @@ void ESPNOW_Transceiver::onDataSent(const uint8_t* macAddress, esp_now_send_stat
 Callback when data is received.
 
 This runs in the high priority WiFi task, and so should not perform any lengthy operations.
+
+Parameter `len` is `int` rather than `size_t` to match `esp_now_recv_cb_t` callback signature.
 */
 void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len)
 {
@@ -186,7 +188,7 @@ esp_err_t ESPNOW_Transceiver::setPrimaryPeerMacAddress(const uint8_t* macAddress
     return err;
 }
 
-bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAddress, const uint8_t* data, int len) // NOLINT(readability-make-member-function-const) false positive
+bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAddress, const uint8_t* data, size_t len) // NOLINT(readability-make-member-function-const) false positive
 {
     esp_now_peer_info_t peerInfo;
     const esp_err_t err = esp_now_get_peer(macAddress, &peerInfo);
@@ -219,7 +221,7 @@ bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAddress, con
     return false;
 }
 
-esp_err_t ESPNOW_Transceiver::sendData(uint8_t* data, int len) const
+esp_err_t ESPNOW_Transceiver::sendData(const uint8_t* data, size_t len) const
 {
     //const uint8_t* ma = _transmitMacAddress;
     //Serial.printf("sendData MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n", ma[0], ma[1], ma[2], ma[3], ma[4], ma[5]);
@@ -233,7 +235,7 @@ esp_err_t ESPNOW_Transceiver::sendData(uint8_t* data, int len) const
     return err;
 }
 
-esp_err_t ESPNOW_Transceiver::sendDataSecondary(uint8_t* data, int len) const
+esp_err_t ESPNOW_Transceiver::sendDataSecondary(const uint8_t* data, size_t len) const
 {
     //const uint8_t* ma = _peerData[SECONDARY_PEER].peer_info.peer_addr;
     //Serial.printf("sendDataSecondary MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n", ma[0], ma[1], ma[2], ma[3], ma[4], ma[5]);
