@@ -8,7 +8,7 @@ void tearDown() {
 }
 
 void test_mpu_6886() {
-    xyz_int16_t input { .x =70, .y = -70, .z = 400 };
+    IMU_Base::xyz_int32_t input { .x =70, .y = -70, .z = 400 };
     IMU_MPU6886::mems_sensor_data_t output = IMU_MPU6886::gyroOffsetFromXYZ(input);
 
     TEST_ASSERT_EQUAL_UINT8(0xFF, output.x_h);

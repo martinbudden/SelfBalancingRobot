@@ -2,8 +2,6 @@
 
 #include "TaskBase.h"
 #include <Quaternion.h>
-#include <xyz_int16_type.h>
-#include <xyz_type.h>
 
 #include <cassert>
 #include <cfloat>
@@ -15,6 +13,8 @@
 #if defined(AHRS_RECORD_TIMES_CHECKS)
 #include <esp32-hal.h>
 #endif
+#include <xyz_type.h>
+
 
 class IMU_Base;
 class IMU_FiltersBase;
@@ -42,10 +42,11 @@ private:
     AHRS(AHRS&&) = delete;
     AHRS& operator=(AHRS&&) = delete;
 public:
-    void setGyroOffset(const xyz_int16_t& gyroOffset);
-    void setAccOffset(const xyz_int16_t& accOffset);
-    xyz_int16_t readGyroRaw() const;
-    xyz_int16_t readAccRaw() const;
+    void setGyroOffset(int32_t x, int32_t y, int32_t z);
+    void setAccOffset(int32_t x, int32_t y, int32_t z);
+    void readGyroRaw(int32_t& x, int32_t& y, int32_t& z) const;
+    void readAccRaw(int32_t& x, int32_t& y, int32_t& z) const;
+    int32_t getAccOneG_Raw() const;
 
     data_t getAhrsDataUsingLock(bool& updatedSinceLastRead) const;
     data_t getAhrsDataForInstrumentationUsingLock() const;
@@ -89,7 +90,7 @@ private:
     uint32_t _imuDataReadyCount {0}; //<! data ready count, used in interrupt service routine
 
     // instrumentation member data
-    uint32_t _fifoCount {0};
+    size_t _fifoCount {0};
     uint32_t _timeCheck0 {0};
     uint32_t _timeChecksMicroSeconds[TIME_CHECKS_COUNT + 1] {};
 #if defined(AHRS_RECORD_TIMES_CHECKS)

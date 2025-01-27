@@ -19,55 +19,56 @@ static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calib
     int64_t accY = 0;
     int64_t accZ = 0;
 
-    const int count = 2000;
+    int32_t x {};
+    int32_t y {};
+    int32_t z {};
+
+    const int count = 50;
     for (auto ii = 0; ii < count; ++ii) {
         delay(2);
-        const xyz_int16_t gyro = ahrs.readGyroRaw();
-        gyroX += gyro.x;
-        gyroY += gyro.y;
-        gyroZ += gyro.z;
-        const xyz_int16_t acc = ahrs.readAccRaw();
-        accX += acc.x;
-        accY += acc.y;
-        accZ += acc.z;
+        ahrs.readGyroRaw(x, y, z);
+        gyroX += x;
+        gyroY += y;
+        gyroZ += z;
+        ahrs.readAccRaw(x, y, z);
+        accX += x;
+        accY += y;
+        accZ += z;
     }
 
-    const xyz_int16_t gyroOffset {
-        .x = static_cast<int16_t>(gyroX / count),
-        .y = static_cast<int16_t>(gyroY / count),
-        .z = static_cast<int16_t>(gyroZ / count),
-    };
+    const auto gyroOffset_x = static_cast<int32_t>(gyroX / count);
+    const auto gyroOffset_y = static_cast<int32_t>(gyroY / count);
+    const auto gyroOffset_z = static_cast<int32_t>(gyroZ / count);
 
-    xyz_int16_t accOffset {
-        .x = static_cast<int16_t>(accX / count),
-        .y = static_cast<int16_t>(accY / count),
-        .z = static_cast<int16_t>(accZ / count),
-    };
-    constexpr int16_t oneG = 4096;
-    constexpr int16_t halfG = 2048;
-    if (accOffset.x > halfG) {
-        accOffset.x -= oneG;
-    } else if (accOffset.x < - halfG) {
-        accOffset.x += oneG;
-    } else if (accOffset.y > halfG) {
-        accOffset.y -= oneG;
-    } else if (accOffset.y < - halfG) {
-        accOffset.y += oneG;
-    } else if (accOffset.z > halfG) {
-        accOffset.z -= oneG;
-    } else if (accOffset.z < - halfG) {
-        accOffset.z += oneG;
+    auto accOffset_x = static_cast<int32_t>(accX / count);
+    auto accOffset_y = static_cast<int32_t>(accY / count);
+    auto accOffset_z = static_cast<int32_t>(accZ / count);
+
+    const int32_t oneG = ahrs.getAccOneG_Raw();
+    const int32_t halfG = oneG / 2;
+    if (accOffset_x > halfG) {
+        accOffset_x -= oneG;
+    } else if (accOffset_x < - halfG) {
+        accOffset_x += oneG;
+    } else if (accOffset_y > halfG) {
+        accOffset_y -= oneG;
+    } else if (accOffset_y < - halfG) {
+        accOffset_y += oneG;
+    } else if (accOffset_z > halfG) {
+        accOffset_z -= oneG;
+    } else if (accOffset_z < - halfG) {
+        accOffset_z += oneG;
     }
 
     if (M5.Lcd.width() > 300) {
         M5.Lcd.printf("gyro offsets\r\n");
-        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", gyroOffset.x, gyroOffset.y, gyroOffset.z);
+        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", gyroOffset_x, gyroOffset_y, gyroOffset_z);
         M5.Lcd.printf("acc offsets\r\n");
-        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", accOffset.x, accOffset.y, accOffset.z);
+        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", accOffset_x, accOffset_y, accOffset_z);
     }
-    preferences.putGyroOffset(gyroOffset);
+    preferences.putGyroOffset(gyroOffset_x, gyroOffset_y, gyroOffset_z);
     if (calibrationType == CALIBRATE_ACC_AND_GYRO) {
-        preferences.putAccOffset(accOffset);
+        preferences.putAccOffset(accOffset_x, accOffset_y, accOffset_z);
     }
 }
 
@@ -77,7 +78,7 @@ static void calibrate()
     // Strength of the calibration operation;
     // 0: disables calibration.
     // 1 is weakest and 255 is strongest.
-    enum { CALIBRATION_STRENGTH = 64 };
+    enum { CALIBRATION_STRENGTH = 128 };
     M5.Imu.setCalibration(0, CALIBRATION_STRENGTH, 0); // just calibrate the gyro
     for (auto ii = 0; ii < 10; ++ii) {
         M5.Imu.update();

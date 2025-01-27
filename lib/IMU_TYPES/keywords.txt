@@ -27,7 +27,6 @@ calculateYawDegrees     KEYWORD2
 #######################################
 
 xyz_t                   KEYWORD3
-xyz_int16_t             KEYWORD3
 
 
 #######################################

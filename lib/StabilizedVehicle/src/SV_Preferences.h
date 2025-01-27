@@ -3,7 +3,6 @@
 #include <PIDF.h>
 #include <Preferences.h>
 #include <string>
-#include <xyz_int16_type.h>
 
 
 class SV_Preferences {
@@ -22,11 +21,13 @@ public:
     float getFloat(const std::string& name) const;
     void putFloat(const std::string& name, float value);
 
-    bool getAccOffset(xyz_int16_t* accOffset) const;
-    void putAccOffset(const xyz_int16_t& accOffset);
+    void removeAccOffset();
+    bool getAccOffset(int32_t& x, int32_t& y, int32_t& z) const;
+    void putAccOffset(int32_t x, int32_t y, int32_t z);
 
-    bool getGyroOffset(xyz_int16_t* gyroOffset) const;
-    void putGyroOffset(const xyz_int16_t& gyroOffset);
+    void removeGyroOffset();
+    bool getGyroOffset(int32_t& x, int32_t& y, int32_t& z) const;
+    void putGyroOffset(int32_t x, int32_t y, int32_t z);
 
     void getMacAddress(uint8_t* macAddress, const std::string& name) const;
     void putMacAddress(const std::string& name, const uint8_t* macAddress);

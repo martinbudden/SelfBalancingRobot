@@ -10,19 +10,24 @@ IMU_Base::IMU_Base(axis_order_t axisOrder, [[maybe_unused]] void* i2cMutex) :
 {
 }
 
-void IMU_Base::setGyroOffset(const xyz_int16_t& gyroOffset)
+void IMU_Base::setGyroOffset(const xyz_int32_t& gyroOffset)
 {
     _gyroOffset = gyroOffset;
 }
 
-void IMU_Base::setAccOffset(const xyz_int16_t& accOffset)
+void IMU_Base::setAccOffset(const xyz_int32_t& accOffset)
 {
     _accOffset = accOffset;
 }
 
+int32_t IMU_Base::getAccOneG_Raw() const
+{
+    return 4096;
+}
+
 xyz_t IMU_Base::readGyroRPS() const
 {
-    const xyz_int16_t gyroRaw = readGyroRaw();
+    const xyz_int32_t gyroRaw = readGyroRaw();
     const xyz_t  gyroRPS = {
         .x = static_cast<float>(gyroRaw.x - _gyroOffset.x) * _gyroResolutionRPS,
         .y = static_cast<float>(gyroRaw.y - _gyroOffset.y) * _gyroResolutionRPS,
@@ -33,7 +38,7 @@ xyz_t IMU_Base::readGyroRPS() const
 
 xyz_t IMU_Base::readGyroDPS() const
 {
-    const xyz_int16_t gyroRaw = readGyroRaw();
+    const xyz_int32_t gyroRaw = readGyroRaw();
     const xyz_t  gyroDPS = {
         .x = static_cast<float>(gyroRaw.x - _gyroOffset.x) * _gyroResolutionDPS,
         .y = static_cast<float>(gyroRaw.y - _gyroOffset.y) * _gyroResolutionDPS,
@@ -44,7 +49,7 @@ xyz_t IMU_Base::readGyroDPS() const
 
 xyz_t IMU_Base::readAcc() const
 {
-    const xyz_int16_t accRaw = readAccRaw();
+    const xyz_int32_t accRaw = readAccRaw();
     const xyz_t  acc = {
         .x = static_cast<float>(accRaw.x - _accOffset.x) * _accResolution,
         .y = static_cast<float>(accRaw.y - _accOffset.y) * _accResolution,
@@ -67,11 +72,11 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data) const
     case XPOS_YPOS_ZPOS:
         return data;
         break;
-    case YNEG_XPOS_ZPOS:
+    case YNEG_XPOS_ZPOS: // NOLINT(bugprone-branch-clone) false positive
         return xyz_t {
-            .x = data.y,
-            .y = data.x,
-            .z = data.z
+            .x = -data.y,
+            .y =  data.x,
+            .z =  data.z
         };
         break;
     case XNEG_YNEG_ZPOS:
@@ -103,7 +108,7 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data) const
     return data;
 }
 
-int  IMU_Base::readFIFO_ToBuffer()
+size_t IMU_Base::readFIFO_ToBuffer()
 {
     return 0;
 }

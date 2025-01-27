@@ -6,8 +6,8 @@ class IMU_M5_UNIFIED : public IMU_Base {
 public:
     IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex);
 public:
-    virtual xyz_int16_t readGyroRaw() const override;
-    virtual xyz_int16_t readAccRaw() const override;
+    virtual xyz_int32_t readGyroRaw() const override;
+    virtual xyz_int32_t readAccRaw() const override;
 
     virtual xyz_t readGyroRPS() const override;
     virtual xyz_t readGyroDPS() const override;

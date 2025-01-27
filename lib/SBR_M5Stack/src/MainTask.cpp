@@ -228,14 +228,15 @@ void MainTask::checkGyroCalibration()
     // Set the gyro offsets from non-volatile storage.
 #if defined(M5_STACK) || defined(USE_IMU_MPU6886)
     // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.
-    xyz_int16_t gyroOffset {};
-    if (_preferences->getGyroOffset(&gyroOffset)) {
-        _ahrs->setGyroOffset(gyroOffset);
-        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", gyroOffset.x, gyroOffset.y, gyroOffset.z);
-        xyz_int16_t accOffset {};
-        if (_preferences->getAccOffset(&accOffset)) {
-            _ahrs->setAccOffset(accOffset);
-            Serial.printf("**** AHRS accOffsets  loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", accOffset.x, accOffset.y, accOffset.z);
+    int32_t x {};
+    int32_t y {};
+    int32_t z {};
+    if (_preferences->getGyroOffset(x, y, z)) {
+        _ahrs->setGyroOffset(x, y, z);
+        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", x, y, z);
+        if (_preferences->getAccOffset(x, y, z)) {
+            _ahrs->setAccOffset(x, y, z);
+            Serial.printf("**** AHRS accOffsets  loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", x, y, z);
         }
     } else {
         // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
@@ -254,6 +255,8 @@ Resets the PID preferences and the Balance Angle to FLT_MAX (which represents un
 */
 void MainTask::resetPreferences()
 {
+    //_preferences->removeGyroOffset();
+    //_preferences->removeAccOffset();
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         const std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
         constexpr PIDF::PIDF_t pidFLT_MAX { FLT_MAX, FLT_MAX, FLT_MAX,FLT_MAX };

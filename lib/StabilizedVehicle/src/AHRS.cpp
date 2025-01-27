@@ -77,7 +77,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
 #else
 
-    IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc();
+    IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc(); // NOLINT(misc-const-correctness) false positive
     TIME_CHECK(0, _timeCheck0);
     TIME_CHECK(1);
 
@@ -165,33 +165,45 @@ void AHRS::Task(void* arg)
 /*!
 Read the raw gyro values. Used in calibration.
 */
-xyz_int16_t AHRS::readGyroRaw() const
+void AHRS::readGyroRaw(int32_t& x, int32_t& y, int32_t& z) const
 {
-    return _IMU.readGyroRaw();
+    const IMU_Base::xyz_int32_t gyro = _IMU.readGyroRaw();
+    x = gyro.x;
+    y = gyro.y;
+    z = gyro.z;
 }
 
 /*!
 Read the raw accelerometer values. Used in calibration.
 */
-xyz_int16_t AHRS::readAccRaw() const
+void AHRS::readAccRaw(int32_t& x, int32_t& y, int32_t& z) const
 {
-    return _IMU.readAccRaw();
+    const IMU_Base::xyz_int32_t acc = _IMU.readAccRaw();
+    x = acc.x;
+    y = acc.y;
+    z = acc.z;
 }
+
+int32_t AHRS::getAccOneG_Raw() const
+{
+    return _IMU.getAccOneG_Raw();
+}
+
 
 /*!
 Set the gyro offset. Used in calibration.
 */
-void AHRS::setGyroOffset(const xyz_int16_t& gyroOffset)
+void AHRS::setGyroOffset(int32_t x, int32_t y, int32_t z)
 {
-    _IMU.setGyroOffset(gyroOffset);
+    _IMU.setGyroOffset(IMU_Base::xyz_int32_t {.x = x, .y = y, .z = z});
 }
 
 /*!
 Set the accelerometer offset. Used in calibration.
 */
-void AHRS::setAccOffset(const xyz_int16_t& accOffset)
+void AHRS::setAccOffset(int32_t x, int32_t y, int32_t z)
 {
-    _IMU.setAccOffset(accOffset);
+    _IMU.setAccOffset(IMU_Base::xyz_int32_t {.x = x, .y = y, .z = z});
 }
 
 Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const

@@ -31,12 +31,26 @@ void test_motor_pair_controller() {
     IMU_Filters_Test imuFilters;
     AHRS ahrs(sensorFusionFilter, imu, imuFilters);
     ReceiverTest receiver;
+
+    TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
     MotorPairController mpc(ahrs, receiver);
+    TEST_ASSERT_FALSE(mpc.motorsIsOn());
+
+    mpc.motorsSwitchOn();
+    TEST_ASSERT_FALSE(mpc.motorsIsOn());
+    ahrs.setSensorFusionFilterInitializing(false);
+    mpc.motorsSwitchOn();
+    TEST_ASSERT_TRUE(mpc.motorsIsOn());
+
+    mpc.motorsToggleOnOff();
+    TEST_ASSERT_FALSE(mpc.motorsIsOn());
+    mpc.motorsToggleOnOff();
+    TEST_ASSERT_TRUE(mpc.motorsIsOn());
+
+    mpc.motorsSwitchOff();
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
     mpc.motorsSwitchOn();
     TEST_ASSERT_TRUE(mpc.motorsIsOn());
-    mpc.motorsToggleOnOff();
-    TEST_ASSERT_FALSE(mpc.motorsIsOn());
 }
 
 int main(int argc, char **argv) {

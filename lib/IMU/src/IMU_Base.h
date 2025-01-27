@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstddef>
+#include <cstdint>
 
 #if defined(I2C_MUTEX_REQUIRED)
 #include <freertos/FreeRTOS.h>
@@ -8,7 +8,6 @@
 #endif
 
 #include <cmath>
-#include <xyz_int16_type.h>
 #include <xyz_type.h>
 
 /*!
@@ -26,6 +25,11 @@ public:
 public:
     IMU_Base(axis_order_t axisOrder, void* i2cMutex);
 public:
+    struct xyz_int32_t {
+        int32_t x;
+        int32_t y;
+        int32_t z;
+    };
     struct gyroRPS_Acc_t {
         xyz_t gyroRPS;
         xyz_t acc;
@@ -33,11 +37,12 @@ public:
     static constexpr float degreesToRadians {M_PI / 180.0};
     static constexpr float radiansToDegrees {180.0 / M_PI};
 public:
-    virtual void setGyroOffset(const xyz_int16_t& gyroOffset);
-    virtual void setAccOffset(const xyz_int16_t& accOffset);
+    virtual void setGyroOffset(const xyz_int32_t& gyroOffset);
+    virtual void setAccOffset(const xyz_int32_t& accOffset);
 
-    virtual xyz_int16_t readGyroRaw() const = 0;
-    virtual xyz_int16_t readAccRaw() const = 0;
+    virtual xyz_int32_t readGyroRaw() const = 0;
+    virtual xyz_int32_t readAccRaw() const = 0;
+    virtual int32_t getAccOneG_Raw() const;
 
     // read functions have default implementations in the base class for convenience,
     // but should be reimplemented in derived classes for efficiency
@@ -47,7 +52,7 @@ public:
     virtual gyroRPS_Acc_t readGyroRPS_Acc() const;
 
     // by default the FIFO is not enabled
-    virtual int readFIFO_ToBuffer();
+    virtual size_t readFIFO_ToBuffer();
     virtual gyroRPS_Acc_t readFIFO_Item(size_t index);
 protected:
     xyz_t mapAxes(const xyz_t& data) const;
@@ -66,7 +71,7 @@ protected:
     float _gyroResolutionRPS {};
     float _gyroResolutionDPS {};
     float _accResolution {};
-    xyz_int16_t _gyroOffset {};
-    xyz_int16_t _accOffset {};
+    xyz_int32_t _gyroOffset {};
+    xyz_int32_t _accOffset {};
 };
 

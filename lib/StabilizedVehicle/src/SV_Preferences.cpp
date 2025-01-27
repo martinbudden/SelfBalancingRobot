@@ -74,56 +74,74 @@ void SV_Preferences::putFloat(const std::string& name, float value)
     _preferences.end();
 }
 
-bool SV_Preferences::getAccOffset(xyz_int16_t* accOffset) const
+void SV_Preferences::removeAccOffset()
+{
+    _preferences.begin(preferencesNamespace, READ_WRITE);
+    _preferences.remove("acc");
+    _preferences.remove("acc_x");
+    _preferences.remove("acc_y");
+    _preferences.remove("acc_z");
+}
+
+bool SV_Preferences::getAccOffset(int32_t& x, int32_t& y, int32_t& z) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const bool ret = _preferences.getBool("acc", false);
     if (ret) {
-        accOffset->x = _preferences.getShort("acc_x", 0);
-        accOffset->y = _preferences.getShort("acc_y", 0);
-        accOffset->z = _preferences.getShort("acc_z", 0);
+        x = _preferences.getInt("acc_x", 0);
+        y = _preferences.getInt("acc_y", 0);
+        z = _preferences.getInt("acc_z", 0);
     }
 
     _preferences.end();
     return ret;
 }
 
-void SV_Preferences::putAccOffset(const xyz_int16_t& accOffset)
+void SV_Preferences::putAccOffset(int32_t x, int32_t y, int32_t z)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
     _preferences.putBool("acc", true);
-    _preferences.putShort("acc_x", accOffset.x);
-    _preferences.putShort("acc_y", accOffset.y);
-    _preferences.putShort("acc_z", accOffset.z);
+    _preferences.putInt("acc_x", x);
+    _preferences.putInt("acc_y", y);
+    _preferences.putInt("acc_z", z);
 
     _preferences.end();
 }
 
-bool SV_Preferences::getGyroOffset(xyz_int16_t* gyroOffset) const
+void SV_Preferences::removeGyroOffset()
+{
+    _preferences.begin(preferencesNamespace, READ_WRITE);
+    _preferences.remove("gyro");
+    _preferences.remove("gyro_x");
+    _preferences.remove("gyro_y");
+    _preferences.remove("gyro_z");
+}
+
+bool SV_Preferences::getGyroOffset(int32_t& x, int32_t& y, int32_t& z) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const bool ret = _preferences.getBool("gyro", false);
     if (ret) {
-        gyroOffset->x = _preferences.getShort("gyro_x", 0);
-        gyroOffset->y = _preferences.getShort("gyro_y", 0);
-        gyroOffset->z = _preferences.getShort("gyro_z", 0);
+        x = _preferences.getInt("gyro_x", 0);
+        y = _preferences.getInt("gyro_y", 0);
+        z = _preferences.getInt("gyro_z", 0);
     }
 
     _preferences.end();
     return ret;
 }
 
-void SV_Preferences::putGyroOffset(const xyz_int16_t& gyroOffset)
+void SV_Preferences::putGyroOffset(int32_t x, int32_t y, int32_t z)
 {
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
     _preferences.putBool("gyro", true);
-    _preferences.putShort("gyro_x", gyroOffset.x);
-    _preferences.putShort("gyro_y", gyroOffset.y);
-    _preferences.putShort("gyro_z", gyroOffset.z);
+    _preferences.putInt("gyro_x", x);
+    _preferences.putInt("gyro_y", y);
+    _preferences.putInt("gyro_z", z);
 
     _preferences.end();
 }

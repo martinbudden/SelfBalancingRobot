@@ -17,8 +17,12 @@ public:
     };
     struct acc_gyro_data_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         enum { DATA_SIZE = 12 };
-        xyz_int16_t acc;
-        xyz_int16_t gyro;
+        int16_t acc_x;
+        int16_t acc_y;
+        int16_t acc_z;
+        int16_t gyro_x;
+        int16_t gyro_y;
+        int16_t gyro_z;
     };
 #pragma pack(pop)
 public:
@@ -26,8 +30,9 @@ public:
     IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_BMI270(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     void init();
 public:
-    virtual xyz_int16_t readGyroRaw() const override;
-    virtual xyz_int16_t readAccRaw() const override;
+    virtual xyz_int32_t readGyroRaw() const override;
+    virtual xyz_int32_t readAccRaw() const override;
+    virtual int32_t getAccOneG_Raw() const override;
 
     virtual gyroRPS_Acc_t readGyroRPS_Acc() const override;
 private:
