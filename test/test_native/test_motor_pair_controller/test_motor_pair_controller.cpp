@@ -7,15 +7,22 @@
 
 class ReceiverTest : public ReceiverBase {
 public:
-    ReceiverTest() {};
+    virtual ~ReceiverTest() = default;
+    ReceiverTest(const ReceiverTest&) = delete;
+    ReceiverTest& operator=(const ReceiverTest&) = delete;
+    ReceiverTest(ReceiverTest&&) = delete;
+    ReceiverTest& operator=(ReceiverTest&&) = delete;
+    ReceiverTest() = default;
+// NOLINTBEGIN(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual EUI_48_t getMyEUI() const override;
     virtual EUI_48_t getPrimaryPeerEUI() const override;
+// NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
-bool ReceiverTest::update(uint32_t tickCountDelta) { return true; }
-void ReceiverTest::mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const {};
+bool ReceiverTest::update([[maybe_unused]] uint32_t tickCountDelta) { return true; }
+void ReceiverTest::mapControls([[maybe_unused]] float& throttleStick, [[maybe_unused]] float& rollStick, [[maybe_unused]] float& pitchStick, [[maybe_unused]] float& yawStick) const {};
 ReceiverBase::EUI_48_t ReceiverTest::getMyEUI() const { return EUI_48_t{}; }
 ReceiverBase::EUI_48_t ReceiverTest::getPrimaryPeerEUI() const { return EUI_48_t{}; }
 
@@ -26,11 +33,11 @@ void tearDown() {
 }
 
 void test_motor_pair_controller() {
-    SensorFusionFilterTest sensorFusionFilter;
-    IMU_Test imu;
-    IMU_Filters_Test imuFilters;
+    SensorFusionFilterTest sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
+    IMU_Test imu; // NOLINT(misc-const-correctness) false positive
+    IMU_Filters_Test imuFilters; // NOLINT(misc-const-correctness) false positive
     AHRS ahrs(sensorFusionFilter, imu, imuFilters);
-    ReceiverTest receiver;
+    ReceiverTest receiver; // NOLINT(misc-const-correctness) false positive
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
     MotorPairController mpc(ahrs, receiver);
@@ -53,7 +60,8 @@ void test_motor_pair_controller() {
     TEST_ASSERT_TRUE(mpc.motorsIsOn());
 }
 
-int main(int argc, char **argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_motor_pair_controller);

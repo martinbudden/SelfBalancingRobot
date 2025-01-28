@@ -1,14 +1,14 @@
 #pragma once
 
 #include "IMU_Base.h"
-#include "SensorFusionFilter.h"
 #include "IMU_FiltersBase.h"
+#include "SensorFusionFilter.h"
 
 
 class SensorFusionFilterTest : public SensorFusionFilterBase {
 public:
     virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT) override;
-    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) override;
+    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, const xyz_t& magnetometer, float deltaT) override;
     virtual void setFreeParameters(float parameter0, float parameter1) override;
 };
 

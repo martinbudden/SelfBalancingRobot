@@ -1,6 +1,6 @@
-#include <cmath>
 #include "arduino_madgwick.h"
 #include "SensorFusionFilter.h"
+#include <cmath>
 #include <unity.h>
 
 
@@ -14,20 +14,20 @@ void test_arduino_madgwick() {
     static Madgwick arduinoMadgwick;
     static MadgwickFilter madgwickFilter;
 
-    float gx = 0.33f;
-    float gy = 0.55f;
-    float gz = -0.19f;
-    xyz_t acc = { .x =0.66f, .y = 0.77f, .z = 0.88f };
+    const float gx = 0.33F;
+    const float gy = 0.55F;
+    const float gz = -0.19F;
+    xyz_t acc = { .x =0.66F, .y = 0.77F, .z = 0.88F };
     acc *= 1.0F / sqrtf(acc.x*acc.x + acc.y*acc.y +acc.z*acc.z);
 
-    const float q0 = 3.0f;
-    const float q1 = 5.0f;
-    const float q2 = 7.0f;
-    const float q3 = 9.0f;
+    const float q0 = 3.0F;
+    const float q1 = 5.0F;
+    const float q2 = 7.0F;
+    const float q3 = 9.0F;
 
-    xyz_t gyro = { .x = gx*0.0174533f, .y = gy*0.0174533f, .z = gz*0.0174533f };
+    const xyz_t gyro = { .x = gx*0.0174533F, .y = gy*0.0174533F, .z = gz*0.0174533F };
     float beta { 1.0 };
-    float deltaT = 0.1f;
+    float deltaT = 0.1F;
 
     arduinoMadgwick.begin(1.0F / deltaT, beta);
     madgwickFilter.setBeta(beta);
@@ -48,11 +48,11 @@ void test_arduino_madgwick() {
     TEST_ASSERT_EQUAL_FLOAT(qE3, q.getZ());
 
 
-    beta = 0.1f;
-    deltaT = 0.01;
+    beta = 0.1F;
+    deltaT = 0.01F;
     arduinoMadgwick.begin(1.0F / deltaT, beta);
     madgwickFilter.setBeta(beta);
-    acc = { .x = -0.66f, .y = 1.77f, .z = 3.88f };
+    acc = { .x = -0.66F, .y = 1.77F, .z = 3.88F };
     acc *= 1.0F / sqrtf(acc.x*acc.x + acc.y*acc.y +acc.z*acc.z);
 
     arduinoMadgwick._setAndNormalizeQ(q0, q1, q2, q3);
@@ -70,7 +70,8 @@ void test_arduino_madgwick() {
     TEST_ASSERT_EQUAL_FLOAT(qE3, q.getZ());
 }
 
-int main(int argc, char **argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_arduino_madgwick);

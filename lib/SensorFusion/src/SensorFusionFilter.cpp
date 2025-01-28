@@ -134,7 +134,7 @@ Quaternion ComplementaryFilter::update(const xyz_t& gyroRPS, const xyz_t& accele
 /*!
 see https://ahrs.readthedocs.io/en/latest/filters/complementary.html
 */
-Quaternion ComplementaryFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
+Quaternion ComplementaryFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, const xyz_t& magnetometer, float deltaT)
 {
     // Create q from q0, q1, q2, q3
     Quaternion q(q0, q1, q2, q3);
@@ -232,7 +232,7 @@ Quaternion MahonyFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer
     return q;
 }
 
-Quaternion MahonyFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
+Quaternion MahonyFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, const xyz_t& magnetometer, float deltaT)
 {
     (void)magnetometer;
     return update(gyroRPS, accelerometer, deltaT);
@@ -324,7 +324,7 @@ Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& acceleromet
 For computation efficiency this code refactors the code used in many implementations (Arduino, Adafruit, M5Stack, Reefwing-AHRS),
 [see MadgwickRefactoring](../../../documents/MadgwickRefactoring.md)
 */
-Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT)
+Quaternion MadgwickFilter::update(const xyz_t& gyroRPS, const xyz_t& accelerometer, const xyz_t& magnetometer, float deltaT)
 {
     xyz_t a = accelerometer;
     const float accMagnitudeSquared = normalize(a);

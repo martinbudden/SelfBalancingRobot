@@ -6,10 +6,11 @@
 class MotorsTest final : public MotorPairBase {
 public:
     MotorsTest();
-public:
+// NOLINTBEGIN(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
     virtual void setPower(float leftPower, float rightPower) override;
 private:
     virtual void readEncoder() override;
+// NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
 MotorsTest::MotorsTest() :
@@ -42,7 +43,7 @@ constexpr float encoderStepsPerRevolution   {1000.0};
 MotorPairBase& MotorPairController::motors()
 {
     // Statically allocate the MotorPair object
-    static MotorsTest motors;
+    static MotorsTest motors; // NOLINT(misc-const-correctness) false positive
     return motors;
 }
 
@@ -89,7 +90,7 @@ void MotorPairController::setControlMode(ControlMode_t controlMode)
 {
     _PIDS[SPEED_DPS].resetIntegral();
     _controlMode = controlMode;
-    if (controlMode == CONTROL_MODE_SERIAL_PIDS) {
+    if (controlMode == CONTROL_MODE_SERIAL_PIDS) { // NOLINT(bugprone-branch-clone) false positive
         _PIDS[SPEED_DPS].setPID(speedPID_DefaultSerial);
     } else {
         _PIDS[SPEED_DPS].setPID(speedPID_DefaultParallel);

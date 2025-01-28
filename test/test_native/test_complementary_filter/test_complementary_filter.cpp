@@ -1,5 +1,5 @@
-#include <cmath>
 #include "SensorFusionFilter.h"
+#include <cmath>
 #include <unity.h>
 
 
@@ -42,11 +42,10 @@ void test_complementary_filter() {
     static ComplementaryFilter complementaryFilter;
 
     const xyz_t gyro0 = { .x = 0.0F, .y = 0.0F, .z = 0.0F };
-    float deltaT = 0.1f;
+    float deltaT = 0.1F;
 
     complementaryFilter.reset();
     complementaryFilter.setAlpha(0.0F); // set alpha to zero so just the accelerometer component is returned
-    const xyz_t accZ1 = { .x = 0.0, .y = 0.0, .z = 1.0 };
 
     Quaternion q = complementaryFilter.update(gyro0, xyz_t { .x = 0.0, .y = 0.0, .z = 1.0 }, deltaT);
     TEST_ASSERT_EQUAL_FLOAT(0, q.calculateRollDegrees());
@@ -65,7 +64,8 @@ void test_complementary_filter() {
 
 }
 
-int main(int argc, char **argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_quaternion_g);

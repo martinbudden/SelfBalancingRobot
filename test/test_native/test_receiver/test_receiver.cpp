@@ -4,15 +4,22 @@
 
 class ReceiverTest : public ReceiverBase {
 public:
-    ReceiverTest() {};
+    virtual ~ReceiverTest() = default;
+    ReceiverTest(const ReceiverTest&) = delete;
+    ReceiverTest& operator=(const ReceiverTest&) = delete;
+    ReceiverTest(ReceiverTest&&) = delete;
+    ReceiverTest& operator=(ReceiverTest&&) = delete;
+    ReceiverTest() = default;
+// NOLINTBEGIN(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual EUI_48_t getMyEUI() const override;
     virtual EUI_48_t getPrimaryPeerEUI() const override;
+// NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
-bool ReceiverTest::update(uint32_t tickCountDelta) { return true; }
-void ReceiverTest::mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const {};
+bool ReceiverTest::update([[maybe_unused]] uint32_t tickCountDelta) { return true; }
+void ReceiverTest::mapControls([[maybe_unused]] float& throttleStick, [[maybe_unused]] float& rollStick, [[maybe_unused]] float& pitchStick, [[maybe_unused]] float& yawStick) const {};
 ReceiverBase::EUI_48_t ReceiverTest::getMyEUI() const { return EUI_48_t{}; }
 ReceiverBase::EUI_48_t ReceiverTest::getPrimaryPeerEUI() const { return EUI_48_t{}; }
 
@@ -23,7 +30,7 @@ void tearDown() {
 }
 
 void test_receiver_switches() {
-    ReceiverTest receiver;
+    ReceiverTest receiver; // NOLINT(misc-const-correctness) false positive
 
     uint8_t switchIndex = 0;
     TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
@@ -61,7 +68,8 @@ void test_receiver_switches() {
 
 }
 
-int main(int argc, char **argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_receiver_switches);

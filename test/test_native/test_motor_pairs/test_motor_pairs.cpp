@@ -12,14 +12,14 @@ void tearDown() {
 void test_motor_construction() {
     enum {STEPS_PER_REVOLUTION = 123};
 
-    Motors4EncoderMotor motors(0, 0, STEPS_PER_REVOLUTION);
+    const Motors4EncoderMotor motors(0, 0, STEPS_PER_REVOLUTION);
     TEST_ASSERT_EQUAL_FLOAT(STEPS_PER_REVOLUTION, motors.getStepsPerRevolution());
     TEST_ASSERT_EQUAL_INT32(0, motors.getLeftEncoder());
     TEST_ASSERT_EQUAL_INT32(0, motors.getRightEncoder());
 }
 
 void test_BalaC_motors_clipping() {
-    MotorsBalaC motors(0, 0);
+    const MotorsBalaC motors(0, 0);
 
     TEST_ASSERT_EQUAL_FLOAT(0, motors.getStepsPerRevolution());
     TEST_ASSERT_EQUAL_INT32(0, motors.getLeftEncoder());
@@ -42,7 +42,7 @@ void test_BalaC_motors_clipping() {
 }
 
 void test_BalaC_motors_deadband() {
-    MotorsBalaC motors(0, 0);
+    MotorsBalaC motors(0, 0); // NOLINT(misc-const-correctness) false positive
     motors.setDeadbandPower(0.2);
 
     float power = motors.scalePower(0.0F);
@@ -71,7 +71,8 @@ void test_BalaC_motors_deadband() {
     TEST_ASSERT_EQUAL_FLOAT(-1.0, power);
 }
 
-int main(int argc, char **argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_motor_construction);

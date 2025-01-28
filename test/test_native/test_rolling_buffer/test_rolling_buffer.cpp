@@ -1,12 +1,12 @@
 #include <RollingBuffer.h>
-#include <unity.h>
 #include <cstdio>
+#include <unity.h>
 
-void setUp(void) {
+void setUp() {
     // set stuff up here
 }
 
-void tearDown(void) {
+void tearDown() {
     // clean stuff up here
 }
 
@@ -271,7 +271,8 @@ printf("19\r\n");
     }
 }
 
-int main( int argc, char **argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_rolling_buffer_size);

@@ -7,7 +7,7 @@ void setUp() {
 void tearDown() {
 }
 
-union fi {
+union fi { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     float f;
     uint32_t i;
 };
@@ -59,7 +59,7 @@ void test_float() {
 
 int32_t float32ToInt24(float x)
 {
-    union {
+    union { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         float f;
         uint32_t i;
     } n {.f = x};
@@ -89,7 +89,7 @@ void test_float_convert()
 
 int32_t float32_to_Q4dot12(float x)
 {
-    union {
+    union { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         float f;
         uint32_t i;
     } n {.f = x};
@@ -116,7 +116,7 @@ int32_t ubyte4float_to_Q4dot12(uint8_t f[4])
     n.b[1] = f[1];
     n.b[2] = f[2];
     n.b[3] = f[3];*/
-    union bi_t {
+    union bi_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         uint8_t b[4];
         uint32_t i;
     };
@@ -146,7 +146,7 @@ void test_fixed_convert()
     TEST_ASSERT_EQUAL(4096, float32_to_Q4dot12(2.0F));
     TEST_ASSERT_EQUAL(-4096, float32_to_Q4dot12(-2.0F));
 
-    float x = 0.48F;
+    const float x = 0.48F;
     int16_t a = float32_to_Q4dot12(x);
     TEST_ASSERT_EQUAL(floor(0.48*2048), a);
     float y = Q4dot12_to_float32(a);
@@ -170,24 +170,24 @@ void test_fixed_convert()
 
 void test_byte_convert()
 {
-    union bf {
+    union bf { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         uint8_t b[4];
         float f;
     };
 
     bf x { .f = 2.0F};
-    TEST_ASSERT_EQUAL_FLOAT(2.0F, x.f);
+    TEST_ASSERT_EQUAL_FLOAT(2.0F, x.f); // NOLINT(cppcoreguidelines-pro-type-union-access)
 
 
-    x.f = 0.48F;
+    x.f = 0.48F; // NOLINT(cppcoreguidelines-pro-type-union-access)
     int16_t a = ubyte4float_to_Q4dot12(&x.b[0]);
     TEST_ASSERT_EQUAL(floor(0.48*2048), a);
     float y = Q4dot12_to_float32(a);
-    TEST_ASSERT_FLOAT_WITHIN(0.00008*x.f, x.f, y);
+    TEST_ASSERT_FLOAT_WITHIN(0.00008*x.f, x.f, y); // NOLINT(cppcoreguidelines-pro-type-union-access)
 }
 
 
-int main(int argc, char **argv)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
     UNITY_BEGIN();
 

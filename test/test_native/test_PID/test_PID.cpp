@@ -8,7 +8,7 @@ void tearDown() {
 }
 
 void test_PID_init() {
-    PIDF pid;
+    const PIDF pid;
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getP());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getI());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getD());
@@ -170,7 +170,8 @@ void test_PI_Controller() {
     TEST_ASSERT_EQUAL_FLOAT(1.5, output);
 }
 
-int main(int argc, char **argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_PID_init);

@@ -101,7 +101,8 @@ void test_IIR_alpha_filter() {
     TEST_ASSERT_EQUAL_FLOAT(0.8*15.0 +0.2*(0.8*10.0 + 0.2*8.0), out);
 }
 
-int main(int argc, char **argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
+{
     UNITY_BEGIN();
 
     RUN_TEST(test_null_filter);

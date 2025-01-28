@@ -28,7 +28,7 @@ For Sensor fusion filters, Euler angles are defined in radians:
 class SensorFusionFilterBase {
 public:
     virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT) = 0;
-    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) = 0;
+    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, const xyz_t& magnetometer, float deltaT) = 0;
     virtual void setFreeParameters(float parameter0, float parameter1) = 0;
     void reset();
     inline Quaternion getOrientation() const { return Quaternion(q0, q1, q2, q3); }
@@ -55,7 +55,7 @@ ComplementaryFilter
 class ComplementaryFilter : public SensorFusionFilterBase {
 public:
     virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT) override;
-    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) override;
+    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, const xyz_t& magnetometer, float deltaT) override;
     virtual void setFreeParameters(float parameter0, float parameter1) override;
     inline void setAlpha(float alpha) { setFreeParameters(alpha, 0.0f); }
 private:
@@ -68,7 +68,7 @@ MahonyFilter
 class MahonyFilter : public SensorFusionFilterBase {
 public:
     virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT) override;
-    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) override;
+    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, const xyz_t& magnetometer, float deltaT) override;
     virtual void setFreeParameters(float parameter0, float parameter1) override;
     inline void setKpKi(float kp, float ki) { setFreeParameters(kp, ki); }
 private:
@@ -83,7 +83,7 @@ MadgwickFilter
 class MadgwickFilter : public SensorFusionFilterBase {
 public:
     virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, float deltaT) override;
-    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, xyz_t& magnetometer, float deltaT) override;
+    virtual Quaternion update(const xyz_t& gyroRPS, const xyz_t& accelerometer, const xyz_t& magnetometer, float deltaT) override;
     virtual void setFreeParameters(float parameter0, float parameter1) override;
     inline void setBeta(float beta) { setFreeParameters(beta, 0.0f); }
     inline void setGyroMeasurementError(float gyroMeasurementError) { setBeta(gyroMeasurementError * sqrtf(3.0F / 4.0F)); }
