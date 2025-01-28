@@ -22,9 +22,9 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 
 1. IMU_TYPES
 2. PIDF
-3. Filters
+3. AtomJoyStickReceiver
 4. SensorFusion (depends on IMU_TYPES)
-5. AtomJoyStickReceiver
+5. Filters
 6. IMU (depends on IMU_TYPES)
 7. StabilizedVehicle (depends on IMU_TYPES, PIDF, Filters, SensorFusion, IMU)
 
