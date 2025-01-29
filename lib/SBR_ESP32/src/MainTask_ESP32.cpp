@@ -8,16 +8,15 @@
 
 #include <WiFi.h>
 
-#include "Buttons.h"
-#include "Calibration.h"
-#include "MainTask.h"
-#include "Screen.h"
+#include "MainTask_ESP32.h"
 #include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
 #include <ESPNOW_Backchannel.h>
 #include <ESPNOW_Receiver.h>
+#include <IMU_BMI270.h>
 #include <IMU_Filters.h>
+#include <IMU_LSM303AGR.h>
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
@@ -77,40 +76,13 @@ Setup for the main loop, motor control task, and AHRS(Attitude and Heading Refer
 */
 void MainTask::setup()
 {
-    // Initialize the M5Stack object
-#if defined(M5_STACK)
-    //M5Stack::begin(bool LCDEnable, bool SDEnable, bool SerialEnable, bool I2CEnable)
-    M5.begin(true, false, false, false);
-    M5.IMU.Init();
-    M5.Power.begin();
-#elif defined(M5_UNIFIED)
-    auto cfg = M5.config(); // NOLINT(readability-static-accessed-through-instance)
-    M5.begin(cfg);
-    M5.Power.begin();
-#if defined(MOTORS_BALA_C)
-    // with additional battery, we need to increase charge current
-    M5.Power.setChargeCurrent(360);
-#endif
-#endif
-
-    Serial.begin(115200);
-
     // This task has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
     const char*  taskName = pcTaskGetName(taskHandle);
     Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n\r\n", taskName, taskPriority, configTICK_RATE_HZ);
 
-    // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
-    // The mutex is created statically, ie without dynamic memory allocation.
-    // If the motors and the AHRS are on separate busses (for example the motors were on a CAN bus, or the AHRS was on an SPI bus),
-    // then the mutex is not required and may be set to nullptr.
-#if defined(I2C_MUTEX_REQUIRED)
-    static StaticSemaphore_t i2cMutexBuffer;
-    SemaphoreHandle_t i2cMutex = xSemaphoreCreateMutexStatic(&i2cMutexBuffer);
-#else
-    SemaphoreHandle_t i2cMutex = nullptr;
-#endif
+    void* i2cMutex = nullptr;
 
     setupAHRS(i2cMutex);
 
@@ -141,16 +113,8 @@ void MainTask::setup()
     static SV_Preferences preferences;
     _preferences = &preferences;
 
-    // Holding BtnA down while switching on enters calibration mode.
-    if (M5.BtnA.isPressed()) {
-        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_ACC_AND_GYRO);
-    }
     checkGyroCalibration();
 
-    // Holding BtnC down while switching on resets the preferences.
-    if (M5.BtnC.isPressed()) {
-        resetPreferences();
-    }
     loadPreferences();
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)
@@ -161,47 +125,18 @@ void MainTask::setup()
     static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, *_ahrs, *this, *_receiver, telemetryScaleFactors, _preferences);
     _backchannel = &backchannel;
 #endif
-
-    // Statically allocate the screen.
-    static Screen screen(*_ahrs, motorPairController, receiver);
-    _screen = &screen;
-    screen.updateTemplate();
-
-    // Statically allocate the buttons.
-    static Buttons buttons(screen, motorPairController, receiver);
-    _buttons = &buttons;
-
-    // Holding BtnB down while switching on initiates binding.
-    // The Atom has no BtnB, so it always broadcasts address for binding on startup.
-#if defined(M5_ATOM)
-    receiver.broadcastMyMacAddressForBinding();
-#else
-    if (M5.BtnB.wasPressed()) {
-        receiver.broadcastMyMacAddressForBinding();
-    }
-#endif
-
     // And finally set up the AHRS and MotorPairController tasks.
     setupTasks();
 }
 
-void MainTask::setupAHRS(void* i2cMutex)
+void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
-    // Statically allocate the IMU according the the build flags
-#if defined(M5_STACK)
 #if defined(USE_IMU_MPU6886)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
-#else
-    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex); // NOLINT(misc-const-correctness) false positive
-#endif
-#elif defined(M5_UNIFIED)
-#if defined(USE_IMU_MPU6886)
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex); // NOLINT(misc-const-correctness) false positive
 #elif defined(USE_IMU_BMI270)
-    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
-#else
-    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
-#endif
+    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_LSM303AGR)
+    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #endif
 
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
@@ -225,29 +160,6 @@ void MainTask::setupAHRS(void* i2cMutex)
 
 void MainTask::checkGyroCalibration()
 {
-    // Set the gyro offsets from non-volatile storage.
-#if defined(M5_STACK) || defined(USE_IMU_MPU6886)
-    // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.
-    int32_t x {};
-    int32_t y {};
-    int32_t z {};
-    if (_preferences->getGyroOffset(x, y, z)) {
-        _ahrs->setGyroOffset(x, y, z);
-        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", x, y, z);
-        if (_preferences->getAccOffset(x, y, z)) {
-            _ahrs->setAccOffset(x, y, z);
-            Serial.printf("**** AHRS accOffsets  loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", x, y, z);
-        }
-    } else {
-        // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
-        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
-    }
-#elif defined(M5_UNIFIED)
-    // M5_UNIFIED directly uses NVS (non-volatile storage) to store the gyro offsets.
-    if (!M5.Imu.loadOffsetFromNVS()) {
-        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
-    }
-#endif
 }
 
 /*!
@@ -349,11 +261,6 @@ void MainTask::loop()
     if (packetReceived) {
         _receiverInUse = true;
         _failSafeTickCount = tickCount;
-        // update the screen template the first time we receive a packet
-        if (_screenTemplateIsUpdated == false) {
-            _screenTemplateIsUpdated = true;
-            _screen->updateTemplate();
-        }
     } else if ((tickCount - _failSafeTickCount > 1500) && _receiverInUse) {
         // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
         // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
@@ -365,17 +272,4 @@ void MainTask::loop()
 #if defined(BACKCHANNEL_MAC_ADDRESS)
     (void)_backchannel->update();
 #endif
-
-    // screen and button update tick counts are coprime, so screen and buttons are not normally updated in same loop
-    // update the screen every 101 ticks (0.1 seconds)
-    if (_screenTickCount - tickCount > 101) {
-        _screenTickCount = tickCount;
-        _screen->update(packetReceived);
-    }
-    // update the buttons every 149 ticks (0.15 seconds)
-    if (_buttonsTickCount - tickCount > 149) {
-        _buttonsTickCount = tickCount;
-        M5.update();
-        _buttons->update();
-    }
 }

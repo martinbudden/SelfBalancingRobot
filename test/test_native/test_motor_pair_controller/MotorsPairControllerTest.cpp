@@ -40,7 +40,7 @@ constexpr float pitchBalanceAngleDegrees    {0.0};
 constexpr float motorSwitchOffAngleDegrees  {70.0};
 constexpr float encoderStepsPerRevolution   {1000.0};
 
-MotorPairBase& MotorPairController::motors()
+MotorPairBase& MotorPairController::allocateMotors()
 {
     // Statically allocate the MotorPair object
     static MotorsTest motors; // NOLINT(misc-const-correctness) false positive
@@ -53,8 +53,8 @@ Constructor. Sets member data.
 MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
     _ahrs(ahrs),
     _receiver(receiver),
-    _motors(motors()),
-    _mixer(motors()),
+    _motors(allocateMotors()),
+    _mixer(_motors),
     _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorStepsPerRevolution(_motors.getStepsPerRevolution()),

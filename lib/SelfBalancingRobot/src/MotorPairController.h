@@ -80,7 +80,7 @@ public:
     void outputToMotors(float deltaT, uint32_t tickCount);
 private:
     void updatePositionOutputs(float deltaT);
-    MotorPairBase& motors();
+    MotorPairBase& allocateMotors();
     void Task(const TaskParameters* taskParameters);
 private:
     const AHRS& _ahrs;

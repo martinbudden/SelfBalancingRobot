@@ -4,22 +4,8 @@
 #include <MotorPairBase.h>
 #include <MotorPairController.h>
 
-#if defined(MOTORS_4_ENCODER_MOTOR)
-#include "Motors4EncoderMotor.h"
-#elif defined(MOTORS_ATOMIC_MOTION_BASE)
-#include "MotorsAtomicMotionBase.h"
-#elif defined(MOTORS_BALA_2)
-#include "MotorsBala2.h"
-#elif defined(MOTORS_BALA_C)
-#include "MotorsBalaC.h"
-#elif defined(MOTORS_GO_PLUS_2)
-#include "MotorsGoPlus2.h"
-#elif defined(MOTORS_PWR_CAN)
-#include "MotorsPwrCAN.h"
-#elif defined(MOTORS_O_DRIVE_CAN)
-#include "Motors_ODriveCAN.h"
-#elif defined(MOTORS_O_DRIVE_TWAI)
-#include "Motors_ODriveTWAI.h"
+#if defined(USE_MOTOR_PAIR_GPIO)
+#include "MotorsGPIO.h"
 #endif
 
 #include <cfloat>
@@ -34,27 +20,10 @@ Statically allocate the motors according to the build flags.
 MotorPairBase& MotorPairController::allocateMotors()
 {
     // Statically allocate the MotorPair object as defined by the build flags.
-#if defined(MOTORS_BALA_2)
-    static MotorsBala2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
-#elif defined(MOTORS_BALA_C)
-    static MotorsBalaC motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
-#elif defined(MOTORS_4_ENCODER_MOTOR)
-    static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
-#elif defined(MOTORS_GO_PLUS_2)
-    static MotorsGoPlus2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
-#elif defined(MOTORS_ATOMIC_MOTION_BASE)
-    static MotorsAtomicMotionBase motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
-#elif defined(MOTORS_PWR_CAN)
-    static MotorsPwrCAN motors;// NOLINT(misc-const-correctness) false positive
-#elif defined(MOTORS_O_DRIVE_CAN)
-    static Motors_ODriveCAN motors(encoderStepsPerRevolution);
-    motors.setup();
-#elif defined(MOTORS_O_DRIVE_TWAI)
-    static Motors_ODriveTWAI motors(encoderStepsPerRevolution);
-    motors.setup();
-#elif defined(MOTORS_ROLLER_CAN)
+#if defined(USE_MOTOR_PAIR_GPIO)
+    const MotorsGPIO::pins_t pins = MOTOR_PINS;
+    static MotorsGPIO motors(pins);// NOLINT(misc-const-correctness) false positive
 #endif
-
 #if defined(MOTOR_POWER_DEADBAND)
     motors.setDeadbandPower(MOTOR_DEADBAND_POWER);
 #endif
@@ -111,4 +80,3 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     static constexpr float maxDesiredYawRateDPS {720.0};
     _yawStickMultiplier = maxDesiredYawRateDPS / yawRateDPS_AtMaxPower;
 }
-
