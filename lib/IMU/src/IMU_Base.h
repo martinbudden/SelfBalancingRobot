@@ -7,6 +7,7 @@
 #include <freertos/semphr.h>
 #endif
 
+#include <Quaternion.h>
 #include <cmath>
 #include <xyz_type.h>
 
@@ -50,6 +51,7 @@ public:
     virtual xyz_t readGyroDPS() const;
     virtual xyz_t readAcc() const;
     virtual gyroRPS_Acc_t readGyroRPS_Acc() const;
+    virtual Quaternion readOrientation() const;
 
     // by default the FIFO is not enabled
     virtual size_t readFIFO_ToBuffer();

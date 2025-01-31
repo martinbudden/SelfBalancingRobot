@@ -2,6 +2,7 @@
 #include "IMU_FiltersBase.h"
 #include "MotorControllerBase.h"
 
+#include <IMU_BNO085.h>
 #include <IMU_Base.h>
 #include <SensorFusionFilter.h>
 #include <cmath>
@@ -77,6 +78,15 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
 #else
 
+#if defined(USE_IMU_BNO085)
+    // BNO085 does the sensor fusion
+    const xyz_t gyro = _IMU.readGyroRPS();
+    const IMU_Base::gyroRPS_Acc_t gyroAcc = {
+        .gyroRPS = gyro,
+        .acc = {}
+    };
+    const Quaternion orientation = _IMU.readOrientation();
+#else
     IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc(); // NOLINT(misc-const-correctness) false positive
     TIME_CHECK(0, _timeCheck0);
     TIME_CHECK(1);
@@ -89,6 +99,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     if (sensorFusionFilterIsInitializing()) {
         checkMadgwickConvergence(gyroAcc.acc, orientation);
     }
+#endif
 
 #endif // USE_IMU_FIFO
 

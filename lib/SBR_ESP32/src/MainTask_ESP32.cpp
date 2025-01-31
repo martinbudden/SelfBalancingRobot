@@ -15,6 +15,7 @@
 #include <ESPNOW_Backchannel.h>
 #include <ESPNOW_Receiver.h>
 #include <IMU_BMI270.h>
+#include <IMU_BNO085.h>
 #include <IMU_Filters.h>
 #include <IMU_LSM303AGR.h>
 #include <IMU_M5Stack.h>
@@ -135,6 +136,8 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_BMI270)
     static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_BNO085)
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_LSM303AGR)
     static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #endif

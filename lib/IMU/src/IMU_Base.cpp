@@ -66,6 +66,11 @@ IMU_Base::gyroRPS_Acc_t IMU_Base::readGyroRPS_Acc() const
     };
 }
 
+Quaternion IMU_Base::readOrientation() const
+{
+    return Quaternion {};
+}
+
 xyz_t IMU_Base::mapAxes(const xyz_t& data) const
 {
     switch (_axisOrder) {

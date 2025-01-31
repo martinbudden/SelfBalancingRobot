@@ -51,6 +51,20 @@ bool I2C::readBytes(uint8_t reg, uint8_t* data, size_t length) const
     return false;
 }
 
+bool I2C::readBytes(uint8_t* data, size_t length) const
+{
+#if !defined(UNIT_TEST_BUILD)
+    if (Wire.requestFrom(_I2C_address, length)) {
+        uint8_t pos = 0; // NOLINT(misc-const-correctness) false positive
+        for (size_t ii = 0; ii < length; ++ii) {
+            data[pos++] = Wire.read();
+        }
+        return true;
+    }
+#endif
+    return false;
+}
+
 uint8_t I2C::writeByte(uint8_t reg, uint8_t data)
 {
 #if !defined(UNIT_TEST_BUILD)
@@ -68,6 +82,17 @@ uint8_t I2C::writeBytes(uint8_t reg, const uint8_t* data, size_t length)
 #if !defined(UNIT_TEST_BUILD)
     Wire.beginTransmission(_I2C_address);
     Wire.write(reg);
+    Wire.write(data, length);
+    return Wire.endTransmission();
+#else
+    return 0;
+#endif
+}
+
+uint8_t I2C::writeBytes(const uint8_t* data, size_t length)
+{
+#if !defined(UNIT_TEST_BUILD)
+    Wire.beginTransmission(_I2C_address);
     Wire.write(data, length);
     return Wire.endTransmission();
 #else
