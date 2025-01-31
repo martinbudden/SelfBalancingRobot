@@ -15,9 +15,9 @@ Motors4EncoderMotor::Motors4EncoderMotor(uint8_t SDA_pin, uint8_t SCL_pin, float
     _I2C(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
     // cppcheck-suppress badBitmaskCheck
-    _I2C.writeByte(REGISTER_CONFIGURE | (MOTOR_LEFT << 4), NORMAL_MODE);
+    _I2C.writeRegister(REGISTER_CONFIGURE | (MOTOR_LEFT << 4), NORMAL_MODE);
 
-    _I2C.writeByte(REGISTER_CONFIGURE | (MOTOR_RIGHT << 4), NORMAL_MODE);
+    _I2C.writeRegister(REGISTER_CONFIGURE | (MOTOR_RIGHT << 4), NORMAL_MODE);
 }
 
 void Motors4EncoderMotor::readEncoder()
@@ -27,15 +27,15 @@ void Motors4EncoderMotor::readEncoder()
     i2cSemaphoreTake();
 
     // cppcheck-suppress badBitmaskCheck
-    _I2C.readBytes(REGISTER_ENCODER | (MOTOR_LEFT << 2), &data[0], 4);
+    _I2C.readRegister(REGISTER_ENCODER | (MOTOR_LEFT << 2), &data[0], 4);
     _leftEncoder =   ((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]);
-    _I2C.readBytes(REGISTER_ENCODER | (MOTOR_RIGHT << 2), &data[0], 4);
+    _I2C.readRegister(REGISTER_ENCODER | (MOTOR_RIGHT << 2), &data[0], 4);
     _rightEncoder = -((data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]);
 
     // this speed value is very coarse and not useful for PID control
     // cppcheck-suppress badBitmaskCheck
-    _leftSpeed = _I2C.readByte(REGISTER_SPEED | MOTOR_LEFT);
-    _rightSpeed = _I2C.readByte(REGISTER_SPEED | MOTOR_RIGHT);
+    _leftSpeed = _I2C.readRegister(REGISTER_SPEED | MOTOR_LEFT);
+    _rightSpeed = _I2C.readRegister(REGISTER_SPEED | MOTOR_RIGHT);
 
     i2cSemaphoreGive();
 }
@@ -50,8 +50,8 @@ void Motors4EncoderMotor::setPower(float leftPower, float rightPower)
 
     i2cSemaphoreTake();
     // cppcheck-suppress badBitmaskCheck
-    _I2C.writeByte(REGISTER_PWM_DUTY | MOTOR_LEFT, leftOutput);
-    _I2C.writeByte(REGISTER_PWM_DUTY | MOTOR_RIGHT, rightOutput);
+    _I2C.writeRegister(REGISTER_PWM_DUTY | MOTOR_LEFT, leftOutput);
+    _I2C.writeRegister(REGISTER_PWM_DUTY | MOTOR_RIGHT, rightOutput);
     i2cSemaphoreGive();
 }
 
@@ -60,7 +60,7 @@ float Motors4EncoderMotor::getCurrent() const
     std::array<uint8_t, 4> data;
 
     i2cSemaphoreTake();
-    _I2C.readBytes(REGISTER_CURRENT, &data[0], sizeof(data));
+    _I2C.readRegister(REGISTER_CURRENT, &data[0], sizeof(data));
     i2cSemaphoreGive();
 
     float current;
@@ -72,7 +72,7 @@ float Motors4EncoderMotor::getCurrent() const
 float Motors4EncoderMotor::getVoltage() const
 {
     i2cSemaphoreTake();
-    const uint8_t v = _I2C.readByte(REGISTER_ADC_8_BIT);
+    const uint8_t v = _I2C.readRegister(REGISTER_ADC_8_BIT);
     i2cSemaphoreGive();
 
     const float voltage = static_cast<float>(v) / 255.0F * 3.3F / 0.16F;

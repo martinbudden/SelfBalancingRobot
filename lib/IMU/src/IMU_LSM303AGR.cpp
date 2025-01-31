@@ -85,12 +85,12 @@ IMU_LSM303AGR::IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SC
 void IMU_LSM303AGR::init()
 {
     // Clear all interrupt settings, this is the default
-    _bus.writeByte(REG_INT1_CTRL, 0x00);
-    _bus.writeByte(REG_INT2_CTRL, 0x00);
+    _bus.writeRegister(REG_INT1_CTRL, 0x00);
+    _bus.writeRegister(REG_INT2_CTRL, 0x00);
 
-    //_bus.writeByte(REG_CTRL1_XL, ODR_416_HZ | FS_XL_8G); // need to check other bits
+    //_bus.writeRegister(REG_CTRL1_XL, ODR_416_HZ | FS_XL_8G); // need to check other bits
 
-    //_bus.writeByte(REG_CTRL2_G, ODR_416_HZ | FS_G_2000_DPS); // need to check other bits
+    //_bus.writeRegister(REG_CTRL2_G, ODR_416_HZ | FS_G_2000_DPS); // need to check other bits
 
     struct setting_t {
         uint8_t reg;
@@ -106,8 +106,8 @@ void IMU_LSM303AGR::init()
     for (setting_t setting : settings) {
         //delay(1);
         int retryCount = 4;
-        while (_bus.readByte(setting.reg) != setting.value && --retryCount) {
-            _bus.writeByte(setting.reg, setting.value);
+        while (_bus.readRegister(setting.reg) != setting.value && --retryCount) {
+            _bus.writeRegister(setting.reg, setting.value);
         }
     }
     _gyroResolutionDPS = GYRO_2000DPS_RES;
@@ -120,7 +120,7 @@ IMU_Base::xyz_int32_t IMU_LSM303AGR::readGyroRaw() const
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return xyz_int32_t {
@@ -135,7 +135,7 @@ IMU_Base::xyz_int32_t IMU_LSM303AGR::readAccRaw() const
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_OUTX_L_XL, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_OUTX_L_XL, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return xyz_int32_t {
@@ -150,7 +150,7 @@ IMU_Base::gyroRPS_Acc_t IMU_LSM303AGR::readGyroRPS_Acc() const
     gyro_acc_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return gyroRPS_AccFromRaw(data);

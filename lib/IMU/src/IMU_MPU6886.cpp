@@ -113,57 +113,57 @@ void IMU_MPU6886::init()
 {
     i2cSemaphoreTake();
 
-    _imuID = _bus.readByte(REG_WHOAMI);
+    _imuID = _bus.readRegister(REG_WHOAMI);
     delay(1);
 
-    _bus.writeByte(REG_PWR_MGMT_1, 0); // clear the power management register
+    _bus.writeRegister(REG_PWR_MGMT_1, 0); // clear the power management register
     delay(10);
 
     constexpr uint8_t DEVICE_RESET = 0x01 << 7;
-    _bus.writeByte(REG_PWR_MGMT_1, DEVICE_RESET); // reset the device
+    _bus.writeRegister(REG_PWR_MGMT_1, DEVICE_RESET); // reset the device
     delay(10);
 
     constexpr uint8_t CLKSEL_1 = 0x01;
-    _bus.writeByte(REG_PWR_MGMT_1, CLKSEL_1); // CLKSEL must be set to 001 to achieve full gyroscope performance.
+    _bus.writeRegister(REG_PWR_MGMT_1, CLKSEL_1); // CLKSEL must be set to 001 to achieve full gyroscope performance.
     delay(10);
 
     // Gyro scale is fixed at 2000DPS, the maximum supported.
     constexpr uint8_t GYRO_FCHOICE_B = 0x00; // enables gyro update rate and filter configuration using REG_CONFIG
-    _bus.writeByte(REG_GYRO_CONFIG, (GFS_2000DPS << 3) | GYRO_FCHOICE_B); // cppcheck-suppress badBitmaskCheck
+    _bus.writeRegister(REG_GYRO_CONFIG, (GFS_2000DPS << 3) | GYRO_FCHOICE_B); // cppcheck-suppress badBitmaskCheck
     _gyroResolutionDPS = GYRO_2000DPS_RES;
     _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
     delay(1);
 
     // Accelerometer scale is fixed at 8G, the maximum supported.
-    _bus.writeByte(REG_ACCEL_CONFIG, AFS_8G << 3);
+    _bus.writeRegister(REG_ACCEL_CONFIG, AFS_8G << 3);
     _accResolution = ACC_8G_RES;
     delay(1);
 
     constexpr uint8_t ACC_FCHOICE_B = 0x00; // Filter:218.1 3-DB BW (Hz), least filtered 1kHz update variant
-    _bus.writeByte(REG_ACCEL_CONFIG2, ACC_FCHOICE_B);
+    _bus.writeRegister(REG_ACCEL_CONFIG2, ACC_FCHOICE_B);
     delay(1);
 
     constexpr uint8_t FIFO_MODE_OVERWRITE = 0b01000000;
-    _bus.writeByte(REG_CONFIG, DLPF_CFG_1 | FIFO_MODE_OVERWRITE);
+    _bus.writeRegister(REG_CONFIG, DLPF_CFG_1 | FIFO_MODE_OVERWRITE);
     delay(1);
 
     // M5Stack default divider is two, giving 500Hz output rate
-    _bus.writeByte(REG_SAMPLE_RATE_DIVIDER, DIVIDE_BY_2);
+    _bus.writeRegister(REG_SAMPLE_RATE_DIVIDER, DIVIDE_BY_2);
     delay(1);
 
-    _bus.writeByte(REG_FIFO_ENABLE, 0x00); // FIFO disabled
+    _bus.writeRegister(REG_FIFO_ENABLE, 0x00); // FIFO disabled
     delay(1);
 
     // M5 Unified settings
-    //_bus.writeByte(REG_INT_PIN_CFG, 0b11000000); // Active low, open drain 50us pulse width, clear on read
-    _bus.writeByte(REG_INT_PIN_CFG, 0x22);
+    //_bus.writeRegister(REG_INT_PIN_CFG, 0b11000000); // Active low, open drain 50us pulse width, clear on read
+    _bus.writeRegister(REG_INT_PIN_CFG, 0x22);
     delay(1);
 
     constexpr uint8_t DATA_RDY_INT_EN = 0x01;
-    _bus.writeByte(REG_INT_ENABLE, DATA_RDY_INT_EN); // data ready interrupt enabled
+    _bus.writeRegister(REG_INT_ENABLE, DATA_RDY_INT_EN); // data ready interrupt enabled
     delay(10);
 
-    _bus.writeByte(REG_USER_CTRL, 0x00);
+    _bus.writeRegister(REG_USER_CTRL, 0x00);
 
     i2cSemaphoreGive();
     delay(1);
@@ -192,7 +192,7 @@ void IMU_MPU6886::setGyroOffset(const xyz_int32_t& gyroOffset)
 #if false
     // Setting the XG_OFFS registers seems to have no effect, so this code disabled
     const mems_sensor_data_t offset = gyroOffsetFromXYZ(gyroOffset);
-    _bus.writeBytes(REG_XG_OFFS_USRH, reinterpret_cast<const uint8_t*>(&offset), sizeof(offset)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.writeRegister(REG_XG_OFFS_USRH, reinterpret_cast<const uint8_t*>(&offset), sizeof(offset)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     delay(1);
 #else
     _gyroOffset = gyroOffset;
@@ -204,7 +204,7 @@ IMU_Base::xyz_int32_t IMU_MPU6886::readAccRaw() const
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return xyz_int32_t {
@@ -219,7 +219,7 @@ xyz_t IMU_MPU6886::readAcc() const
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return accFromRaw(acc);
@@ -230,7 +230,7 @@ IMU_Base::xyz_int32_t IMU_MPU6886::readGyroRaw() const
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     xyz_int32_t ret {
@@ -246,7 +246,7 @@ xyz_t IMU_MPU6886::readGyroRPS() const
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return gyroRPS_FromRaw(gyro);
@@ -262,7 +262,7 @@ IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readGyroRPS_Acc() const
     acc_temperature_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return gyroRPS_AccFromRaw(data);
@@ -273,7 +273,7 @@ int32_t IMU_MPU6886::readTemperatureRaw() const
     std::array<uint8_t, 2> data;
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_TEMP_OUT_H, &data[0], sizeof(data));
+    _bus.readRegister(REG_TEMP_OUT_H, &data[0], sizeof(data));
     i2cSemaphoreGive();
 
     const int32_t temperature = static_cast<int16_t>((data[0] << 8) | data[1]); // NOLINT(hicpp-use-auto,modernize-use-auto)
@@ -290,9 +290,9 @@ float IMU_MPU6886::readTemperature() const
 void IMU_MPU6886::setFIFOEnable(bool enableflag)
 {
     i2cSemaphoreTake();
-    _bus.writeByte(REG_FIFO_ENABLE, enableflag ? 0x18 : 0x00);
+    _bus.writeRegister(REG_FIFO_ENABLE, enableflag ? 0x18 : 0x00);
     delay(1);
-    _bus.writeByte(REG_USER_CTRL, enableflag ? 0x40 : 0x00);
+    _bus.writeRegister(REG_USER_CTRL, enableflag ? 0x40 : 0x00);
     i2cSemaphoreGive();
     delay(1);
 }
@@ -301,9 +301,9 @@ void IMU_MPU6886::resetFIFO()
 {
     i2cSemaphoreTake();
 
-    uint8_t data = _bus.readByte(REG_USER_CTRL);
+    uint8_t data = _bus.readRegister(REG_USER_CTRL);
     data |= 0x04;
-    _bus.writeByte(REG_USER_CTRL, data);
+    _bus.writeRegister(REG_USER_CTRL, data);
 
     i2cSemaphoreGive();
 }
@@ -314,15 +314,15 @@ size_t IMU_MPU6886::readFIFO_ToBuffer()
 
     i2cSemaphoreTake();
 
-    _bus.readBytes(REG_FIFO_COUNT_H, &lengthData[0], sizeof(lengthData));
+    _bus.readRegister(REG_FIFO_COUNT_H, &lengthData[0], sizeof(lengthData));
     const size_t fifoLength = lengthData[0] << 8 | lengthData[1];
 
     constexpr size_t chunkSize = 8*sizeof(acc_temperature_gyro_data_t);
     const size_t count = fifoLength / chunkSize;
     for (size_t ii = 0; ii < count; ++ii) {
-        _bus.readBytes(REG_FIFO_R_W, &_fifoBuffer.data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
+        _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
     }
-    _bus.readBytes(REG_FIFO_R_W, &_fifoBuffer.data[count * chunkSize], fifoLength - count*chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access)
+    _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[count * chunkSize], fifoLength - count*chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access)
 
     i2cSemaphoreGive();
 

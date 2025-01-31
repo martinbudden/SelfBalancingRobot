@@ -19,7 +19,7 @@ I2C::I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
 #endif
 }
 
-uint8_t I2C::readByte(uint8_t reg) const
+uint8_t I2C::readRegister(uint8_t reg) const
 {
 #if !defined(UNIT_TEST_BUILD)
     Wire.beginTransmission(_I2C_address);
@@ -33,7 +33,7 @@ uint8_t I2C::readByte(uint8_t reg) const
     return 0;
 }
 
-bool I2C::readBytes(uint8_t reg, uint8_t* data, size_t length) const
+bool I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const
 {
 #if !defined(UNIT_TEST_BUILD)
     Wire.beginTransmission(_I2C_address);
@@ -65,7 +65,7 @@ bool I2C::readBytes(uint8_t* data, size_t length) const
     return false;
 }
 
-uint8_t I2C::writeByte(uint8_t reg, uint8_t data)
+uint8_t I2C::writeRegister(uint8_t reg, uint8_t data)
 {
 #if !defined(UNIT_TEST_BUILD)
     Wire.beginTransmission(_I2C_address);
@@ -77,7 +77,7 @@ uint8_t I2C::writeByte(uint8_t reg, uint8_t data)
 #endif
 }
 
-uint8_t I2C::writeBytes(uint8_t reg, const uint8_t* data, size_t length)
+uint8_t I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 {
 #if !defined(UNIT_TEST_BUILD)
     Wire.beginTransmission(_I2C_address);

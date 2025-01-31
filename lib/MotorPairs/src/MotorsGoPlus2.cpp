@@ -25,8 +25,8 @@ void MotorsGoPlus2::setPower(float leftPower, float rightPower)
 
     i2cSemaphoreTake();
 
-    _I2C.writeByte(MOTOR_LEFT, left);
-    _I2C.writeByte(MOTOR_RIGHT, right);
+    _I2C.writeRegister(MOTOR_LEFT, left);
+    _I2C.writeRegister(MOTOR_RIGHT, right);
 
     i2cSemaphoreGive();
 }

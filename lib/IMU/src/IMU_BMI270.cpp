@@ -94,10 +94,10 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin,
 
 void IMU_BMI270::init()
 {
-    _bus.writeByte(REG_PWR_CONF_ADDR, 0x00); // Power save disabled.
+    _bus.writeRegister(REG_PWR_CONF_ADDR, 0x00); // Power save disabled.
     delay(1); // 450us is minimum required
 
-    const uint8_t chipID = _bus.readByte(REG_CHIP_ID);
+    const uint8_t chipID = _bus.readRegister(REG_CHIP_ID);
     assert(chipID == 0x24);
     delay(1);
 
@@ -120,7 +120,7 @@ void IMU_BMI270::init()
     };
 
     for (const setting_t setting : settings) {
-        _bus.writeByte(setting.reg, setting.value);
+        _bus.writeRegister(setting.reg, setting.value);
         delay(1);
     }
     _gyroResolutionDPS = GYRO_2000DPS_RES;
@@ -133,7 +133,7 @@ IMU_Base::xyz_int32_t IMU_BMI270::readGyroRaw() const
     xyz_int32_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return gyro;
@@ -144,7 +144,7 @@ IMU_Base::xyz_int32_t IMU_BMI270::readAccRaw() const
     xyz_int32_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_OUTX_L_ACC, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_OUTX_L_ACC, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return acc;
@@ -160,7 +160,7 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc() const
     acc_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readBytes(REG_OUTX_L_ACC, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_OUTX_L_ACC, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return gyroRPS_AccFromRaw(data);

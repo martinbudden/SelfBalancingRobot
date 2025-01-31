@@ -25,8 +25,8 @@ void MotorsBalaC::setPower(float leftPower, float rightPower)
 
     i2cSemaphoreTake();
 
-    _I2C.writeByte(MOTOR_LEFT, leftOutput);
-    _I2C.writeByte(MOTOR_RIGHT, rightOutput);
+    _I2C.writeRegister(MOTOR_LEFT, leftOutput);
+    _I2C.writeRegister(MOTOR_RIGHT, rightOutput);
 
     i2cSemaphoreGive();
 }
