@@ -38,14 +38,14 @@ IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex) :
     i2cSemaphoreGive();
 }
 
-IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readAccRaw() const
+IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readAccRaw()
 {
     xyz_int32_t acc {};
     assert(false && ("M5Unified variants should not call readAccRaw")); // NOLINT(readability-simplify-boolean-expr)
     return acc;
 }
 
-xyz_t IMU_M5_UNIFIED::readAcc() const
+xyz_t IMU_M5_UNIFIED::readAcc()
 {
     // This is very slow on the M5 Atom.
     i2cSemaphoreTake();
@@ -64,14 +64,14 @@ xyz_t IMU_M5_UNIFIED::readAcc() const
     return acc;
 }
 
-IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readGyroRaw() const
+IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readGyroRaw()
 {
     xyz_int32_t gyro {};
     assert(false && ("M5Unified variants should not call readGyroRaw")); // NOLINT(readability-simplify-boolean-expr)
     return gyro;
 }
 
-xyz_t IMU_M5_UNIFIED::readGyroRPS() const
+xyz_t IMU_M5_UNIFIED::readGyroRPS()
 {
     // This is very slow on the M5 Atom.
     i2cSemaphoreTake();
@@ -89,7 +89,7 @@ xyz_t IMU_M5_UNIFIED::readGyroRPS() const
     return gyroRPS;
 }
 
-xyz_t IMU_M5_UNIFIED::readGyroDPS() const
+xyz_t IMU_M5_UNIFIED::readGyroDPS()
 {
     // This is very slow on the M5 Atom.
     i2cSemaphoreTake();
@@ -107,7 +107,7 @@ xyz_t IMU_M5_UNIFIED::readGyroDPS() const
     return gyroDPS;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_M5_UNIFIED::readGyroRPS_Acc() const
+IMU_Base::gyroRPS_Acc_t IMU_M5_UNIFIED::readGyroRPS_Acc()
 {
     // This is very slow on the M5 Atom.
     i2cSemaphoreTake();

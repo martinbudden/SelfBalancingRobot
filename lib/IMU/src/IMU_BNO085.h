@@ -109,10 +109,10 @@ public:
     IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_BNO085(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     void init();
     void setFeatureCommand(uint8_t reportID, uint32_t timeBetweenReportsUs, uint32_t specificConfig);
-    virtual xyz_int32_t readGyroRaw() const override;
-    virtual xyz_int32_t readAccRaw() const override;
-    virtual xyz_t readGyroRPS() const override;
-    virtual Quaternion readOrientation() const override;
+    virtual xyz_int32_t readGyroRaw() override;
+    virtual xyz_int32_t readAccRaw() override;
+    virtual xyz_t readGyroRPS() override;
+    virtual Quaternion readOrientation() override;
 public:
     xyz_t getAcc() const;
     xyz_t getAccLinear() const;

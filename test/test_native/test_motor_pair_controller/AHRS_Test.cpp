@@ -7,13 +7,13 @@ void SensorFusionFilterTest::setFreeParameters(float parameter0, float parameter
 
 void IMU_Test::setGyroOffset([[maybe_unused]] const  xyz_int32_t& gyroOffset) {}
 void IMU_Test::setAccOffset([[maybe_unused]] const  xyz_int32_t& accOffset) {}
-IMU_Base::xyz_int32_t IMU_Test::readGyroRaw() const { return xyz_int32_t{}; }
-IMU_Base::xyz_int32_t IMU_Test::readAccRaw() const { return xyz_int32_t{}; }
+IMU_Base::xyz_int32_t IMU_Test::readGyroRaw() { return xyz_int32_t{}; }
+IMU_Base::xyz_int32_t IMU_Test::readAccRaw() { return xyz_int32_t{}; }
 
-xyz_t IMU_Test::readGyroRPS() const { return xyz_t{}; }
-xyz_t IMU_Test::readGyroDPS() const { return xyz_t{}; }
-xyz_t IMU_Test::readAcc() const { return xyz_t{}; }
-IMU_Base::gyroRPS_Acc_t IMU_Test::readGyroRPS_Acc() const { return gyroRPS_Acc_t{}; }
+xyz_t IMU_Test::readGyroRPS() { return xyz_t{}; }
+xyz_t IMU_Test::readGyroDPS() { return xyz_t{}; }
+xyz_t IMU_Test::readAcc() { return xyz_t{}; }
+IMU_Base::gyroRPS_Acc_t IMU_Test::readGyroRPS_Acc() { return gyroRPS_Acc_t{}; }
 
 size_t IMU_Test::readFIFO_ToBuffer() { return 0; }
 IMU_Base::gyroRPS_Acc_t  IMU_Test::readFIFO_Item([[maybe_unused]] size_t index) { return gyroRPS_Acc_t{}; }

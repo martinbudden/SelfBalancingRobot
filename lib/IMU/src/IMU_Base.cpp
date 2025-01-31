@@ -25,7 +25,7 @@ int32_t IMU_Base::getAccOneG_Raw() const
     return 4096;
 }
 
-xyz_t IMU_Base::readGyroRPS() const
+xyz_t IMU_Base::readGyroRPS()
 {
     const xyz_int32_t gyroRaw = readGyroRaw();
     const xyz_t  gyroRPS = {
@@ -36,7 +36,7 @@ xyz_t IMU_Base::readGyroRPS() const
     return mapAxes(gyroRPS);
 }
 
-xyz_t IMU_Base::readGyroDPS() const
+xyz_t IMU_Base::readGyroDPS()
 {
     const xyz_int32_t gyroRaw = readGyroRaw();
     const xyz_t  gyroDPS = {
@@ -47,7 +47,7 @@ xyz_t IMU_Base::readGyroDPS() const
     return mapAxes(gyroDPS);
 }
 
-xyz_t IMU_Base::readAcc() const
+xyz_t IMU_Base::readAcc()
 {
     const xyz_int32_t accRaw = readAccRaw();
     const xyz_t  acc = {
@@ -58,7 +58,7 @@ xyz_t IMU_Base::readAcc() const
     return mapAxes(acc);
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_Base::readGyroRPS_Acc() const
+IMU_Base::gyroRPS_Acc_t IMU_Base::readGyroRPS_Acc()
 {
     return gyroRPS_Acc_t {
         .gyroRPS = readGyroRPS(),
@@ -66,7 +66,7 @@ IMU_Base::gyroRPS_Acc_t IMU_Base::readGyroRPS_Acc() const
     };
 }
 
-Quaternion IMU_Base::readOrientation() const
+Quaternion IMU_Base::readOrientation()
 {
     return Quaternion {};
 }

@@ -23,7 +23,7 @@ IMU_M5_STACK::IMU_M5_STACK(axis_order_t axisOrder, void* i2cMutex) :
     _accResolution = ACC_8G_RES;
 }
 
-IMU_Base::xyz_int32_t IMU_M5_STACK::readAccRaw() const
+IMU_Base::xyz_int32_t IMU_M5_STACK::readAccRaw()
 {
     int16_t x {};
     int16_t y {};
@@ -36,7 +36,7 @@ IMU_Base::xyz_int32_t IMU_M5_STACK::readAccRaw() const
     return xyz_int32_t {.x = x, .y = y, .z = z };
 }
 
-xyz_t IMU_M5_STACK::readAcc() const
+xyz_t IMU_M5_STACK::readAcc()
 {
     xyz_t acc {};
 
@@ -47,7 +47,7 @@ xyz_t IMU_M5_STACK::readAcc() const
     return acc;
 }
 
-IMU_Base::xyz_int32_t IMU_M5_STACK::readGyroRaw() const
+IMU_Base::xyz_int32_t IMU_M5_STACK::readGyroRaw()
 {
     int16_t x {};
     int16_t y {};
@@ -60,7 +60,7 @@ IMU_Base::xyz_int32_t IMU_M5_STACK::readGyroRaw() const
     return xyz_int32_t {.x = x, .y = y, .z = z };
 }
 
-xyz_t IMU_M5_STACK::readGyroRPS() const
+xyz_t IMU_M5_STACK::readGyroRPS()
 {
     xyz_t gyroRPS {};
 
@@ -75,7 +75,7 @@ xyz_t IMU_M5_STACK::readGyroRPS() const
     return gyroRPS;
 }
 
-xyz_t IMU_M5_STACK::readGyroDPS() const
+xyz_t IMU_M5_STACK::readGyroDPS()
 {
     xyz_t gyroDPS {};
 
@@ -86,7 +86,7 @@ xyz_t IMU_M5_STACK::readGyroDPS() const
     return gyroDPS;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readGyroRPS_Acc() const
+IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readGyroRPS_Acc()
 {
     gyroRPS_Acc_t gyroAcc {};
 

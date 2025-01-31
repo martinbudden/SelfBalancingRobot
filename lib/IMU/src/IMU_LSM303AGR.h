@@ -35,10 +35,10 @@ public:
     };
 #pragma pack(pop)
 public:
-    virtual xyz_int32_t readAccRaw() const override;
-    virtual xyz_int32_t readGyroRaw() const override;
+    virtual xyz_int32_t readAccRaw() override;
+    virtual xyz_int32_t readGyroRaw() override;
 
-    virtual gyroRPS_Acc_t readGyroRPS_Acc() const override;
+    virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
 
     virtual size_t readFIFO_ToBuffer() override;
     virtual gyroRPS_Acc_t readFIFO_Item(size_t index) override;

@@ -76,22 +76,22 @@ void IMU_BNO085::setFeatureCommand(uint8_t reportID, uint32_t timeBetweenReports
     sendPacket(CHANNEL_SENSOR_HUB_CONTROL, 17);
 }
 
-IMU_Base::xyz_int32_t IMU_BNO085::readGyroRaw() const
+IMU_Base::xyz_int32_t IMU_BNO085::readGyroRaw()
 {
     IMU_Base::xyz_int32_t ret {};
     return ret;
 }
 
-IMU_Base::xyz_int32_t IMU_BNO085::readAccRaw() const
+IMU_Base::xyz_int32_t IMU_BNO085::readAccRaw()
 {
     IMU_Base::xyz_int32_t ret {};
     return ret;
 }
 
-Quaternion IMU_BNO085::readOrientation() const
+Quaternion IMU_BNO085::readOrientation()
 {
     while (!_orientationAvailable) {
-        const_cast<IMU_BNO085*>(this)->readPacketAndParse(); //!!TODO, for now
+        readPacketAndParse();
     }
     _orientationAvailable = false;
     // for SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR 0x2A // Q point = 14 for orientation, Q point = 10 for gyro
@@ -105,10 +105,10 @@ Quaternion IMU_BNO085::readOrientation() const
     );
 }
 
-xyz_t IMU_BNO085::readGyroRPS() const
+xyz_t IMU_BNO085::readGyroRPS()
 {
     while (!_gyroAvailable) {
-        const_cast<IMU_BNO085*>(this)->readPacketAndParse(); //!!TODO, for now
+        readPacketAndParse();
     }
     _gyroAvailable = false;
     // for SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR 0x2A // Q point = 14 for orientation, Q point = 10 for gyro

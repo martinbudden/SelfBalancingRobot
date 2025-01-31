@@ -128,7 +128,7 @@ void IMU_BMI270::init()
     _accResolution = ACC_16G_RES;
 }
 
-IMU_Base::xyz_int32_t IMU_BMI270::readGyroRaw() const
+IMU_Base::xyz_int32_t IMU_BMI270::readGyroRaw()
 {
     xyz_int32_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -139,7 +139,7 @@ IMU_Base::xyz_int32_t IMU_BMI270::readGyroRaw() const
     return gyro;
 }
 
-IMU_Base::xyz_int32_t IMU_BMI270::readAccRaw() const
+IMU_Base::xyz_int32_t IMU_BMI270::readAccRaw()
 {
     xyz_int32_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -155,7 +155,7 @@ int32_t IMU_BMI270::getAccOneG_Raw() const
     return 2048;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc() const
+IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc()
 {
     acc_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 

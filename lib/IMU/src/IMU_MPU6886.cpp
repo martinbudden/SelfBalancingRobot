@@ -199,7 +199,7 @@ void IMU_MPU6886::setGyroOffset(const xyz_int32_t& gyroOffset)
 #endif
 }
 
-IMU_Base::xyz_int32_t IMU_MPU6886::readAccRaw() const
+IMU_Base::xyz_int32_t IMU_MPU6886::readAccRaw()
 {
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -214,7 +214,7 @@ IMU_Base::xyz_int32_t IMU_MPU6886::readAccRaw() const
     };
 }
 
-xyz_t IMU_MPU6886::readAcc() const
+xyz_t IMU_MPU6886::readAcc()
 {
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -225,7 +225,7 @@ xyz_t IMU_MPU6886::readAcc() const
     return accFromRaw(acc);
 }
 
-IMU_Base::xyz_int32_t IMU_MPU6886::readGyroRaw() const
+IMU_Base::xyz_int32_t IMU_MPU6886::readGyroRaw()
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -241,7 +241,7 @@ IMU_Base::xyz_int32_t IMU_MPU6886::readGyroRaw() const
     return ret;
 }
 
-xyz_t IMU_MPU6886::readGyroRPS() const
+xyz_t IMU_MPU6886::readGyroRPS()
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -252,12 +252,12 @@ xyz_t IMU_MPU6886::readGyroRPS() const
     return gyroRPS_FromRaw(gyro);
 }
 
-xyz_t IMU_MPU6886::readGyroDPS() const
+xyz_t IMU_MPU6886::readGyroDPS()
 {
     return readGyroRPS() * radiansToDegrees;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readGyroRPS_Acc() const
+IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readGyroRPS_Acc()
 {
     acc_temperature_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 

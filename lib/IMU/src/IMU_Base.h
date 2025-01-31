@@ -41,17 +41,17 @@ public:
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);
     virtual void setAccOffset(const xyz_int32_t& accOffset);
 
-    virtual xyz_int32_t readGyroRaw() const = 0;
-    virtual xyz_int32_t readAccRaw() const = 0;
+    virtual xyz_int32_t readGyroRaw() = 0;
+    virtual xyz_int32_t readAccRaw() = 0;
     virtual int32_t getAccOneG_Raw() const;
 
     // read functions have default implementations in the base class for convenience,
     // but should be reimplemented in derived classes for efficiency
-    virtual xyz_t readGyroRPS() const;
-    virtual xyz_t readGyroDPS() const;
-    virtual xyz_t readAcc() const;
-    virtual gyroRPS_Acc_t readGyroRPS_Acc() const;
-    virtual Quaternion readOrientation() const;
+    virtual xyz_t readGyroRPS();
+    virtual xyz_t readGyroDPS();
+    virtual xyz_t readAcc();
+    virtual gyroRPS_Acc_t readGyroRPS_Acc();
+    virtual Quaternion readOrientation();
 
     // by default the FIFO is not enabled
     virtual size_t readFIFO_ToBuffer();

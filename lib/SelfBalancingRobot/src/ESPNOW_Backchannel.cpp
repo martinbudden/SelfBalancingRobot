@@ -162,7 +162,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         transmit = true;
         break;
 #if defined(USE_ESP32_PREFERENCES)
-    case CommandPacketSetPID::SAVE_P:
+    case CommandPacketSetPID::SAVE_P: // NOLINT(bugprone-branch-clone) false positive
         [[fallthrough]];
     case CommandPacketSetPID::SAVE_I:
         [[fallthrough]];

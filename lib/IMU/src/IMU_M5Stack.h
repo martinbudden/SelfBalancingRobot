@@ -7,13 +7,13 @@ class IMU_M5_STACK : public IMU_Base {
 public:
     IMU_M5_STACK(axis_order_t axisOrder, void* i2cMutex);
 public:
-    virtual xyz_int32_t readGyroRaw() const override;
-    virtual xyz_int32_t readAccRaw() const override;
+    virtual xyz_int32_t readGyroRaw() override;
+    virtual xyz_int32_t readAccRaw() override;
 
-    virtual xyz_t readGyroRPS() const override;
-    virtual xyz_t readGyroDPS() const override;
-    virtual xyz_t readAcc() const override;
-    virtual gyroRPS_Acc_t readGyroRPS_Acc() const override;
+    virtual xyz_t readGyroRPS() override;
+    virtual xyz_t readGyroDPS() override;
+    virtual xyz_t readAcc() override;
+    virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
 
     virtual size_t readFIFO_ToBuffer() override;
     virtual gyroRPS_Acc_t  readFIFO_Item(size_t index) override;

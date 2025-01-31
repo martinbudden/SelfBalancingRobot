@@ -30,11 +30,11 @@ public:
     IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_BMI270(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     void init();
 public:
-    virtual xyz_int32_t readGyroRaw() const override;
-    virtual xyz_int32_t readAccRaw() const override;
+    virtual xyz_int32_t readGyroRaw() override;
+    virtual xyz_int32_t readAccRaw() override;
     virtual int32_t getAccOneG_Raw() const override;
 
-    virtual gyroRPS_Acc_t readGyroRPS_Acc() const override;
+    virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
 private:
     gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const;
 private:

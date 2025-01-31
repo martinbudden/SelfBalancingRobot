@@ -115,7 +115,7 @@ void IMU_LSM303AGR::init()
     _accResolution = ACC_8G_RES;
 }
 
-IMU_Base::xyz_int32_t IMU_LSM303AGR::readGyroRaw() const
+IMU_Base::xyz_int32_t IMU_LSM303AGR::readGyroRaw()
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -130,7 +130,7 @@ IMU_Base::xyz_int32_t IMU_LSM303AGR::readGyroRaw() const
     };
 }
 
-IMU_Base::xyz_int32_t IMU_LSM303AGR::readAccRaw() const
+IMU_Base::xyz_int32_t IMU_LSM303AGR::readAccRaw()
 {
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -145,7 +145,7 @@ IMU_Base::xyz_int32_t IMU_LSM303AGR::readAccRaw() const
     };
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_LSM303AGR::readGyroRPS_Acc() const
+IMU_Base::gyroRPS_Acc_t IMU_LSM303AGR::readGyroRPS_Acc()
 {
     gyro_acc_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
