@@ -13,8 +13,8 @@ public:
         CHANNEL_EXECUTABLE = 1,
         CHANNEL_SENSOR_HUB_CONTROL = 2,
         CHANNEL_INPUT_SENSOR_REPORTS = 3,
-        CHANNEL_WAKE_UP_INPUT_SENSOR_REPORTS = 4, 
-        CHANNEL_GYRO_INTEGRATED_ROTATION_VECTOR_REPORT = 5, 
+        CHANNEL_WAKE_UP_INPUT_SENSOR_REPORTS = 4,
+        CHANNEL_GYRO_INTEGRATED_ROTATION_VECTOR_REPORT = 5,
         CHANNEL_COUNT = 6
     };
     enum {
@@ -26,7 +26,7 @@ public:
         SENSOR_REPORTID_ROTATION_VECTOR = 0x05, // Q point = 14
         SENSOR_REPORTID_GRAVITY = 0x06, // Q point = 8
         SENSOR_REPORTID_GYROSCOPE_UNCALIBRATED = 0x07, // Q point = 9
-        // produced by fusing the outputs of the accelerometer and the gyroscope (ie no magnetometer). 
+        // produced by fusing the outputs of the accelerometer and the gyroscope (ie no magnetometer).
         SENSOR_REPORTID_GAME_ROTATION_VECTOR = 0x08, // Q point = 14
         SENSOR_REPORTID_GEOMAGNETIC_ROTATION_VECTOR = 0x09,
         SENSOR_REPORTID_TAP_DETECTOR = 0x10,
@@ -158,7 +158,7 @@ protected:
     rotation_vector_t _rotationVector {};
 
     sensor_output_t _acc {};
-    sensor_output_t _accLinear {}; // Acceleration of the device with gravity removed 
+    sensor_output_t _accLinear {}; // Acceleration of the device with gravity removed
     sensor_output_t _gyroRPS {};
     sensor_output_t _mag {};
     sensor_output_t _gravity {};

@@ -29,7 +29,7 @@ public:
         CONTROL_MODE_PARALLEL_PIDS, //!< Parallel configuration for pitch and speed PIDs. Pitch and speed are independently set.
         CONTROL_MODE_POSITION //!< The speed PID is used to set position rather than speed. Movement is obtained by incrementing position.
     };
-    enum pid_index_t { 
+    enum pid_index_t {
         PITCH_ANGLE_DEGREES=0,
         SPEED_DPS=1,
         YAW_RATE_DPS=2,

@@ -26,7 +26,7 @@ enum {
 
 enum { EXECUTABLE_RESET_COMPLETE = 0x1 };
 
-enum { 
+enum {
     COMMAND_REPORT_ERRORS = 0x01,
     COMMAND_COUNTER_COMMANDS = 0x02, // sub-commands specified in P0
     COMMAND_TARE = 0x03,
@@ -225,17 +225,17 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
 {
     if (packet.timestamp[0] == REPORT_ID_BASE_TIMESTAMP_REFERENCE) {
         _timestamp = (static_cast<uint32_t>(packet.timestamp[4]) << 24)
-            | (static_cast<uint32_t>(packet.timestamp[3]) << 16) 
-            | (static_cast<uint32_t>(packet.timestamp[2]) << 8) 
+            | (static_cast<uint32_t>(packet.timestamp[3]) << 16)
+            | (static_cast<uint32_t>(packet.timestamp[2]) << 8)
             | static_cast<uint32_t>(packet.timestamp[1]);
     }
 
     /*
-    Bits 1:0 - indicate the status of a sensor. 
-    0 - Unreliable 
-    1 - Accuracy low 
-    2 - Accuracy medium 
-    3 - Accuracy high 
+    Bits 1:0 - indicate the status of a sensor.
+    0 - Unreliable
+    1 - Accuracy low
+    2 - Accuracy medium
+    3 - Accuracy high
     Bits 7:2 - Delay upper bits: 6 most-significant bits of report delay
     */
     const uint8_t reportID = packet.data[0];
@@ -388,7 +388,7 @@ bool IMU_BNO085::readPacket()
     // Check for a reset complete packet
     if (_shtpPacket.header.channel == CHANNEL_EXECUTABLE && _shtpPacket.data[0] == EXECUTABLE_RESET_COMPLETE) {
         _resetCompleteReceived = true;
-    } 
+    }
     return true;
 }
 

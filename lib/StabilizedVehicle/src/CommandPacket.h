@@ -16,7 +16,7 @@ struct CommandPacketReserved {
 
 struct CommandPacketControl {
     enum { TYPE = 1 };
-    enum { 
+    enum {
         NO_ACTION = 0, MOTORS_SWITCH_OFF = 1, MOTORS_SWITCH_ON = 2, RESET = 3,
         CONTROL_MODE_0 = 20,
         CONTROL_MODE_1 = 21,

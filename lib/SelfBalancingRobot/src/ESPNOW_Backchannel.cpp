@@ -260,7 +260,7 @@ bool Backchannel::update()
         //Serial.printf("tiLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
         break;
-    } 
+    }
     case SEND_AHRS_DATA: {
         const int len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
         //Serial.printf("ahrsLen:%d\r\n", len);

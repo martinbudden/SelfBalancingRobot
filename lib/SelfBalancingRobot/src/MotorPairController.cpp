@@ -135,7 +135,7 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
         speedDPS = speedMovingAverageFilter.update(speedDPS);
         // additionally apply IIR filter.
         _speedDPS = _speedFilter.update(speedDPS);
-       
+
         //static float motorSpeed {0.0};
         //static constexpr float motorSpeedWeighting {0.8};
         //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
