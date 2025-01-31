@@ -163,11 +163,11 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         break;
 #if defined(USE_ESP32_PREFERENCES)
     case CommandPacketSetPID::SAVE_P:
-        [[fallthrough]]
+        [[fallthrough]];
     case CommandPacketSetPID::SAVE_I:
-        [[fallthrough]]
+        [[fallthrough]];
     case CommandPacketSetPID::SAVE_D:
-        [[fallthrough]]
+        [[fallthrough]];
     case CommandPacketSetPID::SAVE_F:
         //Serial.printf("Saved PID packetType:%d pidIndex:%d  setType:%d\r\n", packet.type, packet.pidIndex, packet.setType);
         // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.

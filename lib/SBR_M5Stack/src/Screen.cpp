@@ -541,12 +541,12 @@ void Screen::updateTemplate() const
         updateTemplate128x128();
         break;
     case SIZE_135x240:
-        [[fallthrough]]
+        [[fallthrough]];
     case SIZE_80x160:
         updateTemplate80x160();
         break;
     case SIZE_320x240:
-        [[fallthrough]]
+        [[fallthrough]];
     default:
         updateTemplate320x240();
     }
@@ -559,12 +559,12 @@ void Screen::updateReceivedData() const
         updateReceivedData128x128();
         break;
     case SIZE_135x240:
-        [[fallthrough]]
+        [[fallthrough]];
     case SIZE_80x160:
         updateReceivedData80x160();
         break;
     case SIZE_320x240:
-        [[fallthrough]]
+        [[fallthrough]];
     default:
         updateReceivedData320x240();
     }
@@ -582,7 +582,7 @@ void Screen::update(const TD_AHRS::Data& ahrsData) const
         update80x160(ahrsData);
         break;
     case SIZE_320x240:
-        [[fallthrough]]
+        [[fallthrough]];
     default:
         update320x240(ahrsData);
     }
