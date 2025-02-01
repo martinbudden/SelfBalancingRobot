@@ -131,7 +131,7 @@ void Screen::updateTemplate128x128() const
     M5.Lcd.setCursor(0, 20);
     displayEUI("J:", _receiver.getPrimaryPeerEUI());
 
-    int yPos = 35;
+    int32_t yPos = 35;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("pi:");
 
@@ -165,7 +165,7 @@ void Screen::updateTemplate128x128() const
 void Screen::updateReceivedData128x128() const
 {
     // M5StickC
-    int yPos = 75;
+    int32_t yPos = 75;
     M5.Lcd.setCursor(12, yPos);
     const ReceiverBase::controls_t controls = _receiver.getControls();
     M5.Lcd.printf("%6d", controls.throttleStickQ4dot12);
@@ -185,7 +185,7 @@ void Screen::updateReceivedData128x128() const
 
 void Screen::update128x128(const TD_AHRS::Data& ahrsData) const
 {
-    int yPos = 35;
+    int32_t yPos = 35;
 
     M5.Lcd.setCursor(18, yPos);
     M5.Lcd.printf("%5.0F", ahrsData.pitch);
@@ -208,7 +208,7 @@ void Screen::updateTemplate80x160() const
     M5.Lcd.setCursor(0, 20);
     displayEUI_Compact("", _receiver.getPrimaryPeerEUI());
 
-    int yPos = 30;
+    int32_t yPos = 30;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("pi:");
 
@@ -238,7 +238,7 @@ void Screen::updateTemplate80x160() const
 void Screen::updateReceivedData80x160() const
 {
     // M5StickC
-    int yPos = 90;
+    int32_t yPos = 90;
     M5.Lcd.setCursor(12, yPos);
     const ReceiverBase::controls_t controls = _receiver.getControls();
     M5.Lcd.printf("%6d", controls.throttleStickQ4dot12);
@@ -265,7 +265,7 @@ void Screen::updateReceivedData80x160() const
 
 void Screen::update80x160(const TD_AHRS::Data& ahrsData) const
 {
-    int yPos = 30;
+    int32_t yPos = 30;
     const bool displayAcc = true;
 
     M5.Lcd.setCursor(18, yPos);
@@ -321,7 +321,7 @@ void Screen::updateTemplate135x240() const
     M5.Lcd.setCursor(0, 20);
     displayEUI("J:", _receiver.getPrimaryPeerEUI());
 
-    int yPos = 45;
+    int32_t yPos = 45;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("pi:");
 
@@ -364,7 +364,7 @@ void Screen::updateReceivedData135x240() const
 
 void Screen::update135x240(const TD_AHRS::Data& ahrsData) const
 {
-    int yPos = 45;
+    int32_t yPos = 45;
 
     M5.Lcd.setCursor(36, yPos);
     M5.Lcd.printf("%5.0F", ahrsData.pitch);
@@ -400,7 +400,7 @@ void Screen::updateTemplate320x240() const
     M5.Lcd.setCursor(0, 20);
     displayEUI("REM:", _receiver.getPrimaryPeerEUI());
 
-    int yPos = 45;
+    int32_t yPos = 45;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("pi:");
 
@@ -456,7 +456,7 @@ void Screen::updateTemplate320x240() const
 
 void Screen::updateReceivedData320x240() const
 {
-    int yPos = 110;
+    int32_t yPos = 110;
 
     M5.Lcd.setCursor(20, yPos);
     const ReceiverBase::controls_t controls = _receiver.getControls();
@@ -472,9 +472,9 @@ void Screen::updateReceivedData320x240() const
 
     yPos += 20;
     M5.Lcd.setCursor(0, yPos);
-    const uint8_t mode = _receiver.getSwitch(0);
-    const uint8_t altMode = _receiver.getSwitch(1);
-    const uint8_t flipButton =_receiver.getSwitch(2);
+    const uint32_t mode = _receiver.getSwitch(0);
+    const uint32_t altMode = _receiver.getSwitch(1);
+    const uint32_t flipButton =_receiver.getSwitch(2);
     M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == AtomJoyStickReceiver::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 
     M5.Lcd.setCursor(255, yPos);
@@ -483,7 +483,7 @@ void Screen::updateReceivedData320x240() const
 
 void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
 {
-    int yPos = 45;
+    int32_t yPos = 45;
     M5.Lcd.setCursor(36, yPos);
     if (ahrsData.roll == FLT_MAX) {
         M5.Lcd.printf("%5.0F", ahrsData.pitch);

@@ -14,7 +14,7 @@ Receiver::Receiver(const uint8_t* macAddress) :
 /*!
 Setup the receiver. Initialize the Atom JoyStick receiver.
 */
-esp_err_t Receiver::setup(int channel)
+esp_err_t Receiver::setup(uint8_t channel)
 {
 #if defined(ATOM_JOYSTICK_MAC_ADDRESS)
     static constexpr uint8_t atomJoyStickMacAddress[ESP_NOW_ETH_ALEN] ATOM_JOYSTICK_MAC_ADDRESS;
@@ -95,7 +95,7 @@ float Receiver::mapYawStick(float yawStick)
     // map the yaw stick to a quadratic curve to give more control for small values of yaw.
     // higher values of a increase the effect
     // a=0 gives a linear response, a=1 gives a parabolic (x^2) curve
-    static constexpr float a { 0.2 };
+    static constexpr float a { 0.2F };
     const float ret = (1.0F - a) * yawStick + (yawStick < 0.0F ? -a*yawStick*yawStick : a*yawStick*yawStick);
     return ret;
 }

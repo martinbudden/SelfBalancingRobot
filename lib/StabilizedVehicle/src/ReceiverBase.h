@@ -43,5 +43,4 @@ protected:
     uint32_t _switches {0}; // 16 2 or 3 positions switches, each using 2-bits
     controls_t _controls {}; //!< the main 4 channels
     std::array<uint8_t, 4> _aux {}; //!< 4 8-bit auxiliary channels
-
 };

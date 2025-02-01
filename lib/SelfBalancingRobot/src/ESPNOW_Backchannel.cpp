@@ -157,7 +157,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         transmit = true;
         break;
     case CommandPacketSetPID::SET_PITCH_BALANCE_ANGLE:
-        // Set the balance angel, the value of packet.pidIndex is ignored.
+        // Set the balance angle, the value of packet.pidIndex is ignored.
         _motorPairController.setPitchBalanceAngleDegrees(packet.value);
         transmit = true;
         break;

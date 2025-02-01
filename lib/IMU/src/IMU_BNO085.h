@@ -170,5 +170,5 @@ protected:
     sensor_output_t _gyroRaw {};
     sensor_output_t _magRaw {};
 
-    uint8_t _calibrationStatus {}; //Byte R0 of MotionEnging Calibration Response
+    uint8_t _calibrationStatus {}; //Byte R0 of MotionEngine Calibration Response
 };

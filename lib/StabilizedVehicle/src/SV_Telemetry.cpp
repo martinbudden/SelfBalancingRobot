@@ -35,22 +35,22 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
     td->type = TD_TICK_INTERVALS::TYPE;
     td->len = sizeof(TD_TICK_INTERVALS);
 
-    td->ahrsTaskTickIntervalTicks = ahrs.getTickCountDelta();
-    td->ahrsTaskTickIntervalMicroSeconds = ahrs.getTimeMicroSecondDelta();
+    td->ahrsTaskTickIntervalTicks = static_cast<uint8_t>(ahrs.getTickCountDelta());
+    td->ahrsTaskTickIntervalMicroSeconds = static_cast<uint16_t>(ahrs.getTimeMicroSecondDelta());
 
     static_assert(TD_TICK_INTERVALS::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
-    td->ahrsTaskFifoCount = ahrs.getFifoCount();
+    td->ahrsTaskFifoCount = static_cast<uint8_t>(ahrs.getFifoCount());
     for (int ii = 0; ii < TD_TICK_INTERVALS::TIME_CHECKS_COUNT; ++ii) {
-        td->ahrsTimeChecksMicroSeconds[ii] = ahrs.getTimeChecksMicroSeconds(ii);
+        td->ahrsTimeChecksMicroSeconds[ii] = static_cast<uint16_t>(ahrs.getTimeChecksMicroSeconds(ii));
     }
 
-    td->mcTaskTickIntervalMicroSeconds = motorController.getTimeMicroSecondDelta();
-    td->mcOutputPowerTimeMicroSeconds = mcOutputPowerTimeMicroSeconds;
-    td->mcTaskTickIntervalTicks = motorController.getTickCountDelta();
+    td->mcTaskTickIntervalMicroSeconds = static_cast<uint16_t>(motorController.getTimeMicroSecondDelta());
+    td->mcOutputPowerTimeMicroSeconds = static_cast<uint16_t>(mcOutputPowerTimeMicroSeconds);
+    td->mcTaskTickIntervalTicks = static_cast<uint8_t>(motorController.getTickCountDelta());
 
-    td->mainTaskTickInterval = mainTaskTickCountDelta;
-    td->transceiverTickCountDelta = transceiverTickCountDelta;
-    td->receiverDroppedPacketCount = receiverDroppedPacketCount;
+    td->mainTaskTickInterval = static_cast<uint8_t>(mainTaskTickCountDelta);
+    td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
+    td->receiverDroppedPacketCount = static_cast<uint8_t>(receiverDroppedPacketCount);
 
     return td->len;
 }
@@ -75,7 +75,7 @@ int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS& a
         .acc = ahrsData.acc
     };
 
-    td->tickInterval = ahrsData.tickCountDelta;
+    td->tickInterval = static_cast<uint8_t>(ahrsData.tickCountDelta);
 
     td->flags = ahrs.sensorFusionFilterIsInitializing() ? TD_AHRS::FILTER_INITIALIZING_FLAG : 0x00;
 
@@ -92,8 +92,8 @@ int packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, const Rec
     td->id = id;
     td->type = TD_RECEIVER::TYPE;
     td->len = sizeof(TD_RECEIVER);
-    td->tickInterval = receiver.getTickCountDelta();
-    td->droppedPacketCount = receiver.getDroppedPacketCountDelta();
+    td->tickInterval = static_cast<uint8_t>(receiver.getTickCountDelta());
+    td->droppedPacketCount = static_cast<uint8_t>(receiver.getDroppedPacketCountDelta());
 
     td->data.controls = receiver.getControls(),
     td->data.switches = receiver.getSwitches(),

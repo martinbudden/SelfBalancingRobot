@@ -16,7 +16,7 @@ private:
     Receiver(Receiver&&) = delete;
     Receiver& operator=(Receiver&&) = delete;
 public:
-    esp_err_t setup(int channel);
+    esp_err_t setup(uint8_t channel);
     void setMotorController(MotorPairController* motorController) { _motorController = motorController; } //!< Sets the motorController, which must be set before update() is called.
 
     virtual bool update(uint32_t tickCountDelta) override;

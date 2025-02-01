@@ -27,7 +27,7 @@ uint8_t I2C::readRegister(uint8_t reg) const
     Wire.endTransmission();
 
     if (Wire.requestFrom(_I2C_address, static_cast<uint8_t>(1))) {
-        return Wire.read();
+        return static_cast<uint8_t>(Wire.read());
     }
 #endif
     return 0;
@@ -40,10 +40,10 @@ bool I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const
     Wire.write(reg);
     Wire.endTransmission();
 
-    if (Wire.requestFrom(_I2C_address, length)) {
+    if (Wire.requestFrom(_I2C_address, static_cast<uint8_t>(length))) {
         uint8_t pos = 0; // NOLINT(misc-const-correctness) false positive
         for (size_t ii = 0; ii < length; ++ii) {
-            data[pos++] = Wire.read();
+            data[pos++] = static_cast<uint8_t>(Wire.read());
         }
         return true;
     }
@@ -54,10 +54,10 @@ bool I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const
 bool I2C::readBytes(uint8_t* data, size_t length) const
 {
 #if !defined(UNIT_TEST_BUILD)
-    if (Wire.requestFrom(_I2C_address, length)) {
+    if (Wire.requestFrom(_I2C_address, static_cast<uint8_t>(length))) {
         uint8_t pos = 0; // NOLINT(misc-const-correctness) false positive
         for (size_t ii = 0; ii < length; ++ii) {
-            data[pos++] = Wire.read();
+            data[pos++] = static_cast<uint8_t>(Wire.read());
         }
         return true;
     }
