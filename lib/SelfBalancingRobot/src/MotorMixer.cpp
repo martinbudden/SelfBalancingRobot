@@ -22,7 +22,7 @@ void MotorMixer::outputToMotors(const output_t& outputs, float deltaT, uint32_t 
     // Disable the motors if the pitchAngle exceeds the switchOffAngle.
     // Don't switch on again for at least 2 seconds after robot falls over (ie don't switch on if it falls over and bounces back up again).
     constexpr uint32_t robotDebounceIntervalMs = 2000;
-    _motorsIsDisabled = (fabs(_pitchAngleDegreesRaw) >= _motorSwitchOffAngleDegrees) || ((tickCount - _motorSwitchOffTickCount) < robotDebounceIntervalMs);
+    _motorsIsDisabled = (fabsf(_pitchAngleDegreesRaw) >= _motorSwitchOffAngleDegrees) || ((tickCount - _motorSwitchOffTickCount) < robotDebounceIntervalMs);
 
     if (_motorsIsOn && !_motorsIsDisabled) {
         _motorSwitchOffTickCount = 0; // reset the bounce prevention tickcount

@@ -281,8 +281,8 @@ void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientat
     const float accPitchAngleRadians = std::atan2(acc.y, acc.z);
     //const float accRollAngleRadians = std::atan2(-acc.x, sqrtf(acc.y*acc.y + acc.z*acc.z));
 
-    //Serial.printf("acc:P%5.1f mag:P%5.1f         diff:%5.1f\r\n", accPitchAngleRadians/degreesToRadians, madgwickRollAngleRadians/degreesToRadians, fabs(accPitchAngleRadians - madgwickRollAngleRadians)/degreesToRadians);
-    if (fabs(accPitchAngleRadians - madgwickRollAngleRadians) < twoDegreesInRadians && accPitchAngleRadians != madgwickRollAngleRadians) {
+    //Serial.printf("acc:P%5.1f mag:P%5.1f         diff:%5.1f\r\n", accPitchAngleRadians/degreesToRadians, madgwickRollAngleRadians/degreesToRadians, fabsf(accPitchAngleRadians - madgwickRollAngleRadians)/degreesToRadians);
+    if (fabsf(accPitchAngleRadians - madgwickRollAngleRadians) < twoDegreesInRadians && accPitchAngleRadians != madgwickRollAngleRadians) {
         // the angles have converged to within 2 degrees, so set we can reduce the gain.
         setSensorFusionFilterInitializing(false);
         _sensorFusionFilter.setFreeParameters(0.615F, 0.0F); // corresponds to gyro measurement error of 15*2.7 degree/second, as discussed my Madgwick
