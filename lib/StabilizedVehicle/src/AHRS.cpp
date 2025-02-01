@@ -124,7 +124,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 /*!
 Task function for the AHRS. Sets up and runs the task loop() function.
 */
-void AHRS::Task(const TaskParameters* taskParameters)
+[[noreturn]] void AHRS::Task(const TaskParameters* taskParameters)
 {
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
@@ -157,20 +157,21 @@ void AHRS::Task(const TaskParameters* taskParameters)
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
             (void)readIMUandUpdateOrientation(deltaT);
         }
-#endif
+#endif // AHRS_IS_INTERRUPT_DRIVEN
     }
-#endif
+#else
+    while (true) {}
+#endif // USE_FREERTOS
 }
 
 /*!
 Wrapper function for AHRS::Task with the correct signature to be used in xTaskCreate.
 */
-void AHRS::Task(void* arg)
+[[noreturn]] void AHRS::Task(void* arg)
 {
     const AHRS::TaskParameters* taskParameters = static_cast<AHRS::TaskParameters*>(arg);
 
-    AHRS* ahrs = taskParameters->ahrs;
-    ahrs->Task(taskParameters);
+    taskParameters->ahrs->Task(taskParameters);
 }
 
 /*!

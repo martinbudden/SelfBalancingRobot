@@ -331,7 +331,7 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
         _gyroUncalibratedBiasY  = static_cast<uint16_t>(packet.data[13]) << 8 | packet.data[12];
         _gyroUncalibratedBiasZ  = static_cast<uint16_t>(packet.data[15]) << 8 | packet.data[14];
         break;
-    case SENSOR_REPORTID_ROTATION_VECTOR:
+    case SENSOR_REPORTID_ROTATION_VECTOR: // NOLINT(bugprone-branch-clone) false positive
         [[fallthrough]];
     case SENSOR_REPORTID_GEOMAGNETIC_ROTATION_VECTOR:
         [[fallthrough]];
@@ -387,7 +387,7 @@ uint16_t IMU_BNO085::readPacketAndParse()
     if (readPacket() == true) {
         //Check to see if this packet is a sensor reporting its data to us
         switch (_shtpPacket.header.channel) {
-        case CHANNEL_SENSOR_HUB_CONTROL:
+        case CHANNEL_SENSOR_HUB_CONTROL: // NOLINT(bugprone-branch-clone) false positive
             return parseCommandResponse(_shtpPacket);
             break;
         case CHANNEL_INPUT_SENSOR_REPORTS:

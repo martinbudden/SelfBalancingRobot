@@ -71,7 +71,7 @@ public:
         MotorPairController* motorPairController;
         uint32_t tickIntervalMilliSeconds;
     };
-    static void Task(void* arg);
+    [[noreturn]] static void Task(void* arg);
     void loop(float deltaT, uint32_t tickCount);
 public:
     void updateSetpointsAndMotorSpeedEstimates(float deltaT);
@@ -81,7 +81,7 @@ public:
 private:
     void updatePositionOutputs(float deltaT);
     MotorPairBase& allocateMotors();
-    void Task(const TaskParameters* taskParameters);
+    [[noreturn]] void Task(const TaskParameters* taskParameters);
 private:
     const AHRS& _ahrs;
     const ReceiverBase& _receiver;

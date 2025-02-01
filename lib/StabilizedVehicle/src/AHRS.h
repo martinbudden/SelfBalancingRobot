@@ -64,10 +64,10 @@ public:
         AHRS* ahrs;
         uint32_t tickIntervalMilliSeconds;
     };
-    static void Task(void* arg);
+    [[noreturn]] static void Task(void* arg);
     bool readIMUandUpdateOrientation(float deltaT);
 private:
-    void Task(const TaskParameters* taskParameters);
+    [[noreturn]] void Task(const TaskParameters* taskParameters);
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
     static IRAM_ATTR void imuDataReadyInterruptServiceRoutine();
 #endif

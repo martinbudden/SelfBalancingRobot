@@ -133,11 +133,11 @@ void MainTask::setup()
 void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
 #if defined(USE_IMU_MPU6886)
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex); // NOLINT(misc-const-correctness) false positive
 #elif defined(USE_IMU_BMI270)
     static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_BNO085)
-    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex); // NOLINT(misc-const-correctness) false positive
 #elif defined(USE_IMU_LSM303AGR)
     static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #endif
