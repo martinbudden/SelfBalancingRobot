@@ -18,10 +18,29 @@ class IMU_Base {
 public:
     enum axis_order_t {
         XPOS_YPOS_ZPOS,
-        YNEG_XPOS_ZPOS,
-        XNEG_YNEG_ZPOS,
         YPOS_XNEG_ZPOS,
-        XPOS_ZPOS_YNEG,
+        XNEG_YNEG_ZPOS,
+        YNEG_XPOS_ZPOS,
+        XPOS_YNEG_ZNEG,
+        YPOS_XPOS_ZNEG,
+        XNEG_YPOS_ZNEG,
+        YNEG_XNEG_ZNEG,
+        ZPOS_YNEG_XPOS,
+        YPOS_ZPOS_XPOS,
+        ZNEG_YPOS_XPOS,
+        YNEG_ZNEG_XPOS,
+        ZPOS_YPOS_XNEG,
+        YPOS_ZNEG_XNEG,
+        ZNEG_YNEG_XNEG,
+        YNEG_ZPOS_XNEG,
+        ZPOS_XPOS_YPOS,
+        XNEG_ZPOS_YPOS,
+        ZNEG_XNEG_YPOS,
+        XPOS_ZNEG_YPOS,
+        ZPOS_XNEG_YNEG,
+        XNEG_ZNEG_YNEG,
+        ZNEG_XPOS_YNEG,
+        XPOS_ZPOS_YNEG
     };
 public:
     IMU_Base(axis_order_t axisOrder, void* i2cMutex);
