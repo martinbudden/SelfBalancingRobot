@@ -38,6 +38,37 @@ enum {
     COMMAND_CLEAR_DCD_AND_RESET = 0x0B
 };
 
+// System orientation rotation quaternions.
+// The system orientation FRS record (0x2D3E) applies a rotation to the sensor outputs and all the derived outputs.
+// The record is a unit quaternion, with  each coordinate represented as a 32-bit fixed point number with a Q-point of 30.
+
+constexpr float sin45 = 0.7071067811865475F;
+struct quaternion_t { float w; float x; float y; float z; };
+quaternion_t Q_XPOS_YPOS_ZPOS = {  1,      0,      0,      0 };
+quaternion_t Q_YPOS_XNEG_ZPOS = {  sin45,  0,      0,      sin45 };
+quaternion_t Q_XNEG_YNEG_ZPOS = {  0,      0,      0,      1 };
+quaternion_t Q_YNEG_XPOS_ZPOS = {  sin45,  0,      0,     -sin45 };
+quaternion_t Q_XPOS_YNEG_ZNEG = {  0,      0,     -1,      0 };
+quaternion_t Q_YPOS_XPOS_ZNEG = {  0,     -sin45, -sin45,  0 };
+quaternion_t Q_XNEG_YPOS_ZNEG = {  0,     -1,      0,      0 };
+quaternion_t Q_YNEG_XNEG_ZNEG = {  0,     -sin45,  sin45,  0 };
+quaternion_t Q_ZPOS_YNEG_XPOS = {  0,      0,     -sin45,  sin45 };
+quaternion_t Q_YPOS_ZPOS_XPOS = {  0.5,   -0.5,   -0.5,    0.5 };
+quaternion_t Q_ZNEG_YPOS_XPOS = {  sin45, -sin45,  0,      0 };
+quaternion_t Q_YNEG_ZNEG_XPOS = {  0.5,   -0.5,    0.5,   -0.5 };
+quaternion_t Q_ZPOS_YPOS_XNEG = {  sin45, -sin45,  0,      0 };
+quaternion_t Q_YPOS_ZNEG_XNEG = { -0.5,   -0.5,   -0.5,   -0.5 };
+quaternion_t Q_ZNEG_YNEG_XNEG = {  0,      0,     -sin45, -sin45 };
+quaternion_t Q_YNEG_ZPOS_XNEG = {  0.5,    0.5,   -0.5,   -0.5 };
+quaternion_t Q_ZPOS_XPOS_YPOS = { -0.5,   -0.5,   -0.5,    0.5 };
+quaternion_t Q_XNEG_ZPOS_YPOS = {  0,     -sin45,  0,      sin45 };
+quaternion_t Q_ZNEG_XNEG_YPOS = {  0.5,   -0.5,    0.5,    0.5 };
+quaternion_t Q_XPOS_ZNEG_YPOS = { -sin45,  0,     -sin45,  0 };
+quaternion_t Q_ZPOS_XNEG_YNEG = {  0.5,    0.5,   -0.5,    0.5 };
+quaternion_t Q_XNEG_ZNEG_YNEG = {  0,     -sin45,  0,     -sin45 };
+quaternion_t Q_ZNEG_XPOS_YNEG = {  0.5,   -0.5,   -0.5,   -0.5 };
+quaternion_t Q_XPOS_ZPOS_YNEG = {  sin45,  0,     -sin45,  0 };
+
 
 IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
