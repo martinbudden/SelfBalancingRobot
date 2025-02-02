@@ -4,7 +4,7 @@
 /*!
 Packs the TD_Minimal packet with zeros. Returns the length of the packet.
 */
-int packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id)
+size_t packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id)
 {
     TD_MINIMAL* td = reinterpret_cast<TD_MINIMAL*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
@@ -21,7 +21,7 @@ int packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id)
 /*!
 Packs the tick interval telemetry data into a TD_TICK_INTERVALS packet. Returns the length of the packet.
 */
-int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
+size_t packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         const AHRS& ahrs,
         const MotorControllerBase& motorController,
         uint32_t mcOutputPowerTimeMicroSeconds,
@@ -40,7 +40,7 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
 
     static_assert(TD_TICK_INTERVALS::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
     td->ahrsTaskFifoCount = static_cast<uint8_t>(ahrs.getFifoCount());
-    for (int ii = 0; ii < TD_TICK_INTERVALS::TIME_CHECKS_COUNT; ++ii) {
+    for (size_t ii = 0; ii < TD_TICK_INTERVALS::TIME_CHECKS_COUNT; ++ii) {
         td->ahrsTimeChecksMicroSeconds[ii] = static_cast<uint16_t>(ahrs.getTimeChecksMicroSeconds(ii));
     }
 
@@ -58,7 +58,7 @@ int packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
 /*!
 Packs the AHRS telemetry data into a TD_AHRS packet. Returns the length of the packet.
 */
-int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS& ahrs, const MotorControllerBase& motorController)
+size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS& ahrs, const MotorControllerBase& motorController)
 {
     TD_AHRS* td = reinterpret_cast<TD_AHRS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
@@ -85,7 +85,7 @@ int packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS& a
 /*!
 Packs the Receiver telemetry data into a TD_RECEIVER packet. Returns the length of the packet.
 */
-int packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, const ReceiverBase& receiver)
+size_t packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, const ReceiverBase& receiver)
 {
     TD_RECEIVER* td = reinterpret_cast<TD_RECEIVER*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 

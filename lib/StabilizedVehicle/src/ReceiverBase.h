@@ -30,8 +30,8 @@ public:
 
     inline controls_t getControls() const { return _controls; }
     inline uint8_t getAux(size_t index) const { assert(index < 4); return _aux[index]; }
-    inline uint32_t getSwitch(size_t index) const { return (_switches & (0b11 << (2*index))) >> (2*index); }
-    inline void setSwitch(size_t index, uint8_t value) { _switches &= ~(0b11 << (2*index)); _switches |= (value & 0b11) << (2*index); }
+    inline uint32_t getSwitch(size_t index) const { return (_switches & (0b11U << (2*index))) >> (2*index); }
+    inline void setSwitch(size_t index, uint8_t value) { _switches &= ~(0b11U << (2*index)); _switches |= (value & 0b11U) << (2*index); }
     inline uint32_t getSwitches() const { return _switches; }
 
     inline int32_t getDroppedPacketCountDelta() const { return _droppedPacketCountDelta; }

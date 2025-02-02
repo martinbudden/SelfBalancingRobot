@@ -578,6 +578,7 @@ void Screen::update(const TD_AHRS::Data& ahrsData) const
         break;
     case SIZE_135x240:
         update135x240(ahrsData);
+        break;
     case SIZE_80x160:
         update80x160(ahrsData);
         break;

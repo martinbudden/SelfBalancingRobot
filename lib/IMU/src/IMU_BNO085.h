@@ -73,7 +73,6 @@ public:
         uint8_t commandSequenceNumber;
         uint8_t responseSequenceNumber;
         std::array<uint8_t, 11> R;
-
     };
     struct sensor_output_t {
         int16_t x;
@@ -82,6 +81,17 @@ public:
         uint8_t accuracy;
         uint8_t sequenceNumber;
         uint16_t delay;
+    };
+    struct sensor_output_uncalibrated_gyro_t {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+        uint8_t accuracy;
+        uint8_t sequenceNumber;
+        uint16_t delay;
+        int16_t biasX;
+        int16_t biasY;
+        int16_t biasZ;
     };
     // The BNO085 data sheet uses the term "rotation vector" rather than "orientation quaternion" used in the Stabilized Vehicle software
     struct rotation_vector_t {
@@ -128,12 +138,12 @@ public:
     inline sensor_output_t getAccData() const { return _acc; }
     inline sensor_output_t getAccLinearData() const { return _accLinear; }
     inline sensor_output_t getGyroRPS_Data() const { return _gyroRPS; }
-    inline sensor_output_t getGyroUncalibratedRPS_Data() const { return _gyroUncalibratedRPS; }
     inline sensor_output_t getMagData() const { return _mag; }
     inline sensor_output_t getGravityData() const { return _gravity; }
     inline sensor_output_t getAccRawData() const { return _accRaw; }
     inline sensor_output_t getGyroRawData() const { return _gyroRaw; }
     inline sensor_output_t getMagRawData() const { return _magRaw; }
+    inline sensor_output_uncalibrated_gyro_t getGyroUncalibratedRPS_Data() const { return _gyroUncalibratedRPS; }
 private:
     uint16_t readPacketAndParse();
     bool readPacket();
@@ -144,31 +154,28 @@ private:
 protected:
     I2C _bus; //!< Serial Communication Bus interface, can be either I2C or SPI
     uint32_t _timestamp {};
-    mutable uint32_t _orientationAvailable {false};
-    mutable uint32_t _gyroAvailable {false};
+    uint32_t _orientationAvailable {false};
+    uint32_t _gyroAvailable {false};
     // SHTP (Sensor Hub Transport Protocol)
     SHTP_Packet _shtpPacket {};
     std::array<uint8_t, CHANNEL_COUNT> _sequenceNumber {}; //There are 6 com channels. Each channel has its own sequence number
-    command_message_t _commandMessage {};
 
-    bool _resetCompleteReceived = false; // set true when Reset Complete packet received.
+    uint8_t _resetCompleteReceived = false; // set true when Reset Complete packet received.
+    uint8_t _calibrationStatus {}; //R0 of COMMAND_CALIBRATE_MOTION_ENGINE  Response
 
     // combined gyro and rotation for SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR
     gyro_integrated_rotation_vector_t _gyroIntegratedRotationVector {};
     rotation_vector_t _rotationVector {};
+
+    command_message_t _commandMessage {};
 
     sensor_output_t _acc {};
     sensor_output_t _accLinear {}; // Acceleration of the device with gravity removed
     sensor_output_t _gyroRPS {};
     sensor_output_t _mag {};
     sensor_output_t _gravity {};
-    sensor_output_t _gyroUncalibratedRPS {};
-    uint16_t _gyroUncalibratedBiasX {};
-    uint16_t _gyroUncalibratedBiasY {};
-    uint16_t _gyroUncalibratedBiasZ {};
     sensor_output_t _accRaw {};
     sensor_output_t _gyroRaw {};
     sensor_output_t _magRaw {};
-
-    uint8_t _calibrationStatus {}; //Byte R0 of MotionEngine Calibration Response
+    sensor_output_uncalibrated_gyro_t _gyroUncalibratedRPS {};
 };

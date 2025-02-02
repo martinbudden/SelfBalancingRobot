@@ -327,9 +327,9 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
         _gyroUncalibratedRPS.accuracy = accuracy;
         _gyroUncalibratedRPS.sequenceNumber = sequenceNumber;
         _gyroUncalibratedRPS.delay = delay;
-        _gyroUncalibratedBiasX  = static_cast<uint16_t>(packet.data[11]) << 8 | packet.data[10];
-        _gyroUncalibratedBiasY  = static_cast<uint16_t>(packet.data[13]) << 8 | packet.data[12];
-        _gyroUncalibratedBiasZ  = static_cast<uint16_t>(packet.data[15]) << 8 | packet.data[14];
+        _gyroUncalibratedRPS.biasX  = static_cast<uint16_t>(packet.data[11]) << 8 | packet.data[10];
+        _gyroUncalibratedRPS.biasY  = static_cast<uint16_t>(packet.data[13]) << 8 | packet.data[12];
+        _gyroUncalibratedRPS.biasZ  = static_cast<uint16_t>(packet.data[15]) << 8 | packet.data[14];
         break;
     case SENSOR_REPORTID_ROTATION_VECTOR: // NOLINT(bugprone-branch-clone) false positive
         [[fallthrough]];
