@@ -103,23 +103,41 @@ private:
 
     // data synchronization primitives
 #if defined(USE_IMU_DATA_READY_MUTEX)
+#if defined(USE_FREERTOS)
     StaticSemaphore_t _imuDataReadyMutexBuffer {}; // _imuDataReadyMutexBuffer must be declared before _imuDataReadyMutex
     SemaphoreHandle_t _imuDataReadyMutex {};
     inline void LOCK_IMU_DATA_READY() const { xSemaphoreTake(_imuDataReadyMutex, portMAX_DELAY); }
     inline void UNLOCK_IMU_DATA_READY() const { xSemaphoreGive(_imuDataReadyMutex); }
+#elif defined(USE_PICO_BARE_METAL)
+    mutable mutex_t _imuDataReadyMutex{};
+    inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(_imuDataReadyMutex); }
+    inline void UNLOCK_AHRS_DATA() const { mutex_exit(_imuDataReadyMutex); }
+#endif
 #else
     inline void LOCK_IMU_DATA_READY() const {}
     inline void UNLOCK_IMU_DATA_READY() const {}
 #endif
 #if defined(USE_AHRS_DATA_MUTEX)
+#if defined(USE_FREERTOS)
     StaticSemaphore_t _ahrsDataMutexBuffer {}; // _ahrsDataMutexBuffer must be declared before _ahrsDataMutex
     mutable SemaphoreHandle_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { xSemaphoreTake(_ahrsDataMutex, portMAX_DELAY); }
     inline void UNLOCK_AHRS_DATA() const { xSemaphoreGive(_ahrsDataMutex); }
+#elif defined(USE_PICO_BARE_METAL)
+    mutable mutex_t _ahrsDataMutex {};
+    inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(_ahrsDataMutex); }
+    inline void UNLOCK_AHRS_DATA() const { mutex_exit(_ahrsDataMutex); }
+#endif
 #elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
+#if defined(USE_FREERTOS)
     mutable portMUX_TYPE _ahrsDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
     inline void LOCK_AHRS_DATA() const { taskENTER_CRITICAL(&_ahrsDataSpinlock); }
     inline void UNLOCK_AHRS_DATA() const { taskEXIT_CRITICAL(&_ahrsDataSpinlock); }
+#elif defined(USE_PICO_BARE_METAL)
+    mutable critical_section_t _ahrsDataCriticalSection {};
+    inline void LOCK_AHRS_DATA() const { critical_section_enter_blocking(&_ahrsDataCriticalSection); }
+    inline void UNLOCK_AHRS_DATA() const { critical_section_exit(&_ahrsDataCriticalSection); }
+#endif
 #else
     inline void LOCK_AHRS_DATA() const {}
     inline void UNLOCK_AHRS_DATA() const {}

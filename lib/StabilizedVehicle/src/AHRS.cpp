@@ -313,13 +313,13 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 #endif
 
 {
-
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
     ahrs = this;
     attachInterrupt(IMU_INTERRUPT_PIN, imuDataReadyInterruptServiceRoutine, FALLING);
 #endif
     setSensorFusionFilterInitializing(true);
 
+#if defined(USE_FREERTOS)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
@@ -333,4 +333,16 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 #endif
 #pragma GCC diagnostic pop
 
+#elif defined(USE_PICO_BARE_METAL)
+
+#if defined(USE_IMU_DATA_READY_MUTEX)
+    mutex_init(&_imuDataReadyMutex);
+#endif
+#if defined(USE_AHRS_DATA_MUTEX)
+    mutex_init(&_ahrsDataMutex);
+#elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
+    critical_section_init(_ahrsDataCriticalSection);
+#endif
+
+#endif
 }
