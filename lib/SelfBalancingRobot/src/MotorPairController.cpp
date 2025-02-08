@@ -165,7 +165,7 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     // For the Self Balancing Robot, pitch is rotation around the x-axis and roll is rotation around the y-axis,
     // so ROLL and PITCH are REVERSED.
     _pitchAngleDegreesRaw = orientation.calculateRollDegrees();
-    _mixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw);
+    _mixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
 //#define CALCULATE_ROLL_AND_YAW
 #if defined(CALCULATE_ROLL_AND_YAW)
     // Roll and yaw are not required for the MotorPairController calculations,
@@ -215,7 +215,7 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 }
 
 /*!
-Update the outputs using a position PID controller.
+Calculate _outputs[SPEED_DPS] using a position PID controller.
 */
 void MotorPairController::updatePositionOutputs(float deltaT)
 {
