@@ -27,7 +27,7 @@ MotorsPwrCAN::MotorsPwrCAN() :
     CAN_cfg.rx_pin_id = GPIO_NUM_36;
 
     //CAN_cfg.rx_queue  = xQueueCreate(RX_QUEUE_CAPACITY, sizeof(CAN_frame_t));
-    CAN_cfg.rx_queue  = xQueueCreateStatic( RX_QUEUE_CAPACITY, sizeof(CAN_frame_t), ucQueueStorageArea, &xStaticQueue );
+    CAN_cfg.rx_queue  = xQueueCreateStatic(RX_QUEUE_CAPACITY, sizeof(CAN_frame_t), ucQueueStorageArea, &xStaticQueue );
 
     ESP32Can.CANInit();
 }

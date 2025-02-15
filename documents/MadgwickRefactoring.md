@@ -30,10 +30,10 @@ s3 = 4.0f * q1q1 * q3  + 4.0f * q2q2 * q3                                       
 Factor out `4 * q<n>`:
 
 ```cpp
-s0 = 4 * q0 * (q2q2 + q1q1)                             + _2q2 * ax - _2q1 * ay;
-s1 = 4 * q1 * (q3q3 + q0q0 - 1 + 2*q1q1 + 2*q2q2 + az)  - _2q3 * ax - _2q0 * ay;
-s2 = 4 * q2 * (q0q0 + q3q3 - 1 + 2*q1q1 + 2*q2q2 + az)  + _2q0 * ax - _2q3 * ay;
-s3 = 4 * q3 * (q1q1 + q2q2)                             - _2q1 * ax - _2q2 * ay;
+s0 = 4 * q0 * (q2q2 + q1q1)                            + _2q2 * ax - _2q1 * ay;
+s1 = 4 * q1 * (q3q3 + q0q0 - 1 + 2*q1q1 + 2*q2q2 + az) - _2q3 * ax - _2q0 * ay;
+s2 = 4 * q2 * (q0q0 + q3q3 - 1 + 2*q1q1 + 2*q2q2 + az) + _2q0 * ax - _2q3 * ay;
+s3 = 4 * q3 * (q1q1 + q2q2)                            - _2q1 * ax - _2q2 * ay;
 ```
 
 Remove common factor of 2:
@@ -49,29 +49,29 @@ Substitute:
 `_2q1q1_plus_2q2q2` = `2.0f * (q1*q1 + q2*q2)`:
 
 ```cpp
-s0 = 2 * (q0 * _2q1q1_plus_2q2q2                                + q2 * ax - q1 * ay);
-s1 = 2 * (q1 * 2 * (q3q3 + q0q0 - 1 + _2q1q1_plus_2q2q2 + az)   - q3 * ax - q0 * ay);
-s2 = 2 * (q2 * 2 * (q0q0 + q3q3 - 1 + _2q1q1_plus_2q2q2 + az)   + q0 * ax - q3 * ay);
-s3 = 2 * (q3 * _2q1q1_plus_2q2q2                                - q1 * ax - q2 * ay);
+s0 = 2 * (q0 * _2q1q1_plus_2q2q2                              + q2 * ax - q1 * ay);
+s1 = 2 * (q1 * 2 * (q3q3 + q0q0 - 1 + _2q1q1_plus_2q2q2 + az) - q3 * ax - q0 * ay);
+s2 = 2 * (q2 * 2 * (q0q0 + q3q3 - 1 + _2q1q1_plus_2q2q2 + az) + q0 * ax - q3 * ay);
+s3 = 2 * (q3 * _2q1q1_plus_2q2q2                              - q1 * ax - q2 * ay);
 ```
 
 Substitute:
 `common` = `2.0f * (q0*q0 + q3*q3 - 1.0f + _2q1q1_plus_2q2q2 + az)`:
 
 ```cpp
-s0 = 2 * (q0 * _2q1q1_plus_2q2q2    + q2 * ax - q1 * ay);
-s1 = 2 * (q1 * common               - q3 * ax - q0 * ay);
-s2 = 2 * (q2 * common               + q0 * ax - q3 * ay);
-s3 = 2 * (q3 * _2q1q1_plus_2q2q2    - q1 * ax - q2 * ay);
+s0 = 2 * (q0 * _2q1q1_plus_2q2q2 + q2 * ax - q1 * ay);
+s1 = 2 * (q1 * common            - q3 * ax - q0 * ay);
+s2 = 2 * (q2 * common            + q0 * ax - q3 * ay);
+s3 = 2 * (q3 * _2q1q1_plus_2q2q2 - q1 * ax - q2 * ay);
 ```
 
 Instead, calculate half S-values:
 
 ```cpp
-halfS0 = q0 * _2q1q1_plus_2q2q2     + q2 * ax - q1 * ay;
-halfS1 = q1 * common                - q3 * ax - q0 * ay;
-halfS2 = q2 * common                + q0 * ax - q3 * ay;
-halfS3 = q3 * _2q1q1_plus_2q2q2     - q1 * ax - q2 * ay;
+halfS0 = q0 * _2q1q1_plus_2q2q2 + q2 * ax - q1 * ay;
+halfS1 = q1 * common            - q3 * ax - q0 * ay;
+halfS2 = q2 * common            + q0 * ax - q3 * ay;
+halfS3 = q3 * _2q1q1_plus_2q2q2 - q1 * ax - q2 * ay;
 ```
 
 Observe that:

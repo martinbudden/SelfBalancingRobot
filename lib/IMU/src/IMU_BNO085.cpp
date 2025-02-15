@@ -40,7 +40,7 @@ enum {
 
 // System orientation rotation quaternions.
 // The system orientation FRS record (0x2D3E) applies a rotation to the sensor outputs and all the derived outputs.
-// The record is a unit quaternion, with  each coordinate represented as a 32-bit fixed point number with a Q-point of 30.
+// The record is a unit quaternion, with each coordinate represented as a 32-bit fixed point number with a Q-point of 30.
 
 constexpr float sin45 = 0.7071067811865475F;
 struct quaternion_t { float w; float x; float y; float z; };

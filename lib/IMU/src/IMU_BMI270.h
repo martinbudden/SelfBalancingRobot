@@ -4,7 +4,7 @@
 #include <IMU_Base.h>
 
 
-class  IMU_BMI270 : public IMU_Base {
+class IMU_BMI270 : public IMU_Base {
 public:
     static constexpr uint8_t I2C_ADDRESS=0x19;
 

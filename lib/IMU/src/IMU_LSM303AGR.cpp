@@ -296,7 +296,7 @@ IMU_Base::gyroRPS_Acc_t IMU_LSM303AGR::gyroRPS_AccFromRaw(const gyro_acc_data_t&
 /*!
 It seems the LSM303AGR does not properly support bulk reading from the FIFO.
 */
-size_t  IMU_LSM303AGR::readFIFO_ToBuffer()
+size_t IMU_LSM303AGR::readFIFO_ToBuffer()
 {
     //std::array<uint8_t, 2> lengthData;
 

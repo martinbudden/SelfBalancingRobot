@@ -28,7 +28,7 @@ int32_t IMU_Base::getAccOneG_Raw() const
 xyz_t IMU_Base::readGyroRPS()
 {
     const xyz_int32_t gyroRaw = readGyroRaw();
-    const xyz_t  gyroRPS = {
+    const xyz_t gyroRPS = {
         .x = static_cast<float>(gyroRaw.x - _gyroOffset.x) * _gyroResolutionRPS,
         .y = static_cast<float>(gyroRaw.y - _gyroOffset.y) * _gyroResolutionRPS,
         .z = static_cast<float>(gyroRaw.z - _gyroOffset.z) * _gyroResolutionRPS
@@ -39,7 +39,7 @@ xyz_t IMU_Base::readGyroRPS()
 xyz_t IMU_Base::readGyroDPS()
 {
     const xyz_int32_t gyroRaw = readGyroRaw();
-    const xyz_t  gyroDPS = {
+    const xyz_t gyroDPS = {
         .x = static_cast<float>(gyroRaw.x - _gyroOffset.x) * _gyroResolutionDPS,
         .y = static_cast<float>(gyroRaw.y - _gyroOffset.y) * _gyroResolutionDPS,
         .z = static_cast<float>(gyroRaw.z - _gyroOffset.z) * _gyroResolutionDPS
@@ -50,7 +50,7 @@ xyz_t IMU_Base::readGyroDPS()
 xyz_t IMU_Base::readAcc()
 {
     const xyz_int32_t accRaw = readAccRaw();
-    const xyz_t  acc = {
+    const xyz_t acc = {
         .x = static_cast<float>(accRaw.x - _accOffset.x) * _accResolution,
         .y = static_cast<float>(accRaw.y - _accOffset.y) * _accResolution,
         .z = static_cast<float>(accRaw.z - _accOffset.z) * _accResolution

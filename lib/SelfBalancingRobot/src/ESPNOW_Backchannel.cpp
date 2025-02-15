@@ -169,7 +169,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     case CommandPacketSetPID::SAVE_D:
         [[fallthrough]];
     case CommandPacketSetPID::SAVE_F:
-        //Serial.printf("Saved PID packetType:%d pidIndex:%d  setType:%d\r\n", packet.type, packet.pidIndex, packet.setType);
+        //Serial.printf("Saved PID packetType:%d pidIndex:%d setType:%d\r\n", packet.type, packet.pidIndex, packet.setType);
         // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.
         _preferences->putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
         break;

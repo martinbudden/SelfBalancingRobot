@@ -6,7 +6,7 @@
 #include <array>
 
 
-class  IMU_BNO085 : public IMU_Base {
+class IMU_BNO085 : public IMU_Base {
 public:
     enum {
         CHANNEL_COMMAND = 0,
@@ -22,7 +22,7 @@ public:
         SENSOR_REPORTID_GYROSCOPE_CALIBRATED = 0x02, // Q point = 9, radians/second
         SENSOR_REPORTID_MAGNETIC_FIELD_CALIBRATED = 0x03, // Q point = 4
         SENSOR_REPORTID_LINEAR_ACCELERATION = 0x04, // Q point = 8
-        //quaternion referenced to magnetic north  and gravity. It is produced by fusing the outputs of the accelerometer, gyroscope and magnetometer.
+        //quaternion referenced to magnetic north and gravity. It is produced by fusing the outputs of the accelerometer, gyroscope and magnetometer.
         SENSOR_REPORTID_ROTATION_VECTOR = 0x05, // Q point = 14
         SENSOR_REPORTID_GRAVITY = 0x06, // Q point = 8
         SENSOR_REPORTID_GYROSCOPE_UNCALIBRATED = 0x07, // Q point = 9
@@ -161,7 +161,7 @@ protected:
     std::array<uint8_t, CHANNEL_COUNT> _sequenceNumber {}; //There are 6 com channels. Each channel has its own sequence number
 
     uint8_t _resetCompleteReceived = false; // set true when Reset Complete packet received.
-    uint8_t _calibrationStatus {}; //R0 of COMMAND_CALIBRATE_MOTION_ENGINE  Response
+    uint8_t _calibrationStatus {}; //R0 of COMMAND_CALIBRATE_MOTION_ENGINE Response
 
     // combined gyro and rotation for SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR
     gyro_integrated_rotation_vector_t _gyroIntegratedRotationVector {};

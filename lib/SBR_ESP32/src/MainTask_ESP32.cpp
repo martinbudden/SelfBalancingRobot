@@ -36,7 +36,7 @@ The core affinities, priorities, and tick intervals and priorities for the 3 app
 3. For single-processors the AHRS_TASK and the MPC_TASK must have the same priority.
 4. For dual-core processors
     1. The AHRS_TASK runs on the Application CPU (CPU 1).
-    2. The MPC_TASK runs on the  Protocol CPU (CPU 0).
+    2. The MPC_TASK runs on the Protocol CPU (CPU 0).
 5. The MAIN_LOOP_TASK runs on the Application CPU (CPU 1) with priority 1 (this is set by the ESP32 Arduino framework).
 
 The AHRS_TASK and the MPC_TASK are deliberately chosen to run on different cores on ESP32 dual-core processors. This is so
@@ -80,7 +80,7 @@ void MainTask::setup()
     // This task has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
-    const char*  taskName = pcTaskGetName(taskHandle);
+    const char* taskName = pcTaskGetName(taskHandle);
     Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n\r\n", taskName, taskPriority, configTICK_RATE_HZ);
 
     void* i2cMutex = nullptr;

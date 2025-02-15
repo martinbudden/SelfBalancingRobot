@@ -44,7 +44,7 @@ DIP switches available are:
 | Core2   | G13 | G14 |
 | CoreS3  | G18 | G17 |
 
-**CAN Unit** has a CA-IS3050G isolated CAN  transceiver which is connected to a grove pin connector. Pins are as for the **Unit-Mini CAN**.
+**CAN Unit** has a CA-IS3050G isolated CAN transceiver which is connected to a grove pin connector. Pins are as for the **Unit-Mini CAN**.
 
 **Atomic CAN Base** connects directly to a CA-IS3050G isolated CAN transceiver. The GPIO pins used are:
 

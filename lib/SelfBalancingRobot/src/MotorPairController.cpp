@@ -127,8 +127,8 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
 
         // encoders have discrete output and so are subject to digital noise
         // At a speed of 60rpm or 1rps with a 420 steps per revolution we have 420 steps per second,
-        // If the  MPC task is running at 100Hz, that is four steps per iteration, so an error of 1 step is 25%
-        // If the  MPC task is running at 200Hz, that is two steps per iteration, so an error of 1 step is 50%
+        // If the MPC task is running at 100Hz, that is four steps per iteration, so an error of 1 step is 25%
+        // If the MPC task is running at 200Hz, that is two steps per iteration, so an error of 1 step is 50%
         // So we average over 4 iterations to reduce this digital noise.
         static FilterMovingAverage<4> speedMovingAverageFilter;
         float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
@@ -227,7 +227,7 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     const float distanceDegrees = _positionDegrees - _positionDegreesPrevious;
     _positionDegreesPrevious = _positionDegrees;
     constexpr float alpha = 0.9F;
-    const float  speedEstimate = MotorPairBase::clip((_mixer.getPowerLeft() + _mixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
+    const float speedEstimate = MotorPairBase::clip((_mixer.getPowerLeft() + _mixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
     _positionDegrees += alpha*distanceDegrees + (1.0F - alpha)*speedEstimate*deltaT;
 #endif
 #else

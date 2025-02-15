@@ -28,7 +28,7 @@ public:
     virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
 
     virtual size_t readFIFO_ToBuffer() override;
-    virtual gyroRPS_Acc_t  readFIFO_Item(size_t index) override;
+    virtual gyroRPS_Acc_t readFIFO_Item(size_t index) override;
 };
 
 class IMU_Filters_Test : public IMU_FiltersBase {

@@ -16,7 +16,7 @@ public:
     virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
 
     virtual size_t readFIFO_ToBuffer() override;
-    virtual gyroRPS_Acc_t  readFIFO_Item(size_t index) override;
+    virtual gyroRPS_Acc_t readFIFO_Item(size_t index) override;
 private:
     gyroRPS_Acc_t gyroRPS_AccFromRaw(const IMU_MPU6886::acc_temperature_gyro_data_t& data) const;
 private:

@@ -36,7 +36,7 @@ The core affinities, priorities, and tick intervals and priorities for the 3 app
 3. For single-processors the AHRS_TASK and the MPC_TASK must have the same priority.
 4. For dual-core processors
     1. The AHRS_TASK runs on the Application CPU (CPU 1).
-    2. The MPC_TASK runs on the  Protocol CPU (CPU 0).
+    2. The MPC_TASK runs on the Protocol CPU (CPU 0).
 5. The MAIN_LOOP_TASK runs on the Application CPU (CPU 1) with priority 1 (this is set by the ESP32 Arduino framework).
 
 The AHRS_TASK and the MPC_TASK are deliberately chosen to run on different cores on ESP32 dual-core processors. This is so
@@ -85,6 +85,7 @@ void MainTask::setup()
     M5.Power.begin();
 #elif defined(M5_UNIFIED)
     auto cfg = M5.config(); // NOLINT(readability-static-accessed-through-instance)
+    cfg.serial_baudrate = 115200;
     M5.begin(cfg);
     M5.Power.begin();
 #if defined(MOTORS_BALA_C)
@@ -98,7 +99,7 @@ void MainTask::setup()
     // This task has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
-    const char*  taskName = pcTaskGetName(taskHandle);
+    const char* taskName = pcTaskGetName(taskHandle);
     Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n\r\n", taskName, taskPriority, configTICK_RATE_HZ);
 
     // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
@@ -236,7 +237,7 @@ void MainTask::checkGyroCalibration()
         Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", x, y, z);
         if (_preferences->getAccOffset(x, y, z)) {
             _ahrs->setAccOffset(x, y, z);
-            Serial.printf("**** AHRS accOffsets  loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", x, y, z);
+            Serial.printf("**** AHRS accOffsets loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", x, y, z);
         }
     } else {
         // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
@@ -255,6 +256,7 @@ Resets the PID preferences and the Balance Angle to FLT_MAX (which represents un
 */
 void MainTask::resetPreferences()
 {
+    //_preferences->clear();
     //_preferences->removeGyroOffset();
     //_preferences->removeAccOffset();
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {

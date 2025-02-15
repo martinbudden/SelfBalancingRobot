@@ -4,7 +4,7 @@
 #include <IMU_Base.h>
 
 
-class  IMU_LSM303AGR : public IMU_Base {
+class IMU_LSM303AGR : public IMU_Base {
 public:
     IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_LSM303AGR(axisOrder, SDA_pin, SCL_pin, nullptr) {}

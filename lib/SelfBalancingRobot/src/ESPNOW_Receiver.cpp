@@ -106,7 +106,7 @@ Maps the joystick values from Q4dot12 format in the range [-2048, 2047] to float
 NOTE: this function runs in the context of the MotorController task, in particular the FPU usage is in that context, so this avoids the
 need to save the ESP32 FPU registers on a context switch.
 */
-void Receiver::mapControls(float&  throttleStick, float&  rollStick, float&  pitchStick, float&  yawStick) const
+void Receiver::mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
 {
     throttleStick = Q4dot12_to_float(_controls.throttleStickQ4dot12);
     rollStick = Q4dot12_to_float(_controls.rollStickQ4dot12);
