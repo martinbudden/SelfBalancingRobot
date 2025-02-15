@@ -77,10 +77,10 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data) const
     case XPOS_YPOS_ZPOS:
         return data;
         break;
-    case YNEG_XPOS_ZPOS: // NOLINT(bugprone-branch-clone) false positive
+    case YPOS_XNEG_ZPOS:
         return xyz_t {
-            .x = -data.y,
-            .y =  data.x,
+            .x =  data.y,
+            .y = -data.x,
             .z =  data.z
         };
         break;
@@ -91,11 +91,144 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data) const
             .z =  data.z
         };
         break;
-    case YPOS_XNEG_ZPOS:
+    case YNEG_XPOS_ZPOS:
+        return xyz_t {
+            .x = -data.y,
+            .y =  data.x,
+            .z =  data.z
+        };
+        break;
+    case XPOS_YNEG_ZNEG:
+        return xyz_t {
+            .x =  data.x,
+            .y = -data.y,
+            .z = -data.z
+        };
+        break;
+    case YPOS_XPOS_ZNEG:
         return xyz_t {
             .x =  data.y,
+            .y =  data.x,
+            .z = -data.z
+        };
+        break;
+    case XNEG_YPOS_ZNEG:
+        return xyz_t {
+            .x = -data.x,
+            .y =  data.y,
+            .z = -data.z
+        };
+        break;
+    case YNEG_XNEG_ZNEG:
+        return xyz_t {
+            .x = -data.y,
             .y = -data.x,
-            .z =  data.z
+            .z = -data.z
+        };
+        break;
+    case ZPOS_YNEG_XPOS:
+        return xyz_t {
+            .x =  data.z,
+            .y = -data.y,
+            .z =  data.x
+        };
+        break;
+    case YPOS_ZPOS_XPOS:
+        return xyz_t {
+            .x =  data.y,
+            .y =  data.z,
+            .z =  data.x
+        };
+        break;
+    case ZNEG_YPOS_XPOS:
+        return xyz_t {
+            .x = -data.z,
+            .y =  data.y,
+            .z =  data.x
+        };
+        break;
+    case YNEG_ZNEG_XPOS:
+        return xyz_t {
+            .x = -data.y,
+            .y = -data.z,
+            .z =  data.x
+        };
+        break;
+    case ZPOS_YPOS_XNEG:
+        return xyz_t {
+            .x =  data.z,
+            .y =  data.y,
+            .z = -data.x
+        };
+        break;
+    case YPOS_ZNEG_XNEG:
+        return xyz_t {
+            .x =  data.y,
+            .y = -data.z,
+            .z = -data.x
+        };
+        break;
+    case ZNEG_YNEG_XNEG:
+        return xyz_t {
+            .x = -data.z,
+            .y = -data.y,
+            .z = -data.x
+        };
+        break;
+    case YNEG_ZPOS_XNEG:
+        return xyz_t {
+            .x = -data.y,
+            .y =  data.z,
+            .z = -data.x
+        };
+        break;
+    case ZPOS_XPOS_YPOS:
+        return xyz_t {
+            .x =  data.z,
+            .y =  data.x,
+            .z =  data.y
+        };
+        break;
+    case XNEG_ZPOS_YPOS:
+        return xyz_t {
+            .x = -data.x,
+            .y =  data.z,
+            .z =  data.y
+        };
+        break;
+    case ZNEG_XNEG_YPOS:
+        return xyz_t {
+            .x =  data.z,
+            .y = -data.x,
+            .z =  data.y
+        };
+        break;
+    case XPOS_ZNEG_YPOS:
+        return xyz_t {
+            .x =  data.x,
+            .y = -data.z,
+            .z =  data.y
+        };
+        break;
+    case ZPOS_XNEG_YNEG:
+        return xyz_t {
+            .x =  data.z,
+            .y = -data.x,
+            .z = -data.y
+        };
+        break;
+    case XNEG_ZNEG_YNEG:
+        return xyz_t {
+            .x = -data.x,
+            .y = -data.z,
+            .z = -data.y
+        };
+        break;
+    case ZNEG_XPOS_YNEG:
+        return xyz_t {
+            .x = -data.z,
+            .y =  data.x,
+            .z = -data.y
         };
         break;
     case XPOS_ZPOS_YNEG:
@@ -123,7 +256,7 @@ IMU_Base::gyroRPS_Acc_t IMU_Base::readFIFO_Item(size_t index)
 {
     (void)index;
 
-    gyroRPS_Acc_t gyroAcc {};
+    const gyroRPS_Acc_t gyroAcc {};
     return gyroAcc;
 }
 
