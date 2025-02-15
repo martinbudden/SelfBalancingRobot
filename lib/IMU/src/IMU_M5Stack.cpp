@@ -38,13 +38,20 @@ IMU_Base::xyz_int32_t IMU_M5_STACK::readAccRaw()
 
 xyz_t IMU_M5_STACK::readAcc()
 {
-    xyz_t acc {};
+    int16_t x {};
+    int16_t y {};
+    int16_t z {};
 
     i2cSemaphoreTake();
-    M5.IMU.getAccelData(&acc.x, &acc.y, &acc.z);
+    M5.IMU.getAccelAdc(&x, &y, &z);
     i2cSemaphoreGive();
 
-    return acc;
+    const xyz_t acc {
+        .x = static_cast<float>(x - _accOffset.x) * _accResolution,
+        .y = static_cast<float>(y - _accOffset.y) * _accResolution,
+        .z = static_cast<float>(z - _accOffset.z) * _accResolution
+    };
+    return mapAxes(acc);
 }
 
 IMU_Base::xyz_int32_t IMU_M5_STACK::readGyroRaw()
@@ -62,42 +69,46 @@ IMU_Base::xyz_int32_t IMU_M5_STACK::readGyroRaw()
 
 xyz_t IMU_M5_STACK::readGyroRPS()
 {
-    xyz_t gyroRPS {};
+    int16_t x {};
+    int16_t y {};
+    int16_t z {};
 
     i2cSemaphoreTake();
-    M5.IMU.getGyroData(&gyroRPS.x, &gyroRPS.y, &gyroRPS.z);
+    M5.IMU.getGyroAdc(&x, &y, &z);
     i2cSemaphoreGive();
 
-    gyroRPS.x *= degreesToRadians;
-    gyroRPS.y *= degreesToRadians;
-    gyroRPS.z *= degreesToRadians;
-
-    return gyroRPS;
+    const xyz_t gyroRPS {
+        .x = static_cast<float>(x - _gyroOffset.x) * _gyroResolutionRPS,
+        .y = static_cast<float>(y - _gyroOffset.y) * _gyroResolutionRPS,
+        .z = static_cast<float>(z - _gyroOffset.z) * _gyroResolutionRPS,
+    };
+    return mapAxes(gyroRPS);
 }
 
 xyz_t IMU_M5_STACK::readGyroDPS()
 {
-    xyz_t gyroDPS {};
+    int16_t x {};
+    int16_t y {};
+    int16_t z {};
 
     i2cSemaphoreTake();
-    M5.IMU.getGyroData(&gyroDPS.x, &gyroDPS.y, &gyroDPS.z);
+    M5.IMU.getGyroAdc(&x, &y, &z);
     i2cSemaphoreGive();
 
-    return gyroDPS;
+    const xyz_t gyroDPS {
+        .x = static_cast<float>(x - _gyroOffset.x) * _gyroResolutionDPS,
+        .y = static_cast<float>(y - _gyroOffset.y) * _gyroResolutionDPS,
+        .z = static_cast<float>(z - _gyroOffset.z) * _gyroResolutionDPS,
+    };
+    return mapAxes(gyroDPS);
 }
 
 IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readGyroRPS_Acc()
 {
-    gyroRPS_Acc_t gyroAcc {};
-
-    i2cSemaphoreTake();
-    M5.IMU.getGyroData(&gyroAcc.gyroRPS.x, &gyroAcc.gyroRPS.y, &gyroAcc.gyroRPS.z);
-    M5.IMU.getAccelData(&gyroAcc.acc.x, &gyroAcc.acc.y, &gyroAcc.acc.z);
-    i2cSemaphoreGive();
-
-    gyroAcc.gyroRPS.x *= degreesToRadians;
-    gyroAcc.gyroRPS.y *= degreesToRadians;
-    gyroAcc.gyroRPS.z *= degreesToRadians;
+    const gyroRPS_Acc_t gyroAcc {
+        .gyroRPS = readGyroRPS(),
+        .acc = readAcc()
+    };
 
     return gyroAcc;
 }
