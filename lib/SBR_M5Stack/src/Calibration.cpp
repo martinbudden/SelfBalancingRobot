@@ -23,9 +23,9 @@ static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calib
     int32_t y {};
     int32_t z {};
 
-    const int count = 50;
+    const int count = 2000;
     for (auto ii = 0; ii < count; ++ii) {
-        delay(2);
+        delay(1);
         ahrs.readGyroRaw(x, y, z);
         gyroX += x;
         gyroY += y;
@@ -99,7 +99,7 @@ void calibrateGyro([[maybe_unused]] AHRS& ahrs, [[maybe_unused]] SV_Preferences&
     M5.Lcd.fillScreen(TFT_BLACK);
 
     M5.Lcd.setCursor(0, 0);
-    M5.Lcd.printf("Starting  gyro calibration\r\n");
+    M5.Lcd.printf("Starting gyro calibration\r\n");
     M5.Lcd.printf("Please keep the robot\r\n");
     M5.Lcd.printf("still for 10 seconds\r\n\r\n");
     delay(3000);
