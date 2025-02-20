@@ -5,6 +5,7 @@
 #include "MotorPairController.h"
 #include "SBR_Telemetry.h"
 #include "SBR_TelemetryData.h"
+#include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
 #include <CommandPacket.h>
@@ -13,7 +14,9 @@
 #include <SV_Preferences.h>
 #endif
 #include <SV_Telemetry.h>
+#include <SV_TelemetryData.h>
 #include <TaskBase.h>
+#include <cfloat>
 
 static_assert(sizeof(TD_TICK_INTERVALS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN);

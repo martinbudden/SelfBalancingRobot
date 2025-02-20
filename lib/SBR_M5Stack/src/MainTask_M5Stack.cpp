@@ -21,8 +21,6 @@
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
-#include <MotorPairBase.h>
-#include <MotorPairController.h>
 #include <SV_Preferences.h>
 #include <SensorFusionFilter.h>
 #include <cfloat>
@@ -277,6 +275,8 @@ void MainTask::loadPreferences()
     if (!_preferences->isSetPID()) {
         resetPreferences();
     }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
     if (pitchBalanceAngleDegrees != FLT_MAX) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
@@ -292,6 +292,7 @@ void MainTask::loadPreferences()
             Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), pid.kp, pid.ki, pid.kd, pid.kf);
         }
     }
+#pragma GCC diagnostic pop
 }
 
 void MainTask::setupTasks()

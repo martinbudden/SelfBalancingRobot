@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Quaternion.h>
 #include <cstdint>
 
 #if defined(I2C_MUTEX_REQUIRED)
@@ -9,9 +10,8 @@
 #endif
 #endif
 
-#include <Quaternion.h>
-#include <cmath>
 #include <xyz_type.h>
+
 
 /*!
 IMU virtual base class.
@@ -56,8 +56,8 @@ public:
         xyz_t gyroRPS;
         xyz_t acc;
     };
-    static constexpr float degreesToRadians {M_PI / 180.0};
-    static constexpr float radiansToDegrees {180.0 / M_PI};
+    static constexpr float degreesToRadians = static_cast<float>(M_PI / 180.0);
+    static constexpr float radiansToDegrees = static_cast<float>(180.0 / M_PI);
 public:
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);

@@ -2,7 +2,6 @@
 
 #include <I2C.h>
 #include <IMU_Base.h>
-#include <Quaternion.h>
 #include <array>
 
 

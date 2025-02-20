@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
+
 class I2C {
 public:
     I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin);

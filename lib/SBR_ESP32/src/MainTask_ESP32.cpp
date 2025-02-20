@@ -21,8 +21,6 @@
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
-#include <MotorPairBase.h>
-#include <MotorPairController.h>
 #include <SV_Preferences.h>
 #include <SensorFusionFilter.h>
 #include <cfloat>
@@ -140,6 +138,8 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex); // NOLINT(misc-const-correctness) false positive
 #elif defined(USE_IMU_LSM303AGR)
     static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#else
+    static_assert(false);
 #endif
 
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
@@ -192,6 +192,9 @@ void MainTask::loadPreferences()
     if (!_preferences->isSetPID()) {
         resetPreferences();
     }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
     if (pitchBalanceAngleDegrees != FLT_MAX) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
@@ -207,6 +210,7 @@ void MainTask::loadPreferences()
             Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), pid.kp, pid.ki, pid.kd, pid.kf);
         }
     }
+#pragma GCC diagnostic pop
 }
 
 void MainTask::setupTasks()

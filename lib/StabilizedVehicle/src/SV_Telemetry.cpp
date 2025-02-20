@@ -1,5 +1,8 @@
-#include "SV_Telemetry.h"
+#include "AHRS.h"
 #include "MotorControllerBase.h"
+#include "SV_Telemetry.h"
+#include "SV_TelemetryData.h"
+
 
 /*!
 Packs the TD_Minimal packet with zeros. Returns the length of the packet.

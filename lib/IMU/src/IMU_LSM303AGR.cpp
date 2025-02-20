@@ -3,7 +3,6 @@
 #include "IMU_LSM303AGR.h"
 #include <array>
 #include <cassert>
-#include <cmath>
 //#include <delay.h>
 
 // see https://github.com/STMicroelectronics/lsm6ds3tr-c-pid

@@ -9,7 +9,6 @@ void delay(int) {}
 #include <esp32-hal.h>
 #endif
 #include <cassert>
-#include <cmath>
 
 
 namespace { // use anonymous namespace to make items local to this translation unit

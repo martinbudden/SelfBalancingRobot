@@ -4,7 +4,6 @@
 #include <IMU_Base.h>
 
 #include <cassert>
-#include <cfloat>
 
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>

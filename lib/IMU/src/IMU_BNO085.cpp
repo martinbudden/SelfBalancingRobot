@@ -1,9 +1,7 @@
 #if defined(USE_IMU_BNO085)
 
 #include "IMU_BNO085.h"
-#include <array>
 #include <cassert>
-#include <cmath>
 
 namespace { // use anonymous namespace to make items local to this translation unit
 constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
@@ -460,6 +458,5 @@ bool IMU_BNO085::sendCommand(uint8_t command)
 
     return true;
 }
-
 
 #endif

@@ -108,6 +108,8 @@ void Screen::nextScreenMode()
     setScreenMode(screenMode);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
 /*!
 Utility function to display a MAC address.
 */
@@ -531,6 +533,7 @@ void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.setCursor(85, yPos);
     M5.Lcd.printf("%s", _motorPairController.motorsIsOn() ? "ON " : "OFF");
 }
+#pragma GCC diagnostic pop
 
 void Screen::updateTemplate() const
 {

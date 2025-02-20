@@ -1,7 +1,10 @@
 # pragma once
 
-#include "MotorPairController.h"
-#include "TelemetryScaleFactors.h"
+#include <cstddef>
+#include <cstdint>
+
+class MotorPairController;
+class TelemetryScaleFactors;
 
 
 size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const MotorPairController& motorPairController, const TelemetryScaleFactors& scaleFactors); // NOLINT(readability-avoid-const-params-in-decls) false positive

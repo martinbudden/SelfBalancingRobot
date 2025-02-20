@@ -3,7 +3,6 @@
 #include "IMU_BMI270.h"
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <esp32-hal.h>
 
 namespace { // use anonymous namespace to make items local to this translation unit

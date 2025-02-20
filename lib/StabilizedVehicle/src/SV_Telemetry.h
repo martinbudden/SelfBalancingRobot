@@ -1,7 +1,10 @@
 #pragma once
 
-#include "AHRS.h"
-#include "SV_TelemetryData.h"
+#include <cstddef>
+#include <cstdint>
+
+class AHRS;
+class ReceiverBase;
 
 
 size_t packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id);

@@ -2,6 +2,7 @@
 
 #include <IMU_Base.h>
 
+
 class IMU_M5_UNIFIED : public IMU_Base {
 public:
     IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex);
