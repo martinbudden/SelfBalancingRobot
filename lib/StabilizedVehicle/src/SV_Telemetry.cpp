@@ -67,12 +67,24 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS
     td->len = sizeof(TD_AHRS);
 
     const AHRS::data_t ahrsData = ahrs.getAhrsDataForInstrumentationUsingLock();
+    const IMU_Base::xyz_int32_t gyroOffset = ahrs.getGyroOffset();
+    const IMU_Base::xyz_int32_t accOffset = ahrs.getAccOffset();
     td->data = {
         .pitch = motorController.getPitchAngleDegreesRaw(),
         .roll = motorController.getRollAngleDegreesRaw(),
         .yaw = motorController.getYawAngleDegreesRaw(),
         .gyroRPS = ahrsData.gyroRPS,
-        .acc = ahrsData.acc
+        .acc = ahrsData.acc,
+        .gyroOffset = {
+            .x = static_cast<int16_t>(gyroOffset.x),
+            .y = static_cast<int16_t>(gyroOffset.y),
+            .z = static_cast<int16_t>(gyroOffset.x)
+        },
+        .accOffset = {
+            .x = static_cast<int16_t>(accOffset.x),
+            .y = static_cast<int16_t>(accOffset.y),
+            .z = static_cast<int16_t>(accOffset.x)
+        }
     };
 
     td->tickInterval = static_cast<uint8_t>(ahrsData.tickCountDelta);

@@ -10,9 +10,19 @@ IMU_Base::IMU_Base(axis_order_t axisOrder, [[maybe_unused]] void* i2cMutex) :
 {
 }
 
+IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const
+{
+    return _gyroOffset;
+}
+
 void IMU_Base::setGyroOffset(const xyz_int32_t& gyroOffset)
 {
     _gyroOffset = gyroOffset;
+}
+
+IMU_Base::xyz_int32_t IMU_Base::getAccOffset() const
+{
+    return _accOffset;
 }
 
 void IMU_Base::setAccOffset(const xyz_int32_t& accOffset)

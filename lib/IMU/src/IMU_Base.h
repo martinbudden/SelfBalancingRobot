@@ -3,8 +3,10 @@
 #include <cstdint>
 
 #if defined(I2C_MUTEX_REQUIRED)
+#if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#endif
 #endif
 
 #include <Quaternion.h>
@@ -57,7 +59,9 @@ public:
     static constexpr float degreesToRadians {M_PI / 180.0};
     static constexpr float radiansToDegrees {180.0 / M_PI};
 public:
+    virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);
+    virtual xyz_int32_t getAccOffset() const;
     virtual void setAccOffset(const xyz_int32_t& accOffset);
 
     virtual xyz_int32_t readGyroRaw() = 0;
@@ -78,12 +82,12 @@ public:
 protected:
     xyz_t mapAxes(const xyz_t& data) const;
 #if defined(I2C_MUTEX_REQUIRED)
-protected:
+#if defined(USE_FREERTOS)
     inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }
     inline void i2cSemaphoreGive() const { xSemaphoreGive(_i2cMutex); }
     SemaphoreHandle_t _i2cMutex {};
+#endif
 #else
-protected:
     inline void i2cSemaphoreTake() const {}
     inline void i2cSemaphoreGive() const {}
 #endif

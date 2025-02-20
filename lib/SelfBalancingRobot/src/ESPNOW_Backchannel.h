@@ -5,6 +5,7 @@
 class CommandPacketControl;
 class CommandPacketRequestData;
 class CommandPacketSetPID;
+class CommandPacketSetOffset;
 
 class AHRS;
 class MotorPairController;
@@ -16,8 +17,8 @@ class SV_Preferences;
 
 class Backchannel {
 public:
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& flightController, const AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences* preferences);
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& flightController, const AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors) :
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& flightController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences* preferences);
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& flightController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors) :
         Backchannel(transceiver, macAddress, flightController, ahrs, mainTask, receiver, telemetryScaleFactors, nullptr) {}
 private:
     // Backchannel is not copyable or moveable
@@ -33,6 +34,7 @@ private:
     void packetControl(const CommandPacketControl& packet);
     void packetRequestData(const CommandPacketRequestData& packet);
     void packetSetPID(const CommandPacketSetPID& packet);
+    void packetSetOffset(const CommandPacketSetOffset& packet);
 private:
     ESPNOW_Transceiver& _transceiver;
 private:
@@ -40,7 +42,7 @@ private:
     ESPNOW_Transceiver::peer_data_t _peer_data {};
 private:
     MotorPairController& _motorPairController;
-    const AHRS& _ahrs;
+    AHRS& _ahrs;
     const TaskBase& _mainTask;
     const ReceiverBase& _receiver;
     TelemetryScaleFactors& _telemetryScaleFactors;

@@ -88,12 +88,19 @@ struct TD_AHRS {
     uint8_t tickInterval {0}; //!< tick interval of the AHRS task
     enum : uint8_t { FILTER_INITIALIZING_FLAG = 0x01 };
     uint8_t flags {0};
+    struct xyz_int16_t {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+    };
     struct Data {
         float pitch; //!< estimated pitch value calculated by Madgwick Orientation Filter
         float roll; //!< estimated roll value calculated by Madgwick Orientation Filter
         float yaw; //!< estimated yaw value calculated by Madgwick Orientation Filter
         xyz_t gyroRPS; //!< gyro outputs from IMU
         xyz_t acc; //!< acceleration outputs from IMU
+        xyz_int16_t gyroOffset;
+        xyz_int16_t accOffset;
     };
     Data data;
 };

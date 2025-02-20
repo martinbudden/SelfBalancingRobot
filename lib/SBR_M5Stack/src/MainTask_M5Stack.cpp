@@ -229,15 +229,13 @@ void MainTask::checkGyroCalibration()
     // Set the gyro offsets from non-volatile storage.
 #if defined(M5_STACK) || defined(USE_IMU_MPU6886)
     // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.
-    int32_t x {};
-    int32_t y {};
-    int32_t z {};
-    if (_preferences->getGyroOffset(x, y, z)) {
-        _ahrs->setGyroOffset(x, y, z);
-        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", x, y, z);
-        if (_preferences->getAccOffset(x, y, z)) {
-            _ahrs->setAccOffset(x, y, z);
-            Serial.printf("**** AHRS accOffsets loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", x, y, z);
+    IMU_Base::xyz_int32_t offset {};
+    if (_preferences->getGyroOffset(offset.x, offset.y, offset.z)) {
+        _ahrs->setGyroOffset(offset);
+        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", offset.x, offset.y, offset.z);
+        if (_preferences->getAccOffset(offset.x, offset.y, offset.z)) {
+            _ahrs->setAccOffset(offset);
+            Serial.printf("**** AHRS accOffsets loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", offset.x, offset.y, offset.z);
         }
     } else {
         // when calibrateGyro called automatically on startup, just calibrate the gyroscope.

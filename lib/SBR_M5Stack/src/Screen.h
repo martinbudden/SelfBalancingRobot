@@ -54,7 +54,7 @@ private:
     void update135x240(const TD_AHRS::Data& ahrsData) const; // M5StickC Plus
     void update320x240(const TD_AHRS::Data& ahrsData) const; // MCore
 
-    void update(const TD_AHRS::Data& ahrsData) const;
+    void updateAHRS_Data() const;
 
     static void displayEUI(const char* prompt, const ReceiverBase::EUI_48_t& eui);
     static void displayEUI_Compact(const char* prompt, const ReceiverBase::EUI_48_t& eui);

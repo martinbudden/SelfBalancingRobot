@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TaskBase.h"
-#include <Quaternion.h>
+#include <IMU_Base.h>
 
 #include <cassert>
 #include <cfloat>
@@ -13,10 +13,8 @@
 #if defined(AHRS_RECORD_TIMES_CHECKS)
 #include <esp32-hal.h>
 #endif
-#include <xyz_type.h>
 
 
-class IMU_Base;
 class IMU_FiltersBase;
 class MotorControllerBase;
 class SensorFusionFilterBase;
@@ -42,8 +40,10 @@ private:
     AHRS(AHRS&&) = delete;
     AHRS& operator=(AHRS&&) = delete;
 public:
-    void setGyroOffset(int32_t x, int32_t y, int32_t z);
-    void setAccOffset(int32_t x, int32_t y, int32_t z);
+    IMU_Base::xyz_int32_t getGyroOffset() const;
+    void setGyroOffset(const IMU_Base::xyz_int32_t& offset);
+    IMU_Base::xyz_int32_t getAccOffset() const;
+    void setAccOffset(const IMU_Base::xyz_int32_t& offset);
     void readGyroRaw(int32_t& x, int32_t& y, int32_t& z) const;
     void readAccRaw(int32_t& x, int32_t& y, int32_t& z) const;
     int32_t getAccOneG_Raw() const;

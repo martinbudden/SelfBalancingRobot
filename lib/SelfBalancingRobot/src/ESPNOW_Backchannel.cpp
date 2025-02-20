@@ -23,7 +23,7 @@ static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN);
 
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
         MotorPairController& motorPairController,
-        const AHRS& ahrs,
+        AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
         TelemetryScaleFactors& telemetryScaleFactors,
@@ -194,6 +194,63 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     }
 }
 
+void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
+    IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffset();
+    IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffset();
+
+    bool transmit = false;
+
+    switch (packet.itemIndex) {
+    case CommandPacketSetOffset::GYRO_X:
+        gyroOffset.x = packet.value;
+        _ahrs.setGyroOffset(gyroOffset);
+        transmit = true;
+        break;
+    case CommandPacketSetOffset::GYRO_Y:
+        gyroOffset.y = packet.value;
+        _ahrs.setGyroOffset(gyroOffset);
+        transmit = true;
+        break;
+    case CommandPacketSetOffset::GYRO_Z:
+        gyroOffset.z = packet.value;
+        _ahrs.setGyroOffset(gyroOffset);
+        transmit = true;
+        break;
+    case CommandPacketSetOffset::ACC_X:
+        accOffset.x = packet.value;
+        _ahrs.setAccOffset(accOffset);
+        transmit = true;
+        break;
+    case CommandPacketSetOffset::ACC_Y:
+        accOffset.y = packet.value;
+        _ahrs.setAccOffset(accOffset);
+        transmit = true;
+        break;
+    case CommandPacketSetOffset::ACC_Z:
+        accOffset.z = packet.value;
+        _ahrs.setAccOffset(accOffset);
+        transmit = true;
+        break;
+#if defined(USE_ESP32_PREFERENCES)
+    case CommandPacketSetOffset::SAVE_GYRO_OFFSET: // NOLINT(bugprone-branch-clone) false positive
+        _preferences->putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
+        break;
+    case CommandPacketSetOffset::SAVE_ACC_OFFSET: // NOLINT(bugprone-branch-clone) false positive
+        _preferences->putAccOffset(accOffset.x, accOffset.y, accOffset.z);
+        break;
+#endif
+    default:
+        Serial.printf("Backchannel::packetSetOffset invalid itemIndex:%d\r\n", packet.itemIndex);
+        break;
+    }
+
+    if (transmit) {
+        // send back the new data for display
+        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
+        sendData(_transmitDataBuffer, len);
+    }
+}
+
 /*!
 If no data was received then send telemetry data if it has been requested and return false.
 
@@ -229,6 +286,9 @@ bool Backchannel::update()
             break;
         case CommandPacketSetPID::TYPE: // NOLINT(bugprone-branch-clone) false positive
             packetSetPID(*reinterpret_cast<const CommandPacketSetPID*>(_receivedDataBuffer));
+            break;
+        case CommandPacketSetOffset::TYPE: // NOLINT(bugprone-branch-clone) false positive
+            packetSetOffset(*reinterpret_cast<const CommandPacketSetOffset*>(_receivedDataBuffer));
             break;
         default:
             // do nothing

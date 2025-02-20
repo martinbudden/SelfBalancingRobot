@@ -570,22 +570,32 @@ void Screen::updateReceivedData() const
     }
 }
 
-void Screen::update(const TD_AHRS::Data& ahrsData) const
+void Screen::updateAHRS_Data() const
 {
+    const AHRS::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
+    const TD_AHRS::Data tdAhrsData {
+        .pitch = _motorPairController.getPitchAngleDegreesRaw(),
+        .roll = _motorPairController.getRollAngleDegreesRaw(),
+        .yaw = _motorPairController.getYawAngleDegreesRaw(),
+        .gyroRPS = ahrsData.gyroRPS,
+        .acc = ahrsData.acc,
+        .gyroOffset = {},
+        .accOffset = {}
+    };
     switch (_screenSize) {
     case SIZE_128x128:
-        update128x128(ahrsData);
+        update128x128(tdAhrsData);
         break;
     case SIZE_135x240:
-        update135x240(ahrsData);
+        update135x240(tdAhrsData);
         break;
     case SIZE_80x160:
-        update80x160(ahrsData);
+        update80x160(tdAhrsData);
         break;
     case SIZE_320x240:
         [[fallthrough]];
     default:
-        update320x240(ahrsData);
+        update320x240(tdAhrsData);
     }
 }
 
@@ -594,17 +604,9 @@ Update the screen with data from the AHRS and the receiver.
 */
 void Screen::update(bool packetReceived) const
 {
-    const AHRS::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
-    const TD_AHRS::Data tdAhrsData {
-        .pitch = _motorPairController.getPitchAngleDegreesRaw(),
-        .roll = _motorPairController.getRollAngleDegreesRaw(),
-        .yaw = _motorPairController.getYawAngleDegreesRaw(),
-        .gyroRPS = ahrsData.gyroRPS,
-        .acc = ahrsData.acc
-    };
     // update the screen with the AHRS data
     if (_screenMode != Screen::MODE_QRCODE) {
-        update(tdAhrsData);
+        updateAHRS_Data();
         if (packetReceived) {
             // update the screen with data received from the receiver
             updateReceivedData();

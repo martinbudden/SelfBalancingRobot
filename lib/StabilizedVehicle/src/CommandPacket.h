@@ -72,14 +72,25 @@ struct CommandPacketSetPID {
     float value;
 };
 
-struct CommandPacketSetFilter {
+struct CommandPacketSetOffset {
     enum { TYPE = 5 };
+    enum { GYRO_X = 0, GYRO_Y = 1, GYRO_Z = 2, ACC_X = 3, ACC_Y = 4, ACC_Z = 5, SAVE_GYRO_OFFSET = 6, SAVE_ACC_OFFSET = 7 };
+    uint32_t id;
+    uint8_t type;
+    uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetFilter)
+    uint8_t itemIndex;
+    uint8_t filler;
+    int32_t value;
+};
+
+struct CommandPacketSetFilter {
+    enum { TYPE = 6 };
     enum { GYRO_ALL_LPF, GYRO_X_LPF, GYRO_Y_LPF, GYRO_Z_LPF, ACC_ALL_LPF, ACC_X_LPF, ACC_Y_LPF, ACC_Z_LPF };
     uint32_t id;
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetFilter)
-    uint8_t filler0;
-    uint8_t filler1;
+    uint8_t itemIndex;
+    uint8_t filterType;
     float value0;
     float value1;
     float value2;

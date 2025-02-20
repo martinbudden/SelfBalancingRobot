@@ -3,7 +3,6 @@
 #include "MotorControllerBase.h"
 
 #include <IMU_BNO085.h>
-#include <IMU_Base.h>
 #include <SensorFusionFilter.h>
 #include <cmath>
 #if defined(AHRS_IS_INTERRUPT_DRIVEN) || defined(USE_FREERTOS)
@@ -202,20 +201,30 @@ int32_t AHRS::getAccOneG_Raw() const
 }
 
 
+IMU_Base::xyz_int32_t AHRS::getGyroOffset() const
+{
+    return _IMU.getGyroOffset();
+}
+
 /*!
 Set the gyro offset. Used in calibration.
 */
-void AHRS::setGyroOffset(int32_t x, int32_t y, int32_t z)
+void AHRS::setGyroOffset(const IMU_Base::xyz_int32_t& offset)
 {
-    _IMU.setGyroOffset(IMU_Base::xyz_int32_t {.x = x, .y = y, .z = z});
+    _IMU.setGyroOffset(offset);
+}
+
+IMU_Base::xyz_int32_t AHRS::getAccOffset() const
+{
+    return _IMU.getAccOffset();
 }
 
 /*!
 Set the accelerometer offset. Used in calibration.
 */
-void AHRS::setAccOffset(int32_t x, int32_t y, int32_t z)
+void AHRS::setAccOffset(const IMU_Base::xyz_int32_t& offset)
 {
-    _IMU.setAccOffset(IMU_Base::xyz_int32_t {.x = x, .y = y, .z = z});
+    _IMU.setAccOffset(offset);
 }
 
 Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
@@ -271,8 +280,7 @@ AHRS::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
 
 void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientation)
 {
-    constexpr float degreesToRadians {M_PI / 180.0};
-    constexpr float twoDegreesInRadians = 2.0F * degreesToRadians;
+    constexpr float twoDegreesInRadians = 2.0F * Quaternion::degreesToRadians;
 
     // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.
     // For the Self Balancing Robot, pitch is rotation around the x-axis and roll is rotation around the y-axis,
@@ -281,7 +289,7 @@ void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientat
     const float accPitchAngleRadians = std::atan2(acc.y, acc.z);
     //const float accRollAngleRadians = std::atan2(-acc.x, sqrtf(acc.y*acc.y + acc.z*acc.z));
 
-    //Serial.printf("acc:P%5.1f mag:P%5.1f         diff:%5.1f\r\n", accPitchAngleRadians/degreesToRadians, madgwickRollAngleRadians/degreesToRadians, fabsf(accPitchAngleRadians - madgwickRollAngleRadians)/degreesToRadians);
+    //Serial.printf("acc:P%5.1f mag:P%5.1f         diff:%5.1f\r\n", accPitchAngleRadians/Quaternion::degreesToRadians, madgwickRollAngleRadians/Quaternion::degreesToRadians, fabsf(accPitchAngleRadians - madgwickRollAngleRadians)/Quaternion::degreesToRadians);
     if (fabsf(accPitchAngleRadians - madgwickRollAngleRadians) < twoDegreesInRadians && accPitchAngleRadians != madgwickRollAngleRadians) {
         // the angles have converged to within 2 degrees, so set we can reduce the gain.
         setSensorFusionFilterInitializing(false);
