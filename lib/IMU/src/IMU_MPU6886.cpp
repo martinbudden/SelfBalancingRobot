@@ -108,6 +108,7 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pi
     init();
 }
 
+// NOLINTBEGIN(hicpp-signed-bitwise)
 void IMU_MPU6886::init()
 {
     i2cSemaphoreTake();
@@ -118,7 +119,7 @@ void IMU_MPU6886::init()
     _bus.writeRegister(REG_PWR_MGMT_1, 0); // clear the power management register
     delay(10);
 
-    constexpr uint8_t DEVICE_RESET = 0x01 << 7;
+    constexpr uint8_t DEVICE_RESET = 0x01U << 7U;
     _bus.writeRegister(REG_PWR_MGMT_1, DEVICE_RESET); // reset the device
     delay(10);
 
@@ -134,7 +135,7 @@ void IMU_MPU6886::init()
     delay(1);
 
     // Accelerometer scale is fixed at 8G, the maximum supported.
-    _bus.writeRegister(REG_ACCEL_CONFIG, AFS_8G << 3);
+    _bus.writeRegister(REG_ACCEL_CONFIG, AFS_8G << 3U);
     _accResolution = ACC_8G_RES;
     delay(1);
 
@@ -275,7 +276,7 @@ int32_t IMU_MPU6886::readTemperatureRaw() const
     _bus.readRegister(REG_TEMP_OUT_H, &data[0], sizeof(data));
     i2cSemaphoreGive();
 
-    const int32_t temperature = static_cast<int16_t>((data[0] << 8) | data[1]); // NOLINT(hicpp-use-auto,modernize-use-auto)
+    const int32_t temperature = static_cast<int16_t>((data[0] << 8U) | data[1]); // NOLINT(hicpp-use-auto,modernize-use-auto)
     return temperature;
 }
 
@@ -319,9 +320,9 @@ size_t IMU_MPU6886::readFIFO_ToBuffer()
     constexpr size_t chunkSize = 8*sizeof(acc_temperature_gyro_data_t);
     const size_t count = fifoLength / chunkSize;
     for (size_t ii = 0; ii < count; ++ii) {
-        _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
+        _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
     }
-    _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[count * chunkSize], fifoLength - count*chunkSize); // NOLINT(cppcoreguidelines-pro-type-union-access)
+    _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[count * chunkSize], fifoLength - count*chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
 
     i2cSemaphoreGive();
 
@@ -331,7 +332,7 @@ size_t IMU_MPU6886::readFIFO_ToBuffer()
 
 IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readFIFO_Item(size_t index)
 {
-    const acc_temperature_gyro_data_t& accTempGyro = _fifoBuffer.accTemperatureGyro[index]; // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-bounds-constant-array-index)
+    const acc_temperature_gyro_data_t& accTempGyro = _fifoBuffer.accTemperatureGyro[index]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
     return gyroRPS_AccFromRaw(accTempGyro);
 }
 
@@ -545,4 +546,5 @@ IMU_Base::gyroRPS_Acc_t IMU_MPU6886::gyroRPS_AccFromRaw(const acc_temperature_gy
     return gyroRPS_Acc;
 #endif
 }
+// NOLINTEND(hicpp-signed-bitwise)
 #endif // USE_IMU_MPU6886

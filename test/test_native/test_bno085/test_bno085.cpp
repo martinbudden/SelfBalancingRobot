@@ -78,24 +78,29 @@ void test_bno085_channel_gyro_integrated_rotation_vector_report() {
     packet.data[3] = 0x75;
     packet.data[4] = 0x61;
     packet.data[5] = 0xD7;
+    packet.data[6] = 0x11;
+    packet.data[7] = 0xF9;
     TEST_ASSERT_EQUAL(IMU_BNO085::SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR, imu.parseGyroIntegratedRotationVectorReport(packet));
 
     const IMU_BNO085::gyro_integrated_rotation_vector_t gyroRotation = imu.getGyroIntegratedRotationVectorData();
     TEST_ASSERT_EQUAL(0x0503, gyroRotation.i);
     TEST_ASSERT_EQUAL(0x7538, gyroRotation.j);
     TEST_ASSERT_EQUAL(static_cast<int16_t>(0xD761), gyroRotation.k);
+    TEST_ASSERT_EQUAL(static_cast<int16_t>(0xF911), gyroRotation.real);
 
     const Quaternion orientation = imu.readOrientation();
     constexpr int orientation_Q_point = 14;
-    constexpr int gyro_Q_point = 10;
+    //constexpr int gyro_Q_point = 10;
 
     // BNO085 uses [real, i, j, k] for quaternion, IMU_TYPES uses [w, x, y, z]
+    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.real) * pow(2, -orientation_Q_point), orientation.getW());
     TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.i)* pow(2, -orientation_Q_point), orientation.getX());
     TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.j)* pow(2, -orientation_Q_point), orientation.getY());
+    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.k)* pow(2, -orientation_Q_point), orientation.getZ());
 
     constexpr int Q_point = 14;
     const float multiplier = pow(2, Q_point * -1);
-    constexpr float multiplier2 = 1.0F / (1 << Q_point);
+    constexpr float multiplier2 = 1.0F / (1 << Q_point); // NOLINT(hicpp-signed-bitwise)
     TEST_ASSERT_EQUAL_FLOAT(multiplier, multiplier2);
 }
 

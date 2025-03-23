@@ -3,7 +3,7 @@
 
 Quaternion SensorFusionFilterTest::update([[maybe_unused]] const xyz_t& gyroRPS, [[maybe_unused]] const xyz_t& accelerometer, [[maybe_unused]] float deltaT) { return Quaternion {}; }
 Quaternion SensorFusionFilterTest::update([[maybe_unused]] const xyz_t& gyroRPS, [[maybe_unused]] const xyz_t& accelerometer, [[maybe_unused]] const xyz_t& magnetometer, [[maybe_unused]] float deltaT) { return Quaternion {}; }
-void SensorFusionFilterTest::setFreeParameters(float parameter0, float parameter1) {}
+void SensorFusionFilterTest::setFreeParameters([[maybe_unused]] float parameter0, [[maybe_unused]] float parameter1) {}
 
 void IMU_Test::setGyroOffset([[maybe_unused]] const xyz_int32_t& gyroOffset) {}
 void IMU_Test::setAccOffset([[maybe_unused]] const xyz_int32_t& accOffset) {}

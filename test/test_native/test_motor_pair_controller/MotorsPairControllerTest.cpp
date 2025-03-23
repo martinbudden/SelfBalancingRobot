@@ -25,20 +25,20 @@ void MotorsTest::setPower([[maybe_unused]] float leftPower,[[maybe_unused]] floa
 {
 }
 
-constexpr PIDF::PIDF_t pitchPID_Default                       { 0.0240,  0.0,    0.00020, 0.0 };
+constexpr PIDF::PIDF_t pitchPID_Default                       { 0.0240F,  0.0F,    0.00020F, 0.0F };
 
-constexpr PIDF::PIDF_t yawRatePID_Default                     { 0.0,     0.0,    0.0,     1.00 };
+constexpr PIDF::PIDF_t yawRatePID_Default                     { 0.0F,     0.0F,    0.0F,     1.00F };
 
-constexpr PIDF::PIDF_t speedPID_DefaultSerial                 { 0.020,   0.0,    0.0,     0.0 };
+constexpr PIDF::PIDF_t speedPID_DefaultSerial                 { 0.020F,   0.0F,    0.0F,     0.0F };
 
-constexpr PIDF::PIDF_t speedPID_DefaultParallel               { 0.010,   0.0,    0.0,     0.0 };
+constexpr PIDF::PIDF_t speedPID_DefaultParallel               { 0.010F,   0.0F,    0.0F,     0.0F };
 
-constexpr float maxMotorRPM                 {620.0};
-constexpr float wheelDiameterMM             {68.0};
-constexpr float wheelTrackMM                {170.0};
-constexpr float pitchBalanceAngleDegrees    {0.0};
-constexpr float motorSwitchOffAngleDegrees  {70.0};
-constexpr float encoderStepsPerRevolution   {1000.0};
+constexpr float maxMotorRPM                 {620.0F};
+constexpr float wheelDiameterMM             {68.0F};
+constexpr float wheelTrackMM                {170.0F};
+constexpr float pitchBalanceAngleDegrees    {0.0F};
+constexpr float motorSwitchOffAngleDegrees  {70.0F};
+constexpr float encoderStepsPerRevolution   {1000.0F};
 
 MotorPairBase& MotorPairController::allocateMotors()
 {

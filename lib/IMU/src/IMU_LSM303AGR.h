@@ -2,6 +2,7 @@
 
 #include <I2C.h>
 #include <IMU_Base.h>
+#include <array>
 
 
 class IMU_LSM303AGR : public IMU_Base {
@@ -30,8 +31,8 @@ public:
     };
     union gyro_acc_array_t {
         enum { DATA_SIZE = 1032 };
-        gyro_acc_data_t gyroAcc[86];
-        uint8_t data[DATA_SIZE];
+        std::array<gyro_acc_data_t, 86> gyroAcc;
+        std::array<uint8_t, DATA_SIZE> data;
     };
 #pragma pack(pop)
 public:

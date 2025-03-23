@@ -135,6 +135,7 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readFIFO_Item(size_t index)
 
 IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const IMU_MPU6886::acc_temperature_gyro_data_t& data) const
 {
+// NOLINTBEGIN(hicpp-signed-bitwise)
 #if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
     return gyroRPS_Acc_t {
         .gyroRPS = {
@@ -269,5 +270,6 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const IMU_MPU6886::acc_
 
     return gyroRPS_Acc;
 #endif
+// NOLINTEND(hicpp-signed-bitwise)
 }
 #endif

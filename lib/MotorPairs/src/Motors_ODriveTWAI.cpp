@@ -41,7 +41,7 @@ static bool sendMsg([[maybe_unused]] ODrive_Controller& canInterface, uint32_t i
     twai_message_t message;
 
     if (id & 0x80000000) {
-        message.identifier = id & 0x1fffffff;
+        message.identifier = id & 0x1fffffffU;
         message.extd = 1;
     } else {
         message.identifier = id;
@@ -187,14 +187,16 @@ bool Motors_ODriveTWAI::setup()
         Serial.println("ODrive0 vbus request failed!");
         while (true) {} // spin indefinitely
     }
-    Serial.printf("ODrive0 DC voltage [V]: %f DC current [A]: %f\r\n", vbus.Bus_Voltage, vbus.Bus_Current);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+        Serial.printf("ODrive0 DC voltage [V]: %f DC current [A]: %f\r\n", vbus.Bus_Voltage, vbus.Bus_Current);
 
     if (!oDrive1.request(vbus, 1)) {
         Serial.println("ODrive1 vbus request failed!");
         while (true) {} // spin indefinitely
     }
     Serial.printf("ODrive1 DC voltage [V]: %f DC current [A]: %f\r\n", vbus.Bus_Voltage, vbus.Bus_Current);
-
+#pragma GCC diagnostic pop
 
     Serial.println("Enabling ODrive closed loop control...");
     while (_oDrv0_user_data.last_heartbeat.Axis_State != ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL) {

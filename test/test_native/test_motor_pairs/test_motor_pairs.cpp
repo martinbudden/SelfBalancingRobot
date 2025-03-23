@@ -21,54 +21,54 @@ void test_motor_construction() {
 void test_BalaC_motors_clipping() {
     const MotorsBalaC motors(0, 0);
 
-    TEST_ASSERT_EQUAL_FLOAT(0, motors.getStepsPerRevolution());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, motors.getStepsPerRevolution());
     TEST_ASSERT_EQUAL_INT32(0, motors.getLeftEncoder());
     TEST_ASSERT_EQUAL_INT32(0, motors.getRightEncoder());
 
     float power = motors.scalePower(0.0F);
-    TEST_ASSERT_EQUAL_FLOAT(0, power);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, power);
     power = motors.scalePower(0.5F);
     TEST_ASSERT_EQUAL_FLOAT(0.5, power);
     power = motors.scalePower(1.0F);
-    TEST_ASSERT_EQUAL_FLOAT(1.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(1.0F, power);
     power = motors.scalePower(2.0F);
-    TEST_ASSERT_EQUAL_FLOAT(1.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(1.0F, power);
     power = motors.scalePower(-0.5F);
-    TEST_ASSERT_EQUAL_FLOAT(-0.5, power);
+    TEST_ASSERT_EQUAL_FLOAT(-0.5F, power);
     power = motors.scalePower(-1.0F);
-    TEST_ASSERT_EQUAL_FLOAT(-1.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(-1.0F, power);
     power = motors.scalePower(-2.0F);
-    TEST_ASSERT_EQUAL_FLOAT(-1.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(-1.0F, power);
 }
 
 void test_BalaC_motors_deadband() {
     MotorsBalaC motors(0, 0); // NOLINT(misc-const-correctness) false positive
-    motors.setDeadbandPower(0.2);
+    motors.setDeadbandPower(0.2F);
 
     float power = motors.scalePower(0.0F);
     TEST_ASSERT_EQUAL_FLOAT(0.0, power);
 
     power = motors.scalePower(0.01F);
-    TEST_ASSERT_EQUAL_FLOAT(0.208, power);
+    TEST_ASSERT_EQUAL_FLOAT(0.208F, power);
     power = motors.scalePower(0.1F);
-    TEST_ASSERT_EQUAL_FLOAT(0.28, power);
+    TEST_ASSERT_EQUAL_FLOAT(0.28F, power);
     power = motors.scalePower(0.2F);
-    TEST_ASSERT_EQUAL_FLOAT(0.36, power);
+    TEST_ASSERT_EQUAL_FLOAT(0.36F, power);
     power = motors.scalePower(1.0F);
-    TEST_ASSERT_EQUAL_FLOAT(1.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(1.0F, power);
     power = motors.scalePower(2.0F);
-    TEST_ASSERT_EQUAL_FLOAT(1.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(1.0F, power);
 
     power = motors.scalePower(-0.01F);
-    TEST_ASSERT_EQUAL_FLOAT(-0.208, power);
+    TEST_ASSERT_EQUAL_FLOAT(-0.208F, power);
     power = motors.scalePower(-0.1F);
-    TEST_ASSERT_EQUAL_FLOAT(-0.28, power);
+    TEST_ASSERT_EQUAL_FLOAT(-0.28F, power);
     power = motors.scalePower(-0.2F);
-    TEST_ASSERT_EQUAL_FLOAT(-0.36, power);
+    TEST_ASSERT_EQUAL_FLOAT(-0.36F, power);
     power = motors.scalePower(-1.0F);
-    TEST_ASSERT_EQUAL_FLOAT(-1.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(-1.0F, power);
     power = motors.scalePower(-2.0F);
-    TEST_ASSERT_EQUAL_FLOAT(-1.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(-1.0F, power);
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)

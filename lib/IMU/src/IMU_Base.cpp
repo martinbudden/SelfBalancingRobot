@@ -83,6 +83,7 @@ Quaternion IMU_Base::readOrientation()
 
 xyz_t IMU_Base::mapAxes(const xyz_t& data) const
 {
+// NOLINTBEGIN(bugprone-branch-clone) false positive
     switch (_axisOrder) {
     case XPOS_YPOS_ZPOS:
         return data;
@@ -252,6 +253,7 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data) const
         assert(false && "IMU axis order not implemented");
         break;
     } // end switch
+// NOLINTEND(bugprone-branch-clone)
 
     return data;
 }

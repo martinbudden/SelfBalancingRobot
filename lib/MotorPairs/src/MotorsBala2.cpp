@@ -31,10 +31,12 @@ void MotorsBala2::setPower(float leftPower, float rightPower)
     const int16_t right = -static_cast<int16_t>(round(rightClipped * MAX_POWER));
 
     std::array<uint8_t, 4> data;
+    // NOLINTBEGIN(hicpp-signed-bitwise)
     data[0] = static_cast<uint8_t>(left >> 8);
     data[1] = static_cast<uint8_t>(left & 0xFF);
     data[2] = static_cast<uint8_t>(right >> 8);
     data[3] = static_cast<uint8_t>(right & 0xFF);
+    // NOLINTEND(hicpp-signed-bitwise)
 
     i2cSemaphoreTake();
     M5.I2C.writeBytes(I2C_ADDRESS, REGISTER_SPEED, &data[0], 4);

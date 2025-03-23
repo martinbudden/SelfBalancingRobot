@@ -124,14 +124,14 @@ Quaternion IMU_BNO085::readOrientation()
     }
     _orientationAvailable = false;
     // for SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR 0x2A // Q point = 14 for orientation, Q point = 10 for gyro
-    constexpr int Q_point = 14;
-    constexpr float multiplier = 1.0F / (1 << Q_point);
-    return Quaternion(
-        static_cast<float>(static_cast<int16_t>(_gyroIntegratedRotationVector.real)) * multiplier,
-        static_cast<float>(static_cast<int16_t>(_gyroIntegratedRotationVector.i)) * multiplier,
-        static_cast<float>(static_cast<int16_t>(_gyroIntegratedRotationVector.j)) * multiplier,
-        static_cast<float>(static_cast<int16_t>(_gyroIntegratedRotationVector.k)) * multiplier
-    );
+    constexpr unsigned int Q_point = 14;
+    constexpr float multiplier = 1.0F / (1U << Q_point);
+    return {
+        static_cast<float>(_gyroIntegratedRotationVector.real) * multiplier,
+        static_cast<float>(_gyroIntegratedRotationVector.i) * multiplier,
+        static_cast<float>(_gyroIntegratedRotationVector.j) * multiplier,
+        static_cast<float>(_gyroIntegratedRotationVector.k) * multiplier
+    };
 }
 
 xyz_t IMU_BNO085::readGyroRPS()
@@ -141,68 +141,68 @@ xyz_t IMU_BNO085::readGyroRPS()
     }
     _gyroAvailable = false;
     // for SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR 0x2A // Q point = 14 for orientation, Q point = 10 for gyro
-    constexpr int Q_point = 10;
-    constexpr float multiplier = 1.0F / (1 << Q_point);
+    constexpr unsigned int Q_point = 10;
+    constexpr float multiplier = 1.0F / (1U << Q_point);
     return xyz_t {
-        .x = static_cast<float>(static_cast<int16_t>(_gyroIntegratedRotationVector.x)) * multiplier,
-        .y = static_cast<float>(static_cast<int16_t>(_gyroIntegratedRotationVector.y)) * multiplier,
-        .z = static_cast<float>(static_cast<int16_t>(_gyroIntegratedRotationVector.z)) * multiplier
+        .x = static_cast<float>(_gyroIntegratedRotationVector.x) * multiplier,
+        .y = static_cast<float>(_gyroIntegratedRotationVector.y) * multiplier,
+        .z = static_cast<float>(_gyroIntegratedRotationVector.z) * multiplier
     };
 }
 
 xyz_t IMU_BNO085::getAcc() const
 {
-    constexpr int Q_point = 8;
-    constexpr float multiplier = 1.0F / (1 << Q_point);
+    constexpr unsigned int Q_point = 8;
+    constexpr float multiplier = 1.0F / (1U << Q_point);
     return xyz_t {
-        .x = static_cast<float>(static_cast<int16_t>(_acc.x)) * multiplier,
-        .y = static_cast<float>(static_cast<int16_t>(_acc.y)) * multiplier,
-        .z = static_cast<float>(static_cast<int16_t>(_acc.z)) * multiplier
+        .x = static_cast<float>(_acc.x)) * multiplier,
+        .y = static_cast<float>(_acc.y)) * multiplier,
+        .z = static_cast<float>(_acc.z)) * multiplier
     };
 }
 
 
 xyz_t IMU_BNO085::getAccLinear() const
 {
-    constexpr int Q_point = 8;
-    constexpr float multiplier = 1.0F / (1 << Q_point);
+    constexpr unsigned int Q_point = 8;
+    constexpr float multiplier = 1.0F / (1U << Q_point);
     return xyz_t {
-        .x = static_cast<float>(static_cast<int16_t>(_accLinear.x)) * multiplier,
-        .y = static_cast<float>(static_cast<int16_t>(_accLinear.y)) * multiplier,
-        .z = static_cast<float>(static_cast<int16_t>(_accLinear.z)) * multiplier
+        .x = static_cast<float>(_accLinear.x) * multiplier,
+        .y = static_cast<float>(_accLinear.y) * multiplier,
+        .z = static_cast<float>(_accLinear.z) * multiplier
     };
 }
 
 xyz_t IMU_BNO085::getGyroRPS() const
 {
-    constexpr int Q_point = 9;
-    constexpr float multiplier = 1.0F / (1 << Q_point);
+    constexpr unsigned int Q_point = 9;
+    constexpr float multiplier = 1.0F / (1U << Q_point);
     return xyz_t {
-        .x = static_cast<float>(static_cast<int16_t>(_gyroRPS.x)) * multiplier,
-        .y = static_cast<float>(static_cast<int16_t>(_gyroRPS.y)) * multiplier,
-        .z = static_cast<float>(static_cast<int16_t>(_gyroRPS.z)) * multiplier
+        .x = static_cast<float>(_gyroRPS.x) * multiplier,
+        .y = static_cast<float>(_gyroRPS.y) * multiplier,
+        .z = static_cast<float>(_gyroRPS.z) * multiplier
     };
 }
 
 xyz_t IMU_BNO085::getMag() const
 {
-    constexpr int Q_point = 4;
-    constexpr float multiplier = 1.0F / (1 << Q_point);
+    constexpr unsigned int Q_point = 4;
+    constexpr float multiplier = 1.0F / (1U << Q_point);
     return xyz_t {
-        .x = static_cast<float>(static_cast<int16_t>(_mag.x)) * multiplier,
-        .y = static_cast<float>(static_cast<int16_t>(_mag.y)) * multiplier,
-        .z = static_cast<float>(static_cast<int16_t>(_mag.z)) * multiplier
+        .x = static_cast<float>(_mag.x) * multiplier,
+        .y = static_cast<float>(_mag.y) * multiplier,
+        .z = static_cast<float>(_mag.z) * multiplier
     };
 }
 
 xyz_t IMU_BNO085::getGravity() const
 {
-    constexpr int Q_point = 8;
-    constexpr float multiplier = 1.0F / (1 << Q_point);
+    constexpr unsigned int Q_point = 8;
+    constexpr float multiplier = 1.0F / (1U << Q_point);
     return xyz_t {
-        .x = static_cast<float>(static_cast<int16_t>(_gravity.x)) * multiplier,
-        .y = static_cast<float>(static_cast<int16_t>(_gravity.y)) * multiplier,
-        .z = static_cast<float>(static_cast<int16_t>(_gravity.z)) * multiplier
+        .x = static_cast<float>(_gravity.x) * multiplier,
+        .y = static_cast<float>(_gravity.y) * multiplier,
+        .z = static_cast<float>(_gravity.z) * multiplier
     };
 }
 
@@ -231,13 +231,13 @@ uint16_t IMU_BNO085::parseGyroIntegratedRotationVectorReport(const SHTP_Packet& 
 {
     _orientationAvailable = true;
     _gyroAvailable = true;
-    _gyroIntegratedRotationVector.i    = static_cast<uint16_t>(packet.data[1])  << 8 | packet.data[0];
-    _gyroIntegratedRotationVector.j    = static_cast<uint16_t>(packet.data[3])  << 8 | packet.data[2];
-    _gyroIntegratedRotationVector.k    = static_cast<uint16_t>(packet.data[5])  << 8 | packet.data[4];
-    _gyroIntegratedRotationVector.real = static_cast<uint16_t>(packet.data[7])  << 8 | packet.data[6];
-    _gyroIntegratedRotationVector.x    = static_cast<uint16_t>(packet.data[9])  << 8 | packet.data[8];
-    _gyroIntegratedRotationVector.y    = static_cast<uint16_t>(packet.data[11]) << 8 | packet.data[10];
-    _gyroIntegratedRotationVector.z    = static_cast<uint16_t>(packet.data[13]) << 8 | packet.data[12];
+    _gyroIntegratedRotationVector.i    = static_cast<uint16_t>(packet.data[1])  << 8U | packet.data[0];
+    _gyroIntegratedRotationVector.j    = static_cast<uint16_t>(packet.data[3])  << 8U | packet.data[2];
+    _gyroIntegratedRotationVector.k    = static_cast<uint16_t>(packet.data[5])  << 8U | packet.data[4];
+    _gyroIntegratedRotationVector.real = static_cast<uint16_t>(packet.data[7])  << 8U | packet.data[6];
+    _gyroIntegratedRotationVector.x    = static_cast<uint16_t>(packet.data[9])  << 8U | packet.data[8];
+    _gyroIntegratedRotationVector.y    = static_cast<uint16_t>(packet.data[11]) << 8U | packet.data[10];
+    _gyroIntegratedRotationVector.z    = static_cast<uint16_t>(packet.data[13]) << 8U | packet.data[12];
 
     return SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR;
 }
@@ -253,9 +253,9 @@ packet.date[4..]        sensor data starts
 uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
 {
     if (packet.timestamp[0] == REPORT_ID_BASE_TIMESTAMP_REFERENCE) {
-        _timestamp = (static_cast<uint32_t>(packet.timestamp[4]) << 24)
-            | (static_cast<uint32_t>(packet.timestamp[3]) << 16)
-            | (static_cast<uint32_t>(packet.timestamp[2]) << 8)
+        _timestamp = (static_cast<uint32_t>(packet.timestamp[4]) << 24U)
+            | (static_cast<uint32_t>(packet.timestamp[3]) << 16U)
+            | (static_cast<uint32_t>(packet.timestamp[2]) << 8U)
             | static_cast<uint32_t>(packet.timestamp[1]);
     }
 
@@ -270,12 +270,12 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
     const uint8_t reportID = packet.data[0];
     const uint8_t sequenceNumber = packet.data[1];
     const uint8_t status = packet.data[2]; //Get status bits
-    const uint8_t accuracy = status & 0x03;
-    const uint16_t delay = static_cast<uint16_t>(status & 0xFC) << 6 | packet.data[3];
+    const uint8_t accuracy = status & 0x03U;
+    const uint16_t delay = static_cast<uint16_t>(status & 0xFCU) << 6U | packet.data[3];
 
-    const uint16_t dataX = static_cast<uint16_t>(packet.data[5]) << 8 | packet.data[4];
-    const uint16_t dataY = static_cast<uint16_t>(packet.data[7]) << 8 | packet.data[6];
-    const uint16_t dataZ = static_cast<uint16_t>(packet.data[9]) << 8 | packet.data[8];
+    const uint16_t dataX = static_cast<uint16_t>(packet.data[5]) << 8U | packet.data[4];
+    const uint16_t dataY = static_cast<uint16_t>(packet.data[7]) << 8U | packet.data[6];
+    const uint16_t dataZ = static_cast<uint16_t>(packet.data[9]) << 8U | packet.data[8];
 
     switch (reportID) {
     case SENSOR_REPORTID_ACCELEROMETER:
@@ -325,16 +325,16 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
         _gyroUncalibratedRPS.accuracy = accuracy;
         _gyroUncalibratedRPS.sequenceNumber = sequenceNumber;
         _gyroUncalibratedRPS.delay = delay;
-        _gyroUncalibratedRPS.biasX  = static_cast<uint16_t>(packet.data[11]) << 8 | packet.data[10];
-        _gyroUncalibratedRPS.biasY  = static_cast<uint16_t>(packet.data[13]) << 8 | packet.data[12];
-        _gyroUncalibratedRPS.biasZ  = static_cast<uint16_t>(packet.data[15]) << 8 | packet.data[14];
+        _gyroUncalibratedRPS.biasX  = static_cast<uint16_t>(packet.data[11]) << 8U | packet.data[10];
+        _gyroUncalibratedRPS.biasY  = static_cast<uint16_t>(packet.data[13]) << 8U | packet.data[12];
+        _gyroUncalibratedRPS.biasZ  = static_cast<uint16_t>(packet.data[15]) << 8U | packet.data[14];
         break;
     case SENSOR_REPORTID_ROTATION_VECTOR: // NOLINT(bugprone-branch-clone) false positive
         [[fallthrough]];
     case SENSOR_REPORTID_GEOMAGNETIC_ROTATION_VECTOR:
         [[fallthrough]];
     case SENSOR_REPORTID_AR_VR_STABILIZED_ROTATION_VECTOR:
-        _rotationVector.radianAccuracy = static_cast<uint16_t>(packet.data[13]) << 8 | packet.data[12];
+        _rotationVector.radianAccuracy = static_cast<uint16_t>(packet.data[13]) << 8U | packet.data[12];
         [[fallthrough]];
     // the GAME rotation vectors do not report radianAccuracy
     case SENSOR_REPORTID_GAME_ROTATION_VECTOR:
@@ -343,7 +343,7 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
         _rotationVector.i = dataX;
         _rotationVector.j = dataY;
         _rotationVector.k = dataZ;
-        _rotationVector.real = static_cast<uint16_t>(packet.data[11]) << 8 | packet.data[10];
+        _rotationVector.real = static_cast<uint16_t>(packet.data[11]) << 8U | packet.data[10];
         _rotationVector.accuracy = accuracy;
         break;
     case SENSOR_REPORTID_RAW_ACCELEROMETER:
@@ -404,7 +404,7 @@ bool IMU_BNO085::readPacket()
     _bus.readBytes(reinterpret_cast<uint8_t*>(&_shtpPacket.header), sizeof(SHTP_Header));
 
     uint16_t dataLength = ((static_cast<uint16_t>(_shtpPacket.header.lengthMSB)) << 8) | (static_cast<uint16_t>(_shtpPacket.header.lengthLSB));
-    dataLength &= ~(1 << 15); //Clear the MSbit.
+    dataLength &= ~(1U << 15U); //Clear the MSbit.
     if (dataLength == 0) {
         //Packet is empty
         return false;
@@ -458,5 +458,4 @@ bool IMU_BNO085::sendCommand(uint8_t command)
 
     return true;
 }
-
 #endif

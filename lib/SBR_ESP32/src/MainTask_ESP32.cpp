@@ -137,7 +137,7 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 #elif defined(USE_IMU_BNO085)
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex); // NOLINT(misc-const-correctness) false positive
 #elif defined(USE_IMU_LSM303AGR)
-    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex); // NOLINT(misc-const-correctness) false positive
 #else
     static_assert(false);
 #endif
@@ -194,7 +194,7 @@ void MainTask::loadPreferences()
     }
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#pragma GCC diagnostic ignored "-Wdouble-promotion" // printf does double promotion
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
     if (pitchBalanceAngleDegrees != FLT_MAX) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
@@ -202,7 +202,7 @@ void MainTask::loadPreferences()
     }
 
     // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
-    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
+    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) { // NOLINT
         std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
         const PIDF::PIDF_t pid = _preferences->getPID(pidName);
         if (pid.kp != FLT_MAX) {

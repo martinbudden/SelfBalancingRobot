@@ -31,7 +31,7 @@ static ODriveCAN oDrive1(wrap_can_intf(can_intf), Motors_ODriveCAN::O_DRIVE_1_NO
 static bool sendMsg(CANControllerClass& can_intf, uint32_t id, uint8_t length, const uint8_t* data)
 {
     if (id & 0x80000000) {
-        can_intf.beginExtendedPacket(static_cast<int32_t>(id) & 0x1fffffff, length, !data);
+        can_intf.beginExtendedPacket(static_cast<int32_t>(id) & 0x1fffffff, length, !data); // NOLINT(hicpp-signed-bitwise)
     } else {
         can_intf.beginPacket(static_cast<int>(id), length, !data);
     }
@@ -103,14 +103,16 @@ bool Motors_ODriveCAN::setup()
         Serial.println("ODrive0 vbus request failed!");
         while (true) {} // spin indefinitely
     }
-    Serial.printf("ODrive0 DC voltage [V]: %f DC current [A]: %f\r\n", vbus.Bus_Voltage, vbus.Bus_Current);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+        Serial.printf("ODrive0 DC voltage [V]: %f DC current [A]: %f\r\n", vbus.Bus_Voltage, vbus.Bus_Current);
 
     if (!oDrive1.request(vbus, 1)) {
         Serial.println("ODrive1 vbus request failed!");
         while (true) {} // spin indefinitely
     }
     Serial.printf("ODrive1 DC voltage [V]: %f DC current [A]: %f\r\n", vbus.Bus_Voltage, vbus.Bus_Current);
-
+#pragma GCC diagnostic pop
 
     Serial.println("Enabling closed loop control...");
     while (_oDrv0_user_data.last_heartbeat.Axis_State != ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL) {
