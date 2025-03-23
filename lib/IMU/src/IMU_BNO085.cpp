@@ -155,9 +155,9 @@ xyz_t IMU_BNO085::getAcc() const
     constexpr unsigned int Q_point = 8;
     constexpr float multiplier = 1.0F / (1U << Q_point);
     return xyz_t {
-        .x = static_cast<float>(_acc.x)) * multiplier,
-        .y = static_cast<float>(_acc.y)) * multiplier,
-        .z = static_cast<float>(_acc.z)) * multiplier
+        .x = static_cast<float>(_acc.x) * multiplier,
+        .y = static_cast<float>(_acc.y) * multiplier,
+        .z = static_cast<float>(_acc.z) * multiplier
     };
 }
 
@@ -365,7 +365,7 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
         _magRaw.accuracy = accuracy;
         break;
     case REPORT_ID_COMMAND_RESPONSE:
-        //The BNO085 responds with this report to command requests. It's up to use to remember which command we issued.
+        //The BNO085 responds with this report to command requests. It's up to us to remember which command we issued.
         if (packet.data[2] == COMMAND_CALIBRATE_MOTION_ENGINE) {
             _calibrationStatus = packet.data[5]; //R0 - Status (0 = success, non-zero = fail)
         }

@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <cstdint>
 
+class TwoWire;
+
 
 class I2C {
 public:
@@ -15,6 +17,9 @@ public:
     uint8_t writeRegister(uint8_t reg, const uint8_t* data, size_t length);
     uint8_t writeBytes(const uint8_t* data, size_t length);
 private:
+#if defined(I2C_ARDUINO_WIRE)
+    TwoWire& _wire;
+#endif
     uint8_t _I2C_address;
     uint8_t _SDA_pin;
     uint8_t _SCL_pin;
