@@ -4,10 +4,37 @@
     "keywords": "",
     "authors": {
         "name": "Martin Budden",
+        "url": "https://github.com/martinbudden"
+    },
+    "repository": {
+        "type": "git",
         "url": "https://github.com/martinbudden/Library-StabilizedVehicle.git"
     },
+    "dependencies": [
+        {
+            "name": "IMU",
+            "version": ">=0.0.1"
+        },
+        {
+            "name": "IMU_TYPES",
+            "version": ">=0.0.2"
+        },
+        {
+            "name": "Filters",
+            "version": ">=0.0.1"
+        },
+        {
+            "name": "SensorFusion",
+            "version": ">=0.0.1"
+        },
+        {
+            "name": "PIDF",
+            "version": ">=0.0.1"
+        }
+    ],
     "license": "MIT",
     "version": "0.0.1",
     "frameworks": "*",
-    "platforms": "*"
+    "platforms": "*",
+    "headers": ["AHRS.h", "CommandPacket.h", "IMU_FiltersBase.h", "MotorControllerBase.h", "MotorPairControllerTelemetry.h", "ReceiverBase.h", "SBR_TelemetryData.h", "SV_Preferences.h", "SV_Telemetry.h", "SV_TelemetryData.h", "TaskBase.h"]
 }
