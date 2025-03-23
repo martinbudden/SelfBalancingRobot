@@ -22,7 +22,7 @@
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
 #include <SV_Preferences.h>
-#include <SensorFusionFilter.h>
+#include <SensorFusion.h>
 #include <cfloat>
 
 /*!

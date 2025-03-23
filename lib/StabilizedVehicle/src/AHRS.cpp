@@ -3,7 +3,7 @@
 #include "MotorControllerBase.h"
 
 #include <IMU_BNO085.h>
-#include <SensorFusionFilter.h>
+#include <SensorFusion.h>
 #include <cmath>
 #if defined(AHRS_IS_INTERRUPT_DRIVEN) || defined(USE_FREERTOS)
 #include <driver/gpio.h>

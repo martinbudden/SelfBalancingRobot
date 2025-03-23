@@ -2,7 +2,7 @@
 
 #include "IMU_Base.h"
 #include "IMU_FiltersBase.h"
-#include "SensorFusionFilter.h"
+#include "SensorFusion.h"
 
 
 class SensorFusionFilterTest : public SensorFusionFilterBase {
