@@ -1,6 +1,7 @@
 #pragma once
 
-#include <I2C.h>
+#include <BUS_I2C.h>
+#include <BUS_SPI.h>
 #include <IMU_Base.h>
 #include <array>
 
@@ -111,9 +112,35 @@ public:
         int16_t z;
     };
 #pragma pack(pop)
+    static constexpr float sin45f = 0.7071067811865475F;
+    const Quaternion Q_XPOS_YPOS_ZPOS = {  1.0F,    0.0F,    0.0F,    0.0F };
+    const Quaternion Q_YPOS_XNEG_ZPOS = {  sin45f,  0.0F,    0.0F,    sin45f };
+    const Quaternion Q_XNEG_YNEG_ZPOS = {  0.0F,    0.0F,    0.0F,    1.0F };
+    const Quaternion Q_YNEG_XPOS_ZPOS = {  sin45f,  0.0F,    0.0F,   -sin45f };
+    const Quaternion Q_XPOS_YNEG_ZNEG = {  0.0F,    0.0F,   -1.0F,    0.0F };
+    const Quaternion Q_YPOS_XPOS_ZNEG = {  0.0F,   -sin45f, -sin45f,  0.0F };
+    const Quaternion Q_XNEG_YPOS_ZNEG = {  0.0F,   -1.0F,    0.0F,    0.0F };
+    const Quaternion Q_YNEG_XNEG_ZNEG = {  0.0F,   -sin45f,  sin45f,  0.0F };
+    const Quaternion Q_ZPOS_YNEG_XPOS = {  0.0F,    0.0F,   -sin45f, sin45f };
+    const Quaternion Q_YPOS_ZPOS_XPOS = {  0.5F,   -0.5F,   -0.5F,    0.5F };
+    const Quaternion Q_ZNEG_YPOS_XPOS = {  sin45f, -sin45f,  0.0F,    0.0F };
+    const Quaternion Q_YNEG_ZNEG_XPOS = {  0.5F,   -0.5F,    0.5F,   -0.5F };
+    const Quaternion Q_ZPOS_YPOS_XNEG = {  sin45f, -sin45f,  0.0F,    0.0F };
+    const Quaternion Q_YPOS_ZNEG_XNEG = { -0.5F,   -0.5F,   -0.5F,   -0.5F };
+    const Quaternion Q_ZNEG_YNEG_XNEG = {  0.0F,    0.0F,   -sin45f, -sin45f };
+    const Quaternion Q_YNEG_ZPOS_XNEG = {  0.5F,    0.5F,   -0.5F,   -0.5F };
+    const Quaternion Q_ZPOS_XPOS_YPOS = { -0.5F,   -0.5F,   -0.5F,    0.5F };
+    const Quaternion Q_XNEG_ZPOS_YPOS = {  0.0F,   -sin45f,  0.0F,    sin45f };
+    const Quaternion Q_ZNEG_XNEG_YPOS = {  0.5F,   -0.5F,    0.5F,    0.5F };
+    const Quaternion Q_XPOS_ZNEG_YPOS = { -sin45f,  0.0F,   -sin45f,  0.0F };
+    const Quaternion Q_ZPOS_XNEG_YNEG = {  0.5F,    0.5F,   -0.5F,    0.5F };
+    const Quaternion Q_XNEG_ZNEG_YNEG = {  0.0F,   -sin45f,  0.0F,   -sin45f };
+    const Quaternion Q_ZNEG_XPOS_YNEG = {  0.5F,   -0.5F,   -0.5F,   -0.5F };
+    const Quaternion Q_XPOS_ZPOS_YNEG = {  sin45f,  0.0F,   -sin45f,  0.0F };
 public:
     static constexpr uint8_t I2C_ADDRESS=0x4A;
 public:
+    explicit IMU_BNO085(axis_order_t axisOrder);
     IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_BNO085(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     void init();
@@ -151,7 +178,11 @@ private:
     bool sendCommandSaveDynamicCalibrationData();
     bool sendCommand(uint8_t command);
 protected:
-    I2C _bus; //!< Serial Communication Bus interface, can be either I2C or SPI
+#if defined(USE_IMU_BNO085_I2C)
+    BUS_I2C _bus; //!< I2C bus interface
+#else
+    BUS_SPI _bus; //!< SPI bus interface,
+#endif
     uint32_t _timestamp {};
     uint32_t _orientationAvailable {false};
     uint32_t _gyroAvailable {false};

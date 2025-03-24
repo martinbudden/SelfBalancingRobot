@@ -3,12 +3,10 @@
 #include <cstddef>
 #include <cstdint>
 
-class TwoWire;
 
-
-class I2C {
+class BUS_SPI {
 public:
-    I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin);
+    BUS_SPI();
 public:
     uint8_t readRegister(uint8_t reg) const;
     bool readRegister(uint8_t reg, uint8_t* data, size_t length) const;
@@ -17,11 +15,4 @@ public:
     uint8_t writeRegister(uint8_t reg, const uint8_t* data, size_t length);
     uint8_t writeBytes(const uint8_t* data, size_t length);
 private:
-#if defined(I2C_ARDUINO_WIRE)
-    TwoWire& _wire;
-#endif
-    uint8_t _I2C_address;
-    uint8_t _SDA_pin;
-    uint8_t _SCL_pin;
-    uint8_t _filler {0};
 };

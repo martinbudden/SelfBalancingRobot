@@ -1,8 +1,7 @@
 #pragma once
 
-#include "I2C.h"
 #include "MotorPairBase.h"
-#include <cstdint>
+#include <BUS_I2C.h>
 
 class MotorsBalaC final : public MotorPairBase {
 public:
@@ -20,6 +19,6 @@ private:
     // map left and right motors to MOTOR_1 and MOTOR_0
     enum : uint8_t { MOTOR_LEFT = REGISTER_MOTOR_1, MOTOR_RIGHT = REGISTER_MOTOR_0 };
 private:
-    I2C _I2C;
+    BUS_I2C _I2C;
 };
 

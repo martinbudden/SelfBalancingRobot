@@ -1,12 +1,14 @@
 #pragma once
 
-#include <I2C.h>
+#include <BUS_I2C.h>
+#include <BUS_SPI.h>
 #include <IMU_Base.h>
 #include <array>
 
 
 class IMU_LSM303AGR : public IMU_Base {
 public:
+    explicit IMU_LSM303AGR(axis_order_t axisOrder);
     IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_LSM303AGR(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     void init();
@@ -46,6 +48,10 @@ public:
 private:
     gyroRPS_Acc_t gyroRPS_AccFromRaw(const gyro_acc_data_t& data) const;
 private:
-    I2C _bus; //!< Serial Communication Bus interface, can be either I2C or SPI
+#if defined(USE_IMU_LSM303AGR_I2C)
+    BUS_I2C _bus; //!< I2C bus interface
+#else
+    BUS_SPI _bus; //!< SPI bus interface,
+#endif
     gyro_acc_array_t _fifoBuffer {};
 };

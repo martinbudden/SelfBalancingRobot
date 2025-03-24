@@ -45,6 +45,7 @@ public:
         XPOS_ZPOS_YNEG
     };
 public:
+    explicit IMU_Base(axis_order_t axisOrder);
     IMU_Base(axis_order_t axisOrder, void* i2cMutex);
 public:
     struct xyz_int32_t {

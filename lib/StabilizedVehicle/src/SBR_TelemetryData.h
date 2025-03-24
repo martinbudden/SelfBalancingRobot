@@ -7,7 +7,6 @@ Packet definitions of telemetry data specific to Self Balancing Robots.
 
 #include "MotorPairControllerTelemetry.h"
 #include <array>
-#include <cstdint>
 #include <xyz_type.h>
 
 #pragma pack(push, 1)

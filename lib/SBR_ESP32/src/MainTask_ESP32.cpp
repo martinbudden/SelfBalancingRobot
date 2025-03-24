@@ -130,17 +130,27 @@ void MainTask::setup()
 
 void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
-#if defined(USE_IMU_MPU6886)
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex); // NOLINT(misc-const-correctness) false positive
-#elif defined(USE_IMU_BMI270)
+// NOLINTBEGIN(misc-const-correctness) false positive
+#if defined(USE_IMU_MPU6886_I2C)
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_MPU6886_SPI)
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER);
+#elif defined(USE_IMU_BMI270_I2C)
     static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
-#elif defined(USE_IMU_BNO085)
-    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex); // NOLINT(misc-const-correctness) false positive
-#elif defined(USE_IMU_LSM303AGR)
-    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex); // NOLINT(misc-const-correctness) false positive
+#elif defined(USE_IMU_BMI270_SPI)
+    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER);
+#elif defined(USE_IMU_BNO085_I2C)
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_BNO085_SPI)
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER);
+#elif defined(USE_IMU_LSM303AGR_I2C)
+    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_LSM303AGR_SPI)
+    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER);
 #else
     static_assert(false);
 #endif
+// NOLINTEND(misc-const-correctness)
 
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
 #if defined(USE_COMPLEMENTARY_FILTER)

@@ -1,20 +1,20 @@
 #if defined(USE_I2C)
 
-#include "I2C.h"
-#if defined(I2C_ARDUINO_WIRE)
+#include <BUS_I2C.h>
+#if defined(USE_I2C_ARDUINO)
 #include <Wire.h>
 #endif
 
 
-I2C::I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
-#if defined(I2C_ARDUINO_WIRE)
+BUS_I2C::BUS_I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
+#if defined(USE_I2C_ARDUINO)
     _wire(Wire),
 #endif
     _I2C_address(I2C_address),
     _SDA_pin(SDA_pin),
     _SCL_pin(SCL_pin)
 {
-#if defined(I2C_ARDUINO_WIRE)
+#if defined(USE_I2C_ARDUINO)
 #if defined(USE_I2C_BEGIN_2_PARAMETERS)
     _wire.begin(SDA_pin, SCL_pin);
 #else
@@ -23,9 +23,9 @@ I2C::I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
 #endif
 }
 
-uint8_t I2C::readRegister(uint8_t reg) const
+uint8_t BUS_I2C::readRegister(uint8_t reg) const
 {
-#if defined(I2C_ARDUINO_WIRE)
+#if defined(USE_I2C_ARDUINO)
     _wire.beginTransmission(_I2C_address);
     _wire.write(reg);
     _wire.endTransmission();
@@ -39,9 +39,9 @@ uint8_t I2C::readRegister(uint8_t reg) const
     return 0;
 }
 
-bool I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const
+bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const
 {
-#if defined(I2C_ARDUINO_WIRE)
+#if defined(USE_I2C_ARDUINO)
     _wire.beginTransmission(_I2C_address);
     _wire.write(reg);
     _wire.endTransmission();
@@ -61,9 +61,9 @@ bool I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const
     return false;
 }
 
-bool I2C::readBytes(uint8_t* data, size_t length) const
+bool BUS_I2C::readBytes(uint8_t* data, size_t length) const
 {
-#if defined(I2C_ARDUINO_WIRE)
+#if defined(USE_I2C_ARDUINO)
     if (_wire.requestFrom(_I2C_address, static_cast<uint8_t>(length))) {
         uint8_t pos = 0; // NOLINT(misc-const-correctness) false positive
         for (size_t ii = 0; ii < length; ++ii) {
@@ -78,9 +78,9 @@ bool I2C::readBytes(uint8_t* data, size_t length) const
     return false;
 }
 
-uint8_t I2C::writeRegister(uint8_t reg, uint8_t data)
+uint8_t BUS_I2C::writeRegister(uint8_t reg, uint8_t data)
 {
-#if defined(I2C_ARDUINO_WIRE)
+#if defined(USE_I2C_ARDUINO)
     _wire.beginTransmission(_I2C_address);
     _wire.write(reg);
     _wire.write(data);
@@ -92,9 +92,9 @@ uint8_t I2C::writeRegister(uint8_t reg, uint8_t data)
 #endif
 }
 
-uint8_t I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
+uint8_t BUS_I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 {
-#if defined(I2C_ARDUINO_WIRE)
+#if defined(USE_I2C_ARDUINO)
     _wire.beginTransmission(_I2C_address);
     _wire.write(reg);
     _wire.write(data, length);
@@ -107,9 +107,9 @@ uint8_t I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 #endif
 }
 
-uint8_t I2C::writeBytes(const uint8_t* data, size_t length)
+uint8_t BUS_I2C::writeBytes(const uint8_t* data, size_t length)
 {
-#if defined(I2C_ARDUINO_WIRE)
+#if defined(USE_I2C_ARDUINO)
     _wire.beginTransmission(_I2C_address);
     _wire.write(data, length);
     return _wire.endTransmission();

@@ -4,8 +4,6 @@
 Packet definitions of telemetry data useful to any Stabilized Vehicle.
 */
 #include "ReceiverBase.h"
-#include <array>
-#include <cstdint>
 #include <xyz_type.h>
 
 #pragma pack(push, 1)

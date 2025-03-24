@@ -121,19 +121,19 @@ size_t IMU_M5_STACK::readFIFO_ToBuffer()
         M5.IMU.ReadFIFOBuff(&_fifoBuffer[0], fifoCount);
     }
     i2cSemaphoreGive();
-    return fifoCount / IMU_MPU6886::acc_temperature_gyro_data_t::DATA_SIZE;
+    return fifoCount / acc_temperature_gyro_data_t::DATA_SIZE;
 }
 
 IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readFIFO_Item(size_t index)
 {
-    const IMU_MPU6886::acc_temperature_gyro_data_t* imu_data = reinterpret_cast<IMU_MPU6886::acc_temperature_gyro_data_t*>(&_fifoBuffer[0]); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-    const IMU_MPU6886::acc_temperature_gyro_data_t& imuData = imu_data[index]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    const acc_temperature_gyro_data_t* imu_data = reinterpret_cast<acc_temperature_gyro_data_t*>(&_fifoBuffer[0]); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    const acc_temperature_gyro_data_t& imuData = imu_data[index]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     const gyroRPS_Acc_t gyroAcc = IMU_M5_STACK::gyroRPS_AccFromRaw(imuData);
 
     return gyroAcc;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const IMU_MPU6886::acc_temperature_gyro_data_t& data) const
+IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const acc_temperature_gyro_data_t& data) const
 {
 // NOLINTBEGIN(hicpp-signed-bitwise)
 #if defined(IMU_BUILD_YNEG_XPOS_ZPOS)

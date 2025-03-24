@@ -188,16 +188,14 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
 #if defined(M5_STACK)
-#if defined(USE_IMU_MPU6886)
+#if defined(USE_IMU_MPU6886_I2C)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #else
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex); // NOLINT(misc-const-correctness) false positive
 #endif
 #elif defined(M5_UNIFIED)
-#if defined(USE_IMU_MPU6886)
+#if defined(USE_IMU_MPU6886_I2C)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex); // NOLINT(misc-const-correctness) false positive
-#elif defined(USE_IMU_BMI270)
-    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #else
     static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #endif

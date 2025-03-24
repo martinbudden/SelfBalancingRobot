@@ -1,6 +1,5 @@
 #pragma once
 
-#include "I2C.h"
 #include "MotorPairBase.h"
 
 
@@ -16,6 +15,4 @@ private:
 
     enum : uint8_t { I2C_ADDRESS = 0x3A };
     enum : uint8_t { REGISTER_SPEED = 0x00, REGISTER_ENCODER = 0x10 };
-private:
-    //I2C _I2C;
 };

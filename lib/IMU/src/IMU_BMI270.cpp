@@ -1,4 +1,4 @@
-#if defined(USE_IMU_BMI270)
+#if defined(USE_IMU_BMI270_I2C) || defined(USE_IMU_BMI270_SPI)
 
 #include "IMU_BMI270.h"
 #include <array>
@@ -82,6 +82,7 @@ constexpr uint8_t REG_PWR_CTRL_ADDR         = 0x7D;
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
+#if defined(USE_IMU_BMI270_I2C)
 IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
@@ -90,6 +91,15 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin,
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
     init();
 }
+#else
+IMU_BMI270::IMU_BMI270(axis_order_t axisOrder) :
+    IMU_Base(axisOrder, i2cMutex)
+{
+    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
+    init();
+}
+#endif
 
 void IMU_BMI270::init()
 {

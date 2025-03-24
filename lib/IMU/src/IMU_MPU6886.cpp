@@ -1,4 +1,4 @@
-#if defined(USE_IMU_MPU6886)
+#if defined(USE_IMU_MPU6886_I2C) || defined(USE_IMU_MPU6886_SPI)
 
 #include "IMU_MPU6886.h"
 
@@ -98,6 +98,7 @@ constexpr uint8_t REG_YA_OFFSET_L           = 0x7B;
 constexpr uint8_t REG_ZA_OFFSET_H           = 0x7D;
 constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 
+#if defined(USE_IMU_MPU6886_I2C)
 IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
@@ -107,6 +108,16 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pi
     static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
     init();
 }
+#else
+IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder) :
+    IMU_Base(axisOrder, nullptr)
+{
+    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
+    init();
+}
+#endif
 
 // NOLINTBEGIN(hicpp-signed-bitwise)
 void IMU_MPU6886::init()

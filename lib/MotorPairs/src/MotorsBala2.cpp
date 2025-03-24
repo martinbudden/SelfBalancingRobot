@@ -7,7 +7,6 @@
 
 MotorsBala2::MotorsBala2(uint8_t SDA_pin, uint8_t SCL_pin) :
     MotorPairBase(ENCODER_STEPS_PER_REVOLUTION, CANNOT_ACCURATELY_ESTIMATE_SPEED)
-    //_I2C(I2C_ADDRESS, SDA_pin, SCL_pin)
     {(void)SDA_pin; (void)SCL_pin;}
 
 void MotorsBala2::readEncoder()

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "MotorPairBase.h"
-#include <cstdint>
 
 
 class MotorsGPIO final : public MotorPairBase {

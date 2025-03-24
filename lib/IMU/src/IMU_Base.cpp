@@ -2,6 +2,11 @@
 #include <cassert>
 
 
+IMU_Base::IMU_Base(axis_order_t axisOrder) :
+    _axisOrder(axisOrder)
+{
+}
+
 IMU_Base::IMU_Base(axis_order_t axisOrder, [[maybe_unused]] void* i2cMutex) :
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex(static_cast<SemaphoreHandle_t>(i2cMutex)),

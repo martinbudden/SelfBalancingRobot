@@ -1,6 +1,7 @@
 #pragma once
 
-#include <I2C.h>
+#include <BUS_I2C.h>
+#include <BUS_SPI.h>
 #include <IMU_Base.h>
 
 
@@ -26,6 +27,7 @@ public:
     };
 #pragma pack(pop)
 public:
+    explicit IMU_BMI270(axis_order_t axisOrder);
     IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_BMI270(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     void init();
@@ -38,5 +40,9 @@ public:
 private:
     gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const;
 private:
-    I2C _bus; //!< Serial Communication Bus interface, can be either I2C or SPI
+#if defined(USE_IMU_BMI270_I2C)
+    BUS_I2C _bus; //!< I2C bus interface
+#else
+    BUS_SPI _bus; //!< SPI bus interface,
+#endif
 };

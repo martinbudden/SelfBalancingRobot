@@ -1,7 +1,7 @@
 #pragma once
 
 #include <IMU_Base.h>
-#include <IMU_MPU6886.h>
+
 
 class IMU_M5_STACK : public IMU_Base {
 public:
@@ -18,7 +18,24 @@ public:
     virtual size_t readFIFO_ToBuffer() override;
     virtual gyroRPS_Acc_t readFIFO_Item(size_t index) override;
 private:
-    gyroRPS_Acc_t gyroRPS_AccFromRaw(const IMU_MPU6886::acc_temperature_gyro_data_t& data) const;
+    struct acc_temperature_gyro_data_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+        enum { DATA_SIZE = 14 };
+        uint8_t acc_x_h;
+        uint8_t acc_x_l;
+        uint8_t acc_y_h;
+        uint8_t acc_y_l;
+        uint8_t acc_z_h;
+        uint8_t acc_z_l;
+        uint8_t temperature_h;
+        uint8_t temperature_l;
+        uint8_t gyro_x_h;
+        uint8_t gyro_x_l;
+        uint8_t gyro_y_h;
+        uint8_t gyro_y_l;
+        uint8_t gyro_z_h;
+        uint8_t gyro_z_l;
+    };
+    gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_temperature_gyro_data_t& data) const;
 private:
     uint8_t _fifoBuffer[1024] {};
 };
