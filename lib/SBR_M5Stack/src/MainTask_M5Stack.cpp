@@ -23,7 +23,6 @@
 #include <IMU_MPU6886.h>
 #include <SV_Preferences.h>
 #include <SensorFusion.h>
-#include <cfloat>
 
 /*!
 The ESP32S3 is dual core containing a Protocol CPU (known as CPU 0 or PRO_CPU) and an Application CPU (known as CPU 1 or APP_CPU).
@@ -253,7 +252,7 @@ void MainTask::checkGyroCalibration()
 }
 
 /*!
-Resets the PID preferences and the Balance Angle to FLT_MAX (which represents unset).
+Resets the PID preferences and the Balance Angle to SV_Preferences::NOT_SET (which represents unset).
 */
 void MainTask::resetPreferences()
 {
@@ -262,10 +261,10 @@ void MainTask::resetPreferences()
     //_preferences->removeAccOffset();
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         const std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
-        constexpr PIDF::PIDF_t pidFLT_MAX { FLT_MAX, FLT_MAX, FLT_MAX,FLT_MAX };
-        _preferences->putPID(pidName, pidFLT_MAX);
+        constexpr PIDF::PIDF_t pidNOT_SET { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET ,SV_Preferences::NOT_SET };
+        _preferences->putPID(pidName, pidNOT_SET);
     }
-    _preferences->putFloat(_motorPairController->getBalanceAngleName(), FLT_MAX);
+    _preferences->putFloat(_motorPairController->getBalanceAngleName(), SV_Preferences::NOT_SET);
     Serial.printf("**** preferences reset\r\n");
 }
 
@@ -283,7 +282,7 @@ void MainTask::loadPreferences()
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdouble-promotion"
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
-    if (pitchBalanceAngleDegrees != FLT_MAX) {
+    if (pitchBalanceAngleDegrees != SV_Preferences::NOT_SET) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
         Serial.printf("**** pitch balance angle loaded from preferences:%f\r\n", pitchBalanceAngleDegrees);
     }
@@ -292,7 +291,7 @@ void MainTask::loadPreferences()
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
         const PIDF::PIDF_t pid = _preferences->getPID(pidName);
-        if (pid.kp != FLT_MAX) {
+        if (pid.kp != SV_Preferences::NOT_SET) {
             _motorPairController->setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
             Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), pid.kp, pid.ki, pid.kd, pid.kf);
         }

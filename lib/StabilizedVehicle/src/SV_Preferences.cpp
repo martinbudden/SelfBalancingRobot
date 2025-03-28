@@ -1,7 +1,6 @@
 #if defined(USE_ESP32_PREFERENCES)
 
 #include "SV_Preferences.h"
-#include <cfloat>
 
 namespace { // use anonymous namespace to make items local to this translation unit
 const char* preferencesNamespace {"SV"};
@@ -32,10 +31,10 @@ PIDF::PIDF_t SV_Preferences::getPID(const std::string& name) const
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const PIDF::PIDF_t pid {
-        .kp = _preferences.getFloat((name + "_P").c_str(), FLT_MAX),
-        .ki = _preferences.getFloat((name + "_I").c_str(), FLT_MAX),
-        .kd = _preferences.getFloat((name + "_D").c_str(), FLT_MAX),
-        .kf = _preferences.getFloat((name + "_F").c_str(), FLT_MAX)
+        .kp = _preferences.getFloat((name + "_P").c_str(), NOT_SET),
+        .ki = _preferences.getFloat((name + "_I").c_str(), NOT_SET),
+        .kd = _preferences.getFloat((name + "_D").c_str(), NOT_SET),
+        .kf = _preferences.getFloat((name + "_F").c_str(), NOT_SET)
     };
 
     _preferences.end();
@@ -59,7 +58,7 @@ float SV_Preferences::getFloat(const std::string& name) const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
-    const float pitchBalanceAngleDegrees = _preferences.getFloat(name.c_str(), FLT_MAX);
+    const float pitchBalanceAngleDegrees = _preferences.getFloat(name.c_str(), NOT_SET);
 
     _preferences.end();
     return pitchBalanceAngleDegrees;

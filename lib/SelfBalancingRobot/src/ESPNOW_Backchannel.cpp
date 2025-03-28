@@ -177,7 +177,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         break;
     case CommandPacketSetPID::RESET_PID:
         // Save FLT_MAX values for the PID constants, so when next the defaults will be used instead
-        _preferences->putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX });
+        _preferences->putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET });
         break;
     case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
         // Save the balance angel, the value of packet.pidIndex is ignored.

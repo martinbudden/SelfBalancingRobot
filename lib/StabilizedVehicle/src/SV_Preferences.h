@@ -2,6 +2,7 @@
 
 #include <PIDF.h>
 #include <Preferences.h>
+#include <cfloat>
 #include <string>
 
 
@@ -9,6 +10,7 @@ class SV_Preferences {
 public:
     enum { READ_WRITE=false, READ_ONLY=true };
     enum { MAC_ADDRESS_LEN = 6 };
+    static constexpr float NOT_SET = FLT_MAX;
 public:
     // NOTE: "get" functions are declared const, since they are logically const, although not physically const
 
