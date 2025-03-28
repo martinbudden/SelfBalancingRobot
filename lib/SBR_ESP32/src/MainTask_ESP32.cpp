@@ -150,7 +150,6 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 #else
     static_assert(false);
 #endif
-// NOLINTEND(misc-const-correctness)
 
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
 #if defined(USE_COMPLEMENTARY_FILTER)
@@ -159,13 +158,16 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 #elif defined(USE_MAHONY_FILTER)
     // approx 10 microseconds per update
     static MahonyFilter sensorFusionFilter;
-#else
+#elif defined(USE_VQF)
+    static VQF sensorFusionFilter(static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
+#elif defined(USE_MADGWICK_FILTER)
     // approx 16 microseconds per update
-    static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
+    static MadgwickFilter sensorFusionFilter;
 #endif
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
-    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F); // NOLINT(misc-const-correctness) false positive
+    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
+// NOLINTEND(misc-const-correctness)
 
     static AHRS ahrs(sensorFusionFilter, imuSensor, imuFilters);
     _ahrs = &ahrs;

@@ -187,15 +187,16 @@ void MainTask::setup()
 void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
+// NOLINTBEGIN(misc-const-correctness)
 #if defined(M5_STACK)
 #if defined(USE_IMU_MPU6886_I2C)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #else
-    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex); // NOLINT(misc-const-correctness) false positive
+    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #endif
 #elif defined(M5_UNIFIED)
 #if defined(USE_IMU_MPU6886_I2C)
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex); // NOLINT(misc-const-correctness) false positive
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex);
 #else
     static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #endif
@@ -208,13 +209,19 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 #elif defined(USE_MAHONY_FILTER)
     // approx 10 microseconds per update
     static MahonyFilter sensorFusionFilter;
+#elif defined(USE_VQF)
+    const float deltaT = static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F;
+    static VQF sensorFusionFilter(deltaT, deltaT, deltaT, true, false, false);
+#elif defined(USE_VQF_BASIC)
+    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
 #else
     // approx 16 microseconds per update
-    static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
+    static MadgwickFilter sensorFusionFilter;
 #endif
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
-    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F); // NOLINT(misc-const-correctness) false positive
+    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
+// NOLINTEND(misc-const-correctness)
 
     static AHRS ahrs(sensorFusionFilter, imuSensor, imuFilters);
     _ahrs = &ahrs;

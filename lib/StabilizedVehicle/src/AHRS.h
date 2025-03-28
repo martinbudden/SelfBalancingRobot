@@ -52,7 +52,7 @@ public:
     Quaternion getOrientationUsingLock(bool& updatedSinceLastRead) const;
     Quaternion getOrientationForInstrumentationUsingLock() const;
 
-    void checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientation);
+    void checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orientation);
     inline bool sensorFusionFilterIsInitializing() const { return _sensorFusionFilterInitializing; }
     inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
 

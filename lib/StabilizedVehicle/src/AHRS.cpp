@@ -72,7 +72,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT);
     TIME_CHECK(3);
     if (sensorFusionFilterIsInitializing()) {
-        checkMadgwickConvergence(gyroAcc.acc, orientation);
+        checkFusionFilterConvergence(gyroAcc.acc, orientation);
     }
 
 #else
@@ -96,7 +96,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 140us
     TIME_CHECK(3);
     if (sensorFusionFilterIsInitializing()) {
-        checkMadgwickConvergence(gyroAcc.acc, orientation);
+        checkFusionFilterConvergence(gyroAcc.acc, orientation);
     }
 #endif
 
@@ -278,8 +278,9 @@ AHRS::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
     return ret;
 }
 
-void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientation)
+void AHRS::checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orientation)
 {
+#if defined(USE_MADGWICK_FILTER)
     constexpr float twoDegreesInRadians = 2.0F * Quaternion::degreesToRadians;
 
     // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.
@@ -293,8 +294,13 @@ void AHRS::checkMadgwickConvergence(const xyz_t& acc, const Quaternion& orientat
     if (fabsf(accPitchAngleRadians - madgwickRollAngleRadians) < twoDegreesInRadians && accPitchAngleRadians != madgwickRollAngleRadians) {
         // the angles have converged to within 2 degrees, so set we can reduce the gain.
         setSensorFusionFilterInitializing(false);
-        _sensorFusionFilter.setFreeParameters(0.615F, 0.0F); // corresponds to gyro measurement error of 15*2.7 degree/second, as discussed my Madgwick
+        _sensorFusionFilter.setFreeParameters(0.615F, 0.0F); // corresponds to gyro measurement error of 15*2.7 degree/second, as discussed by Madgwick
     }
+#else
+    (void)acc;
+    (void)orientation;
+    setSensorFusionFilterInitializing(false);
+#endif
 }
 
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
