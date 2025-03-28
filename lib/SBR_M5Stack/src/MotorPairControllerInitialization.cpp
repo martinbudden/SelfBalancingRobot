@@ -22,7 +22,6 @@
 #include "Motors_ODriveTWAI.h"
 #endif
 
-#include <cfloat>
 #if defined(I2C_MUTEX_REQUIRED)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -85,7 +84,6 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _controlMode(controlModeDefault),
     _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
 {
-    static constexpr float NOT_SET = FLT_MAX;
     _rollAngleDegreesRaw = NOT_SET;
     _yawAngleDegreesRaw = NOT_SET;
 

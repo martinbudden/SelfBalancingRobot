@@ -9,7 +9,6 @@
 #endif
 #include <MotorPairController.h>
 #include <MotorPairControllerTelemetry.h>
-#include <cfloat>
 
 
 enum {
@@ -274,13 +273,13 @@ void Screen::update80x160(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.printf("%5.0F", ahrsData.pitch);
 
     yPos += 10;
-    if (ahrsData.roll != FLT_MAX) {
+    if (ahrsData.roll != MotorPairController::NOT_SET) {
         M5.Lcd.setCursor(0, yPos);
         M5.Lcd.printf("ro:%5.0F", ahrsData.roll);
     }
 
     yPos += 10;
-    if (ahrsData.yaw != FLT_MAX) {
+    if (ahrsData.yaw != MotorPairController::NOT_SET) {
         M5.Lcd.setCursor(0, yPos);
         M5.Lcd.printf("ya:%5.0F", ahrsData.yaw);
     }
@@ -371,12 +370,12 @@ void Screen::update135x240(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.setCursor(36, yPos);
     M5.Lcd.printf("%5.0F", ahrsData.pitch);
     yPos += 20;
-    if (ahrsData.roll != FLT_MAX) {
+    if (ahrsData.roll != MotorPairController::NOT_SET) {
         M5.Lcd.setCursor(0, yPos);
         M5.Lcd.printf("ro:%5.0F", ahrsData.roll);
     }
     yPos += 20;
-    if (ahrsData.yaw != FLT_MAX) {
+    if (ahrsData.yaw != MotorPairController::NOT_SET) {
         M5.Lcd.setCursor(0, yPos);
         M5.Lcd.printf("ya:%5.0F", ahrsData.yaw);
     }
@@ -487,10 +486,10 @@ void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
 {
     int32_t yPos = 45;
     M5.Lcd.setCursor(36, yPos);
-    if (ahrsData.roll == FLT_MAX) {
+    if (ahrsData.roll == MotorPairController::NOT_SET) {
         M5.Lcd.printf("%5.0F", ahrsData.pitch);
     } else {
-        if (ahrsData.yaw == FLT_MAX) {
+        if (ahrsData.yaw == MotorPairController::NOT_SET) {
             M5.Lcd.printf("%5.0F ro:%5.0F", ahrsData.pitch, ahrsData.roll);
         } else {
             M5.Lcd.printf("%5.0F ro:%5.0F ya:%5.0F", ahrsData.pitch, ahrsData.roll, ahrsData.yaw);

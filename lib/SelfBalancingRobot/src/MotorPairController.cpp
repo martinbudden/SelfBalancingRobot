@@ -164,14 +164,18 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.
     // For the Self Balancing Robot, pitch is rotation around the x-axis and roll is rotation around the y-axis,
     // so ROLL and PITCH are REVERSED.
+    //!!TODO: this needs to be fixed by changing the IMU_AXIS_ORDER build flags
     _pitchAngleDegreesRaw = orientation.calculateRollDegrees();
     _mixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
-//#define CALCULATE_ROLL_AND_YAW
-#if defined(CALCULATE_ROLL_AND_YAW)
+#define CALCULATE_ROLL
+//#define CALCULATE_YAW
+#if defined(CALCULATE_ROLL)
     // Roll and yaw are not required for the MotorPairController calculations,
     // but if they are calculated they will be displayed by the screen and telemetry, which can be useful in debugging.
     _rollAngleDegreesRaw = orientation.calculatePitchDegrees();
+#if defined(CALCULATE_YAW)
     _yawAngleDegreesRaw = orientation.calculateYawDegrees();
+#endif
 #endif
 
     if (!motorsIsOn() || motorsIsDisabled()) { // [[unlikely]]

@@ -16,7 +16,6 @@
 #include <SV_Telemetry.h>
 #include <SV_TelemetryData.h>
 #include <TaskBase.h>
-#include <cfloat>
 
 static_assert(sizeof(TD_TICK_INTERVALS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN);

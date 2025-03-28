@@ -5,6 +5,7 @@
 #include <Filters.h>
 #include <PIDF.h>
 #include <array>
+#include <cfloat>
 #include <string>
 
 struct motor_pair_controller_telemetry_t;
@@ -13,6 +14,9 @@ class MotorPairBase;
 class ReceiverBase;
 class Quaternion;
 
+/*!
+The MotorPairController uses the East North Up (ENU) coordinate convention, the same as used by ROS (Robot Operating System).
+*/
 class MotorPairController : public MotorControllerBase {
 public:
     MotorPairController(const AHRS& ahrs, const ReceiverBase& receiver, void* i2cMutex);
@@ -37,6 +41,7 @@ public:
         PID_COUNT=4,
         PID_BEGIN=0
     };
+    static constexpr float NOT_SET = FLT_MAX;
 public:
     inline bool motorsIsOn() const { return _mixer.motorsIsOn(); }
     inline void motorsSwitchOff() { _mixer.motorsSwitchOff(); }
