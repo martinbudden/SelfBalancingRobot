@@ -1,6 +1,6 @@
 #include "AHRS.h"
 #include "IMU_FiltersBase.h"
-#include "MotorControllerBase.h"
+#include "VehicleControllerBase.h"
 
 #include <IMU_BNO085.h>
 #include <SensorFusion.h>
@@ -102,10 +102,10 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
 #endif // USE_IMU_FIFO
 
-    // If _motorController is not nullptr, then things have been configured so that updateOutputsUsingPIDs
+    // If _vehicleController is not nullptr, then things have been configured so that updateOutputsUsingPIDs
     // is called by the AHRS rather than the motor controller.
-    if (_motorController != nullptr) {
-        _motorController->updateOutputsUsingPIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
+    if (_vehicleController != nullptr) {
+        _vehicleController->updateOutputsUsingPIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
         TIME_CHECK(4);
     }
 

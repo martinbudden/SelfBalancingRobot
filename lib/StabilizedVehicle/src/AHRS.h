@@ -15,7 +15,7 @@
 
 
 class IMU_FiltersBase;
-class MotorControllerBase;
+class VehicleControllerBase;
 class SensorFusionFilterBase;
 
 /*!
@@ -32,8 +32,8 @@ public:
 public:
     AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
-    void setMotorController(MotorControllerBase* motorController) { _motorController = motorController; }
-    bool configuredToUpdateOutputs() const { return (_motorController==nullptr) ? false : true; }
+    void setVehicleController(VehicleControllerBase* vehicleController) { _vehicleController = vehicleController; }
+    bool configuredToUpdateOutputs() const { return (_vehicleController==nullptr) ? false : true; }
 private:
     // class is not copyable or moveable
     AHRS(const AHRS&) = delete;
@@ -76,7 +76,7 @@ private:
     SensorFusionFilterBase& _sensorFusionFilter;
     IMU_Base& _IMU;
     IMU_FiltersBase& _imuFilters;
-    MotorControllerBase* _motorController {nullptr};
+    VehicleControllerBase* _vehicleController {nullptr};
 
     xyz_t _acc {0.0, 0.0, 0.0};
     xyz_t _gyroRPS {0.0, 0.0, 0.0};

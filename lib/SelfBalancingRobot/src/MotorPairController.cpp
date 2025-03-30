@@ -117,10 +117,10 @@ void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 /*!
 If new stick values are available then update the setpoint using the stick values, using the ENU coordinate convention.
 
-NOTE: this function runs in the context of the MotorController task, in particular the FPU usage is in that context, so this avoids the
+NOTE: this function runs in the context of the VehicleController task, in particular the FPU usage is in that context, so this avoids the
 need to save the ESP32 FPU registers on a context switch.
 */
-void MotorPairController::updateSetpoints(float deltaT, uint32_t tickCount)
+void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_t tickCount)
 {
     // failsafe handling
     if (_newStickValuesAvailable) {
@@ -132,7 +132,7 @@ void MotorPairController::updateSetpoints(float deltaT, uint32_t tickCount)
         // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
         // so switch off the motors to prevent the vehicle from doing a runaway.
         _failSafeOn = true;
-        if ((tickCount - _failSafeTickCount > _failSafeTickCountSwitchOffThreshold) && _receiverInUse) {
+        if ((tickCount - _failSafeTickCount > _failSafeTickCountSwitchOffThreshold)) {
             motorsSwitchOff();
             _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
         }

@@ -1,7 +1,7 @@
 #include "AHRS.h"
-#include "MotorControllerBase.h"
 #include "SV_Telemetry.h"
 #include "SV_TelemetryData.h"
+#include "VehicleControllerBase.h"
 
 
 /*!
@@ -26,7 +26,7 @@ Packs the tick interval telemetry data into a TD_TICK_INTERVALS packet. Returns 
 */
 size_t packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         const AHRS& ahrs,
-        const MotorControllerBase& motorController,
+        const VehicleControllerBase& vehicleController,
         uint32_t mcOutputPowerTimeMicroSeconds,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
@@ -47,9 +47,9 @@ size_t packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         td->ahrsTimeChecksMicroSeconds[ii] = static_cast<uint16_t>(ahrs.getTimeChecksMicroSeconds(ii));
     }
 
-    td->mcTaskTickIntervalMicroSeconds = static_cast<uint16_t>(motorController.getTimeMicroSecondDelta());
+    td->mcTaskTickIntervalMicroSeconds = static_cast<uint16_t>(vehicleController.getTimeMicroSecondDelta());
     td->mcOutputPowerTimeMicroSeconds = static_cast<uint16_t>(mcOutputPowerTimeMicroSeconds);
-    td->mcTaskTickIntervalTicks = static_cast<uint8_t>(motorController.getTickCountDelta());
+    td->mcTaskTickIntervalTicks = static_cast<uint8_t>(vehicleController.getTickCountDelta());
 
     td->mainTaskTickInterval = static_cast<uint8_t>(mainTaskTickCountDelta);
     td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
@@ -61,7 +61,7 @@ size_t packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
 /*!
 Packs the AHRS telemetry data into a TD_AHRS packet. Returns the length of the packet.
 */
-size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS& ahrs, const MotorControllerBase& motorController)
+size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS& ahrs, const VehicleControllerBase& vehicleController)
 {
     TD_AHRS* td = reinterpret_cast<TD_AHRS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
@@ -73,9 +73,9 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS
     const IMU_Base::xyz_int32_t gyroOffset = ahrs.getGyroOffset();
     const IMU_Base::xyz_int32_t accOffset = ahrs.getAccOffset();
     td->data = {
-        .pitch = motorController.getPitchAngleDegreesRaw(),
-        .roll = motorController.getRollAngleDegreesRaw(),
-        .yaw = motorController.getYawAngleDegreesRaw(),
+        .pitch = vehicleController.getPitchAngleDegreesRaw(),
+        .roll = vehicleController.getRollAngleDegreesRaw(),
+        .yaw = vehicleController.getYawAngleDegreesRaw(),
         .gyroRPS = ahrsData.gyroRPS,
         .acc = ahrsData.acc,
         .gyroOffset = {

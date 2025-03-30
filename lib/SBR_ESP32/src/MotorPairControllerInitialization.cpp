@@ -47,10 +47,10 @@ MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& r
     _receiver(receiver),
     _motors(allocateMotors()),
     _mixer(_motors),
+    _controlMode(controlModeDefault),
     _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorStepsPerRevolution(_motors.getStepsPerRevolution()),
-    _controlMode(controlModeDefault),
     _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
 {
     _rollAngleDegreesRaw = NOT_SET;

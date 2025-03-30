@@ -134,7 +134,7 @@ void MainTask::setup()
     static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
     _motorPairController = &motorPairController;
     _receiver->setMotorController(_motorPairController);
-    _ahrs->setMotorController(_motorPairController);
+    _ahrs->setVehicleController(_motorPairController);
 
     static SV_Preferences preferences;
     _preferences = &preferences;

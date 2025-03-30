@@ -6,9 +6,9 @@ class Quaternion;
 struct xyz_t;
 
 /*!
-Abstract base class defining a motor controller for a stabilized vehicle.
+Abstract base class defining a controller for a stabilized vehicle.
 */
-class MotorControllerBase : public TaskBase {
+class VehicleControllerBase : public TaskBase {
 public:
     inline void packetReceived() { _packetReceived = true; }
     inline void newStickValuesReceived() { _newStickValuesAvailable = true; }

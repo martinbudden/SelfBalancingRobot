@@ -1,7 +1,7 @@
 #pragma once
 
-#include "MotorControllerBase.h"
 #include "MotorMixer.h"
+#include "VehicleControllerBase.h"
 #include <Filters.h>
 #include <PIDF.h>
 #include <array>
@@ -28,7 +28,7 @@ positive pitch is nose up
 positive roll is left side up
 positive yaw is nose right
 */
-class MotorPairController : public MotorControllerBase {
+class MotorPairController : public VehicleControllerBase {
 public:
     MotorPairController(const AHRS& ahrs, const ReceiverBase& receiver, void* i2cMutex);
     MotorPairController(const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
@@ -110,13 +110,11 @@ private:
     MotorMixer _mixer;
     ControlMode_t _controlMode;
 
-
     int32_t _receiverInUse {false};
     int32_t _failSafeOn {false};
     uint32_t _failSafeTickCount {0}; //<! failsafe counter, so the vehicle doesn't run away if it looses contact with the transmitter (for example by going out of range)
     uint32_t _failSafeTickCountThreshold {1500};
     uint32_t _failSafeTickCountSwitchOffThreshold {5000};
-
 
     // stick values scaled to the range [-1,0, 1.0]
     float _throttleStick {0};
