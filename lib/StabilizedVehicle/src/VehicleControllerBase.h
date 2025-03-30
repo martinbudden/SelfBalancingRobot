@@ -17,6 +17,7 @@ public:
     inline float getYawAngleDegreesRaw() const { return _yawAngleDegreesRaw; }
 
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) = 0;
+    virtual void motorsToggleOnOff() = 0;
 protected:
     int32_t _packetReceived {false};
     int32_t _newStickValuesAvailable {false};

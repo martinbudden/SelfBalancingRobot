@@ -36,5 +36,5 @@
     "version": "0.0.1",
     "frameworks": "*",
     "platforms": "*",
-    "headers": ["AHRS.h", "CommandPacket.h", "IMU_FiltersBase.h", "MotorPairControllerTelemetry.h", "ReceiverBase.h", "SBR_TelemetryData.h", "SV_Preferences.h", "SV_Telemetry.h", "SV_TelemetryData.h", "TaskBase.h", "VehicleControllerBase.h"]
+    "headers": ["AHRS.h", "CommandPacket.h", "IMU_FiltersBase.h", "ReceiverBase.h", "SV_Preferences.h", "SV_Telemetry.h", "SV_TelemetryData.h", "TaskBase.h", "VehicleControllerBase.h"]
 }

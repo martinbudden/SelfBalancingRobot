@@ -23,7 +23,7 @@ public:
     };
 public:
     virtual bool update(uint32_t tickCountDelta) = 0;
-    virtual void mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const = 0;
+    virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const = 0;
     // 48-bit Extended Unique Identifiers, usually the MAC address if the receiver has one, but may be an alternative provided by the receiver.
     virtual EUI_48_t getMyEUI() const = 0;
     virtual EUI_48_t getPrimaryPeerEUI() const = 0;

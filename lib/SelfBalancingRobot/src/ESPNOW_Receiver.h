@@ -3,7 +3,7 @@
 #include "ReceiverBase.h"
 #include <AtomJoyStickReceiver.h>
 
-class MotorPairController;
+class VehicleControllerBase;
 
 
 class Receiver : public ReceiverBase {
@@ -17,10 +17,10 @@ private:
     Receiver& operator=(Receiver&&) = delete;
 public:
     esp_err_t setup(uint8_t channel);
-    void setMotorController(MotorPairController* motorController) { _motorController = motorController; } //!< Sets the motorController, which must be set before update() is called.
+    void setVehicleController(VehicleControllerBase* vehicleController) { _vehicleController = vehicleController; } //!< Sets the motorController, which must be set before update() is called.
 
     virtual bool update(uint32_t tickCountDelta) override;
-    virtual void mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
+    virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual EUI_48_t getMyEUI() const override;
     virtual EUI_48_t getPrimaryPeerEUI() const override;
 
@@ -30,7 +30,7 @@ public:
     static float mapYawStick(float yawStick);
 private:
     AtomJoyStickReceiver _atomJoyStickReceiver;
-    MotorPairController* _motorController {nullptr};
+    VehicleControllerBase* _vehicleController {nullptr};
     uint32_t _packetCount {0};
     uint32_t _receivedPacketCount {0};
     int32_t _droppedPacketCount {0};

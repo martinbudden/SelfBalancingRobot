@@ -1,8 +1,8 @@
 #pragma once
 
-#include <ODriveCAN.h>
-
 #include "MotorPairBase.h"
+
+#include <ODriveCAN.h>
 
 void onHeartbeat(Heartbeat_msg_t& msg, void* user_data);
 void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data);

@@ -133,7 +133,7 @@ void MainTask::setup()
     // Statically allocate the motorPairController.
     static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
     _motorPairController = &motorPairController;
-    _receiver->setMotorController(_motorPairController);
+    _receiver->setVehicleController(_motorPairController);
     _ahrs->setVehicleController(_motorPairController);
 
     static SV_Preferences preferences;

@@ -2,7 +2,7 @@
 
 #include "ESPNOW_Receiver.h"
 
-#include "MotorPairController.h"
+#include "VehicleControllerBase.h"
 
 #include <HardwareSerial.h>
 
@@ -27,7 +27,7 @@ esp_err_t Receiver::setup(uint8_t channel)
 }
 
 /*!
-If a packet was received from the atomJoyStickReceiver then unpack it and send the stick values to the MotorController.
+If a packet was received from the atomJoyStickReceiver then unpack it and inform the VehicleController that new stick values are available.
 
 Returns true if a packet has been received.
 */
@@ -38,7 +38,7 @@ bool Receiver::update(uint32_t tickCountDelta)
     }
 
     // Inform the motor controller that a packet has been received
-    _motorController->packetReceived();
+    _vehicleController->packetReceived();
 
     // record tickoutDelta for instrumentation
     _tickCountDelta = tickCountDelta;
@@ -51,7 +51,7 @@ bool Receiver::update(uint32_t tickCountDelta)
     _droppedPacketCountPrevious = _droppedPacketCount;
 
     if (_atomJoyStickReceiver.unpackPacket()) {
-        assert(_motorController != nullptr);
+        assert(_vehicleController != nullptr);
         if (_packetCount == 5) {
             // set the JoyStick bias so that the current readings are zero.
             _atomJoyStickReceiver.setCurrentReadingsToBias();
@@ -62,7 +62,7 @@ bool Receiver::update(uint32_t tickCountDelta)
         } else {
             if (_flipPressed) {
                 // flipButton being released, so toggle the motor state
-                _motorController->motorsToggleOnOff();
+                _vehicleController->motorsToggleOnOff();
                 _flipPressed = static_cast<int>(false);
             }
         }
@@ -80,7 +80,7 @@ bool Receiver::update(uint32_t tickCountDelta)
         setSwitch(2, _atomJoyStickReceiver.getFlipButton());
 
         // Inform the motor controller that new stick values are available.
-        _motorController->newStickValuesReceived();
+        _vehicleController->newStickValuesReceived();
         return true;
     }
     Serial.printf("BadPacket\r\n");
@@ -109,7 +109,7 @@ Maps the joystick values from Q4dot12 format in the range [-2048, 2047] to float
 NOTE: this function runs in the context of the MotorController task, in particular the FPU usage is in that context, so this avoids the
 need to save the ESP32 FPU registers on a context switch.
 */
-void Receiver::mapControls(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
+void Receiver::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
 {
     throttleStick = Q4dot12_to_float(_controls.throttleStickQ4dot12);
     rollStick = Q4dot12_to_float(_controls.rollStickQ4dot12);

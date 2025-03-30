@@ -94,6 +94,15 @@ void MotorPairController::motorsSwitchOn()
     }
 }
 
+void MotorPairController::motorsToggleOnOff()
+{
+    if (motorsIsOn()) {
+        motorsSwitchOff();
+    } else {
+        motorsSwitchOn();
+    }
+}
+
 void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 {
     const MotorMixerBase::output_t outputs =
@@ -141,7 +150,7 @@ void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_
     // If new joystick values are available from the receiver, then map them to the range [-1.0, 1.0] and use them to update the setpoints.
     if (_newStickValuesAvailable) {
         _newStickValuesAvailable = false;
-        _receiver.mapControls(_throttleStick, _rollStick, _pitchStick, _yawStick);
+        _receiver.getStickValues(_throttleStick, _rollStick, _pitchStick, _yawStick);
 
         _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
 
