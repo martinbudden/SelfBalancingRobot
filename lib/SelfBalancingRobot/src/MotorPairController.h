@@ -15,7 +15,18 @@ class ReceiverBase;
 class Quaternion;
 
 /*!
-The MotorPairController uses the East North Up (ENU) coordinate convention, the same as used by ROS (Robot Operating System).
+The MotorPairController uses the ENU (East North Up) coordinate convention, the same as used by ROS (Robot Operating System).
+This is different from the NED (North East Down) convention commonly used by aircraft.
+
+For ENU
+positive pitch is nose down
+positive roll is left side up
+positive yaw is nose left
+
+For NED
+positive pitch is nose up
+positive roll is left side up
+positive yaw is nose right
 */
 class MotorPairController : public MotorControllerBase {
 public:

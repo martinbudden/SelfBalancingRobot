@@ -4,12 +4,16 @@
     "keywords": "SelfBalancingRobot",
     "authors": {
         "name": "Martin Budden",
-        "url": "https://github.com/martinbudden/Library-SelfBalancingRobot.git"
+        "url": "https://github.com/martinbudden"
     },
+    "dependencies": [
+        {
+            "name": "StabilizedVehicle",
+            "version": ">=0.0.1"
+        }
+    ],
     "license": "MIT",
     "version": "0.0.1",
     "frameworks": "*",
-    "platforms": "*",
-    "dependencies": [
-    ]
+    "platforms": "*"
 }

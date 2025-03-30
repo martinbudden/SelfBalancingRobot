@@ -18,7 +18,17 @@ IMU virtual base class.
 */
 class IMU_Base {
 public:
-    enum axis_order_t {
+    /*!
+    Axes order describing the sensor axes relative to the body axes.
+    For example, if the sensor is rotated relative to the body so that the
+    sensor X-axis points right, the sensor Z-axis points forward, and the sensor Y-axis points down,
+    then the axis order is XPOS_ZPOS_YNEG.
+
+    For example, if the sensor is rotated relative to the body so that the
+    sensor y-axis points right, the sensor X-axis points back, and the sensor Z-axis points up,
+    then the axis order is YPOS_XNEG_ZPOS
+    */
+   enum axis_order_t {
         XPOS_YPOS_ZPOS,
         YPOS_XNEG_ZPOS,
         XNEG_YNEG_ZPOS,

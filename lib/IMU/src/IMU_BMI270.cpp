@@ -200,7 +200,7 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& da
         .acc = {
             .x =  static_cast<float>(data.acc_y - _accOffset.y)* _accResolution,
             .y = -static_cast<float>(data.acc_x - _accOffset.x)* _accResolution,
-            .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution)
+            .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
 #elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)

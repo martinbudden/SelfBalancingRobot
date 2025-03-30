@@ -16,20 +16,20 @@
             "version": ">=0.0.1"
         },
         {
-            "name": "IMU_TYPES",
+            "name": "martinbudden/IMU_TYPES",
+            "version": ">=0.2.1"
+        },
+        {
+            "name": "martinbudden/Filters",
+            "version": ">=0.0.1"
+        },
+        {
+            "name": "martinbudden/SensorFusion",
+            "version": ">=0.1.2"
+        },
+        {
+            "name": "martinbudden/PIDF",
             "version": ">=0.0.2"
-        },
-        {
-            "name": "Filters",
-            "version": ">=0.0.1"
-        },
-        {
-            "name": "SensorFusion",
-            "version": ">=0.0.1"
-        },
-        {
-            "name": "PIDF",
-            "version": ">=0.0.1"
         }
     ],
     "license": "MIT",

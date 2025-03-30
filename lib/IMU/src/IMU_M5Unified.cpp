@@ -16,6 +16,8 @@ IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex) :
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg);
 #elif defined(IMU_BUILD_XPOS_YPOS_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos);
+#elif defined(IMU_BUILD_ZPOS_XNEG_YNEG)
+    M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_neg);
 #else
     switch (axisOrder) {
     case XPOS_YPOS_ZPOS:
@@ -29,6 +31,9 @@ IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex) :
         break;
     case XPOS_ZPOS_YNEG:
         M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg);
+        break;
+    case ZPOS_XNEG_YNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_neg);
         break;
     default:
         assert(false && "IMU orientation not implemented for M5Unified.");

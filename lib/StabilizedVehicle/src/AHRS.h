@@ -18,7 +18,9 @@ class IMU_FiltersBase;
 class MotorControllerBase;
 class SensorFusionFilterBase;
 
-
+/*!
+The AHRS uses the ENU (East North Up) coordinate frame.
+*/
 class AHRS : public TaskBase {
 public:
     struct data_t {

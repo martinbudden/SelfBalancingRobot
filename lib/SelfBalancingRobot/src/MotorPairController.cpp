@@ -89,6 +89,11 @@ void MotorPairController::motorsSwitchOn()
     }
 }
 
+/*!
+If new stick values are available then update the setpoint using the stick values, using the ENU coordinate convention.
+
+Update the motor speed estimates, from the encoders is there are available, otherwise using the motor power output as a proxy for speed.
+*/
 void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
 {
     // If new joystick values are available from the receiver, then map them to the range [-1.0, 1.0] and use them to update the setpoints.
@@ -98,11 +103,23 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
 
         // SPEED_DPS setpoint is set later according to _controlMode
 
-        // Note the negative multiplier
-        _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(-_pitchStick * _pitchMaxAngleDegrees);
+        // MotorPairController uses ENU coordinate convention
 
-        // Note the negative multiplier, since pushing the yaw stick to the right results in a clockwise rotation, ie a negative yaw rate
-        _PIDS[YAW_RATE_DPS].setSetpoint(-_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
+        // Pushing the ROLL stick to the right gives a positive value of rollStick and we want this to be left side up.
+        // For ENU left side up is positive roll, so sign of setpoint is same sign as rollStick.
+        // So sign of _rollStick is left unchanged.
+        //_PIDS[ROLL_ANGLE_DEGREES].setSetpoint(_pollStick * _rollMaxAngleDegrees);
+
+        // Pushing the PITCH stick forward gives a positive value of pitchStick and we want this to be nose down.
+        // For ENU nose down is positive pitch, so sign of setpoint is same sign as pitchStick.
+        // So sign of _pitchStick is left unchanged.
+        _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(_pitchStick * _pitchMaxAngleDegrees);
+
+        // Pushing the YAW stick to the right gives a positive value of yawStick and we want this to be nose right.
+        // For ENU nose left is positive yaw, so sign of setpoint is same as sign of yawStick.
+        // So sign of _yawStick is negated
+        _yawStick = -_yawStick;
+        _PIDS[YAW_RATE_DPS].setSetpoint(_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
     }
 #if defined(MOTORS_HAVE_ENCODERS)
     _motors.readEncoder();
@@ -161,18 +178,14 @@ void MotorPairController::updateOutputsUsingPIDs(float deltaT)
 
 void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_unused]] const xyz_t& acc, const Quaternion& orientation, float deltaT)
 {
-    // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.
-    // For the Self Balancing Robot, pitch is rotation around the x-axis and roll is rotation around the y-axis,
-    // so ROLL and PITCH are REVERSED.
-    //!!TODO: this needs to be fixed by changing the IMU_AXIS_ORDER build flags
-    _pitchAngleDegreesRaw = orientation.calculateRollDegrees();
+    _pitchAngleDegreesRaw = orientation.calculatePitchDegrees();
     _mixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
 #define CALCULATE_ROLL
-//#define CALCULATE_YAW
+#define CALCULATE_YAW
 #if defined(CALCULATE_ROLL)
     // Roll and yaw are not required for the MotorPairController calculations,
     // but if they are calculated they will be displayed by the screen and telemetry, which can be useful in debugging.
-    _rollAngleDegreesRaw = orientation.calculatePitchDegrees();
+    _rollAngleDegreesRaw = orientation.calculateRollDegrees();
 #if defined(CALCULATE_YAW)
     _yawAngleDegreesRaw = orientation.calculateYawDegrees();
 #endif
@@ -211,7 +224,7 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     // This is beneficial because the D-term is especially susceptible to noise.
     static FilterMovingAverage<4> pitchAngleDeltaFilter;
     pitchAngleDegreesDelta = pitchAngleDeltaFilter.update(pitchAngleDegreesDelta);
-    _outputs[PITCH_ANGLE_DEGREES] = _PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
+    _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
 
     // calculate _outputs[YAW_RATE_DPS]
     const float yawRate = -gyroRPS.z * Quaternion::radiansToDegrees;
