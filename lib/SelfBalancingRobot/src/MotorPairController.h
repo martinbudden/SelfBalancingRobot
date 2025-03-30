@@ -46,16 +46,17 @@ public:
     };
     enum pid_index_t {
         PITCH_ANGLE_DEGREES=0,
-        SPEED_DPS=1,
-        YAW_RATE_DPS=2,
-        POSITION_DEGREES=3,
-        PID_COUNT=4,
+        ROLL_ANGLE_DEGREES=1, // allow possibility of roll control in future implementation
+        SPEED_DPS=2,
+        YAW_RATE_DPS=3,
+        POSITION_DEGREES=4,
+        PID_COUNT=5,
         PID_BEGIN=0
     };
     static constexpr float NOT_SET = FLT_MAX;
 public:
     inline bool motorsIsOn() const { return _mixer.motorsIsOn(); }
-    inline void motorsSwitchOff() { _mixer.motorsSwitchOff(); }
+    void motorsSwitchOff();
     void motorsSwitchOn();
     inline void motorsToggleOnOff() { if (motorsIsOn()) {motorsSwitchOff();} else {motorsSwitchOn();} }
     inline bool motorsIsDisabled() const { return _mixer.motorsIsDisabled(); }
@@ -63,6 +64,9 @@ public:
 
     inline ControlMode_t getControlMode() const { return _controlMode; }
     void setControlMode(ControlMode_t controlMode);
+
+    inline void setFailSafeTickCountThreshold(uint32_t failSafeTickCountThreshold) { _failSafeTickCountThreshold = failSafeTickCountThreshold; }
+    inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failSafeTickCountSwitchOffThreshold) { _failSafeTickCountSwitchOffThreshold = failSafeTickCountSwitchOffThreshold; }
 
     std::string getPID_Name(pid_index_t pidIndex) const;
     inline const PIDF::PIDF_t& getPID_Constants(pid_index_t pidIndex) const { return _PIDS[pidIndex].getPID(); }
@@ -90,7 +94,8 @@ public:
     [[noreturn]] static void Task(void* arg);
     void loop(float deltaT, uint32_t tickCount);
 public:
-    void updateSetpointsAndMotorSpeedEstimates(float deltaT);
+    void updateSetpoints(float deltaT, uint32_t tickCount);
+    void updateMotorSpeedEstimates(float deltaT);
     void updateOutputsUsingPIDs(float deltaT);
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
     void outputToMotors(float deltaT, uint32_t tickCount);
@@ -103,6 +108,16 @@ private:
     const ReceiverBase& _receiver;
     MotorPairBase& _motors; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorMixer _mixer;
+    ControlMode_t _controlMode;
+
+
+    int32_t _receiverInUse {false};
+    int32_t _failSafeOn {false};
+    uint32_t _failSafeTickCount {0}; //<! failsafe counter, so the vehicle doesn't run away if it looses contact with the transmitter (for example by going out of range)
+    uint32_t _failSafeTickCountThreshold {1500};
+    uint32_t _failSafeTickCountSwitchOffThreshold {5000};
+
+
     // stick values scaled to the range [-1,0, 1.0]
     float _throttleStick {0};
     float _rollStick {0};
@@ -125,17 +140,16 @@ private:
     const float _motorMaxSpeedDPS_reciprocal;
     const float _motorStepsPerRevolution; //!< Local copy of the value of _motors->getStepsPerRevolution().
 
-    ControlMode_t _controlMode;
-
     float _positionSetpointDegrees {0.0}; //!< Position setpoint for CONTROL_MODE_POSITION
     float _positionDegrees {0.0}; //!< Position for CONTROL_MODE_POSITION
     float _positionDegreesPrevious {0.0}; //!< Previous position for CONTROL_MODE_POSITION
 
+    const float _rollMaxAngleDegrees {45.0};
     float _pitchBalanceAngleDegrees {0.0};
     float _pitchAngleDegreesPrevious {0.0};
     const float _pitchMaxAngleDegrees {20.0};
     float _yawStickMultiplier {1.0};
 
     std::array<PIDF, PID_COUNT> _PIDS;
-    std::array<float, PID_COUNT> _outputs {};
+    std::array<float, PID_COUNT> _outputs {}; //<! PID outputs, stored since the output from on PID may be used as the input to another
 };

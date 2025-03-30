@@ -81,6 +81,11 @@ void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& te
     telemetry.motorMaxSpeedDPS = _motorMaxSpeedDPS;
 }
 
+void MotorPairController::motorsSwitchOff()
+{
+    _mixer.motorsSwitchOff();
+}
+
 void MotorPairController::motorsSwitchOn()
 {
     // don't allow motors to be switched on if the sensor fusion has not initialized
@@ -89,26 +94,63 @@ void MotorPairController::motorsSwitchOn()
     }
 }
 
+void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
+{
+    const MotorMixerBase::output_t outputs =
+    _failSafeOn ?
+        MotorMixerBase::output_t {
+            .speed  = 0.0F,
+            .roll   = 0.0F,
+            .pitch  = 0.0F,
+            .yaw    = 0.0F
+        }
+    :
+        MotorMixerBase::output_t {
+            .speed  = _outputs[SPEED_DPS],
+            .roll   = _outputs[ROLL_ANGLE_DEGREES],
+            .pitch  = _outputs[PITCH_ANGLE_DEGREES],
+            .yaw    = _outputs[YAW_RATE_DPS]
+        };
+    _mixer.outputToMotors(outputs, deltaT, tickCount);
+}
+
 /*!
 If new stick values are available then update the setpoint using the stick values, using the ENU coordinate convention.
 
-Update the motor speed estimates, from the encoders is there are available, otherwise using the motor power output as a proxy for speed.
+NOTE: this function runs in the context of the MotorController task, in particular the FPU usage is in that context, so this avoids the
+need to save the ESP32 FPU registers on a context switch.
 */
-void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
+void MotorPairController::updateSetpoints(float deltaT, uint32_t tickCount)
 {
+    // failsafe handling
+    if (_newStickValuesAvailable) {
+        _receiverInUse = true;
+        _failSafeOn = false;
+        _failSafeTickCount = tickCount;
+    } else if ((tickCount - _failSafeTickCount > _failSafeTickCountThreshold) && _receiverInUse) {
+        // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
+        // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
+        // so switch off the motors to prevent the vehicle from doing a runaway.
+        _failSafeOn = true;
+        if ((tickCount - _failSafeTickCount > _failSafeTickCountSwitchOffThreshold) && _receiverInUse) {
+            motorsSwitchOff();
+            _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
+        }
+    }
+
     // If new joystick values are available from the receiver, then map them to the range [-1.0, 1.0] and use them to update the setpoints.
     if (_newStickValuesAvailable) {
         _newStickValuesAvailable = false;
         _receiver.mapControls(_throttleStick, _rollStick, _pitchStick, _yawStick);
 
-        // SPEED_DPS setpoint is set later according to _controlMode
+        _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
 
         // MotorPairController uses ENU coordinate convention
 
         // Pushing the ROLL stick to the right gives a positive value of rollStick and we want this to be left side up.
         // For ENU left side up is positive roll, so sign of setpoint is same sign as rollStick.
         // So sign of _rollStick is left unchanged.
-        //_PIDS[ROLL_ANGLE_DEGREES].setSetpoint(_pollStick * _rollMaxAngleDegrees);
+        _PIDS[ROLL_ANGLE_DEGREES].setSetpoint(_rollStick * _rollMaxAngleDegrees);
 
         // Pushing the PITCH stick forward gives a positive value of pitchStick and we want this to be nose down.
         // For ENU nose down is positive pitch, so sign of setpoint is same sign as pitchStick.
@@ -121,6 +163,13 @@ void MotorPairController::updateSetpointsAndMotorSpeedEstimates(float deltaT)
         _yawStick = -_yawStick;
         _PIDS[YAW_RATE_DPS].setSetpoint(_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
     }
+}
+
+/*!
+If new stick values are available then update the setpoint using the stick values, using the ENU coordinate convention.
+*/
+void MotorPairController::updateMotorSpeedEstimates(float deltaT)
+{
 #if defined(MOTORS_HAVE_ENCODERS)
     _motors.readEncoder();
     _encoderLeft = _motors.getLeftEncoder();
@@ -204,10 +253,8 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 
     // calculate _outputs[SPEED_DPS] according to the control mode.
     if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-        _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
         _outputs[SPEED_DPS] = -_PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     } else if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
-        _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
         const float speedOutput = _PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
         // feed the speed update back into the pitchAngle PID and set _outputs[SPEED_DPS] to zero
         _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(speedOutput);
@@ -259,17 +306,6 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     _outputs[SPEED_DPS] = (_outputs[POSITION_DEGREES] - updatePositionDegreesPrevious) / deltaT;
 }
 
-void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
-{
-    const MotorMixer::output_t outputs = {
-        .speed  = _outputs[SPEED_DPS],
-        .roll   = 0.0F,
-        .pitch  = _outputs[PITCH_ANGLE_DEGREES],
-        .yaw    = _outputs[YAW_RATE_DPS]
-    };
-    _mixer.outputToMotors(outputs, deltaT, tickCount);
-}
-
 /*!
 Task loop for the MotorPairController. Uses PID controllers to update the motor pair.
 
@@ -279,7 +315,8 @@ There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
 */
 void MotorPairController::loop(float deltaT, uint32_t tickCount)
 {
-    updateSetpointsAndMotorSpeedEstimates(deltaT);
+    updateSetpoints(deltaT, tickCount);
+    updateMotorSpeedEstimates(deltaT);
     // If the AHRS is configured to run updateOutputsUsingPIDs, then we don't need to
     if (!_ahrs.configuredToUpdateOutputs()) {
         updateOutputsUsingPIDs(deltaT);

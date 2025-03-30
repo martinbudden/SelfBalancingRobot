@@ -329,11 +329,10 @@ void MainTask::setupTasks()
 /*!
 The main loop handles:
 1. Input from the receiver(joystick)
-2. Failsafe when contact is lost with the transmitter.
-3. Input from the backchannel(PID tuning).
-4. Input from the buttons
-5. Output to the backchannel(telemetry).
-6. Output to the screen
+2. Input from the backchannel(PID tuning).
+3. Input from the buttons
+4. Output to the backchannel(telemetry).
+5. Output to the screen
 
 The IMU(Inertial Measurement Unit) is read in the AHRS(Attitude and Heading Reference System) task.
 The motors are controlled in the MotorPairController task.
@@ -352,19 +351,11 @@ void MainTask::loop()
 
     const bool packetReceived = _receiver->update(_tickCountDelta);
     if (packetReceived) {
-        _receiverInUse = true;
-        _failSafeTickCount = tickCount;
         // update the screen template the first time we receive a packet
         if (_screenTemplateIsUpdated == false) {
             _screenTemplateIsUpdated = true;
             _screen->updateTemplate();
         }
-    } else if ((tickCount - _failSafeTickCount > 1500) && _receiverInUse) {
-        // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
-        // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
-        // so switch off the motors to prevent the robot from doing a runaway.
-        _motorPairController->motorsSwitchOff();
-        _receiverInUse = false;
     }
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)

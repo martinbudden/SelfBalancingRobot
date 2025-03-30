@@ -10,6 +10,7 @@ Abstract base class defining a motor controller for a stabilized vehicle.
 */
 class MotorControllerBase : public TaskBase {
 public:
+    inline void packetReceived() { _packetReceived = true; }
     inline void newStickValuesReceived() { _newStickValuesAvailable = true; }
     inline float getPitchAngleDegreesRaw() const { return _pitchAngleDegreesRaw; }
     inline float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; }
@@ -17,7 +18,8 @@ public:
 
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) = 0;
 protected:
-    int _newStickValuesAvailable {false};
+    int32_t _packetReceived {false};
+    int32_t _newStickValuesAvailable {false};
     float _pitchAngleDegreesRaw {0.0};
     float _rollAngleDegreesRaw {0.0};
     float _yawAngleDegreesRaw {0.0};

@@ -21,7 +21,7 @@ struct TD_SBR_PIDS {
 
     uint8_t filler0 {0};
     uint8_t filler1 {0};
-    enum { PITCH_ANGLE=0, SPEED=1, YAW_RATE=2, POSITION=3, PID_COUNT=4, PID_BEGIN=0 };
+    enum { PITCH_ANGLE=0, ROLL_ANGLE=1, SPEED=2, YAW_RATE=3, POSITION=4, PID_COUNT=5, PID_BEGIN=0 };
     struct SPID_t {
         float setpoint;
         PIDF::PIDF_t pid;

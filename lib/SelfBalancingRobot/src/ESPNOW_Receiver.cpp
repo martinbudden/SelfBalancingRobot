@@ -37,6 +37,9 @@ bool Receiver::update(uint32_t tickCountDelta)
         return false;
     }
 
+    // Inform the motor controller that a packet has been received
+    _motorController->packetReceived();
+
     // record tickoutDelta for instrumentation
     _tickCountDelta = tickCountDelta;
 
