@@ -73,7 +73,7 @@ void MotorPairController::setControlMode(ControlMode_t controlMode)
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(const AHRS& ahrs, const ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
+MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
     _ahrs(ahrs),
     _receiver(receiver),
     _motors(allocateMotors()),

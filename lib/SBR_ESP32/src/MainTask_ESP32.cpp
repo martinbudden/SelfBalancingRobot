@@ -13,7 +13,6 @@
 
 #include <AHRS.h>
 #include <ESPNOW_Backchannel.h>
-#include <ESPNOW_Receiver.h>
 #include <IMU_BMI270.h>
 #include <IMU_BNO085.h>
 #include <IMU_Filters.h>
@@ -21,6 +20,7 @@
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
+#include <ReceiverAtomJoyStick.h>
 #include <SV_Preferences.h>
 #include <SensorFusion.h>
 
@@ -92,8 +92,9 @@ void MainTask::setup()
     uint8_t myMacAddress[ESP_NOW_ETH_ALEN];
     WiFi.macAddress(&myMacAddress[0]);
 
+
     // Statically allocate and setup the receiver.
-    static Receiver receiver(&myMacAddress[0]);
+    static ReceiverAtomJoyStick receiver(&myMacAddress[0]);
     _receiver = &receiver;
 #if !defined(JOYSTICK_CHANNEL)
     constexpr uint8_t JOYSTICK_CHANNEL {3};
@@ -105,7 +106,6 @@ void MainTask::setup()
     // Statically allocate the motorPairController.
     static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
     _motorPairController = &motorPairController;
-    _receiver->setVehicleController(_motorPairController);
     _ahrs->setVehicleController(_motorPairController);
 
     static SV_Preferences preferences;

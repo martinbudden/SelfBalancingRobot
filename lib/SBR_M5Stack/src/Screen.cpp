@@ -1,7 +1,6 @@
 #include "Screen.h"
 
 #include <AHRS.h>
-#include <ESPNOW_Receiver.h>
 #if defined(M5_STACK)
 #include <M5Stack.h>
 #elif defined(M5_UNIFIED)
@@ -9,6 +8,7 @@
 #endif
 #include <MotorPairController.h>
 #include <MotorPairControllerTelemetry.h>
+#include <ReceiverAtomJoyStick.h>
 
 
 enum {
@@ -31,7 +31,7 @@ enum {
 
 constexpr float radiansToDegrees {180.0 / M_PI};
 
-Screen::Screen(const AHRS& ahrs, const MotorPairController& motorPairController, const Receiver& receiver) :
+Screen::Screen(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver) :
     _screenSize(screenSize()),
     _screenRotationOffset(
         (_screenSize == SIZE_80x160 || _screenSize == SIZE_135x240) ? 1 :
@@ -258,9 +258,9 @@ void Screen::updateReceivedData80x160() const
 
     yPos += 10;
     M5.Lcd.setCursor(0, yPos);
-    const uint8_t mode = _receiver.getSwitch(0);
-    const uint8_t altMode = _receiver.getSwitch(1);
-    const uint8_t flipButton =_receiver.getSwitch(2);
+    const uint32_t flipButton =_receiver.getSwitch(ReceiverAtomJoyStick::MOTOR_ON_OFF_SWITCH);
+    const uint32_t mode = _receiver.getSwitch(ReceiverAtomJoyStick::MODE_SWITCH);
+    const uint32_t altMode = _receiver.getSwitch(ReceiverAtomJoyStick::ALT_MODE_SWITCH);
     M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == AtomJoyStickReceiver::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 }
 
@@ -473,9 +473,9 @@ void Screen::updateReceivedData320x240() const
 
     yPos += 20;
     M5.Lcd.setCursor(0, yPos);
-    const uint32_t mode = _receiver.getSwitch(0);
-    const uint32_t altMode = _receiver.getSwitch(1);
-    const uint32_t flipButton =_receiver.getSwitch(2);
+    const uint32_t flipButton =_receiver.getSwitch(ReceiverAtomJoyStick::MOTOR_ON_OFF_SWITCH);
+    const uint32_t mode = _receiver.getSwitch(ReceiverAtomJoyStick::MODE_SWITCH);
+    const uint32_t altMode = _receiver.getSwitch(ReceiverAtomJoyStick::ALT_MODE_SWITCH);
     M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == AtomJoyStickReceiver::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 
     M5.Lcd.setCursor(255, yPos);

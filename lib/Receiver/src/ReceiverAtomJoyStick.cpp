@@ -1,20 +1,18 @@
 #if defined(USE_ESPNOW)
 
-#include "ESPNOW_Receiver.h"
-
-#include "VehicleControllerBase.h"
+#include "ReceiverAtomJoyStick.h"
 
 #include <HardwareSerial.h>
 
 
-Receiver::Receiver(const uint8_t* macAddress) :
+ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress) :
     _atomJoyStickReceiver(macAddress)
     {}
 
 /*!
 Setup the receiver. Initialize the Atom JoyStick receiver.
 */
-esp_err_t Receiver::setup(uint8_t channel)
+esp_err_t ReceiverAtomJoyStick::setup(uint8_t channel)
 {
 #if defined(ATOM_JOYSTICK_MAC_ADDRESS)
     static constexpr uint8_t atomJoyStickMacAddress[ESP_NOW_ETH_ALEN] ATOM_JOYSTICK_MAC_ADDRESS;
@@ -27,18 +25,17 @@ esp_err_t Receiver::setup(uint8_t channel)
 }
 
 /*!
-If a packet was received from the atomJoyStickReceiver then unpack it and inform the VehicleController that new stick values are available.
+If a packet was received from the atomJoyStickReceiver then unpack it and inform the receiver target that new stick values are available.
 
 Returns true if a packet has been received.
 */
-bool Receiver::update(uint32_t tickCountDelta)
+bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
 {
     if (_atomJoyStickReceiver.isPacketEmpty()) {
         return false;
     }
 
-    // Inform the motor controller that a packet has been received
-    _vehicleController->packetReceived();
+    _packetReceived = true;
 
     // record tickoutDelta for instrumentation
     _tickCountDelta = tickCountDelta;
@@ -51,21 +48,13 @@ bool Receiver::update(uint32_t tickCountDelta)
     _droppedPacketCountPrevious = _droppedPacketCount;
 
     if (_atomJoyStickReceiver.unpackPacket()) {
-        assert(_vehicleController != nullptr);
         if (_packetCount == 5) {
             // set the JoyStick bias so that the current readings are zero.
             _atomJoyStickReceiver.setCurrentReadingsToBias();
         }
+
         // use the flip button to turn the motors on or off
-        if (_atomJoyStickReceiver.getFlipButton()) {
-            _flipPressed = true;
-        } else {
-            if (_flipPressed) {
-                // flipButton being released, so toggle the motor state
-                _vehicleController->motorsToggleOnOff();
-                _flipPressed = static_cast<int>(false);
-            }
-        }
+        setSwitch(MOTOR_ON_OFF_SWITCH, _atomJoyStickReceiver.getFlipButton() ? 1 : 0);
 
         // Save the stick values.
         _controls.throttleStickQ4dot12 = _atomJoyStickReceiver.getThrottleQ4dot12();
@@ -74,13 +63,12 @@ bool Receiver::update(uint32_t tickCountDelta)
         _controls.yawStickQ4dot12 = _atomJoyStickReceiver.getYawQ4dot12();
 
         // Save the button values.
-        setSwitch(0, _atomJoyStickReceiver.getMode());
+        setSwitch(MOTOR_ON_OFF_SWITCH, _atomJoyStickReceiver.getFlipButton());
+        setSwitch(MODE_SWITCH, _atomJoyStickReceiver.getMode());
         const uint8_t altMode = _atomJoyStickReceiver.getAltMode(); // this returns a value of 4 or 5
-        setSwitch(1, altMode == 4 ? 0 : 1);
-        setSwitch(2, _atomJoyStickReceiver.getFlipButton());
+        setSwitch(ALT_MODE_SWITCH, altMode == 4 ? 0 : 1);
 
-        // Inform the motor controller that new stick values are available.
-        _vehicleController->newStickValuesReceived();
+        _newPacketAvailable = true;
         return true;
     }
     Serial.printf("BadPacket\r\n");
@@ -89,46 +77,42 @@ bool Receiver::update(uint32_t tickCountDelta)
 }
 
 /*!
-Map the yaw stick non-linearly to give more control for small values of yaw.
-
-Runs in the context of the MotorController.
-*/
-float Receiver::mapYawStick(float yawStick)
-{
-    // map the yaw stick to a quadratic curve to give more control for small values of yaw.
-    // higher values of a increase the effect
-    // a=0 gives a linear response, a=1 gives a parabolic (x^2) curve
-    static constexpr float a { 0.2F };
-    const float ret = (1.0F - a) * yawStick + (yawStick < 0.0F ? -a*yawStick*yawStick : a*yawStick*yawStick);
-    return ret;
-}
-
-/*!
 Maps the joystick values from Q4dot12 format in the range [-2048, 2047] to floats in the range [-1, 1].
 
 NOTE: this function runs in the context of the MotorController task, in particular the FPU usage is in that context, so this avoids the
 need to save the ESP32 FPU registers on a context switch.
 */
-void Receiver::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
+void ReceiverAtomJoyStick::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
 {
     throttleStick = Q4dot12_to_float(_controls.throttleStickQ4dot12);
     rollStick = Q4dot12_to_float(_controls.rollStickQ4dot12);
     pitchStick = Q4dot12_to_float(_controls.pitchStickQ4dot12);
-    yawStick = mapYawStick(Q4dot12_to_float(_controls.yawStickQ4dot12));
+    yawStick = Q4dot12_to_float(_controls.yawStickQ4dot12);
 }
 
 
-ReceiverBase::EUI_48_t Receiver::getMyEUI() const
+ReceiverBase::EUI_48_t ReceiverAtomJoyStick::getMyEUI() const
 {
     EUI_48_t ret {};
     memcpy(&ret, _atomJoyStickReceiver.myMacAddress(), sizeof(EUI_48_t));
     return ret;
 }
 
-ReceiverBase::EUI_48_t Receiver::getPrimaryPeerEUI() const
+ReceiverBase::EUI_48_t ReceiverAtomJoyStick::getPrimaryPeerEUI() const
 {
     EUI_48_t ret {};
     memcpy(&ret, _atomJoyStickReceiver.getPrimaryPeerMacAddress(), sizeof(EUI_48_t));
     return ret;
+}
+
+void ReceiverAtomJoyStick::broadcastMyEUI() const
+{
+    _atomJoyStickReceiver.broadcastMyMacAddressForBinding();
+}
+
+uint32_t ReceiverAtomJoyStick::getAuxiliaryChannel(size_t index) const
+{
+    (void)index;
+    return 0;
 }
 #endif // USE_ESPNOW

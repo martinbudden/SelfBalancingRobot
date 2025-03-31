@@ -9,10 +9,10 @@ class CommandPacketSetOffset;
 
 class AHRS;
 class MotorPairController;
-class TaskBase;
-class TelemetryScaleFactors;
 class ReceiverBase;
 class SV_Preferences;
+class TaskBase;
+class TelemetryScaleFactors;
 
 
 class Backchannel {

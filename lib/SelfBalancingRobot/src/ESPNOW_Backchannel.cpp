@@ -1,7 +1,6 @@
 #if defined(USE_ESPNOW)
 
 #include "ESPNOW_Backchannel.h"
-#include "ESPNOW_Receiver.h"
 #include "MotorPairController.h"
 #include "SBR_Telemetry.h"
 #include "SBR_TelemetryData.h"
@@ -10,6 +9,8 @@
 #include <AHRS.h>
 #include <CommandPacket.h>
 #include <HardwareSerial.h>
+#include <ReceiverBase.h>
+#include <ReceiverTelemetry.h>
 #if defined(USE_ESP32_PREFERENCES)
 #include <SV_Preferences.h>
 #endif

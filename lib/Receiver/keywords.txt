@@ -6,10 +6,7 @@
 # Data types (KEYWORD1)
 #######################################
 
-TD_Reserved             KEYWORD1
-TD_Minimal              KEYWORD1
-TD_TickIntervals        KEYWORD1
-TD_AHRS                 KEYWORD1
+TD_Receiver             KEYWORD1
 
 
 #######################################
@@ -17,4 +14,3 @@ TD_AHRS                 KEYWORD1
 #######################################
 
 update                  KEYWORD2
-reset                   KEYWORD2

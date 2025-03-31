@@ -1,9 +1,10 @@
 #pragma once
 
 #include "MotorMixer.h"
-#include "VehicleControllerBase.h"
 #include <Filters.h>
 #include <PIDF.h>
+#include <ReceiverBase.h>
+#include <VehicleControllerBase.h>
 #include <array>
 #include <cfloat>
 #include <string>
@@ -11,7 +12,6 @@
 struct motor_pair_controller_telemetry_t;
 class AHRS;
 class MotorPairBase;
-class ReceiverBase;
 class Quaternion;
 
 /*!
@@ -30,7 +30,7 @@ positive yaw is nose right
 */
 class MotorPairController : public VehicleControllerBase {
 public:
-    MotorPairController(const AHRS& ahrs, const ReceiverBase& receiver, void* i2cMutex);
+    MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
     MotorPairController(const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
@@ -45,10 +45,10 @@ public:
         CONTROL_MODE_POSITION //!< The speed PID is used to set position rather than speed. Movement is obtained by incrementing position.
     };
     enum pid_index_t {
-        PITCH_ANGLE_DEGREES=0,
-        ROLL_ANGLE_DEGREES=1, // allow possibility of roll control in future implementation
-        SPEED_DPS=2,
-        YAW_RATE_DPS=3,
+        ROLL_ANGLE_DEGREES=0, // allow possibility of roll control in future implementation
+        PITCH_ANGLE_DEGREES=1,
+        YAW_RATE_DPS=2,
+        SPEED_DPS=3,
         POSITION_DEGREES=4,
         PID_COUNT=5,
         PID_BEGIN=0
@@ -58,7 +58,7 @@ public:
     inline bool motorsIsOn() const { return _mixer.motorsIsOn(); }
     void motorsSwitchOff();
     void motorsSwitchOn();
-    virtual void motorsToggleOnOff() override;
+    void motorsToggleOnOff();
     inline bool motorsIsDisabled() const { return _mixer.motorsIsDisabled(); }
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
 
@@ -94,6 +94,7 @@ public:
     [[noreturn]] static void Task(void* arg);
     void loop(float deltaT, uint32_t tickCount);
 public:
+    static float mapYawStick(float yawStick);
     void updateSetpoints(float deltaT, uint32_t tickCount);
     void updateMotorSpeedEstimates(float deltaT);
     void updateOutputsUsingPIDs(float deltaT);
@@ -105,11 +106,12 @@ private:
     [[noreturn]] void Task(const TaskParameters* taskParameters);
 private:
     const AHRS& _ahrs;
-    const ReceiverBase& _receiver;
+    ReceiverBase& _receiver;
     MotorPairBase& _motors; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorMixer _mixer;
     ControlMode_t _controlMode;
 
+    int32_t _onOffSwitchPressed {false};
     int32_t _receiverInUse {false};
     int32_t _failSafeOn {false};
     uint32_t _failSafeTickCount {0}; //<! failsafe counter, so the vehicle doesn't run away if it looses contact with the transmitter (for example by going out of range)

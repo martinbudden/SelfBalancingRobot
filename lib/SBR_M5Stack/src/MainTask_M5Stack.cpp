@@ -16,11 +16,11 @@
 
 #include <AHRS.h>
 #include <ESPNOW_Backchannel.h>
-#include <ESPNOW_Receiver.h>
 #include <IMU_Filters.h>
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
+#include <ReceiverAtomJoyStick.h>
 #include <SV_Preferences.h>
 #include <SensorFusion.h>
 
@@ -121,7 +121,7 @@ void MainTask::setup()
     WiFi.macAddress(&myMacAddress[0]);
 
     // Statically allocate and setup the receiver.
-    static Receiver receiver(&myMacAddress[0]);
+    static ReceiverAtomJoyStick receiver(&myMacAddress[0]);
     _receiver = &receiver;
 #if !defined(JOYSTICK_CHANNEL)
     constexpr uint8_t JOYSTICK_CHANNEL {3};
@@ -133,7 +133,6 @@ void MainTask::setup()
     // Statically allocate the motorPairController.
     static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
     _motorPairController = &motorPairController;
-    _receiver->setVehicleController(_motorPairController);
     _ahrs->setVehicleController(_motorPairController);
 
     static SV_Preferences preferences;
@@ -172,10 +171,10 @@ void MainTask::setup()
     // Holding BtnB down while switching on initiates binding.
     // The Atom has no BtnB, so it always broadcasts address for binding on startup.
 #if defined(M5_ATOM)
-    receiver.broadcastMyMacAddressForBinding();
+    receiver.broadcastMyEUI();
 #else
     if (M5.BtnB.wasPressed()) {
-        receiver.broadcastMyMacAddressForBinding();
+        receiver.broadcastMyEUI();
     }
 #endif
 

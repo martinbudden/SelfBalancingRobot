@@ -1,16 +1,16 @@
 #include "Buttons.h"
 
-#include <ESPNOW_Receiver.h>
 #if defined(M5_STACK)
 #include <M5Stack.h>
 #elif defined(M5_UNIFIED)
 #include <M5Unified.h>
 #endif
 #include <MotorPairController.h>
+#include <ReceiverBase.h>
 #include <Screen.h>
 
 
-Buttons::Buttons(Screen& screen, MotorPairController& motorController, const Receiver& receiver) :
+Buttons::Buttons(Screen& screen, MotorPairController& motorController, const ReceiverBase& receiver) :
     _screen(screen),
     _motorController(motorController),
     _receiver(receiver)
@@ -60,7 +60,7 @@ void Buttons::update()
 
     if (M5.BtnB.wasPressed()) {
         // BtnB initiates binding
-        _receiver.broadcastMyMacAddressForBinding();
+        _receiver.broadcastMyEUI();
         M5.Lcd.setCursor(_drawPosX, _drawPosY);
         M5.Lcd.print('B');
     } else if (M5.BtnB.wasReleased()) {

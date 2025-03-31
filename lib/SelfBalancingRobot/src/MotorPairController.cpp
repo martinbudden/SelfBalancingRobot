@@ -17,12 +17,12 @@ inline void YIELD_TASK() { taskYIELD(); }
 inline void YIELD_TASK() {}
 #endif
 
-
 const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES = {
+    "ROLL_ANGLE",
     "PITCH_ANGLE",
+    "YAW_RATE",
     "SPEED",
-    "POSITION",
-    "YAW_RATE"
+    "POSITION"
 };
 
 std::string MotorPairController::getPID_Name(pid_index_t pidIndex) const
@@ -124,6 +124,19 @@ void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 }
 
 /*!
+Map the yaw stick non-linearly to give more control for small values of yaw.
+*/
+float MotorPairController::mapYawStick(float yawStick)
+{
+    // map the yaw stick to a quadratic curve to give more control for small values of yaw.
+    // higher values of a increase the effect
+    // a=0 gives a linear response, a=1 gives a parabolic (x^2) curve
+    static constexpr float a { 0.2F };
+    const float ret = (1.0F - a) * yawStick + (yawStick < 0.0F ? -a*yawStick*yawStick : a*yawStick*yawStick);
+    return ret;
+}
+
+/*!
 If new stick values are available then update the setpoint using the stick values, using the ENU coordinate convention.
 
 NOTE: this function runs in the context of the VehicleController task, in particular the FPU usage is in that context, so this avoids the
@@ -132,25 +145,14 @@ need to save the ESP32 FPU registers on a context switch.
 void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_t tickCount)
 {
     // failsafe handling
-    if (_newStickValuesAvailable) {
+    if (_receiver.isNewPacketAvailable()) {
+        _receiver.clearNewPacketAvailable();
         _receiverInUse = true;
         _failSafeOn = false;
         _failSafeTickCount = tickCount;
-    } else if ((tickCount - _failSafeTickCount > _failSafeTickCountThreshold) && _receiverInUse) {
-        // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
-        // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
-        // so switch off the motors to prevent the vehicle from doing a runaway.
-        _failSafeOn = true;
-        if ((tickCount - _failSafeTickCount > _failSafeTickCountSwitchOffThreshold)) {
-            motorsSwitchOff();
-            _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
-        }
-    }
-
-    // If new joystick values are available from the receiver, then map them to the range [-1.0, 1.0] and use them to update the setpoints.
-    if (_newStickValuesAvailable) {
-        _newStickValuesAvailable = false;
+        // Get the new joystick values from the receiver and use them to update the setpoints.
         _receiver.getStickValues(_throttleStick, _rollStick, _pitchStick, _yawStick);
+        _yawStick = mapYawStick(_yawStick);
 
         _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
 
@@ -171,6 +173,26 @@ void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_
         // So sign of _yawStick is negated
         _yawStick = -_yawStick;
         _PIDS[YAW_RATE_DPS].setSetpoint(_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
+
+        const bool motorOnOff = _receiver.getSwitch(ReceiverBase::MOTOR_ON_OFF_SWITCH);
+        if (motorOnOff) {
+            _onOffSwitchPressed = true;
+        } else {
+            if (_onOffSwitchPressed) {
+                // motorOnOff false and _onOffPressed true means the  on/off button is being released, so toggle the motor state
+                motorsToggleOnOff();
+                _onOffSwitchPressed = false;
+            }
+        }
+    } else if ((tickCount - _failSafeTickCount > _failSafeTickCountThreshold) && _receiverInUse) {
+        // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
+        // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
+        // so switch off the motors to prevent the vehicle from doing a runaway.
+        _failSafeOn = true;
+        if ((tickCount - _failSafeTickCount > _failSafeTickCountSwitchOffThreshold)) {
+            motorsSwitchOff();
+            _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
+        }
     }
 }
 

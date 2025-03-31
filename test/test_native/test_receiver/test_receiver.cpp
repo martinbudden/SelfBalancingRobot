@@ -15,6 +15,8 @@ public:
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual EUI_48_t getMyEUI() const override;
     virtual EUI_48_t getPrimaryPeerEUI() const override;
+    virtual void broadcastMyEUI() const override;
+    virtual uint32_t getAuxiliaryChannel(size_t index) const override;
 // NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
@@ -22,6 +24,8 @@ bool ReceiverTest::update([[maybe_unused]] uint32_t tickCountDelta) { return tru
 void ReceiverTest::getStickValues([[maybe_unused]] float& throttleStick, [[maybe_unused]] float& rollStick, [[maybe_unused]] float& pitchStick, [[maybe_unused]] float& yawStick) const {};
 ReceiverBase::EUI_48_t ReceiverTest::getMyEUI() const { return EUI_48_t{}; }
 ReceiverBase::EUI_48_t ReceiverTest::getPrimaryPeerEUI() const { return EUI_48_t{}; }
+void ReceiverTest::broadcastMyEUI() const {}
+uint32_t ReceiverTest::getAuxiliaryChannel(size_t index) const { (void)index; return 0; }
 
 void setUp() {
 }

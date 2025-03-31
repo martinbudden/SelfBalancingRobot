@@ -6,7 +6,7 @@
 class AHRS;
 class Backchannel;
 class MotorPairController;
-class Receiver;
+class ReceiverBase;
 class SV_Preferences;
 
 class MainTask : public TaskBase {
@@ -22,7 +22,7 @@ private:
 private:
     AHRS* _ahrs {nullptr};
     MotorPairController* _motorPairController {nullptr};
-    Receiver* _receiver {nullptr};
+    ReceiverBase* _receiver {nullptr};
     SV_Preferences* _preferences {nullptr};
     Backchannel* _backchannel {nullptr};
 };

@@ -1,0 +1,20 @@
+{
+    "name": "StabilizedVehicle",
+    "description": "Library for stabilized vehicles such as self-balancing robots and quadcopters",
+    "keywords": "",
+    "authors": {
+        "name": "Martin Budden",
+        "url": "https://github.com/martinbudden"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/martinbudden/Library-Reciver.git"
+    },
+    "dependencies": [
+    ],
+    "license": "MIT",
+    "version": "0.0.1",
+    "frameworks": "*",
+    "platforms": "*",
+    "headers": ["ReceiverBase.h"]
+}

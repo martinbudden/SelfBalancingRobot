@@ -3,34 +3,31 @@
 #include "ReceiverBase.h"
 #include <AtomJoyStickReceiver.h>
 
-class VehicleControllerBase;
 
-
-class Receiver : public ReceiverBase {
+class ReceiverAtomJoyStick : public ReceiverBase {
 public:
-    explicit Receiver(const uint8_t* macAddress);
+    explicit ReceiverAtomJoyStick(const uint8_t* macAddress);
 private:
     // Receiver is not copyable or moveable
-    Receiver(const Receiver&) = delete;
-    Receiver& operator=(const Receiver&) = delete;
-    Receiver(Receiver&&) = delete;
-    Receiver& operator=(Receiver&&) = delete;
+    ReceiverAtomJoyStick(const ReceiverAtomJoyStick&) = delete;
+    ReceiverAtomJoyStick& operator=(const ReceiverAtomJoyStick&) = delete;
+    ReceiverAtomJoyStick(ReceiverAtomJoyStick&&) = delete;
+    ReceiverAtomJoyStick& operator=(ReceiverAtomJoyStick&&) = delete;
+public:
+    enum { MODE_SWITCH = 1, ALT_MODE_SWITCH = 2 };
 public:
     esp_err_t setup(uint8_t channel);
-    void setVehicleController(VehicleControllerBase* vehicleController) { _vehicleController = vehicleController; } //!< Sets the motorController, which must be set before update() is called.
 
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual EUI_48_t getMyEUI() const override;
     virtual EUI_48_t getPrimaryPeerEUI() const override;
+    virtual void broadcastMyEUI() const override;
+    uint32_t getAuxiliaryChannel(size_t index) const override;
 
-    void broadcastMyMacAddressForBinding() const { _atomJoyStickReceiver.broadcastMyMacAddressForBinding(); }
     ESPNOW_Transceiver& getESPNOW_Transceiver() { return _atomJoyStickReceiver.getTransceiver(); }
-
-    static float mapYawStick(float yawStick);
 private:
     AtomJoyStickReceiver _atomJoyStickReceiver;
-    VehicleControllerBase* _vehicleController {nullptr};
     uint32_t _packetCount {0};
     uint32_t _receivedPacketCount {0};
     int32_t _droppedPacketCount {0};

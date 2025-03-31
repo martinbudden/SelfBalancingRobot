@@ -1,10 +1,10 @@
 #pragma once
 
-#include "SV_TelemetryData.h"
+#include <ReceiverBase.h>
+#include <SV_TelemetryData.h>
 
 class AHRS;
 class MotorPairController;
-class Receiver;
 
 
 class Screen {
@@ -19,7 +19,7 @@ public:
     };
     enum mode_t { MODE_NORMAL = 1, MODE_INVERTED = 3, MODE_QRCODE = 5 };
 public:
-    Screen(const AHRS& ahrs, const MotorPairController& motorPairController, const Receiver& receiver);
+    Screen(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver);
 private:
     // Screen is not copyable or moveable
     Screen(const Screen&) = delete;
@@ -65,5 +65,5 @@ private:
 
     const AHRS& _ahrs;
     const MotorPairController& _motorPairController;
-    const Receiver& _receiver;
+    const ReceiverBase& _receiver;
 };
