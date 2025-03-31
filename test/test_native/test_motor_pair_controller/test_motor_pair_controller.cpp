@@ -2,6 +2,7 @@
 #include "AHRS_Test.h"
 #include "MotorPairController.h"
 #include "ReceiverBase.h"
+#include "SBR_TelemetryData.h"
 
 #include <unity.h>
 
@@ -37,7 +38,8 @@ void setUp() {
 void tearDown() {
 }
 
-void test_motor_pair_controller() {
+void test_motor_pair_controller()
+{
     static SensorFusionFilterTest sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
     static IMU_Test imu; // NOLINT(misc-const-correctness) false positive
     static IMU_Filters_Test imuFilters; // NOLINT(misc-const-correctness) false positive
@@ -80,11 +82,21 @@ void test_motor_pair_controller() {
     TEST_ASSERT_TRUE(pidNamePosition.compare("POSITION") == 0);
 }
 
+void test_motor_pair_controller_pid_indexes()
+{
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::ROLL_ANGLE_DEGREES) == static_cast<int>(TD_SBR_PIDS::ROLL_ANGLE));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::PITCH_ANGLE_DEGREES) == static_cast<int>(TD_SBR_PIDS::PITCH_ANGLE));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::YAW_RATE_DPS) == static_cast<int>(TD_SBR_PIDS::YAW_RATE));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::SPEED_DPS) == static_cast<int>(TD_SBR_PIDS::SPEED));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::POSITION_DEGREES) == static_cast<int>(TD_SBR_PIDS::POSITION));
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
     UNITY_BEGIN();
 
     RUN_TEST(test_motor_pair_controller);
+    RUN_TEST(test_motor_pair_controller_pid_indexes);
 
     UNITY_END();
 }
