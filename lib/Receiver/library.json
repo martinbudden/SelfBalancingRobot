@@ -1,6 +1,6 @@
 {
-    "name": "StabilizedVehicle",
-    "description": "Library for stabilized vehicles such as self-balancing robots and quadcopters",
+    "name": "Receiver",
+    "description": "Library of various receivers",
     "keywords": "",
     "authors": {
         "name": "Martin Budden",
@@ -16,5 +16,5 @@
     "version": "0.0.1",
     "frameworks": "*",
     "platforms": "*",
-    "headers": ["ReceiverBase.h"]
+    "headers": ["ESPNOW_Transceiver.h", "ReceiverAtomJoyStick.h", "ReceiverBase.h", "ReceiverNull.h", "ReceiverTelemetry.h", "ReceiverTelemetryData.h"]
 }

@@ -45,11 +45,11 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
     addToTransceiverAsSecondaryPeer(backchannelMacAddress);
     // use the last 4 bytes of backchannelMacAddress as the backchannelID
     const uint8_t* pB = backchannelMacAddress;
-    _backchannelID = (*(pB + 2U) << 24U) | (*(pB + 3U) << 16U) | (*(pB + 4U) << 8U) | *(pB + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    _backchannelID = (*(pB + 2U) << 24U) | (*(pB + 3U) << 16U) | (*(pB + 4U) << 8U) | *(pB + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
 
     // use the last 4 bytes of myMacAddress as the telemetryID
     const uint8_t* pM = _transceiver.myMacAddress();
-    _telemetryID = (*(pM + 2U) << 24U) | (*(pM + 3U) << 16U) | (*(pM + 4U) << 8U) | *(pM + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    _telemetryID = (*(pM + 2U) << 24U) | (*(pM + 3U) << 16U) | (*(pM + 4U) << 8U) | *(pM + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
 }
 
 void Backchannel::packetControl(const CommandPacketControl& packet) {

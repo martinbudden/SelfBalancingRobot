@@ -17,9 +17,9 @@ class TelemetryScaleFactors;
 
 class Backchannel {
 public:
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& flightController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences* preferences);
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& flightController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors) :
-        Backchannel(transceiver, macAddress, flightController, ahrs, mainTask, receiver, telemetryScaleFactors, nullptr) {}
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences* preferences);
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors) :
+        Backchannel(transceiver, macAddress, motorPairController, ahrs, mainTask, receiver, telemetryScaleFactors, nullptr) {}
 private:
     // Backchannel is not copyable or moveable
     Backchannel(const Backchannel&) = delete;
