@@ -3,11 +3,6 @@
 #include "IMU_MPU6886.h"
 
 #include <array>
-#if defined(UNIT_TEST_BUILD)
-void delay(int) {}
-#else
-#include <esp32-hal.h>
-#endif
 #include <cassert>
 
 
@@ -125,59 +120,59 @@ void IMU_MPU6886::init()
     i2cSemaphoreTake();
 
     _imuID = _bus.readRegister(REG_WHOAMI);
-    delay(1);
+    delayMs(1);
 
     _bus.writeRegister(REG_PWR_MGMT_1, 0); // clear the power management register
-    delay(10);
+    delayMs(10);
 
     constexpr uint8_t DEVICE_RESET = 0x01U << 7U;
     _bus.writeRegister(REG_PWR_MGMT_1, DEVICE_RESET); // reset the device
-    delay(10);
+    delayMs(10);
 
     constexpr uint8_t CLKSEL_1 = 0x01;
     _bus.writeRegister(REG_PWR_MGMT_1, CLKSEL_1); // CLKSEL must be set to 001 to achieve full gyroscope performance.
-    delay(10);
+    delayMs(10);
 
     // Gyro scale is fixed at 2000DPS, the maximum supported.
     constexpr uint8_t GYRO_FCHOICE_B = 0x00; // enables gyro update rate and filter configuration using REG_CONFIG
     _bus.writeRegister(REG_GYRO_CONFIG, (GFS_2000DPS << 3) | GYRO_FCHOICE_B); // cppcheck-suppress badBitmaskCheck
     _gyroResolutionDPS = GYRO_2000DPS_RES;
     _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
-    delay(1);
+    delayMs(1);
 
     // Accelerometer scale is fixed at 8G, the maximum supported.
     _bus.writeRegister(REG_ACCEL_CONFIG, AFS_8G << 3U);
     _accResolution = ACC_8G_RES;
-    delay(1);
+    delayMs(1);
 
     constexpr uint8_t ACC_FCHOICE_B = 0x00; // Filter:218.1 3-DB BW (Hz), least filtered 1kHz update variant
     _bus.writeRegister(REG_ACCEL_CONFIG2, ACC_FCHOICE_B);
-    delay(1);
+    delayMs(1);
 
     constexpr uint8_t FIFO_MODE_OVERWRITE = 0b01000000;
     _bus.writeRegister(REG_CONFIG, DLPF_CFG_1 | FIFO_MODE_OVERWRITE);
-    delay(1);
+    delayMs(1);
 
     // M5Stack default divider is two, giving 500Hz output rate
     _bus.writeRegister(REG_SAMPLE_RATE_DIVIDER, DIVIDE_BY_2);
-    delay(1);
+    delayMs(1);
 
     _bus.writeRegister(REG_FIFO_ENABLE, 0x00); // FIFO disabled
-    delay(1);
+    delayMs(1);
 
     // M5 Unified settings
     //_bus.writeRegister(REG_INT_PIN_CFG, 0b11000000); // Active low, open drain 50us pulse width, clear on read
     _bus.writeRegister(REG_INT_PIN_CFG, 0x22);
-    delay(1);
+    delayMs(1);
 
     constexpr uint8_t DATA_RDY_INT_EN = 0x01;
     _bus.writeRegister(REG_INT_ENABLE, DATA_RDY_INT_EN); // data ready interrupt enabled
-    delay(10);
+    delayMs(10);
 
     _bus.writeRegister(REG_USER_CTRL, 0x00);
 
     i2cSemaphoreGive();
-    delay(1);
+    delayMs(1);
 }
 
 /*!
@@ -204,7 +199,7 @@ void IMU_MPU6886::setGyroOffset(const xyz_int32_t& gyroOffset)
     // Setting the XG_OFFS registers seems to have no effect, so this code disabled
     const mems_sensor_data_t offset = gyroOffsetFromXYZ(gyroOffset);
     _bus.writeRegister(REG_XG_OFFS_USRH, reinterpret_cast<const uint8_t*>(&offset), sizeof(offset)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-    delay(1);
+    delayMs(1);
 #else
     _gyroOffset = gyroOffset;
 #endif
@@ -302,10 +297,10 @@ void IMU_MPU6886::setFIFOEnable(bool enableflag)
 {
     i2cSemaphoreTake();
     _bus.writeRegister(REG_FIFO_ENABLE, enableflag ? 0x18 : 0x00);
-    delay(1);
+    delayMs(1);
     _bus.writeRegister(REG_USER_CTRL, enableflag ? 0x40 : 0x00);
     i2cSemaphoreGive();
-    delay(1);
+    delayMs(1);
 }
 
 void IMU_MPU6886::resetFIFO()

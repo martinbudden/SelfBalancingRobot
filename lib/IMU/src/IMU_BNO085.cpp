@@ -1,6 +1,7 @@
 #if defined(USE_IMU_BNO085_I2C) || defined(USE_IMU_BNO085_SPI)
 
 #include "IMU_BNO085.h"
+#include <HardwareSerial.h>
 #include <cassert>
 
 namespace { // use anonymous namespace to make items local to this translation unit
@@ -46,11 +47,13 @@ IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin,
     IMU_Base(axisOrder, i2cMutex),
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
+    init();
 }
 #else
 IMU_BNO085::IMU_BNO085(axis_order_t axisOrder) :
-    IMU_Base(axisOrder, nullptr)
+    IMU_Base(axisOrder)
 {
+    init();
 }
 #endif
 
@@ -381,18 +384,31 @@ uint16_t IMU_BNO085::readPacketAndParse()
 
 bool IMU_BNO085::readPacket()
 {
+    _orientationAvailable = true;
+    _gyroAvailable = true;
+
     _bus.readBytes(reinterpret_cast<uint8_t*>(&_shtpPacket.header), sizeof(SHTP_Header));
 
     uint16_t dataLength = ((static_cast<uint16_t>(_shtpPacket.header.lengthMSB)) << 8) | (static_cast<uint16_t>(_shtpPacket.header.lengthLSB));
-    dataLength &= ~(1U << 15U); //Clear the MSbit.
-    if (dataLength == 0) {
+    //Serial.printf("dataLengthMSB:%0x\r\n", _shtpPacket.header.lengthMSB);
+    //Serial.printf("dataLengthLSB:%0x\r\n", _shtpPacket.header.lengthLSB);
+    //Serial.printf("dataLengthA:%0x\r\n", dataLength);
+    dataLength &= ~0x8000; //Clear the MSbit.
+    Serial.printf("dataLength:%4d ch:%d, s:%d\r\n", dataLength, _shtpPacket.header.channel, _shtpPacket.header.sequenceNumber);
+    if (dataLength <= sizeof(SHTP_Header)) {
         //Packet is empty
         return false;
     }
     dataLength -= sizeof(SHTP_Header);
-    assert(dataLength < 28);
-
+    if (_shtpPacket.header.channel == 0) {
+        static uint8_t buf[1024];
+        _bus.readBytes(&buf[0], dataLength);
+        return false;
+    }
+    dataLength = std::min(dataLength, static_cast<uint16_t>(sizeof(SHTP_Packet) - sizeof(SHTP_Header)));
     _bus.readBytes(&_shtpPacket.timestamp[0], dataLength);
+    Serial.printf("timeStamp:0x%02x:%02x:%02x:%02x:%02x\r\n", _shtpPacket.timestamp[0], _shtpPacket.timestamp[1], _shtpPacket.timestamp[2], _shtpPacket.timestamp[3], _shtpPacket.timestamp[4]);
+    Serial.printf("data: %02x,%02x,%02x,%02x,%02x\r\n", _shtpPacket.data[0], _shtpPacket.data[1], _shtpPacket.data[2], _shtpPacket.data[3], _shtpPacket.data[4]);
 
     // Check for a reset complete packet
     if (_shtpPacket.header.channel == CHANNEL_EXECUTABLE && _shtpPacket.data[0] == EXECUTABLE_RESET_COMPLETE) {

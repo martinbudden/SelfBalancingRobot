@@ -8,6 +8,7 @@
 
 class IMU_BNO085 : public IMU_Base {
 public:
+    static constexpr uint8_t I2C_ADDRESS=0x4A;
     enum {
         CHANNEL_COMMAND = 0,
         CHANNEL_EXECUTABLE = 1,
@@ -137,8 +138,6 @@ public:
     const Quaternion Q_XNEG_ZNEG_YNEG = {  0.0F,   -sin45f,  0.0F,   -sin45f };
     const Quaternion Q_ZNEG_XPOS_YNEG = {  0.5F,   -0.5F,   -0.5F,   -0.5F };
     const Quaternion Q_XPOS_ZPOS_YNEG = {  sin45f,  0.0F,   -sin45f,  0.0F };
-public:
-    static constexpr uint8_t I2C_ADDRESS=0x4A;
 public:
     explicit IMU_BNO085(axis_order_t axisOrder);
     IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);

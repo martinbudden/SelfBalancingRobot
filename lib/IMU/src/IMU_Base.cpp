@@ -1,6 +1,9 @@
 #include "IMU_Base.h"
 #include <cassert>
 
+#if !defined(UNIT_TEST_BUILD)
+#include <esp32-hal.h>
+#endif
 
 IMU_Base::IMU_Base(axis_order_t axisOrder) :
     _axisOrder(axisOrder)
@@ -13,6 +16,15 @@ IMU_Base::IMU_Base(axis_order_t axisOrder, [[maybe_unused]] void* i2cMutex) :
 #endif
     _axisOrder(axisOrder)
 {
+}
+
+void IMU_Base::delayMs(int ms)
+{
+#if defined(UNIT_TEST_BUILD)
+    (void)ms;
+#else
+    delay(ms);
+#endif
 }
 
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const

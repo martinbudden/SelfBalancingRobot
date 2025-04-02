@@ -70,6 +70,7 @@ public:
     static constexpr float degreesToRadians = static_cast<float>(M_PI / 180.0);
     static constexpr float radiansToDegrees = static_cast<float>(180.0 / M_PI);
 public:
+    static void delayMs(int ms);
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);
     virtual xyz_int32_t getAccOffset() const;
