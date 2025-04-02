@@ -1,9 +1,3 @@
-#if defined(M5_STACK)
-#include <M5Stack.h>
-#elif defined(M5_UNIFIED)
-#include <M5Unified.h>
-#endif
-
 #include <freertos/FreeRTOS.h>
 
 #include <WiFi.h>
@@ -13,12 +7,12 @@
 
 #include <AHRS.h>
 #include <ESPNOW_Backchannel.h>
+#include <HardwareSerial.h>
 #include <IMU_BMI270.h>
 #include <IMU_BNO085.h>
 #include <IMU_Filters.h>
 #include <IMU_LSM303AGR.h>
-#include <IMU_M5Stack.h>
-#include <IMU_M5Unified.h>
+#include <IMU_LSM6DS3TR_C.h>
 #include <IMU_MPU6886.h>
 #include <ReceiverAtomJoyStick.h>
 #include <SV_Preferences.h>
@@ -74,6 +68,9 @@ Setup for the main loop, motor control task, and AHRS(Attitude and Heading Refer
 */
 void MainTask::setup()
 {
+    Serial.begin(115200);
+    delay(1000);
+
     // This task has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
@@ -91,7 +88,6 @@ void MainTask::setup()
     // get my MAC address
     uint8_t myMacAddress[ESP_NOW_ETH_ALEN];
     WiFi.macAddress(&myMacAddress[0]);
-
 
     // Statically allocate and setup the receiver.
     static ReceiverAtomJoyStick receiver(&myMacAddress[0]);
@@ -123,6 +119,10 @@ void MainTask::setup()
     static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, *_ahrs, *this, *_receiver, telemetryScaleFactors, _preferences);
     _backchannel = &backchannel;
 #endif
+
+    // No binding button so always broadcast address for binding on startup.
+    receiver.broadcastMyEUI();
+
     // And finally set up the AHRS and MotorPairController tasks.
     setupTasks();
 }
@@ -146,6 +146,10 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_LSM303AGR_SPI)
     static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER);
+#elif defined(USE_IMU_LSM6DS3TR_C_I2C)
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_LSM6DS3TR_C_SPI)
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER);
 #else
     static_assert(false);
 #endif
@@ -248,7 +252,7 @@ void MainTask::setupTasks()
     static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
-    Serial.printf("**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
+    Serial.printf("**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
 }
 
 /*!
