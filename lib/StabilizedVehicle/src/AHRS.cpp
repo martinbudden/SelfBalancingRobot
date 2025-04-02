@@ -2,7 +2,9 @@
 #include "IMU_FiltersBase.h"
 #include "VehicleControllerBase.h"
 
+#if defined(USE_IMU_BNO085_I2C) || defined(USE_IMU_BNO085_SPI)
 #include <IMU_BNO085.h>
+#endif
 #include <SensorFusion.h>
 #include <cmath>
 #if defined(AHRS_IS_INTERRUPT_DRIVEN) || defined(USE_FREERTOS)
@@ -17,7 +19,9 @@ static_assert(false);
 #endif
 
 
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
 AHRS* AHRS::ahrs {nullptr};
+#endif
 
 #if defined(USE_FREERTOS)
 inline void YIELD_TASK() { taskYIELD(); }
@@ -77,7 +81,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
 #else
 
-#if defined(USE_IMU_BNO085)
+#if defined(USE_IMU_BNO085_I2C) || defined(USE_IMU_BNO085_SPI)
     // BNO085 does the sensor fusion
     const xyz_t gyro = _IMU.readGyroRPS();
     const IMU_Base::gyroRPS_Acc_t gyroAcc = {
