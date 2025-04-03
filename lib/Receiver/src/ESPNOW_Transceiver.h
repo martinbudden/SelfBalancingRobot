@@ -8,8 +8,7 @@ class ESPNOW_Transceiver {
 public:
     enum { BROADCAST_PEER=0, PRIMARY_PEER=1, SECONDARY_PEER=2, PEER_2=2, PEER_3=4, MAX_PEER_COUNT=4 };
     struct received_data_t {
-        inline received_data_t(uint8_t* aBufferPtr, size_t aBufferSize)
-            : bufferPtr(aBufferPtr), bufferSize(aBufferSize), len(0) {}
+        inline received_data_t(uint8_t* aBufferPtr, size_t aBufferSize) : bufferPtr(aBufferPtr), bufferSize(aBufferSize), len(0) {}
         uint8_t* bufferPtr;
         size_t bufferSize;
         size_t len;

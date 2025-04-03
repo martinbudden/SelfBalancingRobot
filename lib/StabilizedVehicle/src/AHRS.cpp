@@ -296,9 +296,9 @@ void AHRS::checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orie
 
     //Serial.printf("acc:P%5.1f mag:P%5.1f         diff:%5.1f\r\n", accPitchAngleRadians/Quaternion::degreesToRadians, madgwickRollAngleRadians/Quaternion::degreesToRadians, fabsf(accPitchAngleRadians - madgwickRollAngleRadians)/Quaternion::degreesToRadians);
     if (fabsf(accPitchAngleRadians - madgwickRollAngleRadians) < twoDegreesInRadians && accPitchAngleRadians != madgwickRollAngleRadians) {
-        // the angles have converged to within 2 degrees, so set we can reduce the gain.
+        // the angles have converged to within 2 degrees, so we can reduce the gain.
         setSensorFusionFilterInitializing(false);
-        _sensorFusionFilter.setFreeParameters(0.615F, 0.0F); // corresponds to gyro measurement error of 15*2.7 degree/second, as discussed by Madgwick
+        _sensorFusionFilter.setFreeParameters(0.615F, 0.0F); // corresponds to gyro measurement error of 15*2.7 degrees/second, as discussed by Madgwick
     }
 #else
     (void)acc;
@@ -324,7 +324,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
     _IMU(imuSensor),
     _imuFilters(imuFilters)
 #if defined(USE_IMU_DATA_READY_MUTEX)
-    ,_imuDataReadyMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataReadyMutexBuffer)) // statically allocate the imuDataMutex
+    , _imuDataReadyMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataReadyMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 #if defined(USE_AHRS_DATA_MUTEX)
     , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex

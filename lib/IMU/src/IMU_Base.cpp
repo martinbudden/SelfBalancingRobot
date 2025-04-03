@@ -280,7 +280,6 @@ size_t IMU_Base::readFIFO_ToBuffer()
     return 0;
 }
 
-
 IMU_Base::gyroRPS_Acc_t IMU_Base::readFIFO_Item(size_t index)
 {
     (void)index;
@@ -288,4 +287,3 @@ IMU_Base::gyroRPS_Acc_t IMU_Base::readFIFO_Item(size_t index)
     const gyroRPS_Acc_t gyroAcc {};
     return gyroAcc;
 }
-

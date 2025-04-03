@@ -28,13 +28,12 @@ public:
 public:
     explicit IMU_LSM6DS3TR_C(axis_order_t axisOrder);
     IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
-    IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) :  IMU_LSM6DS3TR_C(axisOrder, SDA_pin, SCL_pin, nullptr) {}
+    IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_LSM6DS3TR_C(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     void init();
 public:
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
     virtual int32_t getAccOneG_Raw() const override;
-
     virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
 private:
     gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const;

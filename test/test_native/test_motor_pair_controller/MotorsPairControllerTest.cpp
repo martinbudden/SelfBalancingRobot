@@ -13,7 +13,7 @@ private:
 // NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
-MotorsTest::MotorsTest() :
+MotorsTest::MotorsTest() : // NOLINT(hicpp-use-equals-default, modernize-use-equals-default)
     MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED)
     {}
 
