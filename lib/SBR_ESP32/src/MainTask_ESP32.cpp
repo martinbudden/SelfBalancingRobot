@@ -2,6 +2,7 @@
 
 #include <WiFi.h>
 
+#include "Calibration.h"
 #include "MainTask_ESP32.h"
 #include "TelemetryScaleFactors.h"
 
@@ -77,7 +78,7 @@ void MainTask::setup()
     const char* taskName = pcTaskGetName(taskHandle);
     Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n\r\n", taskName, taskPriority, configTICK_RATE_HZ);
 
-    void* i2cMutex = nullptr;
+    SemaphoreHandle_t i2cMutex = nullptr;
 
     setupAHRS(i2cMutex);
 
@@ -129,7 +130,8 @@ void MainTask::setup()
 
 void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
-// NOLINTBEGIN(misc-const-correctness) false positive
+    // Statically allocate the IMU according the the build flags
+// NOLINTBEGIN(misc-const-correctness)
 #if defined(USE_IMU_MPU6886_I2C)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_MPU6886_SPI)
@@ -162,8 +164,11 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     // approx 10 microseconds per update
     static MahonyFilter sensorFusionFilter;
 #elif defined(USE_VQF)
-    static VQF sensorFusionFilter(static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
-#elif defined(USE_MADGWICK_FILTER)
+    const float deltaT = static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F;
+    static VQF sensorFusionFilter(deltaT, deltaT, deltaT, true, false, false);
+#elif defined(USE_VQF_BASIC)
+    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
+#else
     // approx 16 microseconds per update
     static MadgwickFilter sensorFusionFilter;
 #endif
@@ -178,6 +183,18 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 
 void MainTask::checkGyroCalibration()
 {
+    IMU_Base::xyz_int32_t offset {};
+    if (_preferences->getGyroOffset(offset.x, offset.y, offset.z)) {
+        _ahrs->setGyroOffset(offset);
+        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", offset.x, offset.y, offset.z);
+        if (_preferences->getAccOffset(offset.x, offset.y, offset.z)) {
+            _ahrs->setAccOffset(offset);
+            Serial.printf("**** AHRS accOffsets loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", offset.x, offset.y, offset.z);
+        }
+    } else {
+        // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
+        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
+    }
 }
 
 /*!
@@ -185,6 +202,7 @@ Resets the PID preferences and the Balance Angle to SV_Preferences::NOT_SET (whi
 */
 void MainTask::resetPreferences()
 {
+    //_preferences->clear();
     //_preferences->removeGyroOffset();
     //_preferences->removeAccOffset();
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
@@ -207,7 +225,6 @@ void MainTask::loadPreferences()
     if (!_preferences->isSetPID()) {
         resetPreferences();
     }
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdouble-promotion" // printf does double promotion
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
@@ -217,7 +234,7 @@ void MainTask::loadPreferences()
     }
 
     // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
-    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) { // NOLINT
+    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
         const PIDF::PIDF_t pid = _preferences->getPID(pidName);
         if (pid.kp != SV_Preferences::NOT_SET) {

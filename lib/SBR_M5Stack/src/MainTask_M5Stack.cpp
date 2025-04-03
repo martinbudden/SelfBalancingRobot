@@ -186,18 +186,16 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
 // NOLINTBEGIN(misc-const-correctness)
-#if defined(M5_STACK)
 #if defined(USE_IMU_MPU6886_I2C)
+#if defined(M5_STACK)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #else
-    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex);
-#endif
-#elif defined(M5_UNIFIED)
-#if defined(USE_IMU_MPU6886_I2C)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex);
-#else
-    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #endif
+#elif defined(M5_STACK)
+    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex);
+#elif defined(M5_UNIFIED)
+    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #endif
 
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
@@ -228,7 +226,12 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 void MainTask::checkGyroCalibration()
 {
     // Set the gyro offsets from non-volatile storage.
-#if defined(M5_STACK) || defined(USE_IMU_MPU6886)
+#if defined(M5_UNIFIED)
+    // M5_UNIFIED directly uses NVS (non-volatile storage) to store the gyro offsets.
+    if (!M5.Imu.loadOffsetFromNVS()) {
+        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
+    }
+#else
     // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.
     IMU_Base::xyz_int32_t offset {};
     if (_preferences->getGyroOffset(offset.x, offset.y, offset.z)) {
@@ -240,11 +243,6 @@ void MainTask::checkGyroCalibration()
         }
     } else {
         // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
-        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
-    }
-#elif defined(M5_UNIFIED)
-    // M5_UNIFIED directly uses NVS (non-volatile storage) to store the gyro offsets.
-    if (!M5.Imu.loadOffsetFromNVS()) {
         calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
     }
 #endif
@@ -260,7 +258,7 @@ void MainTask::resetPreferences()
     //_preferences->removeAccOffset();
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         const std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
-        constexpr PIDF::PIDF_t pidNOT_SET { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET ,SV_Preferences::NOT_SET };
+        constexpr PIDF::PIDF_t pidNOT_SET { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET };
         _preferences->putPID(pidName, pidNOT_SET);
     }
     _preferences->putFloat(_motorPairController->getBalanceAngleName(), SV_Preferences::NOT_SET);
@@ -279,7 +277,7 @@ void MainTask::loadPreferences()
         resetPreferences();
     }
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#pragma GCC diagnostic ignored "-Wdouble-promotion" // printf does double promotion
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
     if (pitchBalanceAngleDegrees != SV_Preferences::NOT_SET) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
@@ -322,7 +320,7 @@ void MainTask::setupTasks()
     static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
-    Serial.printf("**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
+    Serial.printf("**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
 }
 
 /*!

@@ -1,15 +1,9 @@
 #include "Calibration.h"
 
 #include <AHRS.h>
-#if defined(M5_STACK)
-#include <M5Stack.h>
-#elif defined(M5_UNIFIED)
-#include <M5Unified.h>
-#endif
 #include <SV_Preferences.h>
 
 
-#if !defined(M5_UNIFIED) || defined(USE_IMU_MPU6886)
 static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrationType)
 {
     int64_t gyroX = 0;
@@ -60,65 +54,15 @@ static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calib
         accOffset_z += oneG;
     }
 
-    if (M5.Lcd.width() > 300) {
-        M5.Lcd.printf("gyro offsets\r\n");
-        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", gyroOffset_x, gyroOffset_y, gyroOffset_z);
-        M5.Lcd.printf("acc offsets\r\n");
-        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", accOffset_x, accOffset_y, accOffset_z);
-    }
     preferences.putGyroOffset(gyroOffset_x, gyroOffset_y, gyroOffset_z);
     if (calibrationType == CALIBRATE_ACC_AND_GYRO) {
         preferences.putAccOffset(accOffset_x, accOffset_y, accOffset_z);
     }
 }
 
-#elif defined(M5_UNIFIED)
-static void calibrate()
-{
-    // Strength of the calibration operation;
-    // 0: disables calibration.
-    // 1 is weakest and 255 is strongest.
-    enum { CALIBRATION_STRENGTH = 128 };
-    M5.Imu.setCalibration(0, CALIBRATION_STRENGTH, 0); // just calibrate the gyro
-    for (auto ii = 0; ii < 10; ++ii) {
-        M5.Imu.update();
-        delay(1000); // 1000ms=1s
-        M5.Imu.setCalibration(0, CALIBRATION_STRENGTH, 0); // just calibrate the gyro
-    }
-    M5.Imu.setCalibration(0, 0, 0);
-    M5.Imu.saveOffsetToNVS();
-}
-#endif
-
 void calibrateGyro(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrationType)
 {
-    if (M5.Lcd.width() > 300) {
-        M5.Lcd.setTextSize(2);
-    }
-    M5.Lcd.setTextColor(TFT_GREEN);
-    M5.Lcd.fillScreen(TFT_BLACK);
-
-    M5.Lcd.setCursor(0, 0);
-    M5.Lcd.printf("Starting gyro calibration\r\n");
-    M5.Lcd.printf("Please keep the robot\r\n");
-    M5.Lcd.printf("still for 10 seconds\r\n\r\n");
     delay(4000); // delay 4 seconds to allow robot to stabilize after user lets go
 
-#if defined(M5_STACK) || defined(USE_IMU_MPU6886)
     calibrate(ahrs, preferences, calibrationType);
-#elif defined(M5_UNIFIED)
-    (void)ahrs;
-    (void)preferences;
-    (void)calibrationType;
-    calibrate();
-#endif
-
-    M5.Lcd.printf("Finished calibration\r\n");
-    delay(4000);
-
-#if defined(M5_STACK)
-    M5.Power.reset();
-#elif defined(M5_UNIFIED)
-    M5.Power.powerOff();
-#endif
 }

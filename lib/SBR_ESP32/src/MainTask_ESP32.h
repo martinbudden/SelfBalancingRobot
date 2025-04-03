@@ -1,7 +1,6 @@
 #pragma once
 
 #include <TaskBase.h>
-#include <cstdint>
 
 class AHRS;
 class Backchannel;

@@ -39,13 +39,6 @@ Handle any button presses.
 */
 void Buttons::update()
 {
-#if defined(M5_ATOM) // M5 Atom has only BtnA
-    if (M5.BtnA.wasDoubleClicked()) {
-        // Only one button
-        // Use double click of BtnA for cycling through screen modes
-        _screen.nextScreenMode();
-    }
-#endif
     if (M5.BtnA.wasPressed()) {
         // BtnA turns the motors on or off
         _motorController.motorsToggleOnOff();
@@ -56,8 +49,13 @@ void Buttons::update()
         M5.Lcd.printf("  ");
     }
 
-#if !defined(M5_ATOM) // M5 Atom has only BtnA
-
+#if defined(M5_ATOM) // M5 Atom has only BtnA
+    if (M5.BtnA.wasDoubleClicked()) {
+        // M5 Atom has only one button
+        // Use double click of BtnA for cycling through screen modes
+        _screen.nextScreenMode();
+    }
+#else
     if (M5.BtnB.wasPressed()) {
         // BtnB initiates binding
         _receiver.broadcastMyEUI();
@@ -69,14 +67,14 @@ void Buttons::update()
     }
 #if defined(M5_STACK)
     if (M5.BtnC.wasPressed()) {
-#else
-    if (M5.BtnC.wasPressed() || M5.BtnB.wasDoubleClicked()) {
-#endif
         // BtnC cycles through the different screen modes
         _screen.nextScreenMode();
     }
-
-#if !defined(M5_STACK)
+#else
+    if (M5.BtnC.wasPressed() || M5.BtnB.wasDoubleClicked()) {
+        // BtnC cycles through the different screen modes
+        _screen.nextScreenMode();
+    }
     if (M5.BtnPWR.wasDoubleClicked()) {
         M5.Power.powerOff();
         /*switch (M5.getBoard()) {
@@ -91,7 +89,6 @@ void Buttons::update()
             break;
         }*/
     }
-#endif // !defined(M5_STACK)
-
-#endif //!defined(M5_ATOM)
+#endif // defined(M5_STACK)
+#endif //defined(M5_ATOM)
 }
