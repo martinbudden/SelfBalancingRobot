@@ -1,7 +1,9 @@
 #if defined(USE_IMU_BNO085_I2C) || defined(USE_IMU_BNO085_SPI)
 
-#include "IMU_BNO085.h"
+#if !defined(UNIT_TEST_BUILD)
 #include <HardwareSerial.h>
+#endif
+#include "IMU_BNO085.h"
 #include <cassert>
 
 namespace { // use anonymous namespace to make items local to this translation unit
@@ -393,22 +395,22 @@ bool IMU_BNO085::readPacket()
     //Serial.printf("dataLengthMSB:%0x\r\n", _shtpPacket.header.lengthMSB);
     //Serial.printf("dataLengthLSB:%0x\r\n", _shtpPacket.header.lengthLSB);
     //Serial.printf("dataLengthA:%0x\r\n", dataLength);
-    dataLength &= ~0x8000; //Clear the MSbit.
-    Serial.printf("dataLength:%4d ch:%d, s:%d\r\n", dataLength, _shtpPacket.header.channel, _shtpPacket.header.sequenceNumber);
+    dataLength &= ~0x8000U; // Clear the most significant bit.
+    //Serial.printf("dataLength:%4d ch:%d, s:%d\r\n", dataLength, _shtpPacket.header.channel, _shtpPacket.header.sequenceNumber);
     if (dataLength <= sizeof(SHTP_Header)) {
         //Packet is empty
         return false;
     }
     dataLength -= sizeof(SHTP_Header);
     if (_shtpPacket.header.channel == 0) {
-        static uint8_t buf[1024];
+        static std::array<uint8_t, 1024> buf;
         _bus.readBytes(&buf[0], dataLength);
         return false;
     }
     dataLength = std::min(dataLength, static_cast<uint16_t>(sizeof(SHTP_Packet) - sizeof(SHTP_Header)));
     _bus.readBytes(&_shtpPacket.timestamp[0], dataLength);
-    Serial.printf("timeStamp:0x%02x:%02x:%02x:%02x:%02x\r\n", _shtpPacket.timestamp[0], _shtpPacket.timestamp[1], _shtpPacket.timestamp[2], _shtpPacket.timestamp[3], _shtpPacket.timestamp[4]);
-    Serial.printf("data: %02x,%02x,%02x,%02x,%02x\r\n", _shtpPacket.data[0], _shtpPacket.data[1], _shtpPacket.data[2], _shtpPacket.data[3], _shtpPacket.data[4]);
+    //Serial.printf("timeStamp:0x%02x:%02x:%02x:%02x:%02x\r\n", _shtpPacket.timestamp[0], _shtpPacket.timestamp[1], _shtpPacket.timestamp[2], _shtpPacket.timestamp[3], _shtpPacket.timestamp[4]);
+    //Serial.printf("data: %02x,%02x,%02x,%02x,%02x\r\n", _shtpPacket.data[0], _shtpPacket.data[1], _shtpPacket.data[2], _shtpPacket.data[3], _shtpPacket.data[4]);
 
     // Check for a reset complete packet
     if (_shtpPacket.header.channel == CHANNEL_EXECUTABLE && _shtpPacket.data[0] == EXECUTABLE_RESET_COMPLETE) {

@@ -82,22 +82,21 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_
     IMU_Base(axisOrder, i2cMutex),
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
-    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
     init();
 }
 #else
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder) :
     IMU_Base(axisOrder)
 {
-    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
     init();
 }
 #endif
 
 void IMU_LSM6DS3TR_C::init()
 {
+    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
+
     _bus.writeRegister(REG_CTRL3_C, 0x01); // software reset
     delayMs(100);
 
@@ -110,7 +109,8 @@ void IMU_LSM6DS3TR_C::init()
         uint8_t value;
     };
     static constexpr std::array<setting_t, 8> settings = {
-        // cppcheck-suppress-begin badBitmaskCheck // so we can OR with zero values without a warning
+        // Suppress badBitmaskCheck so we can OR with zero values without a warning
+        // cppcheck-suppress-begin badBitmaskCheck
         REG_INT1_CTRL,          0x02, // Enable gyro data ready on INT1 pin
         REG_INT2_CTRL,          0x02, // Enable gyro data ready on INT1 pin
         REG_CTRL1_XL,           ODR_6660_HZ | ACC_RANGE_16G, // bandwidth selection bits 00

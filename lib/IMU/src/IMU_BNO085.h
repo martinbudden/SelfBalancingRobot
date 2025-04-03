@@ -113,31 +113,6 @@ public:
         int16_t z;
     };
 #pragma pack(pop)
-    static constexpr float sin45f = 0.7071067811865475F;
-    const Quaternion Q_XPOS_YPOS_ZPOS = {  1.0F,    0.0F,    0.0F,    0.0F };
-    const Quaternion Q_YPOS_XNEG_ZPOS = {  sin45f,  0.0F,    0.0F,    sin45f };
-    const Quaternion Q_XNEG_YNEG_ZPOS = {  0.0F,    0.0F,    0.0F,    1.0F };
-    const Quaternion Q_YNEG_XPOS_ZPOS = {  sin45f,  0.0F,    0.0F,   -sin45f };
-    const Quaternion Q_XPOS_YNEG_ZNEG = {  0.0F,    0.0F,   -1.0F,    0.0F };
-    const Quaternion Q_YPOS_XPOS_ZNEG = {  0.0F,   -sin45f, -sin45f,  0.0F };
-    const Quaternion Q_XNEG_YPOS_ZNEG = {  0.0F,   -1.0F,    0.0F,    0.0F };
-    const Quaternion Q_YNEG_XNEG_ZNEG = {  0.0F,   -sin45f,  sin45f,  0.0F };
-    const Quaternion Q_ZPOS_YNEG_XPOS = {  0.0F,    0.0F,   -sin45f, sin45f };
-    const Quaternion Q_YPOS_ZPOS_XPOS = {  0.5F,   -0.5F,   -0.5F,    0.5F };
-    const Quaternion Q_ZNEG_YPOS_XPOS = {  sin45f, -sin45f,  0.0F,    0.0F };
-    const Quaternion Q_YNEG_ZNEG_XPOS = {  0.5F,   -0.5F,    0.5F,   -0.5F };
-    const Quaternion Q_ZPOS_YPOS_XNEG = {  sin45f, -sin45f,  0.0F,    0.0F };
-    const Quaternion Q_YPOS_ZNEG_XNEG = { -0.5F,   -0.5F,   -0.5F,   -0.5F };
-    const Quaternion Q_ZNEG_YNEG_XNEG = {  0.0F,    0.0F,   -sin45f, -sin45f };
-    const Quaternion Q_YNEG_ZPOS_XNEG = {  0.5F,    0.5F,   -0.5F,   -0.5F };
-    const Quaternion Q_ZPOS_XPOS_YPOS = { -0.5F,   -0.5F,   -0.5F,    0.5F };
-    const Quaternion Q_XNEG_ZPOS_YPOS = {  0.0F,   -sin45f,  0.0F,    sin45f };
-    const Quaternion Q_ZNEG_XNEG_YPOS = {  0.5F,   -0.5F,    0.5F,    0.5F };
-    const Quaternion Q_XPOS_ZNEG_YPOS = { -sin45f,  0.0F,   -sin45f,  0.0F };
-    const Quaternion Q_ZPOS_XNEG_YNEG = {  0.5F,    0.5F,   -0.5F,    0.5F };
-    const Quaternion Q_XNEG_ZNEG_YNEG = {  0.0F,   -sin45f,  0.0F,   -sin45f };
-    const Quaternion Q_ZNEG_XPOS_YNEG = {  0.5F,   -0.5F,   -0.5F,   -0.5F };
-    const Quaternion Q_XPOS_ZPOS_YNEG = {  sin45f,  0.0F,   -sin45f,  0.0F };
 public:
     explicit IMU_BNO085(axis_order_t axisOrder);
     IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);

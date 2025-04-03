@@ -112,7 +112,7 @@ constexpr uint8_t REG_CMD                   = 0x7E;
 As describe in section 4.4 Power-On Reset (POR) and Device Initialization of BMI270 datasheet
 configuration data taken from https://github.com/boschsensortec/BMI270_SensorAPI/blob/master/bmi270.c#L51
 */
-const uint8_t bmi270_config_file[8192] = {
+static const std::array<uint8_t, 8192> imu_bmi270_config_data = {
     0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x3d, 0xb1, 0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x91, 0x03, 0x80, 0x2e, 0xbc,
     0xb0, 0x80, 0x2e, 0xa3, 0x03, 0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x00, 0xb0, 0x50, 0x30, 0x21, 0x2e, 0x59, 0xf5,
     0x10, 0x30, 0x21, 0x2e, 0x6a, 0xf5, 0x80, 0x2e, 0x3b, 0x03, 0x00, 0x00, 0x00, 0x00, 0x08, 0x19, 0x01, 0x00, 0x22,
@@ -586,7 +586,7 @@ void IMU_BMI270::init()
     // Burst write 8kB initialization data to Register INIT_DATA. This requires 6.6ms at 10 MHz SPI I/F frequency.
     _bus.writeRegister(REG_INIT_CTRL, 0);
     delayMs(1);
-    _bus.writeRegister(REG_INIT_DATA, imu_bmi270_config_data, sizeof(imu_bmi270_config_data));
+    _bus.writeRegister(REG_INIT_DATA, &imu_bmi270_config_data[0], sizeof(imu_bmi270_config_data));
     delayMs(10);
     _bus.writeRegister(REG_INIT_CTRL, 1);
     delayMs(1);
@@ -597,20 +597,21 @@ void IMU_BMI270::init()
         uint8_t value;
     };
 
+    // Suppress badBitmaskCheck so we can OR with zero values without a warning
+    // cppcheck-suppress-begin badBitmaskCheck
     static constexpr std::array<setting_t, 10> settings = {
-        // cppcheck-suppress-begin badBitmaskCheck // so we can OR with zero values without a warning
         REG_PWR_CTRL,               0x0E, // enable gyro, acc and temp sensors
-        REG_ACC_CONF,               PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | ODR_1600_HZ,
+        REG_ACC_CONF,               PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | ODR_1600_HZ, // cppcheck-suppress badBitmaskCheck
         REG_ACC_RANGE,              ACC_RANGE_16G,
-        REG_GYR_CONF,               PERFORMANCE_OPTIMIZED | GYRO_OSR4_AVG | ODR_1600_HZ,
+        REG_GYR_CONF,               PERFORMANCE_OPTIMIZED | GYRO_OSR4_AVG | ODR_1600_HZ, // cppcheck-suppress badBitmaskCheck
         REG_GYR_RANGE,              GYRO_RANGE_2000,
         REG_PWR_CONF,               0x02, // disable advanced power save, enable FIFO self-wake - power mode
         //REG_FIFO_CONFIG_1,          FIFO_GYRO_ENABLE | FIFO_ACC_ENABLE | FIFO_HEADER_DISABLE
         REG_FIFO_CONFIG_1,          0x00, // all FIFOs disabled
         REG_INT_MAP_DATA,           0x04, // enable the data ready interrupt pin 1
         REG_INT1_IO_CTRL,           0x0A, // active high, push-pull, output enabled, input disabled
-        // cppcheck-suppress-end badBitmaskCheck
     };
+    // cppcheck-suppress-end badBitmaskCheck
 
     for (const setting_t setting : settings) {
         _bus.writeRegister(setting.reg, setting.value);
