@@ -2,9 +2,7 @@
 
 #include "ReceiverAtomJoyStick.h"
 
-#if !defined(UNIT_TEST_BUILD)
 #include <HardwareSerial.h>
-#endif
 
 
 ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress) :
@@ -140,12 +138,12 @@ int32_t ReceiverAtomJoyStick::ubyte4float_to_Q4dot12(const uint8_t f[4]) // NOLI
     };
     const bi_t n = { .b = { f[0], f[1], f[2], f[3] } }; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-    const uint8_t sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U); // 0x1000 0000 // NOLINT(cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
     const uint8_t exponent = static_cast<uint8_t>((n.i >> 23U) & 0xFFU); // 0x7F80 0000 // NOLINT(cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
     if (exponent == 0) {
         return 0;
     }
 
+    const uint8_t sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U); // 0x1000 0000 // NOLINT(cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
     const uint32_t mantissa = (n.i & 0x7FFFFFU) | 0x800000U; // 0x007F FFFF, OR in implicit bit NOLINT(cppcoreguidelines-pro-type-union-access)
 
     const int32_t i = static_cast<int32_t>(mantissa >> ((22U-11U) - (exponent - 0x80U))); // -Wshift-count-overflow NOLINT(hicpp-use-auto,modernize-use-auto)

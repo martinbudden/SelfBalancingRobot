@@ -1,6 +1,6 @@
 #if defined(USE_IMU_BNO085_I2C) || defined(USE_IMU_BNO085_SPI)
 
-#if !defined(UNIT_TEST_BUILD)
+#if defined(USE_ESP32)
 #include <HardwareSerial.h>
 #endif
 #include "IMU_BNO085.h"

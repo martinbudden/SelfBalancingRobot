@@ -1,7 +1,7 @@
 #include "IMU_Base.h"
 #include <cassert>
 
-#if !defined(UNIT_TEST_BUILD)
+#if defined(USE_ESP32)
 #include <esp32-hal.h>
 #endif
 
@@ -20,10 +20,10 @@ IMU_Base::IMU_Base(axis_order_t axisOrder, [[maybe_unused]] void* i2cMutex) :
 
 void IMU_Base::delayMs(int ms)
 {
-#if defined(UNIT_TEST_BUILD)
-    (void)ms;
-#else
+#if defined(USE_ESP32)
     delay(ms);
+#else
+    (void)ms;
 #endif
 }
 
