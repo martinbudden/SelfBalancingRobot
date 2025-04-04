@@ -1,7 +1,6 @@
 #if defined(USE_IMU_LSM303AGR_I2C) || defined(USE_IMU_LSM303AGR_SPI)
 
 #include "IMU_LSM303AGR.h"
-#include <array>
 #include <cassert>
 //#include <delay.h>
 
@@ -79,7 +78,6 @@ IMU_LSM303AGR::IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SC
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(gyro_acc_data_t) == gyro_acc_data_t::DATA_SIZE);
     static_assert(sizeof(gyro_acc_array_t) == gyro_acc_array_t::DATA_SIZE);
-    init();
 }
 #else
 IMU_LSM303AGR::IMU_LSM303AGR(axis_order_t axisOrder) :
@@ -88,7 +86,6 @@ IMU_LSM303AGR::IMU_LSM303AGR(axis_order_t axisOrder) :
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(gyro_acc_data_t) == gyro_acc_data_t::DATA_SIZE);
     static_assert(sizeof(gyro_acc_array_t) == gyro_acc_array_t::DATA_SIZE);
-    init();
 }
 #endif
 

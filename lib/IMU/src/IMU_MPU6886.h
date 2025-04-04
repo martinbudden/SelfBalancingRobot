@@ -10,7 +10,7 @@ public:
     explicit IMU_MPU6886(axis_order_t axisOrder);
     IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, nullptr) {}
-    void init();
+    virtual void init() override;
 public:
     enum acc_scale_t { AFS_2G = 0, AFS_4G, AFS_8G, AFS_16G };
     enum gyro_scale_t { GFS_250DPS = 0, GFS_500DPS, GFS_1000DPS, GFS_2000DPS };

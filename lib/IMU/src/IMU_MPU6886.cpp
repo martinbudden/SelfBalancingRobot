@@ -2,7 +2,6 @@
 
 #include "IMU_MPU6886.h"
 
-#include <array>
 #include <cassert>
 
 
@@ -101,7 +100,6 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pi
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
-    init();
 }
 #else
 IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder) :
@@ -110,7 +108,6 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder) :
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
-    init();
 }
 #endif
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Quaternion.h>
+#include <array>
 #include <cstdint>
 
 #if defined(I2C_MUTEX_REQUIRED)
@@ -22,8 +23,9 @@ Gyroscope readings can be returned as raw values, in RPS (Radians Per Second), o
 
 Accelerometer readings are returned in units of standard gravity (g - 9.80665 meters per second squared).
 
-The gyro and accelerometer can be read together using readGyroRPS_Acc. For typical IMUs this involves reading 12 bytes of data,
-if the IMU is read via a 10MHz SPI bus this will take approximately 10 microseconds.
+The gyro and accelerometer can be read together using readGyroRPS_Acc. For typical IMUs this involves reading 12 bytes of data:
+if the IMU is read via a 10 MHz  SPI bus this takes approximately 10 microseconds,
+if the IMU is read via a 400 kHz I2C bus this takes approximately 270 microseconds.
 */
 class IMU_Base {
 public:
@@ -64,30 +66,32 @@ public:
         XPOS_ZPOS_YNEG
     };
     static constexpr float sin45f = 0.7071067811865475F;
-    const Quaternion Q_XPOS_YPOS_ZPOS = {  1.0F,    0.0F,    0.0F,    0.0F };
-    const Quaternion Q_YPOS_XNEG_ZPOS = {  sin45f,  0.0F,    0.0F,    sin45f };
-    const Quaternion Q_XNEG_YNEG_ZPOS = {  0.0F,    0.0F,    0.0F,    1.0F };
-    const Quaternion Q_YNEG_XPOS_ZPOS = {  sin45f,  0.0F,    0.0F,   -sin45f };
-    const Quaternion Q_XPOS_YNEG_ZNEG = {  0.0F,    0.0F,   -1.0F,    0.0F };
-    const Quaternion Q_YPOS_XPOS_ZNEG = {  0.0F,   -sin45f, -sin45f,  0.0F };
-    const Quaternion Q_XNEG_YPOS_ZNEG = {  0.0F,   -1.0F,    0.0F,    0.0F };
-    const Quaternion Q_YNEG_XNEG_ZNEG = {  0.0F,   -sin45f,  sin45f,  0.0F };
-    const Quaternion Q_ZPOS_YNEG_XPOS = {  0.0F,    0.0F,   -sin45f, sin45f };
-    const Quaternion Q_YPOS_ZPOS_XPOS = {  0.5F,   -0.5F,   -0.5F,    0.5F };
-    const Quaternion Q_ZNEG_YPOS_XPOS = {  sin45f, -sin45f,  0.0F,    0.0F };
-    const Quaternion Q_YNEG_ZNEG_XPOS = {  0.5F,   -0.5F,    0.5F,   -0.5F };
-    const Quaternion Q_ZPOS_YPOS_XNEG = {  sin45f, -sin45f,  0.0F,    0.0F };
-    const Quaternion Q_YPOS_ZNEG_XNEG = { -0.5F,   -0.5F,   -0.5F,   -0.5F };
-    const Quaternion Q_ZNEG_YNEG_XNEG = {  0.0F,    0.0F,   -sin45f, -sin45f };
-    const Quaternion Q_YNEG_ZPOS_XNEG = {  0.5F,    0.5F,   -0.5F,   -0.5F };
-    const Quaternion Q_ZPOS_XPOS_YPOS = { -0.5F,   -0.5F,   -0.5F,    0.5F };
-    const Quaternion Q_XNEG_ZPOS_YPOS = {  0.0F,   -sin45f,  0.0F,    sin45f };
-    const Quaternion Q_ZNEG_XNEG_YPOS = {  0.5F,   -0.5F,    0.5F,    0.5F };
-    const Quaternion Q_XPOS_ZNEG_YPOS = { -sin45f,  0.0F,   -sin45f,  0.0F };
-    const Quaternion Q_ZPOS_XNEG_YNEG = {  0.5F,    0.5F,   -0.5F,    0.5F };
-    const Quaternion Q_XNEG_ZNEG_YNEG = {  0.0F,   -sin45f,  0.0F,   -sin45f };
-    const Quaternion Q_ZNEG_XPOS_YNEG = {  0.5F,   -0.5F,   -0.5F,   -0.5F };
-    const Quaternion Q_XPOS_ZPOS_YNEG = {  sin45f,  0.0F,   -sin45f,  0.0F };
+    const std::array<Quaternion, 24> axisOrientations = {
+        Quaternion(  1.0F,    0.0F,    0.0F,    0.0F ),
+        Quaternion(  sin45f,  0.0F,    0.0F,    sin45f ),
+        Quaternion(  0.0F,    0.0F,    0.0F,    1.0F ),
+        Quaternion(  sin45f,  0.0F,    0.0F,   -sin45f ),
+        Quaternion(  0.0F,    0.0F,   -1.0F,    0.0F ),
+        Quaternion(  0.0F,   -sin45f, -sin45f,  0.0F ),
+        Quaternion(  0.0F,   -1.0F,    0.0F,    0.0F ),
+        Quaternion(  0.0F,   -sin45f,  sin45f,  0.0F ),
+        Quaternion(  0.0F,    0.0F,   -sin45f, sin45f ),
+        Quaternion(  0.5F,   -0.5F,   -0.5F,    0.5F ),
+        Quaternion(  sin45f, -sin45f,  0.0F,    0.0F ),
+        Quaternion(  0.5F,   -0.5F,    0.5F,   -0.5F ),
+        Quaternion(  sin45f, -sin45f,  0.0F,    0.0F ),
+        Quaternion( -0.5F,   -0.5F,   -0.5F,   -0.5F ),
+        Quaternion(  0.0F,    0.0F,   -sin45f, -sin45f ),
+        Quaternion(  0.5F,    0.5F,   -0.5F,   -0.5F ),
+        Quaternion( -0.5F,   -0.5F,   -0.5F,    0.5F ),
+        Quaternion(  0.0F,   -sin45f,  0.0F,    sin45f ),
+        Quaternion(  0.5F,   -0.5F,    0.5F,    0.5F ),
+        Quaternion( -sin45f,  0.0F,   -sin45f,  0.0F ),
+        Quaternion(  0.5F,    0.5F,   -0.5F,    0.5F ),
+        Quaternion(  0.0F,   -sin45f,  0.0F,   -sin45f ),
+        Quaternion(  0.5F,   -0.5F,   -0.5F,   -0.5F ),
+        Quaternion(  sin45f,  0.0F,   -sin45f,  0.0F )
+    };
 public:
     explicit IMU_Base(axis_order_t axisOrder);
     IMU_Base(axis_order_t axisOrder, void* i2cMutex);
@@ -105,6 +109,7 @@ public:
     static constexpr float radiansToDegrees = static_cast<float>(180.0 / M_PI);
 public:
     static void delayMs(int ms);
+    virtual void init();
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);
     virtual xyz_int32_t getAccOffset() const;

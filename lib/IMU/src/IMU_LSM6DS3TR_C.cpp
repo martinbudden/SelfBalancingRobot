@@ -1,7 +1,6 @@
 #if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_LSM6DS3TR_C_SPI)
 
 #include "IMU_LSM6DS3TR_C.h"
-#include <array>
 #include <cassert>
 
 namespace { // use anonymous namespace to make items local to this translation unit
@@ -82,13 +81,11 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_
     IMU_Base(axisOrder, i2cMutex),
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
-    init();
 }
 #else
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder) :
     IMU_Base(axisOrder)
 {
-    init();
 }
 #endif
 

@@ -2,9 +2,6 @@
 #include "IMU_FiltersBase.h"
 #include "VehicleControllerBase.h"
 
-#if defined(USE_IMU_BNO085_I2C) || defined(USE_IMU_BNO085_SPI)
-#include <IMU_BNO085.h>
-#endif
 #include <SensorFusion.h>
 #include <cmath>
 #if defined(AHRS_IS_INTERRUPT_DRIVEN) || defined(USE_FREERTOS)
@@ -81,14 +78,17 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 
 #else
 
-#if defined(USE_IMU_BNO085_I2C) || defined(USE_IMU_BNO085_SPI)
-    // BNO085 does the sensor fusion
+#if defined(IMU_DOES_SENSOR_FUSION)
     const xyz_t gyro = _IMU.readGyroRPS();
+    TIME_CHECK(0, _timeCheck0);
+    TIME_CHECK(1);
     const IMU_Base::gyroRPS_Acc_t gyroAcc = {
         .gyroRPS = gyro,
         .acc = {}
     };
+    TIME_CHECK(2);
     const Quaternion orientation = _IMU.readOrientation();
+    TIME_CHECK(3);
 #else
     IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc(); // NOLINT(misc-const-correctness) false positive
     TIME_CHECK(0, _timeCheck0);
@@ -129,6 +129,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 */
 [[noreturn]] void AHRS::Task([[maybe_unused]] const TaskParameters* taskParameters)
 {
+    _IMU.init();
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
     _tickIntervalTicks = pdMS_TO_TICKS(taskParameters->tickIntervalMilliSeconds);

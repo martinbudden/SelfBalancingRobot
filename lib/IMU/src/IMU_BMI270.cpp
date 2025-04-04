@@ -1,7 +1,6 @@
 #if defined(USE_IMU_BMI270_I2C) || defined(USE_IMU_BMI270_SPI)
 
 #include "IMU_BMI270.h"
-#include <array>
 #include <cassert>
 
 namespace { // use anonymous namespace to make items local to this translation unit
@@ -558,7 +557,6 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin,
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
-    init();
 }
 #else
 IMU_BMI270::IMU_BMI270(axis_order_t axisOrder) :
@@ -566,7 +564,6 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder) :
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
-    init();
 }
 #endif
 

@@ -27,6 +27,10 @@ void IMU_Base::delayMs(int ms)
 #endif
 }
 
+void IMU_Base::init()
+{
+}
+
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const
 {
     return _gyroOffset;

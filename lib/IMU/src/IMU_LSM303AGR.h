@@ -3,7 +3,6 @@
 #include <BUS_I2C.h>
 #include <BUS_SPI.h>
 #include <IMU_Base.h>
-#include <array>
 
 
 class IMU_LSM303AGR : public IMU_Base {
@@ -37,8 +36,8 @@ public:
     explicit IMU_LSM303AGR(axis_order_t axisOrder);
     IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_LSM303AGR(axisOrder, SDA_pin, SCL_pin, nullptr) {}
-    void init();
 public:
+    virtual void init() override;
     virtual xyz_int32_t readAccRaw() override;
     virtual xyz_int32_t readGyroRaw() override;
 
