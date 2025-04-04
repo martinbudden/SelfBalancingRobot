@@ -78,6 +78,29 @@ bool BUS_I2C::readBytes(uint8_t* data, size_t length) const
     return false;
 }
 
+bool BUS_I2C::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const
+{
+#if defined(USE_I2C_ARDUINO)
+    _wire.requestFrom(_I2C_address, static_cast<uint8_t>(length));
+    for (int ii = 0; ii < timeoutMs; ++ii) {
+        if (_wire.available() > 0) {
+            uint8_t pos = 0; // NOLINT(misc-const-correctness) false positive
+            for (size_t jj = 0; jj < length; ++jj) {
+                data[pos++] = static_cast<uint8_t>(_wire.read()); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            }
+            return true;
+        }
+        delay(1);
+    }
+    return false;
+#else
+    (void)data;
+    (void)length;
+    (void)timeoutMs;
+#endif
+    return false;
+}
+
 uint8_t BUS_I2C::writeRegister(uint8_t reg, uint8_t data)
 {
 #if defined(USE_I2C_ARDUINO)

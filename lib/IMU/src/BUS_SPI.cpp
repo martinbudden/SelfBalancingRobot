@@ -40,6 +40,17 @@ bool BUS_SPI::readBytes(uint8_t* data, size_t length) const
     return false;
 }
 
+bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint8_t timeoutMs) const
+{
+#if defined(USE_SPI_ARDUINO)
+#else
+    (void)data;
+    (void)length;
+    (void)timeoutMs;
+#endif
+    return false;
+}
+
 uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data)
 {
 #if defined(USE_SPI_ARDUINO)

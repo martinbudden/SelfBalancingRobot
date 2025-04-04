@@ -1,15 +1,22 @@
 #if defined(USE_IMU_BNO085_I2C) || defined(USE_IMU_BNO085_SPI)
 
 #if defined(USE_ESP32)
+//#define SERIAL_OUTPUT
+#if defined(SERIAL_OUTPUT)
 #include <HardwareSerial.h>
 #endif
+#endif
+
 #include "IMU_BNO085.h"
 #include <cassert>
+#include <cstring>
 
 namespace { // use anonymous namespace to make items local to this translation unit
 constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
 constexpr float ACC_16G_RES { 16.0 / 32768.0 };
 } // end namespace
+
+enum { BUS_TIMEOUT_MS = 100 };
 
 enum {
     REPORT_ID_COMMAND_RESPONSE = 0xF1,
@@ -47,24 +54,39 @@ enum {
 #if defined(USE_IMU_BNO085_I2C)
 IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
-    _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
+    _bus(I2C_ADDRESS, SDA_pin, SCL_pin),
+    _axisOrderQuaternion(axisOrientations[axisOrder])
 {
-    init();
 }
 #else
 IMU_BNO085::IMU_BNO085(axis_order_t axisOrder) :
-    IMU_Base(axisOrder)
+    IMU_Base(axisOrder),
+    _axisOrderQuaternion(axisOrientations[axisOrder])
 {
-    init();
 }
 #endif
 
 void IMU_BNO085::init()
 {
-    _gyroResolutionDPS = GYRO_2000DPS_RES;
-    _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
-    _accResolution = ACC_16G_RES;
-    setFeatureCommand(SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR, 5000, 0); //Send data update every 5000us, 200Hz. Highest rate supported is 400Hz
+    // transmit reset byte on channel 1
+    _shtpPacket.data[0] = 1; //Reset
+    sendPacket(CHANNEL_EXECUTABLE, 1); //Transmit packet on channel 1, 1 byte
+
+    //Read all incoming data and flush it
+    delayMs(50);
+    //readPacketAndParse();
+    while (readPacketAndParse() == true) { delayMs(1); }
+
+    _shtpPacket.data[0] = REPORT_ID_PRODUCT_ID_REQUEST;
+    _shtpPacket.data[1] = 0;
+    sendPacket(CHANNEL_SENSOR_HUB_CONTROL, 2);
+    delayMs(50);
+    while (readPacketAndParse() == true) { delayMs(1); }
+
+    //setFeatureCommand(SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR, 5000, 0); //Send data update every 5000us, 200Hz. Highest rate supported is 400Hz
+    setFeatureCommand(SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR, 50*1000, 0); //Send data update every 50ms
+    delayMs(100);
+    while (readPacketAndParse() == true) { delayMs(1); }
 }
 
 void IMU_BNO085::setFeatureCommand(uint8_t reportID, uint32_t timeBetweenReportsUs, uint32_t specificConfig)
@@ -104,24 +126,25 @@ IMU_Base::xyz_int32_t IMU_BNO085::readAccRaw()
 
 Quaternion IMU_BNO085::readOrientation()
 {
-    while (!_orientationAvailable) {
+    if (!_orientationAvailable) {
         readPacketAndParse();
     }
     _orientationAvailable = false;
     // for SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR 0x2A // Q point = 14 for orientation, Q point = 10 for gyro
     constexpr unsigned int Q_point = 14;
     constexpr float multiplier = 1.0F / (1U << Q_point);
-    return {
+    const Quaternion integratedRotationVector(
         static_cast<float>(_gyroIntegratedRotationVector.real) * multiplier,
         static_cast<float>(_gyroIntegratedRotationVector.i) * multiplier,
         static_cast<float>(_gyroIntegratedRotationVector.j) * multiplier,
         static_cast<float>(_gyroIntegratedRotationVector.k) * multiplier
-    };
+    );
+    return _axisOrderQuaternion * integratedRotationVector;
 }
 
 xyz_t IMU_BNO085::readGyroRPS()
 {
-    while (!_gyroAvailable) {
+    if (!_gyroAvailable) {
         readPacketAndParse();
     }
     _gyroAvailable = false;
@@ -223,6 +246,7 @@ uint16_t IMU_BNO085::parseGyroIntegratedRotationVectorReport(const SHTP_Packet& 
     _gyroIntegratedRotationVector.x    = static_cast<uint16_t>(packet.data[9])  << 8U | packet.data[8];
     _gyroIntegratedRotationVector.y    = static_cast<uint16_t>(packet.data[11]) << 8U | packet.data[10];
     _gyroIntegratedRotationVector.z    = static_cast<uint16_t>(packet.data[13]) << 8U | packet.data[12];
+    //Serial.printf("gyro:%d,%d,%d\r\n", _gyroIntegratedRotationVector.x, _gyroIntegratedRotationVector.y, _gyroIntegratedRotationVector.z);
 
     return SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR;
 }
@@ -230,18 +254,18 @@ uint16_t IMU_BNO085::parseGyroIntegratedRotationVectorReport(const SHTP_Packet& 
 /*!
 Parse the input sensor report packet.
 Packet format is:
-packet.header           4 byte header
-packet.timestamp[0:5]   5 byte timestamp
-packet.data[0:3]        4 bytes of data containing reportID, sequenceNumber, status, and delay.
-packet.date[4..]        sensor data starts
+packet.header       4 byte header
+packet.data[0:4]    5 byte timestamp
+packet.data[5:8]    4 bytes of data containing reportID, sequenceNumber, status, and delay.
+packet.date[9..]    sensor data starts
 */
 uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
 {
-    if (packet.timestamp[0] == REPORT_ID_BASE_TIMESTAMP_REFERENCE) {
-        _timestamp = (static_cast<uint32_t>(packet.timestamp[4]) << 24U)
-            | (static_cast<uint32_t>(packet.timestamp[3]) << 16U)
-            | (static_cast<uint32_t>(packet.timestamp[2]) << 8U)
-            | static_cast<uint32_t>(packet.timestamp[1]);
+    if (packet.data[0] == REPORT_ID_BASE_TIMESTAMP_REFERENCE) {
+        _timestamp = (static_cast<uint32_t>(packet.data[4]) << 24U)
+            | (static_cast<uint32_t>(packet.data[3]) << 16U)
+            | (static_cast<uint32_t>(packet.data[2]) << 8U)
+            | static_cast<uint32_t>(packet.data[1]);
     }
 
     /*
@@ -252,15 +276,15 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
     3 - Accuracy high
     Bits 7:2 - Delay upper bits: 6 most-significant bits of report delay
     */
-    const uint8_t reportID = packet.data[0];
-    const uint8_t sequenceNumber = packet.data[1];
-    const uint8_t status = packet.data[2]; //Get status bits
+    const uint8_t reportID = packet.data[5];
+    const uint8_t sequenceNumber = packet.data[6];
+    const uint8_t status = packet.data[7]; //Get status bits
     const uint8_t accuracy = status & 0x03U;
-    const uint16_t delay = static_cast<uint16_t>(status & 0xFCU) << 6U | packet.data[3];
+    const uint16_t delay = static_cast<uint16_t>(status & 0xFCU) << 6U | packet.data[8];
 
-    const uint16_t dataX = static_cast<uint16_t>(packet.data[5]) << 8U | packet.data[4];
-    const uint16_t dataY = static_cast<uint16_t>(packet.data[7]) << 8U | packet.data[6];
-    const uint16_t dataZ = static_cast<uint16_t>(packet.data[9]) << 8U | packet.data[8];
+    const uint16_t dataX = static_cast<uint16_t>(packet.data[10]) << 8U | packet.data[9];
+    const uint16_t dataY = static_cast<uint16_t>(packet.data[12]) << 8U | packet.data[11];
+    const uint16_t dataZ = static_cast<uint16_t>(packet.data[14]) << 8U | packet.data[13];
 
     switch (reportID) {
     case SENSOR_REPORTID_ACCELEROMETER:
@@ -310,16 +334,16 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
         _gyroUncalibratedRPS.accuracy = accuracy;
         _gyroUncalibratedRPS.sequenceNumber = sequenceNumber;
         _gyroUncalibratedRPS.delay = delay;
-        _gyroUncalibratedRPS.biasX  = static_cast<uint16_t>(packet.data[11]) << 8U | packet.data[10];
-        _gyroUncalibratedRPS.biasY  = static_cast<uint16_t>(packet.data[13]) << 8U | packet.data[12];
-        _gyroUncalibratedRPS.biasZ  = static_cast<uint16_t>(packet.data[15]) << 8U | packet.data[14];
+        _gyroUncalibratedRPS.biasX  = static_cast<uint16_t>(packet.data[16]) << 8U | packet.data[15];
+        _gyroUncalibratedRPS.biasY  = static_cast<uint16_t>(packet.data[18]) << 8U | packet.data[17];
+        _gyroUncalibratedRPS.biasZ  = static_cast<uint16_t>(packet.data[20]) << 8U | packet.data[19];
         break;
     case SENSOR_REPORTID_ROTATION_VECTOR: // NOLINT(bugprone-branch-clone) false positive
         [[fallthrough]];
     case SENSOR_REPORTID_GEOMAGNETIC_ROTATION_VECTOR:
         [[fallthrough]];
     case SENSOR_REPORTID_AR_VR_STABILIZED_ROTATION_VECTOR:
-        _rotationVector.radianAccuracy = static_cast<uint16_t>(packet.data[13]) << 8U | packet.data[12];
+        _rotationVector.radianAccuracy = static_cast<uint16_t>(packet.data[18]) << 8U | packet.data[17];
         [[fallthrough]];
     // the GAME rotation vectors do not report radianAccuracy
     case SENSOR_REPORTID_GAME_ROTATION_VECTOR:
@@ -328,7 +352,7 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
         _rotationVector.i = dataX;
         _rotationVector.j = dataY;
         _rotationVector.k = dataZ;
-        _rotationVector.real = static_cast<uint16_t>(packet.data[11]) << 8U | packet.data[10];
+        _rotationVector.real = static_cast<uint16_t>(packet.data[16]) << 8U | packet.data[15];
         _rotationVector.accuracy = accuracy;
         break;
     case SENSOR_REPORTID_RAW_ACCELEROMETER:
@@ -352,7 +376,7 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
     case REPORT_ID_COMMAND_RESPONSE:
         //The BNO085 responds with this report to command requests. It's up to us to remember which command we issued.
         if (packet.data[2] == COMMAND_CALIBRATE_MOTION_ENGINE) {
-            _calibrationStatus = packet.data[5]; //R0 - Status (0 = success, non-zero = fail)
+            _calibrationStatus = packet.data[10]; //R0 - Status (0 = success, non-zero = fail)
         }
         break;
     default:
@@ -364,57 +388,103 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
     return reportID;
 }
 
-uint16_t IMU_BNO085::readPacketAndParse()
+bool IMU_BNO085::readPacketAndParse()
 {
     static_assert(sizeof(SHTP_Header) == 4);
     if (readPacket() == true) {
         //Check to see if this packet is a sensor reporting its data to us
         switch (_shtpPacket.header.channel) {
         case CHANNEL_SENSOR_HUB_CONTROL: // NOLINT(bugprone-branch-clone) false positive
-            return parseCommandResponse(_shtpPacket);
+            parseCommandResponse(_shtpPacket);
             break;
         case CHANNEL_INPUT_SENSOR_REPORTS:
-            return parseInputSensorReport(_shtpPacket);
+            parseInputSensorReport(_shtpPacket);
             break;
         case CHANNEL_GYRO_INTEGRATED_ROTATION_VECTOR_REPORT:
-            return parseGyroIntegratedRotationVectorReport(_shtpPacket);
+            parseGyroIntegratedRotationVectorReport(_shtpPacket);
             break;
         }
+        return true;
     }
-    return 0;
+    return false;
 }
 
 bool IMU_BNO085::readPacket()
 {
-    _orientationAvailable = true;
-    _gyroAvailable = true;
-
-    _bus.readBytes(reinterpret_cast<uint8_t*>(&_shtpPacket.header), sizeof(SHTP_Header));
+	// No interrupt pin set then we rely on receivePacket() to timeout. Strictly speaking this does not follow the SH-2 transport protocol.
+    if (_bus.readBytesWithTimeout(reinterpret_cast<uint8_t*>(&_shtpPacket.header), sizeof(SHTP_Header), BUS_TIMEOUT_MS) == false) { // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        return false;
+    }
 
     uint16_t dataLength = ((static_cast<uint16_t>(_shtpPacket.header.lengthMSB)) << 8) | (static_cast<uint16_t>(_shtpPacket.header.lengthLSB));
+    dataLength &= ~0x8000U; // Clear the most significant bit.
     //Serial.printf("dataLengthMSB:%0x\r\n", _shtpPacket.header.lengthMSB);
     //Serial.printf("dataLengthLSB:%0x\r\n", _shtpPacket.header.lengthLSB);
     //Serial.printf("dataLengthA:%0x\r\n", dataLength);
-    dataLength &= ~0x8000U; // Clear the most significant bit.
-    //Serial.printf("dataLength:%4d ch:%d, s:%d\r\n", dataLength, _shtpPacket.header.channel, _shtpPacket.header.sequenceNumber);
     if (dataLength <= sizeof(SHTP_Header)) {
         //Packet is empty
         return false;
     }
-    dataLength -= sizeof(SHTP_Header);
-    if (_shtpPacket.header.channel == 0) {
-        static std::array<uint8_t, 1024> buf;
-        _bus.readBytes(&buf[0], dataLength);
-        return false;
-    }
-    dataLength = std::min(dataLength, static_cast<uint16_t>(sizeof(SHTP_Packet) - sizeof(SHTP_Header)));
-    _bus.readBytes(&_shtpPacket.timestamp[0], dataLength);
+#if defined(SERIAL_OUTPUT)
+    Serial.printf("\r\nDATALENGTH:%3d(0x%3X) CH:%d, SN:%d\r\n", dataLength, dataLength, _shtpPacket.header.channel, _shtpPacket.header.sequenceNumber);
+#endif
+    readData(dataLength -= sizeof(SHTP_Header));
     //Serial.printf("timeStamp:0x%02x:%02x:%02x:%02x:%02x\r\n", _shtpPacket.timestamp[0], _shtpPacket.timestamp[1], _shtpPacket.timestamp[2], _shtpPacket.timestamp[3], _shtpPacket.timestamp[4]);
     //Serial.printf("data: %02x,%02x,%02x,%02x,%02x\r\n", _shtpPacket.data[0], _shtpPacket.data[1], _shtpPacket.data[2], _shtpPacket.data[3], _shtpPacket.data[4]);
 
     // Check for a reset complete packet
     if (_shtpPacket.header.channel == CHANNEL_EXECUTABLE && _shtpPacket.data[0] == EXECUTABLE_RESET_COMPLETE) {
+        //Serial.printf("Reset\r\n");
         _resetCompleteReceived = true;
+    }
+    return true;
+}
+
+/*!
+Perform multiple reads until all bytes are read
+The SHTP_Packet data buffer has max capacity of MAX_PACKET_SIZE. Any bytes over this amount will be lost.
+Arduino I2C read limit is 32 bytes. Header is 4 bytes, so max data we can read per interation is 28 bytes
+*/
+bool IMU_BNO085::readData(size_t readLength)
+{
+    size_t index = 0;
+    int bytesToRead = static_cast<int>(readLength);
+
+    //Setup a series of chunked 32 byte reads
+    while (bytesToRead > 0) {
+        //Serial.printf("bytesToRead:%d\r\n", bytesToRead);
+        int readCount = bytesToRead;
+        if (readCount + sizeof(SHTP_Header) > MAX_I2C_READ_LENGTH) {
+            readCount = MAX_I2C_READ_LENGTH - sizeof(SHTP_Header);
+        }
+
+        std::array<uint8_t, MAX_I2C_READ_LENGTH> data;
+        if (_bus.readBytesWithTimeout(reinterpret_cast<uint8_t*>(&data[0]), readCount + sizeof(SHTP_Header), BUS_TIMEOUT_MS) == false) { // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+            return false;
+        }
+
+#if defined(SERIAL_OUTPUT)
+        const int dataLength = (~0x8000U) & ((static_cast<uint16_t>(data[1]) << 8U) | static_cast<uint16_t>(data[0]));
+        Serial.printf("dataLength:%3d(0x%3X) CH:%d, SN:%d\r\n", dataLength, dataLength, data[2], data[3]);
+#endif
+
+        //Serial.printf("readCount:%d\r\n", readCount);
+        // Read a chunk of data
+        if (index + readCount <= MAX_PACKET_SIZE) {
+            memcpy(&_shtpPacket.data[index], &data[4], readCount);
+#if defined(SERIAL_OUTPUT)
+            for (int ii = 0; ii < readCount; ++ii) {
+                Serial.printf("%02x ", _shtpPacket.data[index + ii]);
+            }
+            if (readLength > 0) {
+                Serial.printf("\r\n");
+            }
+#endif
+            index += readCount;
+        } else {
+            // no room for the data, so just throw it away
+        }
+        bytesToRead -= readCount;
     }
     return true;
 }
@@ -427,7 +497,7 @@ bool IMU_BNO085::sendPacket(uint8_t channelNumber, uint8_t dataLength)
     _shtpPacket.header.lengthMSB = packetLength >> 8;
     _shtpPacket.header.channel = channelNumber;
     _shtpPacket.header.sequenceNumber = _sequenceNumber[channelNumber]++;
-    _bus.writeBytes(reinterpret_cast<uint8_t*>(&_shtpPacket), packetLength);
+    _bus.writeBytes(reinterpret_cast<uint8_t*>(&_shtpPacket), packetLength); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 
     return true;
 }
@@ -452,7 +522,7 @@ bool IMU_BNO085::sendCommand(uint8_t command)
     _commandMessage.reportID = REPORT_ID_COMMAND_REQUEST;
     _commandMessage.command = command;
     _commandMessage.sequenceNumber++;
-    _bus.writeBytes(reinterpret_cast<uint8_t*>(&_commandMessage), sizeof(_commandMessage));
+    _bus.writeBytes(reinterpret_cast<uint8_t*>(&_commandMessage), sizeof(_commandMessage)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 
     return true;
 }

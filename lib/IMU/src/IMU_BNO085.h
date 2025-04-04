@@ -3,12 +3,19 @@
 #include <BUS_I2C.h>
 #include <BUS_SPI.h>
 #include <IMU_Base.h>
-#include <array>
 
+/*!
+The BNO085 is a System in Package (SiP) that integrates a triaxial accelerometer, triaxial gyroscope,
+magnetometer and a 32-bit ARM Cortex-M0+ microcontroller running Hillcrest’s SH-2 (Sensor Hub 2) firmware.
 
+Communication with the BNO085 is via Hillcrest's Sensor Hub Transport Protocol (SHTP) over SPI or I2C.
+*/
 class IMU_BNO085 : public IMU_Base {
 public:
     static constexpr uint8_t I2C_ADDRESS=0x4A;
+    enum { MAX_PACKET_SIZE = 320 }; // The SH-2 protocol allows packets can be up to 32K, but 320 bytes is sufficient for BNO085
+    enum { MAX_I2C_READ_LENGTH = 32 }; // Arduino I2C reads are limited to 32 bytes
+
     enum {
         CHANNEL_COMMAND = 0,
         CHANNEL_EXECUTABLE = 1,
@@ -57,9 +64,7 @@ public:
     };
     struct SHTP_Packet {
         SHTP_Header header;
-        // Note that the BNO08X adds a timestamp reference report to sensor input reports.
-        std::array<uint8_t, 5> timestamp;
-        std::array<uint8_t, 23> data;
+        std::array<uint8_t, MAX_PACKET_SIZE> data;
     };
     struct command_message_t {
         uint8_t reportID; // 0xF2
@@ -104,9 +109,11 @@ public:
         uint16_t radianAccuracy;
     };
     struct gyro_integrated_rotation_vector_t {
+        // gyro value
         int16_t i;
         int16_t j;
         int16_t k;
+        // quaternion
         int16_t real;
         int16_t x;
         int16_t y;
@@ -117,7 +124,7 @@ public:
     explicit IMU_BNO085(axis_order_t axisOrder);
     IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_BNO085(axisOrder, SDA_pin, SCL_pin, nullptr) {}
-    void init();
+    virtual void init() override;
     void setFeatureCommand(uint8_t reportID, uint32_t timeBetweenReportsUs, uint32_t specificConfig);
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
@@ -145,8 +152,9 @@ public:
     inline sensor_output_t getMagRawData() const { return _magRaw; }
     inline sensor_output_uncalibrated_gyro_t getGyroUncalibratedRPS_Data() const { return _gyroUncalibratedRPS; }
 private:
-    uint16_t readPacketAndParse();
+    bool readPacketAndParse();
     bool readPacket();
+    bool readData(size_t readLength);
     bool sendPacket(uint8_t channelNumber, uint8_t dataLength);
     bool sendCommandCalibrateMotionEngine();
     bool sendCommandSaveDynamicCalibrationData();
@@ -160,6 +168,7 @@ protected:
     uint32_t _timestamp {};
     uint32_t _orientationAvailable {false};
     uint32_t _gyroAvailable {false};
+    Quaternion _axisOrderQuaternion;
     // SHTP (Sensor Hub Transport Protocol)
     SHTP_Packet _shtpPacket {};
     std::array<uint8_t, CHANNEL_COUNT> _sequenceNumber {}; //There are 6 com channels. Each channel has its own sequence number

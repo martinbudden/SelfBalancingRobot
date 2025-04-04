@@ -12,53 +12,51 @@ void test_bno085_channel_input_sensor_reports() {
     IMU_BNO085::SHTP_Packet packet;
 
     packet.header.channel = IMU_BNO085::CHANNEL_INPUT_SENSOR_REPORTS;
-    packet.data[4] = 0x03;
-    packet.data[5] = 0x05;
-    packet.data[6] = 0x38;
-    packet.data[7] = 0x75;
-    packet.data[8] = 0x61;
-    packet.data[9] = 0xD7;
-    packet.data[8] = 0x61;
-    packet.data[9] = 0xD7;
-    packet.data[10] = 0x11;
-    packet.data[11] = 0xF9;
+    packet.data[9] = 0x03;
+    packet.data[10] = 0x05;
+    packet.data[11] = 0x38;
+    packet.data[12] = 0x75;
+    packet.data[13] = 0x61;
+    packet.data[14] = 0xD7;
+    packet.data[15] = 0x11;
+    packet.data[16] = 0xF9;
 
-    packet.data[0] = IMU_BNO085::SENSOR_REPORTID_ACCELEROMETER;
+    packet.data[5] = IMU_BNO085::SENSOR_REPORTID_ACCELEROMETER;
     TEST_ASSERT_EQUAL(IMU_BNO085::SENSOR_REPORTID_ACCELEROMETER, imu.parseInputSensorReport(packet));
     const IMU_BNO085::sensor_output_t acc = imu.getAccData();
     TEST_ASSERT_EQUAL(0x0503, acc.x);
     TEST_ASSERT_EQUAL(0x7538, acc.y);
     TEST_ASSERT_EQUAL(static_cast<int16_t>(0xD761), acc.z);
 
-    packet.data[0] = IMU_BNO085::SENSOR_REPORTID_GYROSCOPE_CALIBRATED;
+    packet.data[5] = IMU_BNO085::SENSOR_REPORTID_GYROSCOPE_CALIBRATED;
     TEST_ASSERT_EQUAL(IMU_BNO085::SENSOR_REPORTID_GYROSCOPE_CALIBRATED, imu.parseInputSensorReport(packet));
     const IMU_BNO085::sensor_output_t gyroRPS = imu.getGyroRPS_Data();
     TEST_ASSERT_EQUAL(0x0503, gyroRPS.x);
     TEST_ASSERT_EQUAL(0x7538, gyroRPS.y);
     TEST_ASSERT_EQUAL(static_cast<int16_t>(0xD761), gyroRPS.z);
 
-    packet.data[0] = IMU_BNO085::SENSOR_REPORTID_MAGNETIC_FIELD_CALIBRATED;
+    packet.data[5] = IMU_BNO085::SENSOR_REPORTID_MAGNETIC_FIELD_CALIBRATED;
     TEST_ASSERT_EQUAL(IMU_BNO085::SENSOR_REPORTID_MAGNETIC_FIELD_CALIBRATED, imu.parseInputSensorReport(packet));
     const IMU_BNO085::sensor_output_t mag = imu.getMagData();
     TEST_ASSERT_EQUAL(0x0503, mag.x);
     TEST_ASSERT_EQUAL(0x7538, mag.y);
     TEST_ASSERT_EQUAL(static_cast<int16_t>(0xD761), mag.z);
 
-    packet.data[0] = IMU_BNO085::SENSOR_REPORTID_LINEAR_ACCELERATION;
+    packet.data[5] = IMU_BNO085::SENSOR_REPORTID_LINEAR_ACCELERATION;
     TEST_ASSERT_EQUAL(IMU_BNO085::SENSOR_REPORTID_LINEAR_ACCELERATION, imu.parseInputSensorReport(packet));
     const IMU_BNO085::sensor_output_t accLinear = imu.getAccLinearData();
     TEST_ASSERT_EQUAL(0x0503, accLinear.x);
     TEST_ASSERT_EQUAL(0x7538, accLinear.y);
     TEST_ASSERT_EQUAL(static_cast<int16_t>(0xD761), accLinear.z);
 
-    packet.data[0] = IMU_BNO085::SENSOR_REPORTID_GRAVITY;
+    packet.data[5] = IMU_BNO085::SENSOR_REPORTID_GRAVITY;
     TEST_ASSERT_EQUAL(IMU_BNO085::SENSOR_REPORTID_GRAVITY, imu.parseInputSensorReport(packet));
     const IMU_BNO085::sensor_output_t gravity = imu.getGravityData();
     TEST_ASSERT_EQUAL(0x0503, gravity.x);
     TEST_ASSERT_EQUAL(0x7538, gravity.y);
     TEST_ASSERT_EQUAL(static_cast<int16_t>(0xD761), gravity.z);
 
-    packet.data[0] = IMU_BNO085::SENSOR_REPORTID_GAME_ROTATION_VECTOR;
+    packet.data[5] = IMU_BNO085::SENSOR_REPORTID_GAME_ROTATION_VECTOR;
     TEST_ASSERT_EQUAL(IMU_BNO085::SENSOR_REPORTID_GAME_ROTATION_VECTOR, imu.parseInputSensorReport(packet));
     const IMU_BNO085::rotation_vector_t rotationVector = imu.getRotationVectorData();
     TEST_ASSERT_EQUAL(0x0503, rotationVector.i);
