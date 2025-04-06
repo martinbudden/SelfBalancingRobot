@@ -7,7 +7,7 @@
 
 class IMU_MPU6886 : public IMU_Base {
 public:
-    explicit IMU_MPU6886(axis_order_t axisOrder);
+    IMU_MPU6886(axis_order_t axisOrder, uint8_t CS_pin);
     IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     virtual void init() override;

@@ -559,8 +559,9 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin,
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 }
 #else
-IMU_BMI270::IMU_BMI270(axis_order_t axisOrder) :
-    IMU_Base(axisOrder)
+IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t CS_pin) :
+    IMU_Base(axisOrder),
+    _bus(CS_pin)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);

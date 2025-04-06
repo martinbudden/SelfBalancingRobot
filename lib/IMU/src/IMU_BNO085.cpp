@@ -59,8 +59,9 @@ IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin,
 {
 }
 #else
-IMU_BNO085::IMU_BNO085(axis_order_t axisOrder) :
+IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, uint8_t CS_pin) :
     IMU_Base(axisOrder),
+    _bus(CS_pin),
     _axisOrderQuaternion(axisOrientations[axisOrder])
 {
 }

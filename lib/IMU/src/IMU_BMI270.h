@@ -27,7 +27,7 @@ public:
     };
 #pragma pack(pop)
 public:
-    explicit IMU_BMI270(axis_order_t axisOrder);
+    explicit IMU_BMI270(axis_order_t axisOrder, uint8_t CS_pin);
     IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_BMI270(axisOrder, SDA_pin, SCL_pin, nullptr) {}
 public:

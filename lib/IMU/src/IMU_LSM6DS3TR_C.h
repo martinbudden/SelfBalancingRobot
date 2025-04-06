@@ -26,7 +26,7 @@ public:
     };
 #pragma pack(pop)
 public:
-    explicit IMU_LSM6DS3TR_C(axis_order_t axisOrder);
+    IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t CS_pin);
     IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_LSM6DS3TR_C(axisOrder, SDA_pin, SCL_pin, nullptr) {}
 public:

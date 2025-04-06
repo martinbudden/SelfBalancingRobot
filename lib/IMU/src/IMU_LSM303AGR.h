@@ -33,7 +33,7 @@ public:
 #pragma pack(pop)
 
 public:
-    explicit IMU_LSM303AGR(axis_order_t axisOrder);
+    IMU_LSM303AGR(axis_order_t axisOrder, uint8_t CS_pin);
     IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
     IMU_LSM303AGR(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_LSM303AGR(axisOrder, SDA_pin, SCL_pin, nullptr) {}
 public:

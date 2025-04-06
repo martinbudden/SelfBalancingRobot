@@ -83,8 +83,9 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_
 {
 }
 #else
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder) :
-    IMU_Base(axisOrder)
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t CS_pin) :
+    IMU_Base(axisOrder),
+    _bus(CS_pin)
 {
 }
 #endif
