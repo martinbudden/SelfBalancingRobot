@@ -2,12 +2,10 @@
 
 #include <ReceiverBase.h>
 #include <SV_TelemetryData.h>
-
-class AHRS;
-class MotorPairController;
+#include <ScreenBase.h>
 
 
-class Screen {
+class ScreenM5 : public ScreenBase {
 public:
     enum screen_size_t {
         SIZE_128x128,
@@ -19,23 +17,22 @@ public:
     };
     enum mode_t { MODE_NORMAL = 1, MODE_INVERTED = 3, MODE_QRCODE = 5 };
 public:
-    Screen(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver);
+    ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver);
 private:
     // Screen is not copyable or moveable
-    Screen(const Screen&) = delete;
-    Screen& operator=(const Screen&) = delete;
-    Screen(Screen&&) = delete;
-    Screen& operator=(Screen&&) = delete;
+    ScreenM5(const ScreenM5&) = delete;
+    ScreenM5& operator=(const ScreenM5&) = delete;
+    ScreenM5(ScreenM5&&) = delete;
+    ScreenM5& operator=(ScreenM5&&) = delete;
 public:
     inline screen_size_t getScreenSize() const { return _screenSize; }
-    inline mode_t getScreenMode() const { return _screenMode; }
-    void setScreenMode(mode_t screenMode);
-    void nextScreenMode();
 
-    void updateTemplate() const;
-    void update(bool packetReceived) const;
-    inline void update() const { update(false); }
+    virtual void nextScreenMode() override;
+    virtual void updateTemplate() override;
+    virtual void update(bool packetReceived) const override;
 private:
+    void setScreenMode(mode_t screenMode);
+    inline mode_t getScreenMode() const { return _screenMode; }
     screen_size_t screenSize();
 
     void updateTemplate128x128() const;
@@ -62,8 +59,4 @@ private:
     screen_size_t _screenSize {SIZE_320x240};
     mode_t _screenMode {MODE_NORMAL};
     int _screenRotationOffset {0};
-
-    const AHRS& _ahrs;
-    const MotorPairController& _motorPairController;
-    const ReceiverBase& _receiver;
 };

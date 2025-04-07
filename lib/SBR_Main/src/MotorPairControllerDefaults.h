@@ -61,7 +61,7 @@ constexpr float motorSwitchOffAngleDegrees  {65.0};
 constexpr float encoderStepsPerRevolution   {750.0};
 
 
-#elif defined(MOTORS_ROLLER_CAN) || defined(MOTORS_PWR_CAN) || defined(MOTORS_O_DRIVE_CAN) || defined(MOTORS_O_DRIVE_TWAI)
+#elif defined(MOTORS_ROLLER_CAN) || defined(MOTORS_PWR_CAN) || defined(MOTORS_O_DRIVE_CAN) || defined(MOTORS_O_DRIVE_TWAI) || defined(MOTORS_GPIO)
 
 
 constexpr PIDF::PIDF_t pitchPID_Default                         { 0.0400F, 0.0F,   0.00000F,0.0F };

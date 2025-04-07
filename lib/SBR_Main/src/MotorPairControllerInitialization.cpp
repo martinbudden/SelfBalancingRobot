@@ -20,6 +20,8 @@
 #include "Motors_ODriveCAN.h"
 #elif defined(MOTORS_O_DRIVE_TWAI)
 #include "Motors_ODriveTWAI.h"
+#elif defined(MOTORS_GPIO)
+#include "MotorsGPIO.h"
 #endif
 
 #if defined(I2C_MUTEX_REQUIRED)
@@ -52,6 +54,9 @@ MotorPairBase& MotorPairController::allocateMotors()
     static Motors_ODriveTWAI motors(encoderStepsPerRevolution);
     motors.setup();
 #elif defined(MOTORS_ROLLER_CAN)
+#elif defined(MOTORS_GPIO)
+    const MotorsGPIO::pins_t pins = MOTOR_PINS;
+    static MotorsGPIO motors(pins);// NOLINT(misc-const-correctness) false positive
 #endif
 
 #if defined(MOTOR_POWER_DEADBAND)
@@ -109,4 +114,3 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     static constexpr float maxDesiredYawRateDPS {720.0};
     _yawStickMultiplier = maxDesiredYawRateDPS / yawRateDPS_AtMaxPower;
 }
-

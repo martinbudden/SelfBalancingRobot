@@ -1,4 +1,6 @@
-#include "Screen.h"
+#if defined(M5_UNIFIED) || defined(M5_STACK)
+
+#include "ScreenM5.h"
 
 #include <AHRS.h>
 #if defined(M5_STACK)
@@ -31,21 +33,19 @@ enum {
 
 constexpr float radiansToDegrees {180.0 / M_PI};
 
-Screen::Screen(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver) :
+ScreenM5::ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver) :
+    ScreenBase(ahrs, motorPairController, receiver),
     _screenSize(screenSize()),
     _screenRotationOffset(
         (_screenSize == SIZE_80x160 || _screenSize == SIZE_135x240) ? 1 :
         _screenSize == SIZE_128x128 ? -1 :
-         0),
-    _ahrs(ahrs),
-    _motorPairController(motorPairController),
-    _receiver(receiver)
+         0)
 {
     M5.Lcd.setRotation(_screenMode + _screenRotationOffset);
-    M5.Lcd.setTextSize(_screenSize == Screen::SIZE_128x128 || _screenSize == Screen::SIZE_80x160 || _screenSize == Screen::SIZE_135x240 ? 1 : 2);
+    M5.Lcd.setTextSize(_screenSize == ScreenM5::SIZE_128x128 || _screenSize == ScreenM5::SIZE_80x160 || _screenSize == ScreenM5::SIZE_135x240 ? 1 : 2);
 }
 
-Screen::screen_size_t Screen::screenSize()
+ScreenM5::screen_size_t ScreenM5::screenSize()
 {
     M5.Lcd.setRotation(1); // set to default, to find screen size
 
@@ -53,30 +53,44 @@ Screen::screen_size_t Screen::screenSize()
     switch (M5.Lcd.height()) {
     case SCREEN_HEIGHT_M5_ATOM_S3:
         screenSize = SIZE_128x128;
+        _screenSizeX = 128;
+        _screenSizeY = 128;
         break;
     case SCREEN_WIDTH_M5_STICK_C: // M5_STICK_C rotated by default
         screenSize = SIZE_80x160;
+        _screenSizeX = 80;
+        _screenSizeY = 160;
         break;
     case SCREEN_WIDTH_M5_STICK_C_PLUS: // M5_STICK_C_PLUSE rotated by default
         screenSize = SIZE_135x240;
+        _screenSizeX = 135;
+        _screenSizeY = 240;
         break;
     case SCREEN_HEIGHT_M5_CORE:
         screenSize = SIZE_320x240;
+        _screenSizeX = 320;
+        _screenSizeY = 240;
         break;
     case SCREEN_HEIGHT_M5_CORE_INK:
         screenSize = SIZE_200x200;
+        _screenSizeX = 200;
+        _screenSizeY = 200;
         break;
     case SCREEN_HEIGHT_M5_PAPER:
         screenSize = SIZE_540x960;
+        _screenSizeX = 5400;
+        _screenSizeY = 9600;
         break;
     default:
         screenSize = SIZE_320x240;
+        _screenSizeX = 320;
+        _screenSizeY = 240;
         break;
     }
     return screenSize;
 }
 
-void Screen::setScreenMode(Screen::mode_t screenMode)
+void ScreenM5::setScreenMode(ScreenM5::mode_t screenMode)
 {
     _screenMode = screenMode;
 
@@ -91,19 +105,19 @@ void Screen::setScreenMode(Screen::mode_t screenMode)
     } else {
         M5.Lcd.setRotation(_screenMode + _screenRotationOffset);
         updateTemplate();
-        update();
+        update(false);
     }
 }
 
 /*!
 Cycles through the different screen modes.
 */
-void Screen::nextScreenMode()
+void ScreenM5::nextScreenMode()
 {
     const mode_t screenMode =
-        _screenMode == Screen::MODE_NORMAL ? Screen::MODE_INVERTED :
-        _screenMode == Screen::MODE_INVERTED ? Screen::MODE_QRCODE :
-        Screen::MODE_NORMAL;
+        _screenMode == ScreenM5::MODE_NORMAL ? ScreenM5::MODE_INVERTED :
+        _screenMode == ScreenM5::MODE_INVERTED ? ScreenM5::MODE_QRCODE :
+        ScreenM5::MODE_NORMAL;
     setScreenMode(screenMode);
 }
 
@@ -112,7 +126,7 @@ void Screen::nextScreenMode()
 /*!
 Utility function to display a MAC address.
 */
-void Screen::displayEUI(const char* prompt, const ReceiverBase::EUI_48_t& eui)
+void ScreenM5::displayEUI(const char* prompt, const ReceiverBase::EUI_48_t& eui)
 {
     M5.Lcd.printf("%s%02X:%02X:%02X:%02X:%02X:%02X", prompt, eui.octet[0], eui.octet[1], eui.octet[2], eui.octet[3], eui.octet[4], eui.octet[5]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
@@ -120,12 +134,12 @@ void Screen::displayEUI(const char* prompt, const ReceiverBase::EUI_48_t& eui)
 /*!
 Utility function to display a MAC address in a compact format, for devices with small screens.
 */
-void Screen::displayEUI_Compact(const char* prompt, const ReceiverBase::EUI_48_t& eui)
+void ScreenM5::displayEUI_Compact(const char* prompt, const ReceiverBase::EUI_48_t& eui)
 {
     M5.Lcd.printf("%s%02x%02x%02x:%02x%02x%02x", prompt, eui.octet[0], eui.octet[1], eui.octet[2], eui.octet[3], eui.octet[4], eui.octet[5]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
 
-void Screen::updateTemplate128x128() const
+void ScreenM5::updateTemplate128x128() const
 {
     M5.Lcd.setCursor(0, 10);
     displayEUI("M:", _receiver.getMyEUI());
@@ -163,7 +177,7 @@ void Screen::updateTemplate128x128() const
     M5.Lcd.printf("D:");
 }
 
-void Screen::updateReceivedData128x128() const
+void ScreenM5::updateReceivedData128x128() const
 {
     // M5StickC
     int32_t yPos = 75;
@@ -184,7 +198,7 @@ void Screen::updateReceivedData128x128() const
     M5.Lcd.printf("%6d", controls.yawStickQ4dot12);
 }
 
-void Screen::update128x128(const TD_AHRS::Data& ahrsData) const
+void ScreenM5::update128x128(const TD_AHRS::Data& ahrsData) const
 {
     int32_t yPos = 35;
 
@@ -202,7 +216,7 @@ void Screen::update128x128(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.printf("%2d  ", _receiver.getDroppedPacketCountDelta());
 }
 
-void Screen::updateTemplate80x160() const
+void ScreenM5::updateTemplate80x160() const
 {
     M5.Lcd.setCursor(0, 10);
     displayEUI_Compact("", _receiver.getMyEUI());
@@ -236,7 +250,7 @@ void Screen::updateTemplate80x160() const
     M5.Lcd.printf("D:");
 }
 
-void Screen::updateReceivedData80x160() const
+void ScreenM5::updateReceivedData80x160() const
 {
     // M5StickC
     int32_t yPos = 90;
@@ -264,7 +278,7 @@ void Screen::updateReceivedData80x160() const
     M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == ReceiverAtomJoyStick::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 }
 
-void Screen::update80x160(const TD_AHRS::Data& ahrsData) const
+void ScreenM5::update80x160(const TD_AHRS::Data& ahrsData) const
 {
     int32_t yPos = 30;
     const bool displayAcc = true;
@@ -315,7 +329,7 @@ void Screen::update80x160(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.printf("%2d  ", _receiver.getDroppedPacketCountDelta());
 }
 
-void Screen::updateTemplate135x240() const
+void ScreenM5::updateTemplate135x240() const
 {
     M5.Lcd.setCursor(0, 0);
     displayEUI("M:", _receiver.getMyEUI());
@@ -358,12 +372,12 @@ void Screen::updateTemplate135x240() const
     M5.Lcd.printf("M:");
 }
 
-void Screen::updateReceivedData135x240() const
+void ScreenM5::updateReceivedData135x240() const
 {
     updateReceivedData80x160();
 }
 
-void Screen::update135x240(const TD_AHRS::Data& ahrsData) const
+void ScreenM5::update135x240(const TD_AHRS::Data& ahrsData) const
 {
     int32_t yPos = 45;
 
@@ -394,7 +408,7 @@ void Screen::update135x240(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.printf(_motorPairController.motorsIsOn() ? "ON " : "OFF");
 }
 
-void Screen::updateTemplate320x240() const
+void ScreenM5::updateTemplate320x240() const
 {
     M5.Lcd.setCursor(0, 0);
     displayEUI("MAC:", _receiver.getMyEUI());
@@ -455,7 +469,7 @@ void Screen::updateTemplate320x240() const
     M5.Lcd.printf("Motors:");
 }
 
-void Screen::updateReceivedData320x240() const
+void ScreenM5::updateReceivedData320x240() const
 {
     int32_t yPos = 110;
 
@@ -482,7 +496,7 @@ void Screen::updateReceivedData320x240() const
     M5.Lcd.printf("%3d", _receiver.getDroppedPacketCountDelta());
 }
 
-void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
+void ScreenM5::update320x240(const TD_AHRS::Data& ahrsData) const
 {
     int32_t yPos = 45;
     M5.Lcd.setCursor(36, yPos);
@@ -534,8 +548,9 @@ void Screen::update320x240(const TD_AHRS::Data& ahrsData) const
 }
 #pragma GCC diagnostic pop
 
-void Screen::updateTemplate() const
+void ScreenM5::updateTemplate()
 {
+    _templateIsUpdated = true;
     M5.Lcd.fillScreen(TFT_BLACK);
 
     switch (_screenSize) {
@@ -554,7 +569,7 @@ void Screen::updateTemplate() const
     }
 }
 
-void Screen::updateReceivedData() const
+void ScreenM5::updateReceivedData() const
 {
     switch (_screenSize) {
     case SIZE_128x128:
@@ -572,7 +587,7 @@ void Screen::updateReceivedData() const
     }
 }
 
-void Screen::updateAHRS_Data() const
+void ScreenM5::updateAHRS_Data() const
 {
     const AHRS::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
     const TD_AHRS::Data tdAhrsData {
@@ -604,10 +619,10 @@ void Screen::updateAHRS_Data() const
 /*!
 Update the screen with data from the AHRS and the receiver.
 */
-void Screen::update(bool packetReceived) const
+void ScreenM5::update(bool packetReceived) const
 {
     // update the screen with the AHRS data
-    if (_screenMode != Screen::MODE_QRCODE) {
+    if (_screenMode != ScreenM5::MODE_QRCODE) {
         updateAHRS_Data();
         if (packetReceived) {
             // update the screen with data received from the receiver
@@ -615,3 +630,4 @@ void Screen::update(bool packetReceived) const
         }
     }
 }
+#endif

@@ -1,8 +1,4 @@
-#if defined(BUILD_ENV_ESP32)
-#include "MainTask_ESP32.h"
-#elif defined(BUILD_ENV_M5STACK)
-#include "MainTask_M5Stack.h"
-#endif
+#include "MainTask.h"
 
 #include <Arduino.h>
 

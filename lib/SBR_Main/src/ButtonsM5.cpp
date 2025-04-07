@@ -1,4 +1,6 @@
-#include "Buttons.h"
+#if defined(M5_UNIFIED) || defined(M5_STACK)
+
+#include "ButtonsM5.h"
 
 #if defined(M5_STACK)
 #include <M5Stack.h>
@@ -7,27 +9,16 @@
 #endif
 #include <MotorPairController.h>
 #include <ReceiverBase.h>
-#include <Screen.h>
+#include <ScreenBase.h>
 
 
-Buttons::Buttons(Screen& screen, MotorPairController& motorController, const ReceiverBase& receiver) :
-    _screen(screen),
-    _motorController(motorController),
-    _receiver(receiver)
+ButtonsM5::ButtonsM5(MotorPairController& motorController, const ReceiverBase& receiver, ScreenBase* screen) :
+    ButtonsBase(motorController, receiver, screen)
 {
-    const Screen::screen_size_t screenSize = _screen.getScreenSize();
-    _drawPosX =
-        (screenSize == Screen::SIZE_128x128) ? 115 :
-        (screenSize == Screen::SIZE_80x160)  ? 60 :
-        (screenSize == Screen::SIZE_135x240) ? 115 :
-        (screenSize == Screen::SIZE_320x240) ? 300 :
-        0;
-    _drawPosY =
-        (screenSize == Screen::SIZE_128x128) ? 115 :
-        (screenSize == Screen::SIZE_80x160)  ? 140 :
-        (screenSize == Screen::SIZE_135x240) ? 220 :
-        (screenSize == Screen::SIZE_320x240) ? 220 :
-        0;
+    const int screenSizeX = _screen->getScreenSizeX();
+    _drawPosX = (screenSizeX == 128) ? 115 : screenSizeX - 20;
+    const int screenSizeY = _screen->getScreenSizeY();
+    _drawPosY = (screenSizeY == 128) ? 115 : screenSizeY - 20;
 }
 
 /*!
@@ -37,8 +28,9 @@ Handle any button presses.
 2. BtnB initiates binding (pairing).
 3. BtcC cycles through the different screen modes.
 */
-void Buttons::update()
+void ButtonsM5::update()
 {
+    M5.update();
     if (M5.BtnA.wasPressed()) {
         // BtnA turns the motors on or off
         _motorController.motorsToggleOnOff();
@@ -53,7 +45,7 @@ void Buttons::update()
     if (M5.BtnA.wasDoubleClicked()) {
         // M5 Atom has only one button
         // Use double click of BtnA for cycling through screen modes
-        _screen.nextScreenMode();
+        _screen->nextScreenMode();
     }
 #else
     if (M5.BtnB.wasPressed()) {
@@ -68,12 +60,12 @@ void Buttons::update()
 #if defined(M5_STACK)
     if (M5.BtnC.wasPressed()) {
         // BtnC cycles through the different screen modes
-        _screen.nextScreenMode();
+        _screen->nextScreenMode();
     }
 #else
     if (M5.BtnC.wasPressed() || M5.BtnB.wasDoubleClicked()) {
         // BtnC cycles through the different screen modes
-        _screen.nextScreenMode();
+        _screen->nextScreenMode();
     }
     if (M5.BtnPWR.wasDoubleClicked()) {
         M5.Power.powerOff();
@@ -92,3 +84,4 @@ void Buttons::update()
 #endif // defined(M5_STACK)
 #endif //defined(M5_ATOM)
 }
+#endif

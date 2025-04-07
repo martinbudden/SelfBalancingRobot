@@ -8,15 +8,20 @@
 
 #include <WiFi.h>
 
-#include "Buttons.h"
+#include "ButtonsM5.h"
 #include "Calibration.h"
-#include "MainTask_M5Stack.h"
-#include "Screen.h"
+#include "MainTask.h"
+#include "ScreenM5.h"
 #include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
 #include <ESPNOW_Backchannel.h>
+#include <HardwareSerial.h>
+#include <IMU_BMI270.h>
+#include <IMU_BNO085.h>
 #include <IMU_Filters.h>
+#include <IMU_LSM303AGR.h>
+#include <IMU_LSM6DS3TR_C.h>
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
@@ -75,12 +80,7 @@ Setup for the main loop, motor control task, and AHRS(Attitude and Heading Refer
 void MainTask::setup()
 {
     // Initialize the M5Stack object
-#if defined(M5_STACK)
-    //M5Stack::begin(bool LCDEnable, bool SDEnable, bool SerialEnable, bool I2CEnable)
-    M5.begin(true, false, false, false);
-    M5.IMU.Init();
-    M5.Power.begin();
-#elif defined(M5_UNIFIED)
+#if defined(M5_UNIFIED)
     auto cfg = M5.config(); // NOLINT(readability-static-accessed-through-instance)
     cfg.serial_baudrate = 115200;
     M5.begin(cfg);
@@ -89,15 +89,15 @@ void MainTask::setup()
     // with additional battery, we need to increase charge current
     M5.Power.setChargeCurrent(360);
 #endif
+#elif defined(M5_STACK)
+    //M5Stack::begin(bool LCDEnable, bool SDEnable, bool SerialEnable, bool I2CEnable)
+    M5.begin(true, false, false, false);
+    M5.IMU.Init();
+    M5.Power.begin();
 #endif
 
     Serial.begin(115200);
-
-    // This task has name "loopTask" and priority 1.
-    const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
-    const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
-    const char* taskName = pcTaskGetName(taskHandle);
-    Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n\r\n", taskName, taskPriority, configTICK_RATE_HZ);
+    delay(400); // delay to allow serial port to initialize before first print
 
     // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
     // The mutex is created statically, ie without dynamic memory allocation.
@@ -112,6 +112,7 @@ void MainTask::setup()
 
     setupAHRS(i2cMutex);
 
+#if defined(USE_ESPNOW)
     // Set WiFi to station mode
     WiFi.mode(WIFI_STA);
     // Disconnect from Access Point if it was previously connected
@@ -127,8 +128,9 @@ void MainTask::setup()
     constexpr uint8_t JOYSTICK_CHANNEL {3};
 #endif
     const esp_err_t err = receiver.setup(JOYSTICK_CHANNEL);
-    Serial.printf("**** ESP-NOW Ready:%X\r\n\r\n", err);
+    Serial.printf("\r\n\r\n**** ESP-NOW Ready:%X\r\n\r\n", err);
     assert(err == ESP_OK && "Unable to setup receiver.");
+#endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
     static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
@@ -138,16 +140,20 @@ void MainTask::setup()
     static SV_Preferences preferences;
     _preferences = &preferences;
 
+#if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
         calibrateGyro(*_ahrs, *_preferences, CALIBRATE_ACC_AND_GYRO);
     }
+#endif
     checkGyroCalibration();
 
+#if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnC down while switching on resets the preferences.
     if (M5.BtnC.isPressed()) {
         resetPreferences();
     }
+#endif
     loadPreferences();
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)
@@ -159,24 +165,29 @@ void MainTask::setup()
     _backchannel = &backchannel;
 #endif
 
+#if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
-    static Screen screen(*_ahrs, motorPairController, receiver);
+    static ScreenM5 screen(*_ahrs, motorPairController, receiver);
     _screen = &screen;
     screen.updateTemplate();
 
     // Statically allocate the buttons.
-    static Buttons buttons(screen, motorPairController, receiver);
+    static ButtonsM5 buttons(motorPairController, receiver, _screen);
     _buttons = &buttons;
 
-    // Holding BtnB down while switching on initiates binding.
-    // The Atom has no BtnB, so it always broadcasts address for binding on startup.
 #if defined(M5_ATOM)
+    // The Atom has no BtnB, so it always broadcasts address for binding on startup.
     receiver.broadcastMyEUI();
 #else
+    // Holding BtnB down while switching on initiates binding.
     if (M5.BtnB.wasPressed()) {
         receiver.broadcastMyEUI();
     }
 #endif
+#else
+    // no buttons defined, so always broadcast address for binding on startup
+    receiver.broadcastMyEUI();
+#endif // M5_STACK || M5_UNIFIED
 
     // And finally set up the AHRS and MotorPairController tasks.
     setupTasks();
@@ -192,10 +203,30 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 #else
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex);
 #endif
+#elif defined(USE_IMU_MPU6886_SPI)
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
+#elif defined(USE_IMU_BMI270_I2C)
+    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_BMI270_SPI)
+    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
+#elif defined(USE_IMU_BNO085_I2C)
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_BNO085_SPI)
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
+#elif defined(USE_IMU_LSM303AGR_I2C)
+    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_LSM303AGR_SPI)
+    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
+#elif defined(USE_IMU_LSM6DS3TR_C_I2C)
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+#elif defined(USE_IMU_LSM6DS3TR_C_SPI)
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
 #elif defined(M5_STACK)
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #elif defined(M5_UNIFIED)
     static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
+#else
+    static_assert(false);
 #endif
 
     // Statically allocate the Sensor Fusion Filter and the AHRS object.
@@ -298,6 +329,13 @@ void MainTask::loadPreferences()
 
 void MainTask::setupTasks()
 {
+    // The main task is set up by the framework, so just print its details.
+    // It has name "loopTask" and priority 1.
+    const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
+    const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
+    const char* taskName = pcTaskGetName(taskHandle);
+    Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
+
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
         .ahrs = _ahrs,
@@ -308,7 +346,7 @@ void MainTask::setupTasks()
     static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
-    Serial.printf("\r\n**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
+    Serial.printf("**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
@@ -346,29 +384,29 @@ void MainTask::loop()
     _tickCountDelta = tickCount - _tickCountPrevious;
     _tickCountPrevious = tickCount;
 
-    const bool packetReceived = _receiver->update(_tickCountDelta);
+    [[maybe_unused]] const bool packetReceived = _receiver->update(_tickCountDelta);
+#if defined(BACKCHANNEL_MAC_ADDRESS)
+    _backchannel->update();
+#endif
+#if defined(USE_SCREEN)
     if (packetReceived) {
         // update the screen template the first time we receive a packet
-        if (_screenTemplateIsUpdated == false) {
-            _screenTemplateIsUpdated = true;
+        if (_screen->templateIsUpdated() == false) {
             _screen->updateTemplate();
         }
     }
-
-#if defined(BACKCHANNEL_MAC_ADDRESS)
-    (void)_backchannel->update();
-#endif
-
     // screen and button update tick counts are coprime, so screen and buttons are not normally updated in same loop
     // update the screen every 101 ticks (0.1 seconds)
     if (_screenTickCount - tickCount > 101) {
         _screenTickCount = tickCount;
         _screen->update(packetReceived);
     }
+#endif
+#if defined(USE_BUTTONS)
     // update the buttons every 149 ticks (0.15 seconds)
     if (_buttonsTickCount - tickCount > 149) {
         _buttonsTickCount = tickCount;
-        M5.update();
         _buttons->update();
     }
+#endif
 }

@@ -1,4 +1,4 @@
-#if defined(USE_MOTOR_PAIR_GPIO)
+#if defined(MOTORS_GPIO)
 
 #include "MotorsGPIO.h"
 #include <cmath>
