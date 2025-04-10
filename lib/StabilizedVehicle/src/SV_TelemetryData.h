@@ -33,7 +33,7 @@ struct TD_MINIMAL {
 };
 
 /*!
-Packet for the the transmission of AHRS, MPC, and MAIN tick intervals and timings;
+Packet for the the transmission of AHRS, Vehicle Controller, and MAIN tick intervals and timings;
 */
 struct TD_TICK_INTERVALS {
     enum { TYPE = 2 };
@@ -47,9 +47,9 @@ struct TD_TICK_INTERVALS {
     static constexpr int TIME_CHECKS_COUNT = 4;
     std::array<uint16_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
 
-    uint16_t mcTaskTickIntervalMicroSeconds {0}; //!< tick interval of the MC_TASK in microseconds
-    uint16_t mcOutputPowerTimeMicroSeconds {0}; //!< time taken to set the motor power
-    uint8_t mcTaskTickIntervalTicks {0}; //!< tick interval of the MC_TASK
+    uint16_t vcTaskTickIntervalMicroSeconds {0}; //!< execution interval of the Vehicle Controller task in microseconds
+    uint16_t vcOutputPowerTimeMicroSeconds {0}; //!< time taken to set the Vehicle output power
+    uint8_t vcTaskTickIntervalTicks {0}; //!< tick interval of the Vehicle Controller task
     uint8_t mainTaskTickInterval {0}; //!< tick interval of the MAIN_LOOP_TASK
     uint8_t transceiverTickCountDelta; //<<! tick interval of the ESP_NOW transceiver
     uint8_t receiverDroppedPacketCount {0}; //!< the number of packets dropped by the receiver

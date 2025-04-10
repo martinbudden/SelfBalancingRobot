@@ -27,7 +27,7 @@ Packs the tick interval telemetry data into a TD_TICK_INTERVALS packet. Returns 
 size_t packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         const AHRS& ahrs,
         const VehicleControllerBase& vehicleController,
-        uint32_t mcOutputPowerTimeMicroSeconds,
+        uint32_t vcOutputPowerTimeMicroSeconds,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
         uint32_t receiverDroppedPacketCount)
@@ -47,9 +47,9 @@ size_t packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
         td->ahrsTimeChecksMicroSeconds[ii] = static_cast<uint16_t>(ahrs.getTimeChecksMicroSeconds(ii));
     }
 
-    td->mcTaskTickIntervalMicroSeconds = static_cast<uint16_t>(vehicleController.getTimeMicroSecondDelta());
-    td->mcOutputPowerTimeMicroSeconds = static_cast<uint16_t>(mcOutputPowerTimeMicroSeconds);
-    td->mcTaskTickIntervalTicks = static_cast<uint8_t>(vehicleController.getTickCountDelta());
+    td->vcTaskTickIntervalMicroSeconds = static_cast<uint16_t>(vehicleController.getTimeMicroSecondDelta());
+    td->vcOutputPowerTimeMicroSeconds = static_cast<uint16_t>(vcOutputPowerTimeMicroSeconds);
+    td->vcTaskTickIntervalTicks = static_cast<uint8_t>(vehicleController.getTickCountDelta());
 
     td->mainTaskTickInterval = static_cast<uint8_t>(mainTaskTickCountDelta);
     td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
