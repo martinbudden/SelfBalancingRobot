@@ -2,12 +2,13 @@
 
 #include "IMU_LSM6DS3TR_C.h"
 #include <cassert>
+// see https://github.com/STMicroelectronics/lsm6ds3tr-c-pid
 
 namespace { // use anonymous namespace to make items local to this translation unit
-constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
-constexpr float ACC_16G_RES { 16.0 / 32768.0 };
-} // end namespace
 
+constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
+constexpr float ACC_8G_RES  {  8.0 / 32768.0 };
+constexpr float ACC_16G_RES { 16.0 / 32768.0 };
 
 constexpr uint8_t REG_RESERVED1             = 0x00;
 constexpr uint8_t REG_FUNC_CFG_ACCESS       = 0x01;
@@ -23,7 +24,9 @@ constexpr uint8_t REG_FIFO_CTRL5            = 0x0A;
 constexpr uint8_t REG_DRDY_PULSE_CFG_G      = 0x0B;
 constexpr uint8_t REG_RESERVED4             = 0x0C;
 constexpr uint8_t REG_INT1_CTRL             = 0x0D;
+    constexpr uint8_t INT1_DRDY_G           =0b00000010;
 constexpr uint8_t REG_INT2_CTRL             = 0x0E;
+    constexpr uint8_t INT2_DRDY_G           =0b00000010;
 constexpr uint8_t REG_WHO_AM_I              = 0x0F;
     constexpr uint8_t REG_WHO_AM_I_RESPONSE = 0x6A;
 
@@ -43,9 +46,19 @@ constexpr uint8_t REG_CTRL2_G               = 0x11;
     constexpr uint8_t GYRO_RANGE_1000_DPS   = 0b1000;
     constexpr uint8_t GYRO_RANGE_2000_DPS   = 0b1100;
 constexpr uint8_t REG_CTRL3_C               = 0x12;
+    constexpr uint8_t BDU                   = 0b01000000;
+    constexpr uint8_t IF_INC                = 0b00000100;
+    constexpr uint8_t SW_RESET              = 0b00000001;
 constexpr uint8_t REG_CTRL4_C               = 0x13;
+    constexpr uint8_t I2C_DISABLE           = 0b00000100;
+    constexpr uint8_t LPF1_SEL_G            = 0b00000010;
 constexpr uint8_t REG_CTRL5_C               = 0x14;
 constexpr uint8_t REG_CTRL6_C               = 0x15;
+    constexpr uint8_t XL_HM_MODE_DISABLE    = 0b00010000;
+    constexpr uint8_t LPF1_335HZ            = 0x00;   // (bits 2:0) gyro LPF1 cutoff 335.5hz
+    constexpr uint8_t LPF1_232HZ            = 0x01;   // (bits 2:0) gyro LPF1 cutoff 232.0hz
+    constexpr uint8_t LPF1_171HZ            = 0x02;   // (bits 2:0) gyro LPF1 cutoff 171.1hz
+    constexpr uint8_t LPF1_609HZ            = 0x03;   // (bits 2:0) gyro LPF1 cutoff 609.0hz
 constexpr uint8_t REG_CTRL7_G               = 0x16;
 constexpr uint8_t REG_CTRL8_XL              = 0x17;
 constexpr uint8_t REG_CTRL9_XL              = 0x18;
@@ -72,6 +85,7 @@ constexpr uint8_t REG_OUTY_H_ACC            = 0x2B;
 constexpr uint8_t REG_OUTZ_L_ACC            = 0x2C;
 constexpr uint8_t REG_OUTZ_H_ACC            = 0x2D;
 
+} // end namespace
 
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
@@ -95,7 +109,7 @@ void IMU_LSM6DS3TR_C::init()
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 
-    _bus.writeRegister(REG_CTRL3_C, 0x01); // software reset
+    _bus.writeRegister(REG_CTRL3_C, SW_RESET); // software reset
     delayMs(100);
 
     const uint8_t chipID = _bus.readRegister(REG_WHO_AM_I);
@@ -109,14 +123,17 @@ void IMU_LSM6DS3TR_C::init()
     static constexpr std::array<setting_t, 8> settings = {
         // Suppress badBitmaskCheck so we can OR with zero values without a warning
         // cppcheck-suppress-begin badBitmaskCheck
-        REG_INT1_CTRL,          0x02, // Enable gyro data ready on INT1 pin
-        REG_INT2_CTRL,          0x02, // Enable gyro data ready on INT1 pin
-        REG_CTRL1_XL,           ODR_6660_HZ | ACC_RANGE_16G, // bandwidth selection bits 00
+        REG_INT1_CTRL,          INT1_DRDY_G, // Enable gyro data ready on INT1 pin
+        REG_INT2_CTRL,          INT2_DRDY_G, // Enable gyro data ready on INT2 pin
+        REG_CTRL1_XL,           ODR_6660_HZ | ACC_RANGE_16G, // bandwidth selection bits 00, and use LPF1 (default)
         REG_CTRL2_G,            ODR_6660_HZ | GYRO_RANGE_2000_DPS,
-        REG_CTRL3_C,            0,
-        REG_CTRL4_C,            0,
-        REG_CTRL6_C,            0,
-        REG_CTRL9_XL,           0
+        REG_CTRL3_C,            BDU | IF_INC, // Block Data Update and automatically increment registers when read via serial interface (I2C or SPI)
+#if defined(USE_IMU_LSM6DS3TR_C_I2C)
+        REG_CTRL4_C,            LPF1_SEL_G, // enable gyro LPF
+#else
+        REG_CTRL4_C,            LPF1_SEL_G | I2C_DISABLE,
+#endif
+        REG_CTRL6_C,            LPF1_335HZ
         // cppcheck-suppress-end badBitmaskCheck
     };
 
