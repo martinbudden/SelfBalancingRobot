@@ -251,4 +251,5 @@ esp_err_t ESPNOW_Transceiver::sendDataSecondary(const uint8_t* data, size_t len)
     //if (err != ESP_OK) { Serial.printf("sendDataSecondary err:0x%X (0x%x)\r\n", err, err - ESP_ERR_ESPNOW_BASE); }
     return err;
 }
+
 #endif

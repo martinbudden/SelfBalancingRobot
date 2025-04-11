@@ -1,3 +1,5 @@
+#if defined(USE_ESPNOW)
+
 # pragma once
 
 #include <array>
@@ -60,3 +62,5 @@ private:
     esp_now_send_status_t _sendStatus {ESP_NOW_SEND_SUCCESS};
     std::array<uint8_t, ESP_NOW_ETH_ALEN + 2> _myMacAddress {0, 0, 0, 0, 0, 0, 0, 0};
 };
+
+#endif // USE_ESPNOW
