@@ -11,8 +11,6 @@
 #endif
 #endif
 
-#include <xyz_type.h>
-
 
 /*!
 IMU virtual base class.

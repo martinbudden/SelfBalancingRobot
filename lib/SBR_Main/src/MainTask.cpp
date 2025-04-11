@@ -20,7 +20,6 @@
 #include <IMU_BMI270.h>
 #include <IMU_BNO085.h>
 #include <IMU_Filters.h>
-#include <IMU_LSM303AGR.h>
 #include <IMU_LSM6DS3TR_C.h>
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
@@ -65,7 +64,7 @@ enum { MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
 #if defined(USE_IMU_MPU6886)
     enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
 #else
-    enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TAsK must be set to run slower.
+    enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
 #endif
 #endif
 
@@ -213,10 +212,6 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_BNO085_SPI)
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
-#elif defined(USE_IMU_LSM303AGR_I2C)
-    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
-#elif defined(USE_IMU_LSM303AGR_SPI)
-    static IMU_LSM303AGR imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
 #elif defined(USE_IMU_LSM6DS3TR_C_I2C)
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_LSM6DS3TR_C_SPI)
@@ -229,7 +224,7 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static_assert(false);
 #endif
 
-    // Statically allocate the Sensor Fusion Filter and the AHRS object.
+    // Statically allocate the Sensor Fusion Filter.
 #if defined(USE_COMPLEMENTARY_FILTER)
     // approx 130 microseconds per update
     static ComplementaryFilter sensorFusionFilter;
@@ -250,6 +245,7 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
 // NOLINTEND(misc-const-correctness)
 
+    // Statically allocate the AHRS object
     static AHRS ahrs(sensorFusionFilter, imuSensor, imuFilters);
     _ahrs = &ahrs;
 }
