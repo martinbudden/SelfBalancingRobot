@@ -100,8 +100,10 @@ static void onReceive(const twai_message_t& message)
 
 
 // see https://github.com/espressif/esp-idf/tree/v5.3.1/examples/peripherals/twai/twai_network
-static void twai_receive_task([[maybe_unused]] void* arg)
+static void twai_receive_task(void* arg)
 {
+    (void)arg;
+
     twai_message_t message;
     while (true) {
         if (twai_receive(&message, portMAX_DELAY) == ESP_OK) {
@@ -237,6 +239,5 @@ void Motors_ODriveTWAI::setPower(float leftPower, float rightPower)
     oDrive0.setTorque(leftPower);
     oDrive1.setTorque(rightPower);
 }
-
 
 #endif

@@ -4,9 +4,9 @@
 #include <cassert>
 
 namespace { // use anonymous namespace to make items local to this translation unit
+
 constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
 constexpr float ACC_16G_RES { 16.0 / 32768.0 };
-} // end namespace
 
 
 constexpr uint8_t REG_CHIP_ID               = 0x00;
@@ -45,7 +45,6 @@ constexpr uint8_t REG_FIFO_LENGTH_1         = 0x25;
 constexpr uint8_t REG_FIFO_DATA             = 0x26;
 constexpr uint8_t REG_FEAT_PAGE             = 0x2F;
 constexpr uint8_t REG_FEATURES              = 0x30; // 16 items
-
 
 constexpr uint8_t REG_ACC_CONF              = 0x40;
     constexpr uint8_t PERFORMANCE_OPTIMIZED = 0b10000000;
@@ -106,6 +105,8 @@ constexpr uint8_t REG_OFFSET_6              = 0x77;
 constexpr uint8_t REG_PWR_CONF              = 0x7C;
 constexpr uint8_t REG_PWR_CTRL              = 0x7D;
 constexpr uint8_t REG_CMD                   = 0x7E;
+
+} // end namespace
 
 /*!
 As describe in section 4.4 Power-On Reset (POR) and Device Initialization of BMI270 datasheet

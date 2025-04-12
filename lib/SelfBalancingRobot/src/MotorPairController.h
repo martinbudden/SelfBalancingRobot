@@ -3,7 +3,6 @@
 #include "MotorMixer.h"
 #include <Filters.h>
 #include <PIDF.h>
-#include <ReceiverBase.h>
 #include <VehicleControllerBase.h>
 #include <array>
 #include <cfloat>
@@ -13,6 +12,7 @@ struct motor_pair_controller_telemetry_t;
 class AHRS;
 class MotorPairBase;
 class Quaternion;
+class ReceiverBase;
 
 /*!
 The MotorPairController uses the ENU (East North Up) coordinate convention, the same as used by ROS (Robot Operating System).

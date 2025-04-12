@@ -1,8 +1,6 @@
 #include "MotorPairControllerDefaults.h"
 
-#include <AHRS.h>
 #include <MotorPairBase.h>
-#include <MotorPairController.h>
 
 #if defined(MOTORS_4_ENCODER_MOTOR)
 #include "Motors4EncoderMotor.h"
@@ -22,11 +20,6 @@
 #include "Motors_ODriveTWAI.h"
 #elif defined(MOTORS_GPIO)
 #include "MotorsGPIO.h"
-#endif
-
-#if defined(I2C_MUTEX_REQUIRED)
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 #endif
 
 /*!

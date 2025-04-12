@@ -1,8 +1,6 @@
 #include "MotorMixer.h"
 
-#include <MotorMixerBase.h>
 #include <MotorPairBase.h>
-#include <cmath>
 #if defined(AHRS_RECORD_TIMES_CHECKS)
 #include <esp32-hal.h>
 #endif
@@ -17,7 +15,7 @@
 
 void MotorMixer::outputToMotors(const output_t& outputs, float deltaT, uint32_t tickCount)
 {
-    (void) deltaT;
+    (void)deltaT;
 
     // Disable the motors if the pitchAngle exceeds the switchOffAngle.
     // Don't switch on again for at least 2 seconds after robot falls over (ie don't switch on if it falls over and bounces back up again).

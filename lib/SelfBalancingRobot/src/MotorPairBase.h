@@ -3,8 +3,10 @@
 #include <cstdint>
 
 #if defined(I2C_MUTEX_REQUIRED)
+#if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#endif
 #endif
 
 /*!
@@ -22,7 +24,9 @@ public:
         {}
 public:
 #if defined(I2C_MUTEX_REQUIRED)
+#if defined(USE_FREERTOS)
     inline void setMutex(SemaphoreHandle_t i2cMutex) { _i2cMutex = i2cMutex; }
+#endif
 #endif
     inline int32_t getLeftEncoder() const { return _leftEncoder - _leftEncoderOffset; }
     inline int32_t getRightEncoder() const { return _rightEncoder - _rightEncoderOffset; }
@@ -41,9 +45,11 @@ public:
     static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
 protected:
 #if defined(I2C_MUTEX_REQUIRED)
+#if defined(USE_FREERTOS)
     inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }
     inline void i2cSemaphoreGive() const { xSemaphoreGive(_i2cMutex); }
     SemaphoreHandle_t _i2cMutex {nullptr};
+#endif
 #else
     inline void i2cSemaphoreTake() const {}
     inline void i2cSemaphoreGive() const {}
