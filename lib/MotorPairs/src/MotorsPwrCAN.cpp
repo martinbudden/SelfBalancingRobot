@@ -44,7 +44,7 @@ void MotorsPwrCAN::readEncoder()
         if (_rxFrame.FIR.B.RTR == CAN_RTR) { // NOLINT(bugprone-branch-clone) false positive
             Serial.printf("RTR from 0x%08X, DLC %d\r\n", _rxFrame.MsgID, _rxFrame.FIR.B.DLC);
         } else {
-            Serial.printf("from 0x%08X, DLC %d, Data \r\n", _rxFrame.MsgID, _rxFrame.FIR.B.DLC);
+            Serial.printf("from 0x%08X, DLC %d, Data\r\n", _rxFrame.MsgID, _rxFrame.FIR.B.DLC);
             for (int i = 0; i < _rxFrame.FIR.B.DLC; i++) {
                 Serial.printf("0x%02X ", _rxFrame.data.u8[i]);
             }
