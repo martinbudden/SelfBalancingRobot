@@ -203,33 +203,33 @@ void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
 
     bool transmit = false;
 
-    switch (packet.itemIndex) {
-    case CommandPacketSetOffset::GYRO_X:
+    switch (packet.setType) {
+    case CommandPacketSetOffset::SET_GYRO_OFFSET_X:
         gyroOffset.x = packet.value;
         _ahrs.setGyroOffset(gyroOffset);
         transmit = true;
         break;
-    case CommandPacketSetOffset::GYRO_Y:
+    case CommandPacketSetOffset::SET_GYRO_OFFSET_Y:
         gyroOffset.y = packet.value;
         _ahrs.setGyroOffset(gyroOffset);
         transmit = true;
         break;
-    case CommandPacketSetOffset::GYRO_Z:
+    case CommandPacketSetOffset::SET_GYRO_OFFSET_Z:
         gyroOffset.z = packet.value;
         _ahrs.setGyroOffset(gyroOffset);
         transmit = true;
         break;
-    case CommandPacketSetOffset::ACC_X:
+    case CommandPacketSetOffset::SET_ACC_OFFSET_X:
         accOffset.x = packet.value;
         _ahrs.setAccOffset(accOffset);
         transmit = true;
         break;
-    case CommandPacketSetOffset::ACC_Y:
+    case CommandPacketSetOffset::SET_ACC_OFFSET_Y:
         accOffset.y = packet.value;
         _ahrs.setAccOffset(accOffset);
         transmit = true;
         break;
-    case CommandPacketSetOffset::ACC_Z:
+    case CommandPacketSetOffset::SET_ACC_OFFSET_Z:
         accOffset.z = packet.value;
         _ahrs.setAccOffset(accOffset);
         transmit = true;
@@ -243,7 +243,7 @@ void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
         break;
 #endif
     default:
-        Serial.printf("Backchannel::packetSetOffset invalid itemIndex:%d\r\n", packet.itemIndex);
+        Serial.printf("Backchannel::packetSetOffset invalid itemIndex:%d\r\n", packet.setType);
         break;
     }
 
