@@ -81,12 +81,12 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS
         .gyroOffset = {
             .x = static_cast<int16_t>(gyroOffset.x),
             .y = static_cast<int16_t>(gyroOffset.y),
-            .z = static_cast<int16_t>(gyroOffset.x)
+            .z = static_cast<int16_t>(gyroOffset.z)
         },
         .accOffset = {
             .x = static_cast<int16_t>(accOffset.x),
             .y = static_cast<int16_t>(accOffset.y),
-            .z = static_cast<int16_t>(accOffset.x)
+            .z = static_cast<int16_t>(accOffset.z)
         }
     };
 
