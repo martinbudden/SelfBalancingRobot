@@ -20,7 +20,7 @@ bool SV_Preferences::isSetPID() const
 {
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
-    const bool ret = _preferences.getBool("PIDS_SET");
+    const bool ret = _preferences.getBool("PIDS_SET", false);
 
     _preferences.end();
     return ret;
