@@ -70,7 +70,7 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
 /*!
 Maps the joystick values from Q4dot12 format in the range [-2048, 2047] to floats in the range [-1, 1].
 
-NOTE: this function runs in the context of the MotorController task, in particular the FPU usage is in that context, so this avoids the
+NOTE: this function runs in the context of the MotorPairController task, in particular the FPU usage is in that context, so this avoids the
 need to save the ESP32 FPU registers on a context switch.
 */
 void ReceiverAtomJoyStick::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const

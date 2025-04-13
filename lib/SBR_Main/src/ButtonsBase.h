@@ -7,11 +7,11 @@ class ScreenBase;
 
 class ButtonsBase {
 public:
-    ButtonsBase(MotorPairController& motorController, const ReceiverBase& receiver, ScreenBase* screen) :
-        _motorController(motorController), _receiver(receiver), _screen(screen) {}
+    ButtonsBase(MotorPairController& motorPairController, const ReceiverBase& receiver, ScreenBase* screen) :
+        _motorPairController(motorPairController), _receiver(receiver), _screen(screen) {}
     virtual void update() = 0;
 protected:
-    MotorPairController& _motorController;
+    MotorPairController& _motorPairController;
     const ReceiverBase& _receiver;
     ScreenBase* _screen;
 };

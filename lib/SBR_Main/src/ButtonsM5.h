@@ -5,7 +5,7 @@
 
 class ButtonsM5 : public ButtonsBase {
 public:
-    ButtonsM5(MotorPairController& motorController, const ReceiverBase& receiver, ScreenBase* screen);
+    ButtonsM5(MotorPairController& motorPairController, const ReceiverBase& receiver, ScreenBase* screen);
     virtual void update() override;
 private:
     // ButtonsM5 is not copyable or moveable

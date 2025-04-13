@@ -6,7 +6,7 @@
 class MotorPairBase;
 
 /*!
-The MotorMixer takes the outputs from the MotorController and "mixes" the values, to set the appropriate power for each motor.
+The MotorMixer takes the outputs from the MotorPairController and "mixes" the values, to set the appropriate power for each motor.
 */
 class MotorMixer : public MotorMixerBase {
 public:

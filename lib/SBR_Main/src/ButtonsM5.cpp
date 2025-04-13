@@ -12,8 +12,8 @@
 #include <ScreenBase.h>
 
 
-ButtonsM5::ButtonsM5(MotorPairController& motorController, const ReceiverBase& receiver, ScreenBase* screen) :
-    ButtonsBase(motorController, receiver, screen)
+ButtonsM5::ButtonsM5(MotorPairController& motorPairController, const ReceiverBase& receiver, ScreenBase* screen) :
+    ButtonsBase(motorPairController, receiver, screen)
 {
     const int screenSizeX = _screen->getScreenSizeX();
     _drawPosX = (screenSizeX == 128) ? 115 : screenSizeX - 20;
@@ -33,7 +33,7 @@ void ButtonsM5::update()
     M5.update();
     if (M5.BtnA.wasPressed()) {
         // BtnA turns the motors on or off
-        _motorController.motorsToggleOnOff();
+        _motorPairController.motorsToggleOnOff();
         M5.Lcd.setCursor(_drawPosX, _drawPosY);
         M5.Lcd.print('A');
     } else if (M5.BtnA.wasReleased()) {
