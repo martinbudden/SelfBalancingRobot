@@ -5,9 +5,6 @@
 
 namespace { // use anonymous namespace to make items local to this translation unit
 
-constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
-constexpr float ACC_16G_RES { 16.0 / 32768.0 };
-
 
 constexpr uint8_t REG_CHIP_ID               = 0x00;
 constexpr uint8_t REG_ERR_REG               = 0x02;
@@ -47,18 +44,42 @@ constexpr uint8_t REG_FEAT_PAGE             = 0x2F;
 constexpr uint8_t REG_FEATURES              = 0x30; // 16 items
 
 constexpr uint8_t REG_ACC_CONF              = 0x40;
-    constexpr uint8_t PERFORMANCE_OPTIMIZED = 0b10000000;
-    constexpr uint8_t ODR_800_HZ = 0x0B;
-    constexpr uint8_t ODR_1600_HZ = 0x0C;
-    constexpr uint8_t ACC_OSR4_AVG1 = 0b00000000; // no averaging
-    constexpr uint8_t ACC_OSR4_AVG2 = 0b00001000; // average 2 samples
+    constexpr uint8_t ACC_FILTER_PERFORMANCE_OPTIMIZED = 0b10000000;
+    constexpr uint8_t ACC_ODR_25_HZ = 0x06;
+    constexpr uint8_t ACC_ODR_50_HZ = 0x07;
+    constexpr uint8_t ACC_ODR_100_HZ = 0x08;
+    constexpr uint8_t ACC_ODR_200_HZ = 0x09;
+    constexpr uint8_t ACC_ODR_400_HZ = 0x0A;
+    constexpr uint8_t ACC_ODR_800_HZ = 0x0B;
+    constexpr uint8_t ACC_ODR_1600_HZ = 0x0C;
+    constexpr uint8_t ACC_OSR4_AVG1 = 0x00;
+    constexpr uint8_t ACC_OSR4_AVG2 = 0x10;
+    constexpr uint8_t ACC_NORM_AVG4 = 0x20;
+    constexpr uint8_t ACC_CIC_AVG8 = 0x30;
 constexpr uint8_t REG_ACC_RANGE             = 0x41;
+    constexpr uint8_t ACC_RANGE_2G = 0x00;
+    constexpr uint8_t ACC_RANGE_4G = 0x01;
+    constexpr uint8_t ACC_RANGE_8G = 0x02;
     constexpr uint8_t ACC_RANGE_16G = 0x03;
 constexpr uint8_t REG_GYR_CONF              = 0x42;
-    constexpr uint8_t GYRO_ODR_3200_HZ = 0x0D; // for gyro only, not for acc
-    constexpr uint8_t GYRO_OSR4_AVG = 0x00;
+    constexpr uint8_t GYRO_FILTER_PERFORMANCE_OPTIMIZED = 0b10000000;
+    constexpr uint8_t GYRO_ODR_25_HZ = 0x06;
+    constexpr uint8_t GYRO_ODR_50_HZ = 0x07;
+    constexpr uint8_t GYRO_ODR_100_HZ = 0x08;
+    constexpr uint8_t GYRO_ODR_200_HZ = 0x09;
+    constexpr uint8_t GYRO_ODR_400_HZ = 0x0A;
+    constexpr uint8_t GYRO_ODR_800_HZ = 0x0B;
+    constexpr uint8_t GYRO_ODR_1600_HZ = 0x0C;
+    constexpr uint8_t GYRO_ODR_3200_HZ = 0x0D; // for gyro only, acc does not support this rate
+    constexpr uint8_t GYRO_OSR4 = 0x00;
+    constexpr uint8_t GYRO_OSR2 = 0x10;
+    constexpr uint8_t GYRO_NORM = 0x30;
 constexpr uint8_t REG_GYR_RANGE             = 0x43;
-    constexpr uint8_t GYRO_RANGE_2000 = 0x00;
+    constexpr uint8_t GYRO_RANGE_125_DPS  = 0x04;
+    constexpr uint8_t GYRO_RANGE_250_DPS  = 0x03;
+    constexpr uint8_t GYRO_RANGE_500_DPS  = 0x02;
+    constexpr uint8_t GYRO_RANGE_1000_DPS = 0x01;
+    constexpr uint8_t GYRO_RANGE_2000_DPS = 0x00;
 constexpr uint8_t REG_AUX_CONF              = 0x44;
 constexpr uint8_t REG_FIFO_DOWNS            = 0x45;
 constexpr uint8_t REG_FIFO_WTM_0            = 0x46;
@@ -569,7 +590,7 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t CS_pin) :
 }
 #endif
 
-void IMU_BMI270::init()
+void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) // NOLINT(readability-function-cognitive-complexity)
 {
     // Initialization sequence, see page 17 and following from BMI270 Datasheet
     _bus.readRegister(REG_CHIP_ID); // dummy read, required for SPI mode
@@ -590,36 +611,87 @@ void IMU_BMI270::init()
     _bus.writeRegister(REG_INIT_CTRL, 1);
     delayMs(1);
 
+    _bus.writeRegister(REG_PWR_CTRL, 0x0E); // enable gyro, acc and temp sensors
+    delayMs(1);
+    _bus.writeRegister(REG_PWR_CONF, 0x02); // disable advanced power save, enable FIFO self-wake - power mode
+    delayMs(1);
+    //_bus.writeRegister(REG_FIFO_CONFIG_1, FIFO_GYRO_ENABLE | FIFO_ACC_ENABLE | FIFO_HEADER_DISABLE);
+    _bus.writeRegister(REG_FIFO_CONFIG_1, 0x00); // all FIFOs disabled
+    delayMs(1);
+    _bus.writeRegister(REG_INT_MAP_DATA, 0x04); // enable the data ready interrupt pin 1
+    delayMs(1);
+    _bus.writeRegister(REG_INT1_IO_CTRL, 0x0A); // active high, push-pull, output enabled, input disabled
+    delayMs(1);
 
-    struct setting_t {
-        uint8_t reg;
-        uint8_t value;
-    };
+    const uint8_t gyroOutputDataRate = 
+        outputDataRateHz == 0 ? GYRO_ODR_3200_HZ :
+        outputDataRateHz > 1600 ? GYRO_ODR_3200_HZ :
+        outputDataRateHz > 800 ? GYRO_ODR_1600_HZ :
+        outputDataRateHz > 400 ? GYRO_ODR_800_HZ :
+        outputDataRateHz > 200 ? GYRO_ODR_400_HZ :
+        outputDataRateHz > 100 ? GYRO_ODR_200_HZ :
+        outputDataRateHz > 50 ? GYRO_ODR_100_HZ :
+        outputDataRateHz > 25 ? GYRO_ODR_50_HZ : GYRO_ODR_25_HZ;
 
-    // Suppress badBitmaskCheck so we can OR with zero values without a warning
-    // cppcheck-suppress-begin badBitmaskCheck
-    static constexpr std::array<setting_t, 10> settings = {
-        REG_PWR_CTRL,               0x0E, // enable gyro, acc and temp sensors
-        REG_ACC_CONF,               PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | ODR_1600_HZ, // cppcheck-suppress badBitmaskCheck
-        REG_ACC_RANGE,              ACC_RANGE_16G,
-        REG_GYR_CONF,               PERFORMANCE_OPTIMIZED | GYRO_OSR4_AVG | ODR_1600_HZ, // cppcheck-suppress badBitmaskCheck
-        REG_GYR_RANGE,              GYRO_RANGE_2000,
-        REG_PWR_CONF,               0x02, // disable advanced power save, enable FIFO self-wake - power mode
-        //REG_FIFO_CONFIG_1,          FIFO_GYRO_ENABLE | FIFO_ACC_ENABLE | FIFO_HEADER_DISABLE
-        REG_FIFO_CONFIG_1,          0x00, // all FIFOs disabled
-        REG_INT_MAP_DATA,           0x04, // enable the data ready interrupt pin 1
-        REG_INT1_IO_CTRL,           0x0A, // active high, push-pull, output enabled, input disabled
-    };
-    // cppcheck-suppress-end badBitmaskCheck
+    _bus.writeRegister(REG_GYR_CONF, GYRO_FILTER_PERFORMANCE_OPTIMIZED | GYRO_OSR4 | gyroOutputDataRate); // cppcheck-suppress badBitmaskCheck NOLINT(hicpp-signed-bitwise)
+    delayMs(1);
 
-    for (const setting_t setting : settings) {
-        _bus.writeRegister(setting.reg, setting.value);
-        delayMs(1);
+    switch (gyroSensitivity) {
+    case GYRO_FULL_SCALE_125_DPS:
+        _bus.writeRegister(REG_GYR_RANGE, GYRO_RANGE_125_DPS);
+        _gyroResolutionDPS = 125.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_250_DPS:
+        _bus.writeRegister(REG_GYR_RANGE, GYRO_RANGE_250_DPS);
+        _gyroResolutionDPS = 250.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_500_DPS:
+        _bus.writeRegister(REG_GYR_RANGE, GYRO_RANGE_500_DPS);
+        _gyroResolutionDPS = 500.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_1000_DPS:
+        _bus.writeRegister(REG_GYR_RANGE, GYRO_RANGE_1000_DPS);
+        _gyroResolutionDPS = 1000.0F / 32768.0F;
+        break;
+    default:
+        _bus.writeRegister(REG_GYR_RANGE, GYRO_RANGE_2000_DPS);
+        _gyroResolutionDPS = 2000.0F / 32768.0F;
+        break;
     }
+    _gyroResolutionRPS = _gyroResolutionDPS * degreesToRadians;
+    delayMs(1);
 
-    _gyroResolutionDPS = GYRO_2000DPS_RES;
-    _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
-    _accResolution = ACC_16G_RES;
+    const uint8_t accOutputDataRate = 
+        outputDataRateHz == 0 ? ACC_ODR_1600_HZ :
+        outputDataRateHz > 800 ? ACC_ODR_1600_HZ :
+        outputDataRateHz > 400 ? ACC_ODR_800_HZ :
+        outputDataRateHz > 200 ? ACC_ODR_400_HZ :
+        outputDataRateHz > 100 ? ACC_ODR_200_HZ :
+        outputDataRateHz > 50 ? ACC_ODR_100_HZ :
+        outputDataRateHz > 25 ? ACC_ODR_50_HZ : ACC_ODR_25_HZ;
+
+    _bus.writeRegister(REG_ACC_CONF, ACC_FILTER_PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | accOutputDataRate); // cppcheck-suppress badBitmaskCheck NOLINT(hicpp-signed-bitwise)
+    delayMs(1);
+
+    switch (accSensitivity) {
+    case ACC_FULL_SCALE_2G:
+        _bus.writeRegister(REG_ACC_RANGE, ACC_RANGE_2G);
+        _accResolution = 2.0F / 32768.0F;
+        break;
+    case ACC_FULL_SCALE_4G:
+        _bus.writeRegister(REG_ACC_RANGE, ACC_RANGE_4G);
+        _accResolution = 4.0F / 32768.0F;
+        break;
+    case ACC_FULL_SCALE_8G:
+        _bus.writeRegister(REG_ACC_RANGE, ACC_RANGE_8G);
+        _accResolution = 8.0F / 32768.0F;
+        break;
+    default:
+        _bus.writeRegister(REG_ACC_RANGE, ACC_RANGE_16G);
+        _accResolution = 16.0F / 32768.0F;
+        break;
+    }
+    delayMs(1);
 }
 
 IMU_Base::xyz_int32_t IMU_BMI270::readGyroRaw()

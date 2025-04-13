@@ -6,10 +6,9 @@
 
 
 namespace { // use anonymous namespace to make items local to this translation unit
+
 constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
 constexpr float ACC_8G_RES { 8.0 / 32768.0 };
-} // end namespace
-
 
 constexpr uint8_t I2C_ADDRESS               = 0x68;
 
@@ -92,6 +91,9 @@ constexpr uint8_t REG_YA_OFFSET_L           = 0x7B;
 constexpr uint8_t REG_ZA_OFFSET_H           = 0x7D;
 constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 
+} // end namespace
+
+
 #if defined(USE_IMU_MPU6886_I2C)
 IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
@@ -113,8 +115,12 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint8_t CS_pin) :
 #endif
 
 // NOLINTBEGIN(hicpp-signed-bitwise)
-void IMU_MPU6886::init()
+void IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
 {
+    (void)outputDataRateHz;
+    (void)gyroSensitivity;
+    (void)accSensitivity;
+
     i2cSemaphoreTake();
 
     _imuID = _bus.readRegister(REG_WHOAMI);

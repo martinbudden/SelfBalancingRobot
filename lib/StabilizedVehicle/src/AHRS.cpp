@@ -129,6 +129,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 */
 [[noreturn]] void AHRS::Task([[maybe_unused]] const TaskParameters* taskParameters)
 {
+    //_IMU.init(1000 / taskParameters->tickIntervalMilliSeconds);
     _IMU.init();
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.

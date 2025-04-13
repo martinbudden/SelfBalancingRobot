@@ -27,8 +27,11 @@ void IMU_Base::delayMs(int ms)
 #endif
 }
 
-void IMU_Base::init()
+void IMU_Base::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
 {
+    (void)outputDataRateHz;
+    (void)gyroSensitivity;
+    (void)accSensitivity;
 }
 
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const

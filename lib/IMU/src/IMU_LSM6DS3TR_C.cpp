@@ -6,10 +6,6 @@
 
 namespace { // use anonymous namespace to make items local to this translation unit
 
-constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
-constexpr float ACC_8G_RES  {  8.0 / 32768.0 };
-constexpr float ACC_16G_RES { 16.0 / 32768.0 };
-
 constexpr uint8_t REG_RESERVED1             = 0x00;
 constexpr uint8_t REG_FUNC_CFG_ACCESS       = 0x01;
 constexpr uint8_t REG_RESERVED2             = 0x02;
@@ -31,20 +27,36 @@ constexpr uint8_t REG_WHO_AM_I              = 0x0F;
     constexpr uint8_t REG_WHO_AM_I_RESPONSE = 0x6A;
 
 constexpr uint8_t REG_CTRL1_XL              = 0x10;
-    constexpr uint8_t ACC_RANGE_2G  = 0b0000;
-    constexpr uint8_t ACC_RANGE_4G  = 0b1000;
-    constexpr uint8_t ACC_RANGE_8G  = 0b1100;
-    constexpr uint8_t ACC_RANGE_16G = 0b0100;
-    constexpr uint8_t ODR_416_HZ =  0b01100000;
-    constexpr uint8_t ODR_833_HZ =  0b01110000;
-    constexpr uint8_t ODR_1660_HZ = 0b10000000;
-    constexpr uint8_t ODR_3330_HZ = 0b10010000;
-    constexpr uint8_t ODR_6660_HZ = 0b10100000;
+    constexpr uint8_t ACC_RANGE_2G    =     0b0000;
+    constexpr uint8_t ACC_RANGE_4G    =     0b1000;
+    constexpr uint8_t ACC_RANGE_8G    =     0b1100;
+    constexpr uint8_t ACC_RANGE_16G   =     0b0100;
+    constexpr uint8_t ACC_ODR_12p5_HZ = 0b00010000;
+    constexpr uint8_t ACC_ODR_26_HZ   = 0b00100000;
+    constexpr uint8_t ACC_ODR_52_HZ   = 0b00110000;
+    constexpr uint8_t ACC_ODR_104_HZ  = 0b01000000;
+    constexpr uint8_t ACC_ODR_208_HZ  = 0b010100000;
+    constexpr uint8_t ACC_ODR_416_HZ  = 0b01100000;
+    constexpr uint8_t ACC_ODR_833_HZ  = 0b01110000;
+    constexpr uint8_t ACC_ODR_1666_HZ = 0b10000000;
+    constexpr uint8_t ACC_ODR_3332_HZ = 0b10010000;
+    constexpr uint8_t ACC_ODR_6664_HZ = 0b10100000;
 constexpr uint8_t REG_CTRL2_G               = 0x11;
-    constexpr uint8_t GYRO_RANGE_245_DPS    = 0b0000;
-    constexpr uint8_t GYRO_RANGE_500_DPS    = 0b0100;
-    constexpr uint8_t GYRO_RANGE_1000_DPS   = 0b1000;
-    constexpr uint8_t GYRO_RANGE_2000_DPS   = 0b1100;
+    constexpr uint8_t GYRO_RANGE_125_DPS   = 0b0010;
+    constexpr uint8_t GYRO_RANGE_245_DPS   = 0b0000;
+    constexpr uint8_t GYRO_RANGE_500_DPS   = 0b0100;
+    constexpr uint8_t GYRO_RANGE_1000_DPS  = 0b1000;
+    constexpr uint8_t GYRO_RANGE_2000_DPS  = 0b1100;
+    constexpr uint8_t GYRO_ODR_12p5_HZ = 0b00010000;
+    constexpr uint8_t GYRO_ODR_26_HZ   = 0b00100000;
+    constexpr uint8_t GYRO_ODR_52_HZ   = 0b00110000;
+    constexpr uint8_t GYRO_ODR_104_HZ  = 0b01000000;
+    constexpr uint8_t GYRO_ODR_208_HZ  = 0b010100000;
+    constexpr uint8_t GYRO_ODR_416_HZ  = 0b01100000;
+    constexpr uint8_t GYRO_ODR_833_HZ  = 0b01110000;
+    constexpr uint8_t GYRO_ODR_1666_HZ = 0b10000000;
+    constexpr uint8_t GYRO_ODR_3332_HZ = 0b10010000;
+    constexpr uint8_t GYRO_ODR_6664_HZ = 0b10100000;
 constexpr uint8_t REG_CTRL3_C               = 0x12;
     constexpr uint8_t BDU                   = 0b01000000;
     constexpr uint8_t IF_INC                = 0b00000100;
@@ -104,7 +116,7 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t CS_pin) :
 }
 #endif
 
-void IMU_LSM6DS3TR_C::init()
+void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) // NOLINT(readability-function-cognitive-complexity)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
@@ -120,13 +132,11 @@ void IMU_LSM6DS3TR_C::init()
         uint8_t reg;
         uint8_t value;
     };
-    static constexpr std::array<setting_t, 8> settings = {
+    static constexpr std::array<setting_t, 6> settings = {
         // Suppress badBitmaskCheck so we can OR with zero values without a warning
         // cppcheck-suppress-begin badBitmaskCheck
         REG_INT1_CTRL,          INT1_DRDY_G, // Enable gyro data ready on INT1 pin
         REG_INT2_CTRL,          INT2_DRDY_G, // Enable gyro data ready on INT2 pin
-        REG_CTRL1_XL,           ODR_6660_HZ | ACC_RANGE_16G, // bandwidth selection bits 00, and use LPF1 (default)
-        REG_CTRL2_G,            ODR_6660_HZ | GYRO_RANGE_2000_DPS,
         REG_CTRL3_C,            BDU | IF_INC, // Block Data Update and automatically increment registers when read via serial interface (I2C or SPI)
 #if defined(USE_IMU_LSM6DS3TR_C_I2C)
         REG_CTRL4_C,            LPF1_SEL_G, // enable gyro LPF
@@ -141,9 +151,73 @@ void IMU_LSM6DS3TR_C::init()
         _bus.writeRegister(setting.reg, setting.value);
         delayMs(1);
     }
-    _gyroResolutionDPS = GYRO_2000DPS_RES;
-    _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
-    _accResolution = ACC_16G_RES;
+
+    const uint8_t gyroOutputDataRate = 
+        outputDataRateHz == 0 ? GYRO_ODR_6664_HZ :
+        outputDataRateHz > 3332 ? GYRO_ODR_6664_HZ :
+        outputDataRateHz > 1666 ? GYRO_ODR_3332_HZ :
+        outputDataRateHz > 833 ? GYRO_ODR_1666_HZ :
+        outputDataRateHz > 416 ? GYRO_ODR_833_HZ :
+        outputDataRateHz > 208 ? GYRO_ODR_416_HZ :
+        outputDataRateHz > 104 ? GYRO_ODR_208_HZ :
+        outputDataRateHz > 52 ? GYRO_ODR_104_HZ :
+        outputDataRateHz > 26 ? GYRO_ODR_52_HZ :
+        outputDataRateHz > 13 ? GYRO_ODR_26_HZ : GYRO_ODR_12p5_HZ;
+    switch (gyroSensitivity) {
+    case GYRO_FULL_SCALE_125_DPS:
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_125_DPS | gyroOutputDataRate);
+        _gyroResolutionDPS = 245.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_250_DPS:
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_245_DPS | gyroOutputDataRate); // cppcheck-suppress badBitmaskCheck
+        _gyroResolutionDPS = 245.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_500_DPS:
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_500_DPS | gyroOutputDataRate);
+        _gyroResolutionDPS = 500.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_1000_DPS:
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_1000_DPS | gyroOutputDataRate);
+        _gyroResolutionDPS = 1000.0F / 32768.0F;
+        break;
+    default:
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_2000_DPS | gyroOutputDataRate);
+        _gyroResolutionDPS = 2000.0F / 32768.0F;
+        break;
+    }
+    _gyroResolutionRPS = _gyroResolutionDPS * degreesToRadians;
+    delayMs(1);
+
+    const uint8_t accOutputDataRate = 
+        outputDataRateHz == 0 ? ACC_ODR_6664_HZ :
+        outputDataRateHz > 3332 ? ACC_ODR_6664_HZ :
+        outputDataRateHz > 1666 ? ACC_ODR_3332_HZ :
+        outputDataRateHz > 833 ? ACC_ODR_1666_HZ :
+        outputDataRateHz > 416 ? ACC_ODR_833_HZ :
+        outputDataRateHz > 208 ? ACC_ODR_416_HZ :
+        outputDataRateHz > 104 ? ACC_ODR_208_HZ :
+        outputDataRateHz > 52 ? ACC_ODR_104_HZ :
+        outputDataRateHz > 26 ? ACC_ODR_52_HZ :
+        outputDataRateHz > 13 ? ACC_ODR_26_HZ : ACC_ODR_12p5_HZ;
+    switch (accSensitivity) {
+    case ACC_FULL_SCALE_2G:
+        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_2G | accOutputDataRate); // cppcheck-suppress badBitmaskCheck
+        _accResolution = 2.0F / 32768.0F;
+        break;
+    case ACC_FULL_SCALE_4G:
+        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_4G | accOutputDataRate);
+        _accResolution = 4.0F / 32768.0F;
+        break;
+    case ACC_FULL_SCALE_8G:
+        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_8G | accOutputDataRate);
+        _accResolution = 8.0F / 32768.0F;
+        break;
+    default:
+        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_16G | accOutputDataRate);
+        _accResolution = 16.0F / 32768.0F;
+        break;
+    }
+    delayMs(1);
 }
 
 IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readGyroRaw()

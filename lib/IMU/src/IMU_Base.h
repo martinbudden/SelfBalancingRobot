@@ -63,6 +63,24 @@ public:
         ZNEG_XPOS_YNEG,
         XPOS_ZPOS_YNEG
     };
+    enum gyro_sensitivity_t {
+        GYRO_FULL_SCALE_MAX,
+        GYRO_FULL_SCALE_125_DPS,
+        GYRO_FULL_SCALE_250_DPS,
+        GYRO_FULL_SCALE_500_DPS,
+        GYRO_FULL_SCALE_1000_DPS,
+        GYRO_FULL_SCALE_2000_DPS,
+        GYRO_FULL_SCALE_4000_DPS,
+    };
+    enum acc_sensitivity_t {
+        ACC_FULL_SCALE_MAX,
+        ACC_FULL_SCALE_1G,
+        ACC_FULL_SCALE_2G,
+        ACC_FULL_SCALE_4G,
+        ACC_FULL_SCALE_8G,
+        ACC_FULL_SCALE_16G,
+        ACC_FULL_SCALE_32G,
+    };
     static constexpr float sin45f = 0.7071067811865475F;
     const std::array<Quaternion, 24> axisOrientations = {
         Quaternion(  1.0F,    0.0F,    0.0F,    0.0F ),
@@ -107,7 +125,9 @@ public:
     static constexpr float radiansToDegrees = static_cast<float>(180.0 / M_PI);
 public:
     static void delayMs(int ms);
-    virtual void init();
+    virtual void init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity);
+    void init(uint32_t outputDataRateHz) { init(outputDataRateHz, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX); }
+    void init() { init(0, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX); }
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);
     virtual xyz_int32_t getAccOffset() const;

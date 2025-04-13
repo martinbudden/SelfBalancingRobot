@@ -67,15 +67,17 @@ IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, uint8_t CS_pin) :
 }
 #endif
 
-void IMU_BNO085::init()
+void IMU_BNO085::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
 {
+    assert(outputDataRateHz <= 400);
+    (void)gyroSensitivity;
+    (void)accSensitivity;
+
     // transmit reset byte on channel 1
     _shtpPacket.data[0] = 1; //Reset
     sendPacket(CHANNEL_EXECUTABLE, 1); //Transmit packet on channel 1, 1 byte
-
-    //Read all incoming data and flush it
     delayMs(50);
-    //readPacketAndParse();
+    //Read all incoming data and flush it
     while (readPacketAndParse() == true) { delayMs(1); }
 
     _shtpPacket.data[0] = REPORT_ID_PRODUCT_ID_REQUEST;
@@ -84,8 +86,8 @@ void IMU_BNO085::init()
     delayMs(50);
     while (readPacketAndParse() == true) { delayMs(1); }
 
-    //setFeatureCommand(SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR, 5000, 0); //Send data update every 5000us, 200Hz. Highest rate supported is 400Hz
-    setFeatureCommand(SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR, 50*1000, 0); //Send data update every 50ms
+    // default to update every 2500 microseconds, 400Hz, which is highest supported rate
+    setFeatureCommand(SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR, outputDataRateHz == 0 ? 2500 : 1000000 / outputDataRateHz, 0);
     delayMs(100);
     while (readPacketAndParse() == true) { delayMs(1); }
 }
@@ -522,7 +524,7 @@ bool IMU_BNO085::sendCommand(uint8_t command)
 {
     _commandMessage.reportID = REPORT_ID_COMMAND_REQUEST;
     _commandMessage.command = command;
-    _commandMessage.sequenceNumber++;
+    ++_commandMessage.sequenceNumber;
     _bus.writeBytes(reinterpret_cast<uint8_t*>(&_commandMessage), sizeof(_commandMessage)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 
     return true;
