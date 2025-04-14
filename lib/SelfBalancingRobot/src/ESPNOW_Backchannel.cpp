@@ -11,9 +11,7 @@
 #include <HardwareSerial.h>
 #include <ReceiverBase.h>
 #include <ReceiverTelemetry.h>
-#if defined(USE_ESP32_PREFERENCES)
 #include <SV_Preferences.h>
-#endif
 #include <SV_Telemetry.h>
 #include <SV_TelemetryData.h>
 #include <TaskBase.h>
@@ -164,7 +162,6 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         _motorPairController.setPitchBalanceAngleDegrees(packet.value);
         transmit = true;
         break;
-#if defined(USE_ESP32_PREFERENCES)
     case CommandPacketSetPID::SAVE_P: // NOLINT(bugprone-branch-clone) false positive
         [[fallthrough]];
     case CommandPacketSetPID::SAVE_I:
@@ -184,7 +181,6 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         // Save the balance angel, the value of packet.pidIndex is ignored.
         _preferences->putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
         break;
-#endif
     default:
         //Serial.printf("Backchannel::packetSetPID invalid setType:%d\r\n", packet.pidIndex);
         break;
@@ -234,14 +230,12 @@ void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
         _ahrs.setAccOffset(accOffset);
         transmit = true;
         break;
-#if defined(USE_ESP32_PREFERENCES)
     case CommandPacketSetOffset::SAVE_GYRO_OFFSET: // NOLINT(bugprone-branch-clone) false positive
         _preferences->putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
         break;
     case CommandPacketSetOffset::SAVE_ACC_OFFSET: // NOLINT(bugprone-branch-clone) false positive
         _preferences->putAccOffset(accOffset.x, accOffset.y, accOffset.z);
         break;
-#endif
     default:
         Serial.printf("Backchannel::packetSetOffset invalid itemIndex:%d\r\n", packet.setType);
         break;

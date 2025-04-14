@@ -241,7 +241,7 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
     }
 #else
     // no encoders, so estimate speed from power output
-    (void)deltaT; // so LINT doesn't report and unused parameter.
+    (void)deltaT; // so LINT doesn't report an unused parameter.
     _speedDPS = MotorPairBase::clip((_mixer.getPowerLeft() + _mixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
 #endif
 }
@@ -256,16 +256,28 @@ void MotorPairController::updateOutputsUsingPIDs(float deltaT)
     updateOutputsUsingPIDs(data.gyroRPS, data.acc, orientation, deltaT);
 }
 
+/*!
+Gimbal lock occurs when the X-axis of an IMU points straight up or straight down.
+Gimbal lock effects are significant when the X-axis angle is above +/-85 degrees.
+We want to be able to work with tilt angles in excess of this (eg when recovering from a fall, or when starting up from a lying down position),
+so we cannot point the X-axis in the direction of motion.
+
+So we point the X-axis to the left and the Y axis forward keeping the Z-axis pointing up.
+This means pitch is about the Y-axis and roll about the X-axis (normally pitch is about X-axis and roll is about the Y-axis),
+so we need to convert the values returned by calculatePitchDegrees() and calculateRollDegrees().
+*/
 void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_unused]] const xyz_t& acc, const Quaternion& orientation, float deltaT)
 {
-    _pitchAngleDegreesRaw = orientation.calculatePitchDegrees();
+    // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
+    _pitchAngleDegreesRaw = -orientation.calculateRollDegrees();
     _mixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
 #define CALCULATE_ROLL
 #define CALCULATE_YAW
 #if defined(CALCULATE_ROLL)
     // Roll and yaw are not required for the MotorPairController calculations,
     // but if they are calculated they will be displayed by the screen and telemetry, which can be useful in debugging.
-    _rollAngleDegreesRaw = orientation.calculateRollDegrees();
+    // AHRS orientation assumes (as is conventional) that roll is around the Y-axis, so convert.
+    _rollAngleDegreesRaw = orientation.calculatePitchDegrees();
 #if defined(CALCULATE_YAW)
     _yawAngleDegreesRaw = orientation.calculateYawDegrees();
 #endif
@@ -305,8 +317,8 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
 
     // calculate _outputs[YAW_RATE_DPS]
-    const float yawRate = -gyroRPS.z * Quaternion::radiansToDegrees;
-    _outputs[YAW_RATE_DPS] = _PIDS[YAW_RATE_DPS].update(yawRate, deltaT);
+    const float yawRateDPS = -gyroRPS.z * Quaternion::radiansToDegrees;
+    _outputs[YAW_RATE_DPS] = _PIDS[YAW_RATE_DPS].update(yawRateDPS, deltaT);
 }
 
 /*!
