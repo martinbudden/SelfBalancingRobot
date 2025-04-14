@@ -5,7 +5,6 @@
 
 namespace { // use anonymous namespace to make items local to this translation unit
 
-
 constexpr uint8_t REG_CHIP_ID               = 0x00;
 constexpr uint8_t REG_ERR_REG               = 0x02;
 constexpr uint8_t REG_STATUS                = 0x03;
@@ -568,7 +567,6 @@ static const std::array<uint8_t, 8192> imu_bmi270_config_data = {
     0x2e, 0x00, 0xc1
 };
 
-
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
@@ -577,21 +575,20 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin,
     IMU_Base(axisOrder, i2cMutex),
     _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
-    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 }
 #else
 IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t CS_pin) :
     IMU_Base(axisOrder),
     _bus(CS_pin)
 {
-    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 }
 #endif
 
 void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) // NOLINT(readability-function-cognitive-complexity)
 {
+    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
+
     // Initialization sequence, see page 17 and following from BMI270 Datasheet
     _bus.readRegister(REG_CHIP_ID); // dummy read, required for SPI mode
     const uint8_t chipID = _bus.readRegister(REG_CHIP_ID);
@@ -734,16 +731,16 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc()
 
 IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const
 {
-#if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
+#if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
     return gyroRPS_Acc_t {
         .gyroRPS = {
-            .x = -static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
-            .y =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
+            .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
+            .y =  static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
             .z =  static_cast<float>(data.gyro_z - _gyroOffset.z) * _gyroResolutionRPS
         },
         .acc = {
-            .x = -static_cast<float>(data.acc_y - _accOffset.y)* _accResolution,
-            .y =  static_cast<float>(data.acc_x - _accOffset.x)* _accResolution,
+            .x =  static_cast<float>(data.acc_x - _accOffset.x)* _accResolution,
+            .y =  static_cast<float>(data.acc_y - _accOffset.y)* _accResolution,
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
@@ -760,6 +757,32 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& da
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
+#elif defined(IMU_BUILD_XNEG_YNEG_ZPOS)
+    return gyroRPS_Acc_t {
+        .gyroRPS = {
+            .x = -static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
+            .y = -static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
+            .z =  static_cast<float>(data.gyro_z - _gyroOffset.z) * _gyroResolutionRPS
+        },
+        .acc = {
+            .x = -static_cast<float>(data.acc_x - _accOffset.x)* _accResolution,
+            .y = -static_cast<float>(data.acc_y - _accOffset.y)* _accResolution,
+            .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
+        }
+    };
+#elif defined(IMU_BUILD_YNEG_XPOS_ZPOS)
+    return gyroRPS_Acc_t {
+        .gyroRPS = {
+            .x = -static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
+            .y =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
+            .z =  static_cast<float>(data.gyro_z - _gyroOffset.z) * _gyroResolutionRPS
+        },
+        .acc = {
+            .x = -static_cast<float>(data.acc_y - _accOffset.y)* _accResolution,
+            .y =  static_cast<float>(data.acc_x - _accOffset.x)* _accResolution,
+            .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
+        }
+    };
 #elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
     return gyroRPS_Acc_t {
         .gyroRPS = {
@@ -773,31 +796,18 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& da
             .z = -static_cast<float>(data.acc_y - _accOffset.y)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_XPOS_YPOS_ZPOS)
-    return gyroRPS_Acc_t {
-        .gyroRPS = {
-            .x = static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
-            .y = static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
-            .z = static_cast<float>(data.gyro_z - _gyroOffset.z) * _gyroResolutionRPS
-        },
-        .acc = {
-            .x  = static_cast<float>(data.acc_x - _accOffset.x)* _accResolution,
-            .y  = static_cast<float>(data.acc_y - _accOffset.y)* _accResolution,
-            .z  = static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
-        }
-    };
 #else
     // Axis order mapping done at run-time
     const gyroRPS_Acc_t gyroRPS_Acc {
         .gyroRPS = {
-            .x = static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
-            .y = static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
-            .z = static_cast<float>(data.gyro_z - _gyroOffset.z) * _gyroResolutionRPS
+            .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
+            .y =  static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
+            .z =  static_cast<float>(data.gyro_z - _gyroOffset.z) * _gyroResolutionRPS
         },
         .acc = {
-            .x  = static_cast<float>(data.acc_x - _accOffset.x)* _accResolution,
-            .y  = static_cast<float>(data.acc_y - _accOffset.y)* _accResolution,
-            .z  = static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
+            .x =  static_cast<float>(data.acc_x - _accOffset.x)* _accResolution,
+            .y =  static_cast<float>(data.acc_y - _accOffset.y)* _accResolution,
+            .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
     switch (_axisOrder) {
@@ -854,19 +864,21 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& da
                 .z = -gyroRPS_Acc.gyroRPS.y
             },
             .acc = {
-                .x = -gyroRPS_Acc.acc.z,
+                .x = -gyroRPS_Acc.acc.x,
                 .y =  gyroRPS_Acc.acc.z,
                 .z = -gyroRPS_Acc.acc.y
             }
         };
         break;
     default:
-        assert(false && "IMU axis order not implemented");
+        return gyroRPS_Acc_t {
+            .gyroRPS = mapAxes(gyroRPS_Acc.gyroRPS),
+            .acc = mapAxes(gyroRPS_Acc.acc)
+        };
         break;
     } // end switch
 
     return gyroRPS_Acc;
 #endif
 }
-
 #endif

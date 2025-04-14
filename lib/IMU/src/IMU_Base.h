@@ -109,6 +109,7 @@ public:
         Quaternion(  sin45f,  0.0F,   -sin45f,  0.0F )
     };
 public:
+    virtual ~IMU_Base() = default;
     explicit IMU_Base(axis_order_t axisOrder);
     IMU_Base(axis_order_t axisOrder, void* i2cMutex);
 public:
@@ -148,7 +149,6 @@ public:
     // by default the FIFO is not enabled
     virtual size_t readFIFO_ToBuffer();
     virtual gyroRPS_Acc_t readFIFO_Item(size_t index);
-protected:
     xyz_t mapAxes(const xyz_t& data) const;
 #if defined(I2C_MUTEX_REQUIRED)
 #if defined(USE_FREERTOS)
