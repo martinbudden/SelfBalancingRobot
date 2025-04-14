@@ -202,32 +202,32 @@ void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
     switch (packet.setType) {
     case CommandPacketSetOffset::SET_GYRO_OFFSET_X:
         gyroOffset.x = packet.value;
-        _ahrs.setGyroOffset(gyroOffset);
+        _ahrs.setGyroOffsetMapped(gyroOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_GYRO_OFFSET_Y:
         gyroOffset.y = packet.value;
-        _ahrs.setGyroOffset(gyroOffset);
+        _ahrs.setGyroOffsetMapped(gyroOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_GYRO_OFFSET_Z:
         gyroOffset.z = packet.value;
-        _ahrs.setGyroOffset(gyroOffset);
+        _ahrs.setGyroOffsetMapped(gyroOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_X:
         accOffset.x = packet.value;
-        _ahrs.setAccOffset(accOffset);
+        _ahrs.setAccOffsetMapped(accOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_Y:
         accOffset.y = packet.value;
-        _ahrs.setAccOffset(accOffset);
+        _ahrs.setAccOffsetMapped(accOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_Z:
         accOffset.z = packet.value;
-        _ahrs.setAccOffset(accOffset);
+        _ahrs.setAccOffsetMapped(accOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SAVE_GYRO_OFFSET: // NOLINT(bugprone-branch-clone) false positive

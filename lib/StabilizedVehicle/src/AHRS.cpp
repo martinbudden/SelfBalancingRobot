@@ -220,6 +220,14 @@ void AHRS::setGyroOffset(const IMU_Base::xyz_int32_t& offset)
     _IMU.setGyroOffset(offset);
 }
 
+void AHRS::setGyroOffsetMapped(const IMU_Base::xyz_int32_t& offset)
+{
+    xyz_t offsetF = { static_cast<float>(offset.x), static_cast<float>(offset.y), static_cast<float>(offset.z) };
+    offsetF = _IMU.mapAxes(offsetF);
+    const IMU_Base::xyz_int32_t offsetMapped = { static_cast<int32_t>(offsetF.x), static_cast<int32_t>(offsetF.y), static_cast<int32_t>(offsetF.z) };
+    _IMU.setGyroOffset(offsetMapped);
+}
+
 IMU_Base::xyz_int32_t AHRS::getAccOffset() const
 {
     return _IMU.getAccOffset();
@@ -231,6 +239,14 @@ Set the accelerometer offset. Used in calibration.
 void AHRS::setAccOffset(const IMU_Base::xyz_int32_t& offset)
 {
     _IMU.setAccOffset(offset);
+}
+
+void AHRS::setAccOffsetMapped(const IMU_Base::xyz_int32_t& offset)
+{
+    xyz_t offsetF = { static_cast<float>(offset.x), static_cast<float>(offset.y), static_cast<float>(offset.z) };
+    offsetF = _IMU.mapAxes(offsetF);
+    const IMU_Base::xyz_int32_t offsetMapped = { static_cast<int32_t>(offsetF.x), static_cast<int32_t>(offsetF.y), static_cast<int32_t>(offsetF.z) };
+    _IMU.setAccOffset(offsetMapped);
 }
 
 Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
