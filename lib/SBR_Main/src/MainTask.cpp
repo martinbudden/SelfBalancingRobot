@@ -59,7 +59,6 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
 
 enum { MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
 
-
 #if !defined(MPC_TASK_TICK_INTERVAL_MILLISECONDS)
 #if defined(USE_IMU_MPU6886)
     enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
@@ -224,7 +223,8 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static_assert(false);
 #endif
 
-    // Statically allocate the Sensor Fusion Filter.
+    // Statically allocate the Sensor Fusion Filter
+    // Timings are for 240MHz ESP32-S3
 #if defined(USE_COMPLEMENTARY_FILTER)
     // approx 130 microseconds per update
     static ComplementaryFilter sensorFusionFilter;

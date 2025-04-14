@@ -3,7 +3,7 @@
 
 class IMU_Test : public IMU_Base {
 public:
-    virtual ~IMU_Test() = default;
+    virtual ~IMU_Test() = default; // NOLINT(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
     IMU_Test(const IMU_Test&) = delete;
     IMU_Test& operator=(const IMU_Test&) = delete;
     IMU_Test(IMU_Test&&) = delete;

@@ -153,7 +153,7 @@ void test_fixed_convert()
     const auto a = static_cast<int16_t>(float32_to_Q4dot12(x));
     TEST_ASSERT_EQUAL(floor(0.48*2048), a);
     const float y = Q4dot12_to_float32(a);
-    TEST_ASSERT_FLOAT_WITHIN(0.00008*x, x, y);
+    TEST_ASSERT_FLOAT_WITHIN(0.00008F*x, x, y);
 
     TEST_ASSERT_EQUAL(2048, float32_to_Q4dot12(1.0F));
     TEST_ASSERT_EQUAL(-2048, float32_to_Q4dot12(-1.0F));
@@ -187,7 +187,7 @@ void test_byte_convert()
     TEST_ASSERT_EQUAL(floor(0.48*2048), a);
 
     const float y = Q4dot12_to_float32(a);
-    TEST_ASSERT_FLOAT_WITHIN(0.00008*x.f, x.f, y); // NOLINT(cppcoreguidelines-pro-type-union-access)
+    TEST_ASSERT_FLOAT_WITHIN(0.00008F*x.f, x.f, y); // NOLINT(cppcoreguidelines-pro-type-union-access)
 }
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 

@@ -102,7 +102,7 @@ private:
     inline void TIME_CHECK(uint32_t index) { _timeChecksMicroSeconds[index] = micros(); }
     inline void TIME_CHECK(uint32_t index, uint32_t timeMicroSeconds) { _timeChecksMicroSeconds[index] = timeMicroSeconds; }
 #else
-    inline void TIME_CHECK(uint32_t index) { (void)index;}
+    inline void TIME_CHECK(uint32_t index) { (void)index; }
     inline void TIME_CHECK(uint32_t index, uint32_t timeMicroSeconds) { (void)index; (void)timeMicroSeconds; }
 #endif
 
@@ -132,7 +132,10 @@ private:
     mutable mutex_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(_ahrsDataMutex); }
     inline void UNLOCK_AHRS_DATA() const { mutex_exit(_ahrsDataMutex); }
-#endif
+#else
+    inline void LOCK_AHRS_DATA() const {}
+    inline void UNLOCK_AHRS_DATA() const {}
+#endif // USE_FREERTOS
 #elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
 #if defined(USE_FREERTOS)
     mutable portMUX_TYPE _ahrsDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
@@ -142,7 +145,10 @@ private:
     mutable critical_section_t _ahrsDataCriticalSection {};
     inline void LOCK_AHRS_DATA() const { critical_section_enter_blocking(&_ahrsDataCriticalSection); }
     inline void UNLOCK_AHRS_DATA() const { critical_section_exit(&_ahrsDataCriticalSection); }
-#endif
+#else
+    inline void LOCK_AHRS_DATA() const {}
+    inline void UNLOCK_AHRS_DATA() const {}
+#endif // USE_FREERTOS
 #else
     inline void LOCK_AHRS_DATA() const {}
     inline void UNLOCK_AHRS_DATA() const {}

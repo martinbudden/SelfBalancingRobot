@@ -91,10 +91,10 @@ void test_bno085_channel_gyro_integrated_rotation_vector_report() {
     //constexpr int gyro_Q_point = 10;
 
     // BNO085 uses [real, i, j, k] for quaternion, IMU_TYPES uses [w, x, y, z]
-    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.real) * pow(2, -orientation_Q_point), orientation.getW());
-    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.i)* pow(2, -orientation_Q_point), orientation.getX());
-    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.j)* pow(2, -orientation_Q_point), orientation.getY());
-    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.k)* pow(2, -orientation_Q_point), orientation.getZ());
+    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.real) * powf(2, -orientation_Q_point), orientation.getW());
+    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.i) * powf(2, -orientation_Q_point), orientation.getX());
+    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.j) * powf(2, -orientation_Q_point), orientation.getY());
+    TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.k) * powf(2, -orientation_Q_point), orientation.getZ());
 
     constexpr int Q_point = 14;
     const float multiplier = pow(2, Q_point * -1);
