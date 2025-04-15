@@ -7,6 +7,7 @@ class ScreenBase;
 
 class ButtonsBase {
 public:
+    virtual ~ButtonsBase() = default;
     ButtonsBase(MotorPairController& motorPairController, const ReceiverBase& receiver, ScreenBase* screen) :
         _motorPairController(motorPairController), _receiver(receiver), _screen(screen) {}
     virtual void update() = 0;

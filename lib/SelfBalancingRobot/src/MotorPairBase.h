@@ -18,6 +18,7 @@ class MotorPairBase {
 public:
     enum can_accurately_estimate_speed_t { CANNOT_ACCURATELY_ESTIMATE_SPEED = 0,  CAN_ACCURATELY_ESTIMATE_SPEED = 1};
 public:
+    virtual ~MotorPairBase() = default;
     inline MotorPairBase(float stepsPerRevolution, can_accurately_estimate_speed_t canAccuratelyEstimateSpeed) :
         _stepsPerRevolution(stepsPerRevolution),
         _canAccuratelyEstimateSpeed(canAccuratelyEstimateSpeed)

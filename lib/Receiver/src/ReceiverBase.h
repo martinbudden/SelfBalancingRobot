@@ -21,6 +21,7 @@ public:
         int32_t yawStickQ4dot12;
     };
 public:
+    virtual ~ReceiverBase() = default;
     virtual bool update(uint32_t tickCountDelta) = 0;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const = 0;
     // 48-bit Extended Unique Identifiers, usually the MAC address if the receiver has one, but may be an alternative provided by the receiver.

@@ -5,6 +5,7 @@
 
 class ReceiverNull : public ReceiverBase {
 public:
+    virtual ~ReceiverNull() = default;
     ReceiverNull() = default;
 private:
     // ReceiverNull is not copyable or moveable

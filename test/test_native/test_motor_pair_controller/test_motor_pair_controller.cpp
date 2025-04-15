@@ -8,13 +8,13 @@
 
 class ReceiverTest : public ReceiverBase {
 public:
-    virtual ~ReceiverTest() = default;
     ReceiverTest(const ReceiverTest&) = delete;
     ReceiverTest& operator=(const ReceiverTest&) = delete;
     ReceiverTest(ReceiverTest&&) = delete;
     ReceiverTest& operator=(ReceiverTest&&) = delete;
     ReceiverTest() = default;
 // NOLINTBEGIN(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
+    virtual ~ReceiverTest() = default;
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual EUI_48_t getMyEUI() const override;

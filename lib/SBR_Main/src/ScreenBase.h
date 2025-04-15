@@ -7,6 +7,7 @@ class ReceiverBase;
 
 class ScreenBase {
 public:
+    virtual ~ScreenBase() = default;
     ScreenBase(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver) :
         _ahrs(ahrs), _motorPairController(motorPairController), _receiver(receiver) {}
 public:
