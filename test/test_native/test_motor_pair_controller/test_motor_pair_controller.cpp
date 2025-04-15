@@ -1,35 +1,38 @@
-#include "AHRS.h"
-#include "AHRS_Test.h"
 #include "MotorPairController.h"
-#include "ReceiverBase.h"
 #include "SBR_TelemetryData.h"
+
+#include <AHRS.h>
+#include <IMU_FiltersBase.h>
+#include <ReceiverNull.h>
+#include <SensorFusion.h>
 
 #include <unity.h>
 
-class ReceiverTest : public ReceiverBase {
-public:
-    ReceiverTest(const ReceiverTest&) = delete;
-    ReceiverTest& operator=(const ReceiverTest&) = delete;
-    ReceiverTest(ReceiverTest&&) = delete;
-    ReceiverTest& operator=(ReceiverTest&&) = delete;
-    ReceiverTest() = default;
-// NOLINTBEGIN(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
-    virtual ~ReceiverTest() = default;
-    virtual bool update(uint32_t tickCountDelta) override;
-    virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
-    virtual EUI_48_t getMyEUI() const override;
-    virtual EUI_48_t getPrimaryPeerEUI() const override;
-    virtual void broadcastMyEUI() const override;
-    virtual uint32_t getAuxiliaryChannel(size_t index) const override;
-// NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
-};
 
-bool ReceiverTest::update([[maybe_unused]] uint32_t tickCountDelta) { return true; }
-void ReceiverTest::getStickValues([[maybe_unused]] float& throttleStick, [[maybe_unused]] float& rollStick, [[maybe_unused]] float& pitchStick, [[maybe_unused]] float& yawStick) const {};
-ReceiverBase::EUI_48_t ReceiverTest::getMyEUI() const { return EUI_48_t{}; }
-ReceiverBase::EUI_48_t ReceiverTest::getPrimaryPeerEUI() const { return EUI_48_t{}; }
-void ReceiverTest::broadcastMyEUI() const { }
-uint32_t ReceiverTest::getAuxiliaryChannel(size_t index) const { (void)index; return 0; }
+class IMU_Test : public IMU_Base {
+public:
+    explicit IMU_Test(axis_order_t axisOrder) : IMU_Base(axisOrder) {}
+    xyz_int32_t readGyroRaw() override;
+    xyz_int32_t readAccRaw() override;
+};
+IMU_Base::xyz_int32_t IMU_Test::readGyroRaw() { return xyz_int32_t {}; }
+IMU_Base::xyz_int32_t IMU_Test::readAccRaw() { return xyz_int32_t {}; }
+
+
+class IMU_Filters_Test : public IMU_FiltersBase {
+public:
+    virtual ~IMU_Filters_Test() = default;
+    IMU_Filters_Test() = default;
+
+    // IMU_Filters_Test is not copyable or moveable
+    IMU_Filters_Test(const IMU_Filters_Test&) = delete;
+    IMU_Filters_Test& operator=(const IMU_Filters_Test&) = delete;
+    IMU_Filters_Test(IMU_Filters_Test&&) = delete;
+    IMU_Filters_Test& operator=(IMU_Filters_Test&&) = delete;
+
+    void filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) override;
+};
+void IMU_Filters_Test::filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) { (void)gyroRPS; (void)acc; (void)deltaT; }
 
 
 void setUp() {
@@ -40,11 +43,11 @@ void tearDown() {
 
 void test_motor_pair_controller()
 {
-    static SensorFusionFilterTest sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
-    static IMU_Test imu; // NOLINT(misc-const-correctness) false positive
+    static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
+    static IMU_Test imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
     static IMU_Filters_Test imuFilters; // NOLINT(misc-const-correctness) false positive
     static AHRS ahrs(sensorFusionFilter, imu, imuFilters);
-    static ReceiverTest receiver; // NOLINT(misc-const-correctness) false positive
+    static ReceiverNull receiver; // NOLINT(misc-const-correctness) false positive
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
     MotorPairController mpc(ahrs, receiver);
