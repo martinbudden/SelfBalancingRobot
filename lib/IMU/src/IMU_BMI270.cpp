@@ -603,7 +603,11 @@ void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
     // Burst write 8kB initialization data to Register INIT_DATA. This requires 6.6ms at 10 MHz SPI I/F frequency.
     _bus.writeRegister(REG_INIT_CTRL, 0);
     delayMs(1);
-    _bus.writeRegister(REG_INIT_DATA, &imu_bmi270_config_data[0], sizeof(imu_bmi270_config_data));
+    enum { BUS_WRITE_CHUNK_SIZE = 32 };
+    static_assert(sizeof(imu_bmi270_config_data) % BUS_WRITE_CHUNK_SIZE == 0);
+    for (size_t ii = 0; ii < sizeof(imu_bmi270_config_data); ii += BUS_WRITE_CHUNK_SIZE) {
+        _bus.writeRegister(REG_INIT_DATA, &imu_bmi270_config_data[ii], BUS_WRITE_CHUNK_SIZE);;
+    }
     delayMs(10);
     _bus.writeRegister(REG_INIT_CTRL, 1);
     delayMs(1);
