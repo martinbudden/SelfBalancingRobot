@@ -28,7 +28,7 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
         TelemetryScaleFactors& telemetryScaleFactors,
-        SV_Preferences* preferences) :
+        SV_Preferences& preferences) :
     _transceiver(transceiver),
     _received_data(_receivedDataBuffer, sizeof(_receivedDataBuffer)),
     _motorPairController(motorPairController),
@@ -171,15 +171,15 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     case CommandPacketSetPID::SAVE_F:
         //Serial.printf("Saved PID packetType:%d pidIndex:%d setType:%d\r\n", packet.type, packet.pidIndex, packet.setType);
         // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.
-        _preferences->putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
+        _preferences.putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
         break;
     case CommandPacketSetPID::RESET_PID:
         // Save FLT_MAX values for the PID constants, so when next the defaults will be used instead
-        _preferences->putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET });
+        _preferences.putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET });
         break;
     case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
         // Save the balance angel, the value of packet.pidIndex is ignored.
-        _preferences->putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
+        _preferences.putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
         break;
     default:
         //Serial.printf("Backchannel::packetSetPID invalid setType:%d\r\n", packet.pidIndex);
@@ -231,10 +231,10 @@ void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
         transmit = true;
         break;
     case CommandPacketSetOffset::SAVE_GYRO_OFFSET: // NOLINT(bugprone-branch-clone) false positive
-        _preferences->putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
+        _preferences.putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
         break;
     case CommandPacketSetOffset::SAVE_ACC_OFFSET: // NOLINT(bugprone-branch-clone) false positive
-        _preferences->putAccOffset(accOffset.x, accOffset.y, accOffset.z);
+        _preferences.putAccOffset(accOffset.x, accOffset.y, accOffset.z);
         break;
     default:
         Serial.printf("Backchannel::packetSetOffset invalid itemIndex:%d\r\n", packet.setType);

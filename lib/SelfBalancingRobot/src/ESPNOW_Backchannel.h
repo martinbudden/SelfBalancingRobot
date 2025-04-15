@@ -17,9 +17,7 @@ class TelemetryScaleFactors;
 
 class Backchannel {
 public:
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences* preferences);
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors) :
-        Backchannel(transceiver, macAddress, motorPairController, ahrs, mainTask, receiver, telemetryScaleFactors, nullptr) {}
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences& preferences);
 private:
     // Backchannel is not copyable or moveable
     Backchannel(const Backchannel&) = delete;
@@ -46,7 +44,7 @@ private:
     const TaskBase& _mainTask;
     const ReceiverBase& _receiver;
     TelemetryScaleFactors& _telemetryScaleFactors;
-    SV_Preferences* _preferences {nullptr};
+    SV_Preferences& _preferences;
     uint8_t _receivedDataBuffer[ESP_NOW_MAX_DATA_LEN] {};
     uint8_t _transmitDataBuffer[ESP_NOW_MAX_DATA_LEN] {};
     uint32_t _telemetryID {0};
