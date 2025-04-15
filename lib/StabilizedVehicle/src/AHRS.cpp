@@ -35,68 +35,21 @@ NOTE: calls to YIELD_TASK have no effect on multi-core implementations, but are 
 */
 bool AHRS::readIMUandUpdateOrientation(float deltaT)
 {
-#if defined(AHRS_RECORD_TIMES_CHECKS)
-    _timeCheck0 = micros();
-#endif
-
-#if defined(USE_IMU_FIFO)
-    // It uses the IMU FIFO. This ensures all IMU readings are processed, but it has the disadvantage that
-    // reading the FIFO blocks the I2C bus, which in turn blocks the MPC_TASK.
-    // I'm starting to come to the conclusion that, for M5Stack devices, better overall performance is obtained by not using the FIFO.
-
-    _fifoCount = _IMU.readFIFO_ToBuffer();
-    if (_fifoCount == 0) {
-        YIELD_TASK();
-        return false;
-    }
-    TIME_CHECK(0, _timeCheck0);
-    TIME_CHECK(1);
-
-    IMU_Base::gyroRPS_Acc_t gyroAcc {};
-    xyz_t gyroRPS_Sum {0.0, 0.0, 0.0};
-    xyz_t accSum {0.0, 0.0, 0.0};
-    const float fifoCountReciprocal = 1.0F / static_cast<float>(_fifoCount);
-    const float fifoDeltaT = deltaT * fifoCountReciprocal;
-    // constexpr float dT {1.0 / 500.0}; // use fixed deltaT corresponding to the update rate of the FIFO
-
-    for (auto ii = 0; ii < _fifoCount; ++ii) {
-        gyroAcc = _IMU.readFIFO_Item(ii);
-        _imuFilters.filter(gyroAcc.gyroRPS, gyroAcc.acc, fifoDeltaT);
-        gyroRPS_Sum += gyroAcc.gyroRPS;
-        accSum += gyroAcc.acc;
-    }
-    gyroAcc.gyroRPS = gyroRPS_Sum * fifoCountReciprocal;
-    gyroAcc.acc = accSum * fifoCountReciprocal;
-    TIME_CHECK(1);
-    TIME_CHECK(2);
-
-    const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT);
-    TIME_CHECK(3);
-    if (sensorFusionFilterIsInitializing()) {
-        checkFusionFilterConvergence(gyroAcc.acc, orientation);
-    }
-
-#else
-
+    TIME_CHECK(0);
 #if defined(IMU_DOES_SENSOR_FUSION)
-    const xyz_t gyro = _IMU.readGyroRPS();
-    TIME_CHECK(0, _timeCheck0);
-    TIME_CHECK(1);
     const IMU_Base::gyroRPS_Acc_t gyroAcc = {
-        .gyroRPS = gyro,
+        .gyroRPS = _IMU.readGyroRPS(),
         .acc = {}
     };
+    TIME_CHECK(1);
     TIME_CHECK(2);
     const Quaternion orientation = _IMU.readOrientation();
     TIME_CHECK(3);
 #else
     IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc(); // NOLINT(misc-const-correctness) false positive
-    TIME_CHECK(0, _timeCheck0);
     TIME_CHECK(1);
-
     _imuFilters.filter(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 207us
     TIME_CHECK(2);
-
     const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 140us
     TIME_CHECK(3);
     if (sensorFusionFilterIsInitializing()) {
@@ -104,14 +57,12 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     }
 #endif
 
-#endif // USE_IMU_FIFO
-
     // If _vehicleController is not nullptr, then things have been configured so that updateOutputsUsingPIDs
     // is called by the AHRS rather than the motor controller.
     if (_vehicleController != nullptr) {
         _vehicleController->updateOutputsUsingPIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
-        TIME_CHECK(4);
     }
+    TIME_CHECK(4);
 
     LOCK_AHRS_DATA();
     _ahrsDataUpdatedSinceLastRead = true;

@@ -96,14 +96,11 @@ private:
 
     // instrumentation member data
     uint32_t _fifoCount {0};
-    uint32_t _timeCheck0 {0};
     uint32_t _timeChecksMicroSeconds[TIME_CHECKS_COUNT + 1] {};
 #if defined(AHRS_RECORD_TIMES_CHECKS)
     inline void TIME_CHECK(uint32_t index) { _timeChecksMicroSeconds[index] = micros(); }
-    inline void TIME_CHECK(uint32_t index, uint32_t timeMicroSeconds) { _timeChecksMicroSeconds[index] = timeMicroSeconds; }
 #else
     inline void TIME_CHECK(uint32_t index) { (void)index; }
-    inline void TIME_CHECK(uint32_t index, uint32_t timeMicroSeconds) { (void)index; (void)timeMicroSeconds; }
 #endif
 
     // data synchronization primitives
