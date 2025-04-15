@@ -46,6 +46,7 @@ PIDF::PIDF_t SV_Preferences::getPID(const std::string& name) const
 
     _preferences.end();
 #else
+    (void)name;
     const PIDF::PIDF_t pid {};
 #endif
     return pid;
@@ -63,6 +64,9 @@ void SV_Preferences::putPID(const std::string& name, const PIDF::PIDF_t& pid)
     _preferences.putFloat((name + "_F").c_str(), pid.kf);
 
     _preferences.end();
+#else
+    (void)name;
+    (void)pid;
 #endif
 }
 
@@ -75,6 +79,7 @@ float SV_Preferences::getFloat(const std::string& name) const
 
     _preferences.end();
 #else
+    (void)name;
     const float pitchBalanceAngleDegrees =  0.0F;
 #endif
     return pitchBalanceAngleDegrees;
@@ -88,6 +93,9 @@ void SV_Preferences::putFloat(const std::string& name, float value)
     _preferences.putFloat(name.c_str(), value);
 
     _preferences.end();
+#else
+    (void)name;
+    (void)value;
 #endif
 }
 
@@ -116,6 +124,9 @@ bool SV_Preferences::getAccOffset(int32_t& x, int32_t& y, int32_t& z) const
 
     _preferences.end();
 #else
+    (void)x;
+    (void)y;
+    (void)z;
     const bool ret = false;
 #endif
     return ret;
@@ -132,6 +143,10 @@ void SV_Preferences::putAccOffset(int32_t x, int32_t y, int32_t z)
     _preferences.putInt("acc_z", z);
 
     _preferences.end();
+#else
+    (void)x;
+    (void)y;
+    (void)z;
 #endif
 }
 
@@ -160,6 +175,9 @@ bool SV_Preferences::getGyroOffset(int32_t& x, int32_t& y, int32_t& z) const
 
     _preferences.end();
 #else
+    (void)x;
+    (void)y;
+    (void)z;
     const bool ret = false;
 #endif
     return ret;
@@ -176,6 +194,10 @@ void SV_Preferences::putGyroOffset(int32_t x, int32_t y, int32_t z)
     _preferences.putInt("gyro_z", z);
 
     _preferences.end();
+#else
+    (void)x;
+    (void)y;
+    (void)z;
 #endif
 }
 
@@ -187,6 +209,9 @@ void SV_Preferences::getMacAddress(uint8_t* macAddress, const std::string& name)
     _preferences.getBytes(name.c_str(), macAddress, MAC_ADDRESS_LEN);
 
     _preferences.end();
+#else
+    (void)macAddress;
+    (void)name;
 #endif
 }
 
@@ -198,5 +223,8 @@ void SV_Preferences::putMacAddress(const std::string& name, const uint8_t* macAd
     _preferences.putBytes(name.c_str(), macAddress, MAC_ADDRESS_LEN);
 
     _preferences.end();
+#else
+    (void)macAddress;
+    (void)name;
 #endif
 }
