@@ -233,7 +233,7 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data) const
         break;
     case ZNEG_XNEG_YPOS:
         return xyz_t {
-            .x =  data.z,
+            .x = -data.z,
             .y = -data.x,
             .z =  data.y
         };
@@ -274,7 +274,7 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data) const
         };
         break;
     default:
-        assert(false && "IMU axis order not implemented");
+        assert(false && "IMU axis order not supported");
         break;
     } // end switch
 // NOLINTEND(bugprone-branch-clone)
