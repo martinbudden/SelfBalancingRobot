@@ -17,7 +17,7 @@ inline void YIELD_TASK() { taskYIELD(); }
 inline void YIELD_TASK() {}
 #endif
 
-const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES = {
+static const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES = {
     "ROLL_ANGLE",
     "PITCH_ANGLE",
     "YAW_RATE",
