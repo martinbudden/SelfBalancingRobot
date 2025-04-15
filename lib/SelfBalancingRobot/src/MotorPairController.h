@@ -30,6 +30,7 @@ positive yaw is nose right
 */
 class MotorPairController : public VehicleControllerBase {
 public:
+    virtual ~MotorPairController() = default;
     MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
     MotorPairController(const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
 private:
