@@ -7,7 +7,8 @@
 
 class IMU_BMI270 : public IMU_Base {
 public:
-    static constexpr uint8_t I2C_ADDRESS=0x68;
+    static constexpr uint8_t I2C_ADDRESS = 0x68;
+    static constexpr uint8_t I2C_ADDRESS_ALTERNATIVE = 0x69;
 
 #pragma pack(push, 1)
     struct mems_sensor_data_t {

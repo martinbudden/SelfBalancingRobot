@@ -2,6 +2,7 @@
 
 #include "IMU_BMI270.h"
 #include <cassert>
+#include <HardwareSerial.h>
 
 namespace { // use anonymous namespace to make items local to this translation unit
 
@@ -10,18 +11,18 @@ constexpr uint8_t REG_ERR_REG               = 0x02;
 constexpr uint8_t REG_STATUS                = 0x03;
 constexpr uint8_t REG_DATA_0                = 0x04; // through to 0x0B are AUX registers
 
-constexpr uint8_t REG_OUTX_L_ACC            = 0x0C;
-constexpr uint8_t REG_OUTX_H_ACC            = 0x0D;
-constexpr uint8_t REG_OUTY_L_ACC            = 0x0E;
-constexpr uint8_t REG_OUTY_H_ACC            = 0x0F;
-constexpr uint8_t REG_OUTZ_L_ACC            = 0x10;
-constexpr uint8_t REG_OUTZ_H_ACC            = 0x11;
-constexpr uint8_t REG_OUTX_L_G              = 0x12;
-constexpr uint8_t REG_OUTX_H_G              = 0x13;
-constexpr uint8_t REG_OUTY_L_G              = 0x14;
-constexpr uint8_t REG_OUTY_H_G              = 0x15;
-constexpr uint8_t REG_OUTZ_L_G              = 0x16;
-constexpr uint8_t REG_OUTZ_H_G              = 0x17;
+constexpr uint8_t REG_ACC_X_L               = 0x0C;
+constexpr uint8_t REG_ACC_X_H               = 0x0D;
+constexpr uint8_t REG_ACC_Y_L               = 0x0E;
+constexpr uint8_t REG_ACC_Y_H               = 0x0F;
+constexpr uint8_t REG_ACC_Z_L               = 0x10;
+constexpr uint8_t REG_ACC_Z_H               = 0x11;
+constexpr uint8_t REG_GYRO_X_L              = 0x12;
+constexpr uint8_t REG_GYRO_X_H              = 0x13;
+constexpr uint8_t REG_GYRO_Y_L              = 0x14;
+constexpr uint8_t REG_GYRO_Y_H              = 0x15;
+constexpr uint8_t REG_GYRO_Z_L              = 0x16;
+constexpr uint8_t REG_GYRO_Z_H              = 0x17;
 
 constexpr uint8_t REG_SENSORTIME_0          = 0x18;
 constexpr uint8_t REG_SENSORTIME_1          = 0x19;
@@ -97,6 +98,8 @@ constexpr uint8_t REG_AUX_RD_ADDR           = 0x4D;
 constexpr uint8_t REG_AUX_WR_ADDR           = 0x4E;
 constexpr uint8_t REG_AUX_WR_DATA           = 0x4F;
 
+// reserved                                   0x50
+// reserved                                   0x51
 constexpr uint8_t REG_ERR_MASK              = 0x52;
 constexpr uint8_t REG_INT1_IO_CTRL          = 0x53;
 constexpr uint8_t REG_INT2_IO_CTRL          = 0x54;
@@ -105,11 +108,19 @@ constexpr uint8_t REG_INT1_MAP_FEAT         = 0x56;
 constexpr uint8_t REG_INT2_MAP_FEAT         = 0x57;
 constexpr uint8_t REG_INT_MAP_DATA          = 0x58;
 constexpr uint8_t REG_INIT_CTRL             = 0x59;
+// reserved                                   0x5A
 constexpr uint8_t REG_INIT_ADDR_0           = 0x5B;
 constexpr uint8_t REG_INIT_ADDR_1           = 0x5C;
+// reserved                                   0x5D
 constexpr uint8_t REG_INIT_DATA             = 0x5E;
 constexpr uint8_t REG_INTERNAL_ERROR        = 0x5F;
 
+// reserved                                   0x60
+// ...
+// reserved                                   0x67
+constexpr uint8_t REG_AUX_IF_TRIM           = 0x68;
+constexpr uint8_t REG_GYR_CRT_CONF          = 0x69;
+constexpr uint8_t REG_NMV_CONF              = 0x6A;
 constexpr uint8_t REG_IF_CONF               = 0x6B;
 constexpr uint8_t REG_DRV                   = 0x6C;
 constexpr uint8_t REG_ACC_SELF_TEST         = 0x6D;
@@ -122,6 +133,10 @@ constexpr uint8_t REG_OFFSET_3              = 0x74;
 constexpr uint8_t REG_OFFSET_4              = 0x75;
 constexpr uint8_t REG_OFFSET_5              = 0x76;
 constexpr uint8_t REG_OFFSET_6              = 0x77;
+// reserved                                   0x78
+// reserved                                   0x79
+// reserved                                   0x7A
+// reserved                                   0x7B
 constexpr uint8_t REG_PWR_CONF              = 0x7C;
 constexpr uint8_t REG_PWR_CTRL              = 0x7D;
 constexpr uint8_t REG_CMD                   = 0x7E;
@@ -589,28 +604,42 @@ void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 
+    delayMs(100);
+
     // Initialization sequence, see page 17 and following from BMI270 Datasheet
     _bus.readRegister(REG_CHIP_ID); // dummy read, required for SPI mode
-    const uint8_t chipID = _bus.readRegister(REG_CHIP_ID);
-    assert(chipID == 0x24);
+    const uint8_t chipID = _bus.readRegisterWithTimeout(REG_CHIP_ID, 100);
+Serial.printf("IMU_BMI270 init, chipID=%02x\r\n", chipID);
+    //assert(chipID == 0x24);
     delayMs(1);
 
-    _bus.writeRegister(REG_CMD, 0xB6); // Soft reset
+    //_bus.writeRegister(REG_CMD, 0xB6); // Soft reset
     delayMs(100);
     _bus.writeRegister(REG_PWR_CONF, 0x00); // Power save disabled
     delayMs(1); // 450us is minimum delay required
 
-    // Burst write 8kB initialization data to Register INIT_DATA. This requires 6.6ms at 10 MHz SPI I/F frequency.
-    _bus.writeRegister(REG_INIT_CTRL, 0);
+    // Write 8kB initialization data to Register INIT_DATA. This requires 6.6ms at 10 MHz SPI I/F frequency.
+    _bus.writeRegister(REG_INIT_CTRL, 0x00); // prepare config load
     delayMs(1);
+
+    const size_t dataSize = sizeof(imu_bmi270_config_data);
+    const uint8_t addressArray[2] = {
+        static_cast<uint8_t>((dataSize >> 1) & 0x0F),
+        static_cast<uint8_t>(dataSize >> 5)
+    };
+    _bus.writeRegister(REG_INIT_ADDR_0, &addressArray[0], 2);
     enum { BUS_WRITE_CHUNK_SIZE = 32 };
     static_assert(sizeof(imu_bmi270_config_data) % BUS_WRITE_CHUNK_SIZE == 0);
-    for (size_t ii = 0; ii < sizeof(imu_bmi270_config_data); ii += BUS_WRITE_CHUNK_SIZE) {
-        _bus.writeRegister(REG_INIT_DATA, &imu_bmi270_config_data[ii], BUS_WRITE_CHUNK_SIZE);;
+    for (size_t ii = 0; ii < dataSize; ii += BUS_WRITE_CHUNK_SIZE) {
+        _bus.writeRegister(REG_INIT_DATA, &imu_bmi270_config_data[ii], BUS_WRITE_CHUNK_SIZE);
+        delayMs(1);
     }
     delayMs(10);
-    _bus.writeRegister(REG_INIT_CTRL, 1);
-    delayMs(1);
+    _bus.writeRegister(REG_INIT_CTRL, 0x01); // complete config load
+    delayMs(10);
+    const uint8_t internalStatus = _bus.readRegister(REG_INTERNAL_STATUS);
+Serial.printf("IMU_BMI270 init, internalStatus=%02x\r\n", internalStatus);
+    //assert(internalStatus == 0x01);
 
     _bus.writeRegister(REG_PWR_CTRL, 0x0E); // enable gyro, acc and temp sensors
     delayMs(1);
@@ -700,7 +729,7 @@ IMU_Base::xyz_int32_t IMU_BMI270::readGyroRaw()
     xyz_int32_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readRegister(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_GYRO_X_L, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return gyro;
@@ -711,7 +740,7 @@ IMU_Base::xyz_int32_t IMU_BMI270::readAccRaw()
     xyz_int32_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readRegister(REG_OUTX_L_ACC, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
     return acc;
@@ -727,8 +756,9 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc()
     acc_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
     i2cSemaphoreTake();
-    _bus.readRegister(REG_OUTX_L_ACC, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
+//Serial.printf("readGyroRPS_Acc %d,%d,%d,%d,%d,%d\r\n", data.acc_x, data.acc_y, data.acc_z, data.gyro_x, data.gyro_y, data.gyro_z);
 
     return gyroRPS_AccFromRaw(data);
 }

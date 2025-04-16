@@ -11,6 +11,7 @@ public:
     BUS_I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin);
 public:
     uint8_t readRegister(uint8_t reg) const;
+    uint8_t readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const;
     bool readRegister(uint8_t reg, uint8_t* data, size_t length) const;
     bool readBytes(uint8_t* data, size_t length) const;
     bool readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const;
