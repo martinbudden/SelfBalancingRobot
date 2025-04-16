@@ -35,6 +35,14 @@ constexpr uint8_t REG_SC_OUT_0              = 0x1E;
 constexpr uint8_t REG_SC_OUT_1              = 0x1F;
 constexpr uint8_t REG_WR_GEST_ACT           = 0x20;
 constexpr uint8_t REG_INTERNAL_STATUS       = 0x21;
+    constexpr uint8_t NOT_INIT            = 0x00;
+    constexpr uint8_t INIT_OK             = 0x01;
+    constexpr uint8_t INIT_ERROR          = 0x02;
+    constexpr uint8_t DRV_ERROR           = 0x03;
+    constexpr uint8_t SENSOR_STOPPED      = 0x04;
+    constexpr uint8_t NVM_ERROR           = 0x05;
+    constexpr uint8_t START_UP_ERROR      = 0x06;
+    constexpr uint8_t COMPATIBILITY_ERROR = 0x07;
 constexpr uint8_t REG_TEMPERATURE_0         = 0x22;
 constexpr uint8_t REG_TEMPERATURE_1         = 0x23;
 constexpr uint8_t REG_FIFO_LENGTH_0         = 0x24;
@@ -639,7 +647,7 @@ Serial.printf("IMU_BMI270 init, chipID=%02x\r\n", chipID);
     delayMs(10);
     const uint8_t internalStatus = _bus.readRegister(REG_INTERNAL_STATUS);
 Serial.printf("IMU_BMI270 init, internalStatus=%02x\r\n", internalStatus);
-    //assert(internalStatus == 0x01);
+    //assert(internalStatus == INIT_OK || internalStatus == SENSOR_STOPPED);
 
     _bus.writeRegister(REG_PWR_CTRL, 0x0E); // enable gyro, acc and temp sensors
     delayMs(1);
