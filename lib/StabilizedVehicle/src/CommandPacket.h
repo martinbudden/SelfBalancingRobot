@@ -43,7 +43,7 @@ struct CommandPacketRequestData {
         REQUEST_AHRS_DATA = 3,
         REQUEST_RECEIVER_DATA = 4,
         REQUEST_PID_DATA = 5,
-        REQUEST_MOTOR_CONTROLLER_DATA = 6
+        REQUEST_VEHICLE_CONTROLLER_DATA = 6
     };
     uint32_t id;
     uint8_t type;

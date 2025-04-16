@@ -112,7 +112,7 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
         sendData(_transmitDataBuffer, len);
         break;
     }
-    case CommandPacketRequestData::REQUEST_MOTOR_CONTROLLER_DATA: {
+    case CommandPacketRequestData::REQUEST_VEHICLE_CONTROLLER_DATA: {
         _sendType = SEND_MPC_DATA;
         const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
         sendData(_transmitDataBuffer, len);
