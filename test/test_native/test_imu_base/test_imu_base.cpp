@@ -185,11 +185,25 @@ void test_map_axes() {
     TEST_ASSERT_EQUAL(-input.y, output.z);
 }
 
+void test_map_axes_inversion() {
+    const xyz_t input { .x =3, .y = 5, .z = 7 };
+
+    for (int ii = IMU_Base::XPOS_YPOS_ZPOS; ii <= IMU_Base::XPOS_ZPOS_YNEG; ++ii) {
+        const auto axisOrder = static_cast<IMU_Base::axis_order_t>(ii);
+        const xyz_t intermediate = IMU_Base::mapAxes(input, axisOrder);
+        const xyz_t output =       IMU_Base::mapAxes(intermediate, IMU_Base::axisOrderInverse(axisOrder));
+        TEST_ASSERT_EQUAL(input.x, output.x);
+        TEST_ASSERT_EQUAL(input.y, output.y);
+        TEST_ASSERT_EQUAL(input.z, output.z);
+    }
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
     UNITY_BEGIN();
 
     RUN_TEST(test_map_axes);
+    RUN_TEST(test_map_axes_inversion);
 
     UNITY_END();
 }

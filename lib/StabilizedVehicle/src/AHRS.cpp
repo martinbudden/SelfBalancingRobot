@@ -184,6 +184,34 @@ void AHRS::setAccOffset(const IMU_Base::xyz_int32_t& offset)
     _IMU.setAccOffset(offset);
 }
 
+IMU_Base::xyz_int32_t AHRS::mapOffset(const IMU_Base::xyz_int32_t& offset, IMU_Base::axis_order_t axisOrder)
+{
+    xyz_t offsetF = { static_cast<float>(offset.x), static_cast<float>(offset.y), static_cast<float>(offset.z) };
+    offsetF = IMU_Base::mapAxes(offsetF, axisOrder);
+    const IMU_Base::xyz_int32_t offsetMapped = { static_cast<int32_t>(offsetF.x), static_cast<int32_t>(offsetF.y), static_cast<int32_t>(offsetF.z) };
+    return offsetMapped;
+}
+
+IMU_Base::xyz_int32_t AHRS::getGyroOffsetMapped() const
+{
+    return mapOffset(_IMU.getGyroOffset(), _IMU.getAxisOrder());
+}
+
+void AHRS::setGyroOffsetMapped(const IMU_Base::xyz_int32_t& offset)
+{
+    _IMU.setGyroOffset(mapOffset(offset, IMU_Base::axisOrderInverse(_IMU.getAxisOrder())));
+}
+
+IMU_Base::xyz_int32_t AHRS::getAccOffsetMapped() const
+{
+    return mapOffset(_IMU.getAccOffset(), _IMU.getAxisOrder());
+}
+
+void AHRS::setAccOffsetMapped(const IMU_Base::xyz_int32_t& offset)
+{
+    _IMU.setAccOffset(mapOffset(offset, IMU_Base::axisOrderInverse(_IMU.getAxisOrder())));
+}
+
 Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
 {
     LOCK_AHRS_DATA();

@@ -1,7 +1,6 @@
 #if defined(USE_ESPNOW)
 
 #include "ESPNOW_Backchannel.h"
-#include "MotorPairController.h"
 #include "SBR_Telemetry.h"
 #include "SBR_TelemetryData.h"
 #include "TelemetryScaleFactors.h"
@@ -14,7 +13,6 @@
 #include <SV_Preferences.h>
 #include <SV_Telemetry.h>
 #include <SV_TelemetryData.h>
-#include <TaskBase.h>
 
 static_assert(sizeof(TD_TICK_INTERVALS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN);
@@ -95,7 +93,7 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
                 _receiver.getDroppedPacketCountDelta());
         sendData(_transmitDataBuffer, len);
         break;
-        }
+    }
     case CommandPacketRequestData::REQUEST_AHRS_DATA: {
         _sendType = SEND_AHRS_DATA;
         const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
@@ -174,7 +172,6 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
         _preferences.putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
         break;
     case CommandPacketSetPID::RESET_PID:
-        // Save FLT_MAX values for the PID constants, so when next the defaults will be used instead
         _preferences.putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET });
         break;
     case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
@@ -194,46 +191,48 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
 }
 
 void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
-    IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffset();
-    IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffset();
+    IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffsetMapped();
+    IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffsetMapped();
 
     bool transmit = false;
 
     switch (packet.setType) {
     case CommandPacketSetOffset::SET_GYRO_OFFSET_X:
         gyroOffset.x = packet.value;
-        _ahrs.setGyroOffset(gyroOffset);
+        _ahrs.setGyroOffsetMapped(gyroOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_GYRO_OFFSET_Y:
         gyroOffset.y = packet.value;
-        _ahrs.setGyroOffset(gyroOffset);
+        _ahrs.setGyroOffsetMapped(gyroOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_GYRO_OFFSET_Z:
         gyroOffset.z = packet.value;
-        _ahrs.setGyroOffset(gyroOffset);
+        _ahrs.setGyroOffsetMapped(gyroOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_X:
         accOffset.x = packet.value;
-        _ahrs.setAccOffset(accOffset);
+        _ahrs.setAccOffsetMapped(accOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_Y:
         accOffset.y = packet.value;
-        _ahrs.setAccOffset(accOffset);
+        _ahrs.setAccOffsetMapped(accOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_Z:
         accOffset.z = packet.value;
-        _ahrs.setAccOffset(accOffset);
+        _ahrs.setAccOffsetMapped(accOffset);
         transmit = true;
         break;
     case CommandPacketSetOffset::SAVE_GYRO_OFFSET: // NOLINT(bugprone-branch-clone) false positive
+        gyroOffset = _ahrs.getGyroOffset();
         _preferences.putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
         break;
     case CommandPacketSetOffset::SAVE_ACC_OFFSET: // NOLINT(bugprone-branch-clone) false positive
+        accOffset = _ahrs.getAccOffset();
         _preferences.putAccOffset(accOffset.x, accOffset.y, accOffset.z);
         break;
     default:

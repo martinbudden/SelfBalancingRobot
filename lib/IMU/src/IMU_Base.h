@@ -154,7 +154,10 @@ public:
     // by default the FIFO is not enabled
     virtual size_t readFIFO_ToBuffer();
     virtual gyroRPS_Acc_t readFIFO_Item(size_t index);
-    xyz_t mapAxes(const xyz_t& data) const;
+    inline axis_order_t getAxisOrder() const { return _axisOrder; }
+    static xyz_t mapAxes(const xyz_t& data, axis_order_t axisOrder);
+    inline xyz_t mapAxes(const xyz_t& data) const { return mapAxes(data, _axisOrder); }
+    static axis_order_t axisOrderInverse(axis_order_t axisOrder);
 #if defined(I2C_MUTEX_REQUIRED)
 #if defined(USE_FREERTOS)
     inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }

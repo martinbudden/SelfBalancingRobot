@@ -70,8 +70,8 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS
     td->len = sizeof(TD_AHRS);
 
     const AHRS::data_t ahrsData = ahrs.getAhrsDataForInstrumentationUsingLock();
-    const IMU_Base::xyz_int32_t gyroOffset = ahrs.getGyroOffset();
-    const IMU_Base::xyz_int32_t accOffset = ahrs.getAccOffset();
+    const IMU_Base::xyz_int32_t gyroOffset = ahrs.getGyroOffsetMapped();
+    const IMU_Base::xyz_int32_t accOffset = ahrs.getAccOffsetMapped();
     td->data = {
         .pitch = vehicleController.getPitchAngleDegreesRaw(),
         .roll = vehicleController.getRollAngleDegreesRaw(),

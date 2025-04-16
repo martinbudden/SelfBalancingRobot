@@ -105,10 +105,10 @@ Quaternion IMU_Base::readOrientation()
     return Quaternion {};
 }
 
-xyz_t IMU_Base::mapAxes(const xyz_t& data) const
+xyz_t IMU_Base::mapAxes(const xyz_t& data, axis_order_t axisOrder)
 {
 // NOLINTBEGIN(bugprone-branch-clone) false positive
-    switch (_axisOrder) {
+    switch (axisOrder) {
     case XPOS_YPOS_ZPOS:
         return data;
         break;
@@ -280,6 +280,43 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data) const
 // NOLINTEND(bugprone-branch-clone)
 
     return data;
+}
+
+IMU_Base::axis_order_t IMU_Base::axisOrderInverse(axis_order_t axisOrder)
+{
+    switch (axisOrder) {
+    case YPOS_XNEG_ZPOS:
+        return YNEG_XPOS_ZPOS;
+    case YNEG_XPOS_ZPOS:
+        return YPOS_XNEG_ZPOS;
+    case YPOS_ZPOS_XPOS:
+        return ZPOS_XPOS_YPOS;
+    case ZNEG_YPOS_XPOS:
+        return ZPOS_YPOS_XNEG;
+    case YNEG_ZNEG_XPOS:
+        return ZPOS_XNEG_YNEG;
+    case ZPOS_YPOS_XNEG:
+        return ZNEG_YPOS_XPOS;
+    case YPOS_ZNEG_XNEG:
+        return ZNEG_XPOS_YNEG;
+    case YNEG_ZPOS_XNEG:
+        return ZNEG_XNEG_YPOS;
+    case ZPOS_XPOS_YPOS:
+        return YPOS_ZPOS_XPOS;
+    case ZNEG_XNEG_YPOS:
+        return YNEG_ZPOS_XNEG;
+    case XPOS_ZNEG_YPOS:
+        return XPOS_ZPOS_YNEG;
+    case ZPOS_XNEG_YNEG:
+        return YNEG_ZNEG_XPOS;
+    case ZNEG_XPOS_YNEG:
+        return YPOS_ZNEG_XNEG;
+    case XPOS_ZPOS_YNEG:
+        return XPOS_ZNEG_YPOS;
+    default:
+        // other axis orders are self-inverting
+        return axisOrder;
+    }
 }
 
 size_t IMU_Base::readFIFO_ToBuffer()

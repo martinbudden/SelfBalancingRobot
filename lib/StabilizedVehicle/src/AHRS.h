@@ -46,6 +46,12 @@ public:
     IMU_Base::xyz_int32_t getAccOffset() const;
     void setAccOffset(const IMU_Base::xyz_int32_t& offset);
 
+    static IMU_Base::xyz_int32_t mapOffset(const IMU_Base::xyz_int32_t& offset, IMU_Base::axis_order_t axisOrder);
+    IMU_Base::xyz_int32_t getGyroOffsetMapped() const;
+    void setGyroOffsetMapped(const IMU_Base::xyz_int32_t& offset);
+    IMU_Base::xyz_int32_t getAccOffsetMapped() const;
+    void setAccOffsetMapped(const IMU_Base::xyz_int32_t& offset);
+
     void readGyroRaw(int32_t& x, int32_t& y, int32_t& z) const;
     void readAccRaw(int32_t& x, int32_t& y, int32_t& z) const;
     int32_t getAccOneG_Raw() const;
