@@ -20,6 +20,8 @@
 #include "Motors_ODriveTWAI.h"
 #elif defined(MOTORS_GPIO)
 #include "MotorsGPIO.h"
+#else
+#error "No MOTORS defined"
 #endif
 
 /*!

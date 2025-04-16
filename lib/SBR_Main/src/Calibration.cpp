@@ -11,7 +11,7 @@
 
 static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrationType)
 {
-#if defined(M5_UNIFIED) && !defined(USE_IMU_MPU6886)
+#if defined(USE_IMU_M5_UNIFIED)
     (void)ahrs;
     (void)preferences;
     (void)calibrationType;

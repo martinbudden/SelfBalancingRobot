@@ -1,4 +1,4 @@
-#if defined(M5_STACK)
+#if defined(USE_IMU_M5_STACK)
 
 #include "IMU_M5Stack.h"
 #include <M5Stack.h>

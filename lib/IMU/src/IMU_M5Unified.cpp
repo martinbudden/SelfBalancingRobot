@@ -1,4 +1,4 @@
-#if defined(M5_UNIFIED)
+#if defined(USE_IMU_M5_UNIFIED)
 #include <M5Unified.h>
 
 #include <IMU_M5Unified.h>

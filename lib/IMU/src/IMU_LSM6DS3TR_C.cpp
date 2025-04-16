@@ -1,6 +1,10 @@
 #if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_LSM6DS3TR_C_SPI)
 
 #include "IMU_LSM6DS3TR_C.h"
+//#define SERIAL_OUTPUT
+#if defined(SERIAL_OUTPUT)
+#include <HardwareSerial.h>
+#endif
 #include <cassert>
 // see https://github.com/STMicroelectronics/lsm6ds3tr-c-pid
 
@@ -124,8 +128,13 @@ void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSen
     _bus.writeRegister(REG_CTRL3_C, SW_RESET); // software reset
     delayMs(100);
 
-    const uint8_t chipID = _bus.readRegister(REG_WHO_AM_I);
-    assert(chipID == REG_WHO_AM_I_RESPONSE);
+    const uint8_t chipID = _bus.readRegisterWithTimeout(REG_WHO_AM_I, 100);
+#if defined(SERIAL_OUTPUT)
+    Serial.printf("IMU_LSM6DS3STR_C init, chipID=%02x\r\n", chipID);
+#else
+    (void)chipID;
+#endif
+    //assert(chipID == REG_WHO_AM_I_RESPONSE);
     delayMs(1);
 
     struct setting_t {

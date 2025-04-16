@@ -38,6 +38,12 @@ uint8_t BUS_SPI::readRegister(uint8_t reg) const
 #endif
 }
 
+uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
+{
+    (void)timeoutMs;
+    return readRegister(reg);
+}
+
 bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const
 {
 #if defined(USE_SPI_ARDUINO)

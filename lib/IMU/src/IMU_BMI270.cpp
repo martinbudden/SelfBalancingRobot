@@ -1,8 +1,11 @@
 #if defined(USE_IMU_BMI270_I2C) || defined(USE_IMU_BMI270_SPI)
 
 #include "IMU_BMI270.h"
-#include <cassert>
+//#define SERIAL_OUTPUT
+#if defined(SERIAL_OUTPUT)
 #include <HardwareSerial.h>
+#endif
+#include <cassert>
 
 namespace { // use anonymous namespace to make items local to this translation unit
 
@@ -616,8 +619,10 @@ void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
 
     // Initialization sequence, see page 17 and following from BMI270 Datasheet
     _bus.readRegister(REG_CHIP_ID); // dummy read, required for SPI mode
-    const uint8_t chipID = _bus.readRegisterWithTimeout(REG_CHIP_ID, 100);
-Serial.printf("IMU_BMI270 init, chipID=%02x\r\n", chipID);
+    [[maybe_unused]] const uint8_t chipID = _bus.readRegisterWithTimeout(REG_CHIP_ID, 100);
+#if defined(SERIAL_OUTPUT)
+    Serial.printf("IMU_BMI270 init, chipID=%02x\r\n", chipID);
+#endif
     //assert(chipID == 0x24);
     delayMs(1);
 
@@ -631,9 +636,9 @@ Serial.printf("IMU_BMI270 init, chipID=%02x\r\n", chipID);
     delayMs(1);
 
     const size_t dataSize = sizeof(imu_bmi270_config_data);
-    const uint8_t addressArray[2] = {
-        static_cast<uint8_t>((dataSize >> 1) & 0x0F),
-        static_cast<uint8_t>(dataSize >> 5)
+    const std::array<uint8_t, 2> addressArray = {
+        static_cast<uint8_t>((dataSize >> 1U) & 0x0FU),
+        static_cast<uint8_t>(dataSize >> 5U)
     };
     _bus.writeRegister(REG_INIT_ADDR_0, &addressArray[0], 2);
     enum { BUS_WRITE_CHUNK_SIZE = 32 };
@@ -645,8 +650,10 @@ Serial.printf("IMU_BMI270 init, chipID=%02x\r\n", chipID);
     delayMs(10);
     _bus.writeRegister(REG_INIT_CTRL, 0x01); // complete config load
     delayMs(10);
-    const uint8_t internalStatus = _bus.readRegister(REG_INTERNAL_STATUS);
-Serial.printf("IMU_BMI270 init, internalStatus=%02x\r\n", internalStatus);
+    [[maybe_unused]] const uint8_t internalStatus = _bus.readRegister(REG_INTERNAL_STATUS);
+#if defined(SERIAL_OUTPUT)
+    Serial.printf("IMU_BMI270 init, internalStatus=%02x\r\n", internalStatus);
+#endif
     //assert(internalStatus == INIT_OK || internalStatus == SENSOR_STOPPED);
 
     _bus.writeRegister(REG_PWR_CTRL, 0x0E); // enable gyro, acc and temp sensors
@@ -766,7 +773,6 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc()
     i2cSemaphoreTake();
     _bus.readRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
-//Serial.printf("readGyroRPS_Acc %d,%d,%d,%d,%d,%d\r\n", data.acc_x, data.acc_y, data.acc_z, data.gyro_x, data.gyro_y, data.gyro_z);
 
     return gyroRPS_AccFromRaw(data);
 }

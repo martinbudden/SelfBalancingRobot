@@ -215,9 +215,9 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_LSM6DS3TR_C_SPI)
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
-#elif defined(M5_STACK)
+#elif defined(USE_IMU_M5_STACK)
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex);
-#elif defined(M5_UNIFIED)
+#elif defined(USE_IMU_M5_UNIFIED)
     static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #else
     static_assert(false);
@@ -253,7 +253,7 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 void MainTask::checkGyroCalibration()
 {
     // Set the gyro offsets from non-volatile storage.
-#if defined(M5_UNIFIED)
+#if defined(USE_IMU_M5_UNIFIED)
     // M5_UNIFIED directly uses NVS (non-volatile storage) to store the gyro offsets.
     if (!M5.Imu.loadOffsetFromNVS()) {
         calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
