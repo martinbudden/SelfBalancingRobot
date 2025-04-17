@@ -28,13 +28,13 @@ public:
     inline screen_size_t getScreenSize() const { return _screenSize; }
 
     virtual void nextScreenMode() override;
-    virtual void updateTemplate() override;
-    virtual void update(bool packetReceived) const override;
+    virtual void update(bool packetReceived) override;
 private:
     void setScreenMode(mode_t screenMode);
     inline mode_t getScreenMode() const { return _screenMode; }
     screen_size_t screenSize();
 
+    void updateTemplate();
     void updateTemplate128x128() const;
     void updateTemplate80x160() const;
     void updateTemplate135x240() const;
@@ -59,4 +59,5 @@ private:
     screen_size_t _screenSize {SIZE_320x240};
     mode_t _screenMode {MODE_NORMAL};
     int _screenRotationOffset {0};
+    int _templateIsUpdated {false};
 };

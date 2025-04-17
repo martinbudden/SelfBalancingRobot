@@ -619,10 +619,14 @@ void ScreenM5::updateAHRS_Data() const
 /*!
 Update the screen with data from the AHRS and the receiver.
 */
-void ScreenM5::update(bool packetReceived) const
+void ScreenM5::update(bool packetReceived)
 {
     // update the screen with the AHRS data
     if (_screenMode != ScreenM5::MODE_QRCODE) {
+        // update the screen template if it hasn't been updated
+        if (_templateIsUpdated == false) {
+            updateTemplate();
+        }
         updateAHRS_Data();
         if (packetReceived) {
             // update the screen with data received from the receiver

@@ -167,7 +167,6 @@ void MainTask::setup()
     // Statically allocate the screen.
     static ScreenM5 screen(*_ahrs, motorPairController, receiver);
     _screen = &screen;
-    screen.updateTemplate();
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(motorPairController, receiver, _screen);
@@ -382,12 +381,6 @@ void MainTask::loop()
     _backchannel->update();
 #endif
 #if defined(USE_SCREEN)
-    if (packetReceived) {
-        // update the screen template the first time we receive a packet
-        if (_screen->templateIsUpdated() == false) {
-            _screen->updateTemplate();
-        }
-    }
     // screen and button update tick counts are coprime, so screen and buttons are not normally updated in same loop
     // update the screen every 101 ticks (0.1 seconds)
     if (_screenTickCount - tickCount > 101) {
