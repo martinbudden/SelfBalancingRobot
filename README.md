@@ -41,10 +41,9 @@ These libraries are designed so they may be used in other projects.
 
 | Library              | Function  | Location |
 | -------------------- | --------- | -------- |
-| IMU_TYPES            | General purpose 3D vector, quaternion, and 3x3 matrix classes |https://github.com/martinbudden/Library-IMU_TYPES|
+| IMU_TYPES            | General purpose 3D vector, quaternion, and 3x3 matrix classes | https://github.com/martinbudden/Library-IMU_TYPES |
 | PIDF                 | PID controller with feed-forward | https://github.com/martinbudden/Library-PIDF |
 | Filters              | Collection of general purpose filters | https://github.com/martinbudden/Library-Filters |
-| AtomJoyStickReceiver | Receiver for M5Stack Atom Joystick | https://github.com/martinbudden/Library-AtomJoyStickReceiver |
 | SensorFusion         | Sensor Fusion including<br> Complementary Filter<br> Mahony Filter<br> Madgwick Filter<br> VQF | https://github.com/martinbudden/Library-SensorFusion |
 
 ## Potential Future Implementations
