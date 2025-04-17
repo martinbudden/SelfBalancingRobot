@@ -55,6 +55,7 @@ uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
     }
 #else
     (void)reg;
+    (void)timeoutMs;
 #endif
     return 0;
 }

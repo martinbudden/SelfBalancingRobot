@@ -768,13 +768,11 @@ int32_t IMU_BMI270::getAccOneG_Raw() const
 
 IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc()
 {
-    acc_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-
     i2cSemaphoreTake();
-    _bus.readRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&_accGyroData), sizeof(_accGyroData)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
-    return gyroRPS_AccFromRaw(data);
+    return gyroRPS_AccFromRaw(_accGyroData);
 }
 
 IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const

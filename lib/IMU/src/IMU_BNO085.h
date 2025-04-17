@@ -1,8 +1,8 @@
 #pragma once
 
+#include "IMU_Base.h"
 #include <BUS_I2C.h>
 #include <BUS_SPI.h>
-#include <IMU_Base.h>
 
 /*!
 The BNO085 is a System in Package (SiP) that integrates a triaxial accelerometer, triaxial gyroscope,
@@ -12,7 +12,8 @@ Communication with the BNO085 is via Hillcrest's Sensor Hub Transport Protocol (
 */
 class IMU_BNO085 : public IMU_Base {
 public:
-    static constexpr uint8_t I2C_ADDRESS=0x4A;
+    static constexpr uint8_t I2C_ADDRESS = 0x4A;
+
     enum { MAX_PACKET_SIZE = 320 }; // The SH-2 protocol allows packets can be up to 32K, but 320 bytes is sufficient for BNO085
     enum { MAX_I2C_READ_LENGTH = 32 }; // Arduino I2C reads are limited to 32 bytes
 

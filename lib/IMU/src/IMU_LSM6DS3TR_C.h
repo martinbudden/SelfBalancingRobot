@@ -1,13 +1,14 @@
 #pragma once
 
+#include "IMU_Base.h"
 #include <BUS_I2C.h>
 #include <BUS_SPI.h>
-#include <IMU_Base.h>
 
 
 class IMU_LSM6DS3TR_C : public IMU_Base {
 public:
-    static constexpr uint8_t I2C_ADDRESS=0x6A;
+    static constexpr uint8_t I2C_ADDRESS = 0x6A;
+    static constexpr uint8_t I2C_ADDRESS_ALTERNATIVE = 0x6B;
 #pragma pack(push, 1)
     struct mems_sensor_data_t {
         enum { DATA_SIZE = 6 };
@@ -43,4 +44,5 @@ private:
 #else
     BUS_SPI _bus; //!< SPI bus interface,
 #endif
+    acc_gyro_data_t _accGyroData {};
 };

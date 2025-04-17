@@ -1,8 +1,8 @@
 #pragma once
 
+#include "IMU_Base.h"
 #include <BUS_I2C.h>
 #include <BUS_SPI.h>
-#include <IMU_Base.h>
 
 
 class IMU_BMI270 : public IMU_Base {
@@ -46,4 +46,5 @@ private:
 #else
     BUS_SPI _bus; //!< SPI bus interface,
 #endif
+    acc_gyro_data_t _accGyroData {};
 };

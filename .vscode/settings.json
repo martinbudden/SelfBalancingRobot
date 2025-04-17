@@ -31,6 +31,7 @@
         "cppcoreguidelines",
         "datasheet",
         "DEADBAND",
+        "DHCX",
         "DLPF",
         "drawpix",
         "DRDY",

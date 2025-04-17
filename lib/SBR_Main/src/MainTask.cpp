@@ -154,7 +154,7 @@ void MainTask::setup()
 #endif
     loadPreferences();
 
-#if defined(BACKCHANNEL_MAC_ADDRESS)
+#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the telemetry scale factors
     static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
@@ -211,9 +211,9 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_BNO085_SPI)
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
-#elif defined(USE_IMU_LSM6DS3TR_C_I2C)
+#elif defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
-#elif defined(USE_IMU_LSM6DS3TR_C_SPI)
+#elif defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
 #elif defined(USE_IMU_M5_STACK)
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex);
@@ -303,12 +303,10 @@ void MainTask::loadPreferences()
     if (!_preferences->isSetPID()) {
         resetPreferences();
     }
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdouble-promotion" // printf does double promotion
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
     if (pitchBalanceAngleDegrees != SV_Preferences::NOT_SET) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
-        Serial.printf("**** pitch balance angle loaded from preferences:%f\r\n", pitchBalanceAngleDegrees);
+        Serial.printf("**** pitch balance angle loaded from preferences:%f\r\n", static_cast<double>(pitchBalanceAngleDegrees));
     }
 
     // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
@@ -317,10 +315,9 @@ void MainTask::loadPreferences()
         const PIDF::PIDF_t pid = _preferences->getPID(pidName);
         if (pid.kp != SV_Preferences::NOT_SET) {
             _motorPairController->setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
-            Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), pid.kp, pid.ki, pid.kd, pid.kf);
+            Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), static_cast<double>(pid.kp), static_cast<double>(pid.ki), static_cast<double>(pid.kd), static_cast<double>(pid.kf));
         }
     }
-#pragma GCC diagnostic pop
 }
 
 void MainTask::setupTasks()

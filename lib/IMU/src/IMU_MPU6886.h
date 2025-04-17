@@ -1,8 +1,8 @@
 #pragma once
 
+#include "IMU_Base.h"
 #include <BUS_I2C.h>
 #include <BUS_SPI.h>
-#include <IMU_Base.h>
 
 
 class IMU_MPU6886 : public IMU_Base {
@@ -12,6 +12,7 @@ public:
     IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, nullptr) {}
     virtual void init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) override;
 public:
+    static constexpr uint8_t I2C_ADDRESS = 0x68;
     enum acc_scale_t { AFS_2G = 0, AFS_4G, AFS_8G, AFS_16G };
     enum gyro_scale_t { GFS_250DPS = 0, GFS_500DPS, GFS_1000DPS, GFS_2000DPS };
 #pragma pack(push, 1)
@@ -77,6 +78,7 @@ private:
 #else
     BUS_SPI _bus; //!< SPI bus interface,
 #endif
+    acc_temperature_gyro_data_t _accTemperatureGyroData {};
     acc_temperature_gyro_array_t _fifoBuffer {};
     uint8_t _imuID {0};
 };

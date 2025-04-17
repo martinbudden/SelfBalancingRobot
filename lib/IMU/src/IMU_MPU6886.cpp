@@ -10,8 +10,6 @@ namespace { // use anonymous namespace to make items local to this translation u
 constexpr float GYRO_2000DPS_RES { 2000.0 / 32768.0 };
 constexpr float ACC_8G_RES { 8.0 / 32768.0 };
 
-constexpr uint8_t I2C_ADDRESS               = 0x68;
-
 constexpr uint8_t REG_XG_OFFS_TC_H          = 0x04;
 constexpr uint8_t REG_XG_OFFS_TC_L          = 0x05;
 constexpr uint8_t REG_YG_OFFS_TC_H          = 0x07;
@@ -269,13 +267,11 @@ xyz_t IMU_MPU6886::readGyroDPS()
 
 IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readGyroRPS_Acc()
 {
-    acc_temperature_gyro_data_t data; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-
     i2cSemaphoreTake();
-    _bus.readRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&data), sizeof(data)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    _bus.readRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&_accTemperatureGyroData), sizeof(_accTemperatureGyroData)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     i2cSemaphoreGive();
 
-    return gyroRPS_AccFromRaw(data);
+    return gyroRPS_AccFromRaw(_accTemperatureGyroData);
 }
 
 int32_t IMU_MPU6886::readTemperatureRaw() const
