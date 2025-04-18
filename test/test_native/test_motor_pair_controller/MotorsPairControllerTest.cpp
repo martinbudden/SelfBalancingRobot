@@ -86,7 +86,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
 /*!
 Sets the control mode and adjusts the _PIDS[SPEED_DPS] constants accordingly.
 */
-void MotorPairController::setControlMode(ControlMode_t controlMode)
+void MotorPairController::setControlMode(control_mode_t controlMode)
 {
     _PIDS[SPEED_DPS].resetIntegral();
     _controlMode = controlMode;

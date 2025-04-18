@@ -24,7 +24,7 @@ constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.001F,   0.01
 constexpr PIDF::PIDF_t positionPID_Default                      { 1.00F,    0.00F,  0.0F,    0.0F };
 constexpr PIDF::PIDF_t positionPID_TelemetryScaleFactors        { 0.10F,    0.01F,  0.001F,  0.1F };
 
-constexpr MotorPairController::ControlMode_t controlModeDefault = MotorPairController::CONTROL_MODE_PARALLEL_PIDS;
+constexpr MotorPairController::control_mode_t controlModeDefault = MotorPairController::CONTROL_MODE_PARALLEL_PIDS;
 
 constexpr float maxMotorRPM                 {200.0}; // this is an estimate of max RPM under load
 constexpr float wheelDiameterMM             {45.0};
@@ -51,7 +51,7 @@ constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.001F,  0.001
 constexpr PIDF::PIDF_t positionPID_Default                      { 0.650F,  0.00F,  0.0000F, 0.0F };
 constexpr PIDF::PIDF_t positionPID_TelemetryScaleFactors        { 0.001F,  0.01F,  0.0001F, 0.1F };
 
-constexpr MotorPairController::ControlMode_t controlModeDefault = MotorPairController::CONTROL_MODE_PARALLEL_PIDS;
+constexpr MotorPairController::control_mode_t controlModeDefault = MotorPairController::CONTROL_MODE_PARALLEL_PIDS;
 
 constexpr float maxMotorRPM                 {170.0};
 constexpr float wheelDiameterMM             {68.0};
@@ -79,7 +79,7 @@ constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.001F,  1.0F,
 constexpr PIDF::PIDF_t positionPID_Default                      { 0.001F,  0.0F,   0.0F,    0.0F };
 constexpr PIDF::PIDF_t positionPID_TelemetryScaleFactors        { 0.001F,  1.0F,   0.0001F, 0.1F };
 
-constexpr MotorPairController::ControlMode_t controlModeDefault = MotorPairController::CONTROL_MODE_SERIAL_PIDS;
+constexpr MotorPairController::control_mode_t controlModeDefault = MotorPairController::CONTROL_MODE_SERIAL_PIDS;
 
 constexpr float maxMotorRPM                 {100.0};
 constexpr float wheelDiameterMM             {68.0};
@@ -108,7 +108,7 @@ constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.001F,   1.0F
 constexpr PIDF::PIDF_t positionPID_Default                      { 0.050F,   0.0F,   0.0F,    0.0F };
 constexpr PIDF::PIDF_t positionPID_TelemetryScaleFactors        { 0.001F,   1.0F,   0.001F,  0.1F };
 
-constexpr MotorPairController::ControlMode_t controlModeDefault = MotorPairController::CONTROL_MODE_SERIAL_PIDS;
+constexpr MotorPairController::control_mode_t controlModeDefault = MotorPairController::CONTROL_MODE_SERIAL_PIDS;
 
 constexpr float maxMotorRPM                 {80.0};
 constexpr float wheelDiameterMM             {66.5};
@@ -135,7 +135,7 @@ constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.0001F, 0.001
 constexpr PIDF::PIDF_t positionPID_Default                      { 0.0000F, 0.0F,   0.0F,    0.0F };
 constexpr PIDF::PIDF_t positionPID_TelemetryScaleFactors        { 0.0001F, 0.001F, 0.00001F,0.1F };
 
-constexpr MotorPairController::ControlMode_t controlModeDefault = MotorPairController::CONTROL_MODE_PARALLEL_PIDS;
+constexpr MotorPairController::control_mode_t controlModeDefault = MotorPairController::CONTROL_MODE_PARALLEL_PIDS;
 
 constexpr float maxMotorRPM                 {100.0};
 constexpr float wheelDiameterMM             {56.0};

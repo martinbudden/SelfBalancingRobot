@@ -63,7 +63,7 @@ MotorPairBase& MotorPairController::allocateMotors()
 /*!
 Sets the control mode and adjusts the _PIDS[SPEED_DPS] constants accordingly.
 */
-void MotorPairController::setControlMode(ControlMode_t controlMode)
+void MotorPairController::setControlMode(control_mode_t controlMode)
 {
     _controlMode = controlMode;
     _PIDS[SPEED_DPS].setPID((controlMode == CONTROL_MODE_SERIAL_PIDS) ? speedPID_DefaultSerial : speedPID_DefaultParallel);

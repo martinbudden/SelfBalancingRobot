@@ -40,7 +40,7 @@ private:
     MotorPairController(MotorPairController&&) = delete;
     MotorPairController& operator=(MotorPairController&&) = delete;
 public:
-    enum ControlMode_t {
+    enum control_mode_t {
         CONTROL_MODE_SERIAL_PIDS, //!< Serial configuration for pitch and speed PIDs. Output from speed PID is added to the setpoint of the pitch PID.
         CONTROL_MODE_PARALLEL_PIDS, //!< Parallel configuration for pitch and speed PIDs. Pitch and speed are independently set.
         CONTROL_MODE_POSITION //!< The speed PID is used to set position rather than speed. Movement is obtained by incrementing position.
@@ -63,8 +63,8 @@ public:
     inline bool motorsIsDisabled() const { return _mixer.motorsIsDisabled(); }
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
 
-    inline ControlMode_t getControlMode() const { return _controlMode; }
-    void setControlMode(ControlMode_t controlMode);
+    inline control_mode_t getControlMode() const { return _controlMode; }
+    void setControlMode(control_mode_t controlMode);
 
     inline void setFailSafeTickCountThreshold(uint32_t failSafeTickCountThreshold) { _failSafeTickCountThreshold = failSafeTickCountThreshold; }
     inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failSafeTickCountSwitchOffThreshold) { _failSafeTickCountSwitchOffThreshold = failSafeTickCountSwitchOffThreshold; }
@@ -110,7 +110,7 @@ private:
     ReceiverBase& _receiver;
     MotorPairBase& _motors; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorMixer _mixer;
-    ControlMode_t _controlMode;
+    control_mode_t _controlMode;
 
     int32_t _onOffSwitchPressed {false};
     int32_t _receiverInUse {false};

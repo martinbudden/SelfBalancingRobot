@@ -75,13 +75,12 @@ struct CommandPacketSetPID {
 struct CommandPacketSetOffset {
     enum { TYPE = 5 };
     enum { NO_ACTION = 0,
-        SET_GYRO_OFFSET_X = 1, SET_GYRO_OFFSET_Y = 2, SET_GYRO_OFFSET_Z = 3,
-        SET_ACC_OFFSET_X = 4, SET_ACC_OFFSET_Y = 5, SET_ACC_OFFSET_Z = 6,
-        SAVE_GYRO_OFFSET = 7, SAVE_ACC_OFFSET = 8
+        SET_GYRO_OFFSET_X = 1, SET_GYRO_OFFSET_Y = 2, SET_GYRO_OFFSET_Z = 3, SAVE_GYRO_OFFSET = 4,
+        SET_ACC_OFFSET_X = 5, SET_ACC_OFFSET_Y = 6, SET_ACC_OFFSET_Z = 7, SAVE_ACC_OFFSET = 8
     };
     uint32_t id;
     uint8_t type;
-    uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetFilter)
+    uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetOffset)
     uint8_t setType;
     uint8_t filler;
     int32_t value;
