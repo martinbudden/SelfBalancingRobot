@@ -1,8 +1,15 @@
 #include "MotorMixer.h"
 
 #include <MotorPairBase.h>
-#if defined(AHRS_RECORD_TIMES_CHECKS)
+
+#if defined(USE_FREERTOS) && defined(FRAMEWORK_ARDUINO)
 #include <esp32-hal.h>
+static uint64_t timeUs() { return micros(); }
+#elif defined(USE_FREERTOS) && defined(FRAMEWORK_ESPIDF)
+#include <esp_timer.h>
+static uint64_t timeUs() { return esp_timer_get_time(); }
+#else
+static uint64_t timeUs() { return 0; }
 #endif
 
 #if !defined(UNIT_TEST_BUILD)
@@ -31,13 +38,9 @@ void MotorMixer::outputToMotors(const output_t& outputs, float deltaT, uint32_t 
         // filter the power input into the motors so they run more smoothly.
         const float powerLeftFiltered = _powerLeftFilter.update(_powerLeft);
         const float powerRightFiltered = _powerRightFilter.update(_powerRight);
-#if defined(AHRS_RECORD_TIMES_CHECKS)
-        const uint32_t timeMicroSeconds0 = micros();
-#endif
+        const uint32_t timeMicroSeconds0 = timeUs();
         _motors.setPower(powerLeftFiltered, powerRightFiltered);
-#if defined(AHRS_RECORD_TIMES_CHECKS)
-        _outputPowerTimeMicroSeconds = micros() - timeMicroSeconds0;
-#endif
+        _outputPowerTimeMicroSeconds = timeUs() - timeMicroSeconds0;
     } else {
         if (_motorSwitchOffTickCount == 0) { // the motors haven't already been switched off
             // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.

@@ -90,19 +90,16 @@ private:
     Quaternion _orientation {};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
 
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
-    // interrupt service routine data
-    static AHRS* ahrs; //!< alias of `this` to be used in imuDataReceivedInterruptServiceRoutine
-    uint32_t _imuDataReadyCount {0}; //<! data ready count, used in interrupt service routine
-#endif
-
     // instrumentation member data
     uint32_t _fifoCount {0};
     uint32_t _timeChecksMicroSeconds[TIME_CHECKS_COUNT + 1] {};
     inline void TIME_CHECK(uint32_t index, uint32_t timeMicroSeconds) { _timeChecksMicroSeconds[index] = timeMicroSeconds; }
 
     // data synchronization primitives
-#if defined(USE_IMU_DATA_READY_MUTEX)
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+    // interrupt service routine data
+    static AHRS* ahrs; //!< alias of `this` to be used in imuDataReceivedInterruptServiceRoutine
+    uint32_t _imuDataReadyCount {0}; //<! data ready count, used in interrupt service routine
 #if defined(USE_FREERTOS)
     StaticSemaphore_t _imuDataReadyMutexBuffer {}; // _imuDataReadyMutexBuffer must be declared before _imuDataReadyMutex
     SemaphoreHandle_t _imuDataReadyMutex {};
@@ -110,13 +107,14 @@ private:
     inline void UNLOCK_IMU_DATA_READY() const { xSemaphoreGive(_imuDataReadyMutex); }
 #elif defined(USE_PICO_BARE_METAL)
     mutable mutex_t _imuDataReadyMutex{};
-    inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(_imuDataReadyMutex); }
-    inline void UNLOCK_AHRS_DATA() const { mutex_exit(_imuDataReadyMutex); }
+    inline void LOCK_IMU_DATA_READY() const { mutex_enter_blocking(_imuDataReadyMutex); }
+    inline void UNLOCK_IMU_DATA_READY() const { mutex_exit(_imuDataReadyMutex); }
 #endif
 #else
     inline void LOCK_IMU_DATA_READY() const {}
     inline void UNLOCK_IMU_DATA_READY() const {}
 #endif
+
 #if defined(USE_AHRS_DATA_MUTEX)
 #if defined(USE_FREERTOS)
     StaticSemaphore_t _ahrsDataMutexBuffer {}; // _ahrsDataMutexBuffer must be declared before _ahrsDataMutex

@@ -663,9 +663,11 @@ void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
     //_bus.writeRegister(REG_FIFO_CONFIG_1, FIFO_GYRO_ENABLE | FIFO_ACC_ENABLE | FIFO_HEADER_DISABLE);
     _bus.writeRegister(REG_FIFO_CONFIG_1, 0x00); // all FIFOs disabled
     delayMs(1);
-    _bus.writeRegister(REG_INT_MAP_DATA, 0x04); // enable the data ready interrupt pin 1
+    _bus.writeRegister(REG_INT_MAP_DATA, 0b01000100); // enable the data ready interrupt pins 1 and 2
     delayMs(1);
-    _bus.writeRegister(REG_INT1_IO_CTRL, 0x0A); // active high, push-pull, output enabled, input disabled
+    _bus.writeRegister(REG_INT1_IO_CTRL, 0b00000100); // input disabled, output enabled, push-pull, active low
+    delayMs(1);
+    _bus.writeRegister(REG_INT2_IO_CTRL, 0b00000100); // input disabled, output enabled, push-pull, active low
     delayMs(1);
 
     const uint8_t gyroOutputDataRate = 

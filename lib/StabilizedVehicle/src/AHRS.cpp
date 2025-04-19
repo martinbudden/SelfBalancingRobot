@@ -4,11 +4,10 @@
 
 #include <SensorFusion.h>
 #include <cmath>
-#if defined(AHRS_IS_INTERRUPT_DRIVEN) || defined(USE_FREERTOS)
-#include <driver/gpio.h>
-#endif
 
 #if defined(USE_FREERTOS) && defined(FRAMEWORK_ARDUINO)
+#include <Arduino.h>
+#include <driver/gpio.h>
 #include <esp32-hal-gpio.h>
 static uint64_t timeUs() { return micros(); }
 #elif defined(USE_FREERTOS) && defined(FRAMEWORK_ESPIDF)
@@ -106,7 +105,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
         const float deltaT = static_cast<float>(timeMicroSeconds - _timeMicroSecondsPrevious) * 0.000001F;
         _timeMicroSecondsPrevious = timeMicroSeconds;
         if (deltaT > 0.0F) {
-            (void)readIMUandUpdateOrientation(deltaT);
+            readIMUandUpdateOrientation(deltaT);
         }
 #else
         // delay until the end of the next tickIntervalTicks
@@ -121,7 +120,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 
         if (_tickCountDelta > 0) { // guard against the case of the while loop executing twice on the same tick interval
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
-            (void)readIMUandUpdateOrientation(deltaT);
+            readIMUandUpdateOrientation(deltaT);
         }
 #endif // AHRS_IS_INTERRUPT_DRIVEN
     }
@@ -301,7 +300,6 @@ void AHRS::checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orie
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
 IRAM_ATTR void AHRS::imuDataReadyInterruptServiceRoutine()
 {
-    //AHRS* ahrs = reinterpret_cast<AHRS*>(arg);
     ++ahrs->_imuDataReadyCount;
     ahrs->UNLOCK_IMU_DATA_READY();
 }
@@ -314,7 +312,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
     _sensorFusionFilter(sensorFusionFilter),
     _IMU(imuSensor),
     _imuFilters(imuFilters)
-#if defined(USE_IMU_DATA_READY_MUTEX)
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
     , _imuDataReadyMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataReadyMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 #if defined(USE_AHRS_DATA_MUTEX)
@@ -324,7 +322,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 {
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
     ahrs = this;
-    attachInterrupt(IMU_INTERRUPT_PIN, imuDataReadyInterruptServiceRoutine, FALLING);
+    attachInterrupt(digitalPinToInterrupt(IMU_INTERRUPT_PIN), imuDataReadyInterruptServiceRoutine, LOW);
 #endif
     setSensorFusionFilterInitializing(true);
 
@@ -332,7 +330,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
-#if defined(USE_IMU_DATA_READY_MUTEX)
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
     // ensure _imuDataReadyMutexBuffer declared before _imuDataReadyMutex
     static_assert(offsetof(AHRS, _imuDataReadyMutex) > offsetof(AHRS, _imuDataReadyMutexBuffer));
 #endif
@@ -344,7 +342,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 
 #elif defined(USE_PICO_BARE_METAL)
 
-#if defined(USE_IMU_DATA_READY_MUTEX)
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
     mutex_init(&_imuDataReadyMutex);
 #endif
 #if defined(USE_AHRS_DATA_MUTEX)
