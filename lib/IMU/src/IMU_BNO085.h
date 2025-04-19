@@ -148,6 +148,8 @@ public:
     uint16_t parseInputSensorReport(const SHTP_Packet& packet);
     uint16_t parseGyroIntegratedRotationVectorReport(const SHTP_Packet& packet);
     uint16_t parseCommandResponse(const SHTP_Packet& packet);
+    bool sendCommandCalibrateMotionEngine();
+    bool sendCommandSaveDynamicCalibrationData();
     // for unit testing
     inline gyro_integrated_rotation_vector_t getGyroIntegratedRotationVectorData() const { return _gyroIntegratedRotationVector; }
     inline rotation_vector_t getRotationVectorData() const { return _rotationVector; }
@@ -165,8 +167,6 @@ private:
     bool readPacket();
     bool readData(size_t readLength);
     bool sendPacket(uint8_t channelNumber, uint8_t dataLength);
-    bool sendCommandCalibrateMotionEngine();
-    bool sendCommandSaveDynamicCalibrationData();
     bool sendCommand(uint8_t command);
 protected:
 #if defined(USE_IMU_BNO085_I2C)
