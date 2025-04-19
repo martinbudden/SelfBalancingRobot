@@ -15,7 +15,7 @@ union fi { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     uint32_t i;
 };
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
 void test_float()
 {
     fi v {};
@@ -23,41 +23,41 @@ void test_float()
     uint32_t exponent = 0;
 
     TEST_ASSERT_EQUAL_FLOAT(0.0F, v.f);
-    TEST_ASSERT_EQUAL(0, v.i & 0x80000000); // sign bit
-    mantissa =  v.i & 0x07fffff;
-    exponent = (v.i & 0x7f800000) >> 23;
+    TEST_ASSERT_EQUAL(0, v.i & 0x80000000U); // sign bit
+    mantissa =  v.i & 0x07fffffU;
+    exponent = (v.i & 0x7f800000U) >> 23U;
     TEST_ASSERT_EQUAL(0, mantissa);
     TEST_ASSERT_EQUAL(0, exponent);
 
     v.f = 1.0F;
     TEST_ASSERT_EQUAL_FLOAT(1.0F, v.f);
-    TEST_ASSERT_EQUAL(0, v.i & 0x80000000); // sign bit
-    mantissa =  v.i & 0x07fffff;
-    exponent = (v.i & 0x7f800000) >> 23;
+    TEST_ASSERT_EQUAL(0, v.i & 0x80000000U); // sign bit
+    mantissa =  v.i & 0x07fffffU;
+    exponent = (v.i & 0x7f800000U) >> 23U;
     TEST_ASSERT_EQUAL(0, mantissa);
     TEST_ASSERT_EQUAL(127, exponent); // twos complement
 
     v.f = 2.0F;
     TEST_ASSERT_EQUAL_FLOAT(2.0F, v.f);
     TEST_ASSERT_EQUAL(0, v.i & 0x80000000); // sign bit
-    mantissa =  v.i & 0x07fffff;
-    exponent = (v.i & 0x7f800000) >> 23;
+    mantissa =  v.i & 0x07fffffU;
+    exponent = (v.i & 0x7f800000U) >> 23U;
     TEST_ASSERT_EQUAL(0, mantissa);
     TEST_ASSERT_EQUAL(128, exponent);
 
     v.f = 0.5F;
     TEST_ASSERT_EQUAL_FLOAT(0.5F, v.f);
-    TEST_ASSERT_EQUAL(0, v.i & 0x80000000); // sign bit
-    mantissa =  v.i & 0x07fffff;
-    exponent = (v.i & 0x7f800000) >> 23;
+    TEST_ASSERT_EQUAL(0, v.i & 0x80000000U); // sign bit
+    mantissa =  v.i & 0x07fffffU;
+    exponent = (v.i & 0x7f800000U) >> 23U;
     TEST_ASSERT_EQUAL(0, mantissa);
     TEST_ASSERT_EQUAL(126, exponent);
 
     v.f = 0.75F;
     TEST_ASSERT_EQUAL_FLOAT(0.75F, v.f);
     TEST_ASSERT_EQUAL(0, v.i & 0x80000000); // sign bit
-    mantissa =  v.i & 0x07fffff;
-    exponent = (v.i & 0x7f800000) >> 23;
+    mantissa =  v.i & 0x07fffffU;
+    exponent = (v.i & 0x7f800000U) >> 23U;
     TEST_ASSERT_EQUAL(0x400000, mantissa);
     TEST_ASSERT_EQUAL(126, exponent);
 }
@@ -69,13 +69,13 @@ int32_t float32ToInt24(float x)
         uint32_t i;
     } n {.f = x};
 
-    const auto sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U); // 0x1000 0000  NOLINT(cppcoreguidelines-pro-type-union-access)
-    const auto exponent = static_cast<uint8_t>((n.i >> 23U) & 0xFFU); // 0x7F80 0000 NOLINT(cppcoreguidelines-pro-type-union-access)
+    const auto sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U); // 0x1000 0000
+    const auto exponent = static_cast<uint8_t>((n.i >> 23U) & 0xFFU); // 0x7F80 0000
     if (exponent == 0) {
         return 0;
     }
 
-    const uint32_t mantissa = (n.i & 0x7FFFFFU) | 0x800000U; // 0x007F FFFF implicit bit NOLINT(cppcoreguidelines-pro-type-union-access)
+    const uint32_t mantissa = (n.i & 0x7FFFFFU) | 0x800000U; // 0x007F FFFF
 
     const auto i = static_cast<int32_t>(mantissa >> (22U - (exponent - 0x80U)));
     return sign ? -i : i;
@@ -99,13 +99,13 @@ int32_t float32_to_Q4dot12(float x)
         uint32_t i;
     } n {.f = x};
 
-    const auto sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U); // 0x1000 0000 NOLINT(cppcoreguidelines-pro-type-union-access)
-    const auto exponent = static_cast<uint8_t>((n.i >> 23U) & 0xFFU); // 0x7F80 0000 NOLINT(cppcoreguidelines-pro-type-union-access)
+    const auto sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U);
+    const auto exponent = static_cast<uint8_t>((n.i >> 23U) & 0xFFU);
     if (exponent == 0) {
         return 0;
     }
 
-    const uint32_t mantissa = (n.i & 0x7FFFFFU) | 0x800000U; // 0x007F FFFF, or in implicit bit NOLINT(cppcoreguidelines-pro-type-union-access)
+    const uint32_t mantissa = (n.i & 0x7FFFFFU) | 0x800000U; // 0x007F FFFF, or in implicit bit
 
     const auto i = static_cast<int32_t>(mantissa >> ((22U-11U) - (exponent - 0x80)));
     return sign ? -i : i;
@@ -127,15 +127,15 @@ int32_t ubyte4float_to_Q4dot12(const uint8_t f[4]) // NOLINT(cppcoreguidelines-a
     };
     const bi_t n = { .b = { f[0], f[1], f[2], f[3] } }; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-    const uint8_t exponent = static_cast<uint8_t>((n.i >> 23U) & 0xFFU); // 0x7F80 0000 // NOLINT(cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
+    const uint8_t exponent = static_cast<uint8_t>((n.i >> 23U) & 0xFFU); // 0x7F80 0000
     if (exponent == 0) {
         return 0;
     }
 
-    const uint8_t sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U); // 0x1000 0000 // NOLINT(cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
-    const uint32_t mantissa = (n.i & 0x7FFFFFU) | 0x800000U; // 0x007F FFFF, OR in implicit bit NOLINT(cppcoreguidelines-pro-type-union-access)
+    const uint8_t sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U); // 0x1000 0000
+    const uint32_t mantissa = (n.i & 0x7FFFFFU) | 0x800000U; // 0x007F FFFF, OR in implicit bit
 
-    const int32_t i = static_cast<int32_t>(mantissa >> ((22U-11U) - (exponent - 0x80U))); // -Wshift-count-overflow NOLINT(hicpp-use-auto,modernize-use-auto)
+    const int32_t i = static_cast<int32_t>(mantissa >> ((22U-11U) - (exponent - 0x80U))); // -Wshift-count-overflow
     return sign ? -i : i;
 }
 
@@ -179,17 +179,17 @@ void test_byte_convert()
     };
 
     bf x { .f = 2.0F};
-    TEST_ASSERT_EQUAL_FLOAT(2.0F, x.f); // NOLINT(cppcoreguidelines-pro-type-union-access)
+    TEST_ASSERT_EQUAL_FLOAT(2.0F, x.f);
 
 
     x.f = 0.48F; // NOLINT(cppcoreguidelines-pro-type-union-access)
-    const auto a = static_cast<int16_t>(ubyte4float_to_Q4dot12(&x.b[0])); // NOLINT(cppcoreguidelines-pro-type-union-access)
+    const auto a = static_cast<int16_t>(ubyte4float_to_Q4dot12(&x.b[0]));
     TEST_ASSERT_EQUAL(floor(0.48*2048), a);
 
     const float y = Q4dot12_to_float32(a);
-    TEST_ASSERT_FLOAT_WITHIN(0.00008F*x.f, x.f, y); // NOLINT(cppcoreguidelines-pro-type-union-access)
+    TEST_ASSERT_FLOAT_WITHIN(0.00008F*x.f, x.f, y);
 }
-// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
 
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
