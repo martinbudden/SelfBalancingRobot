@@ -18,7 +18,7 @@ constexpr PIDF::PIDF_t yawRatePID_TelemetryScaleFactors         { 0.01F,    0.01
 constexpr PIDF::PIDF_t speedPID_DefaultSerial                   { 1.00F,    0.00F,  0.0F,    0.0F };
 constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsSerial     { 0.01F,    0.01F,  0.00001F,0.1F };
 
-constexpr PIDF::PIDF_t speedPID_DefaultParallel                 { 0.030F,   1.00F,  0.0F,    0.00F };
+constexpr PIDF::PIDF_t speedPID_DefaultParallel                 { 0.030F,   0.00F,  0.0F,    0.00F };
 constexpr PIDF::PIDF_t speedPID_TelemetryScaleFactorsParallel   { 0.001F,   0.01F,  0.0001F, 0.01F };
 
 constexpr PIDF::PIDF_t positionPID_Default                      { 1.00F,    0.00F,  0.0F,    0.0F };
