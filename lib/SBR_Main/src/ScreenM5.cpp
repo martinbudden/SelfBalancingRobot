@@ -152,23 +152,23 @@ void ScreenM5::updateTemplate128x128() const
 
     yPos += 15;
     M5.Lcd.setCursor(0, yPos);
+    M5.Lcd.printf("Gyro");
+
+    yPos += 20;
+    M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("Acc");
 
-    yPos = 75;
+    yPos = 95;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("T:");
-
-    yPos += 10;
-    M5.Lcd.setCursor(0, yPos);
+    M5.Lcd.setCursor(60, yPos);
     M5.Lcd.printf("R:");
 
     yPos += 10;
     M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("P:");
-
-    yPos += 10;
-    M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("Y:");
+    M5.Lcd.setCursor(60, yPos);
+    M5.Lcd.printf("P:");
 
     M5.Lcd.setCursor(0, 118);
     M5.Lcd.printf("M:");
@@ -180,21 +180,18 @@ void ScreenM5::updateTemplate128x128() const
 void ScreenM5::updateReceivedData128x128() const
 {
     // M5StickC
-    int32_t yPos = 75;
-    M5.Lcd.setCursor(12, yPos);
+    int32_t yPos = 95;
     const ReceiverBase::controls_t controls = _receiver.getControls();
-    M5.Lcd.printf("%6d", controls.throttleStickQ4dot12);
 
-    yPos += 10;
     M5.Lcd.setCursor(12, yPos);
+    M5.Lcd.printf("%6d", controls.throttleStickQ4dot12);
+    M5.Lcd.setCursor(72, yPos);
     M5.Lcd.printf("%6d", controls.rollStickQ4dot12);
 
     yPos += 10;
     M5.Lcd.setCursor(12, yPos);
     M5.Lcd.printf("%6d", controls.pitchStickQ4dot12);
-
-    yPos += 10;
-    M5.Lcd.setCursor(12, yPos);
+    M5.Lcd.setCursor(72, yPos);
     M5.Lcd.printf("%6d", controls.yawStickQ4dot12);
 }
 
@@ -202,10 +199,19 @@ void ScreenM5::update128x128(const TD_AHRS::Data& ahrsData) const
 {
     int32_t yPos = 35;
 
-    M5.Lcd.setCursor(18, yPos);
-    M5.Lcd.printf("%5.0F", ahrsData.pitch);
+    M5.Lcd.setCursor(22, yPos);
+    M5.Lcd.printf("%5.0f", ahrsData.pitch);
+
+    if (ahrsData.roll != MotorPairController::NOT_SET) {
+        M5.Lcd.setCursor(60, yPos);
+        M5.Lcd.printf("ro:%5.0F", ahrsData.roll);
+    }
 
     yPos += 25;
+    M5.Lcd.setCursor(0, yPos);
+    M5.Lcd.printf("x:%4.0f y:%4.0f z:%4.0f", ahrsData.gyroRPS.x*radiansToDegrees, ahrsData.gyroRPS.y*radiansToDegrees, ahrsData.gyroRPS.z*radiansToDegrees);
+
+    yPos += 20;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("x:%4.1f y:%4.1f z:%4.1f", ahrsData.acc.x, ahrsData.acc.y, ahrsData.acc.z);
 
@@ -312,14 +318,14 @@ void ScreenM5::update80x160(const TD_AHRS::Data& ahrsData) const
         M5.Lcd.printf("az:%5.2f", ahrsData.acc.z);
     } else {
         M5.Lcd.setCursor(0, yPos);
-        M5.Lcd.printf("gx:%5.0F", ahrsData.gyroRPS.x * radiansToDegrees);
+        M5.Lcd.printf("gx:%5.0F", ahrsData.gyroRPS.x*radiansToDegrees);
 
         yPos += 10;
         M5.Lcd.setCursor(0, yPos);
-        M5.Lcd.printf("gy:%5.0F", ahrsData.gyroRPS.y * radiansToDegrees);
+        M5.Lcd.printf("gy:%5.0F", ahrsData.gyroRPS.y*radiansToDegrees);
 
         M5.Lcd.setCursor(0, yPos);
-        M5.Lcd.printf("gz:%5.0F", ahrsData.gyroRPS.z * radiansToDegrees);
+        M5.Lcd.printf("gz:%5.0F", ahrsData.gyroRPS.z*radiansToDegrees);
     }
 
     M5.Lcd.setCursor(12, 150);
@@ -512,7 +518,7 @@ void ScreenM5::update320x240(const TD_AHRS::Data& ahrsData) const
 
     yPos += 20;
     M5.Lcd.setCursor(36, yPos);
-    M5.Lcd.printf("%5.0F gy:%5.0F gz:%5.0F", ahrsData.gyroRPS.x * radiansToDegrees, ahrsData.gyroRPS.y * radiansToDegrees, ahrsData.gyroRPS.z * radiansToDegrees);
+    M5.Lcd.printf("%5.0F gy:%5.0F gz:%5.0F", ahrsData.gyroRPS.x*radiansToDegrees, ahrsData.gyroRPS.y*radiansToDegrees, ahrsData.gyroRPS.z*radiansToDegrees);
 
     yPos += 20;
     M5.Lcd.setCursor(36, yPos);
@@ -533,7 +539,7 @@ void ScreenM5::update320x240(const TD_AHRS::Data& ahrsData) const
     M5.Lcd.setCursor(208, yPos);
     M5.Lcd.printf("%8.0F", mpcTelemetry.speedRightDPS);
     M5.Lcd.setCursor(208, yPos + 20);
-    M5.Lcd.printf("%8.0F", round(mpcTelemetry.speedDPS_Filtered * (1.0F/6.0F)));
+    M5.Lcd.printf("%8.0F", round(mpcTelemetry.speedDPS_Filtered*(1.0F/6.0F)));
 #else
     yPos = 190;
     M5.Lcd.setCursor(48, yPos);
