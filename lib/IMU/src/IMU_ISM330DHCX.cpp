@@ -1,41 +1,21 @@
-#if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_LSM6DS3TR_C_SPI) \
-  || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_IMU_ISM330DHCX_SPI) \
-  || defined(USE_LSM6DSOX_I2C) || defined(USE_IMU_LSM6DSOX_SPI)
+#if defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_IMU_ISM330DHCX_SPI)
 
-#include "IMU_LSM6DS3TR_C.h"
+#include "IMU_ISM330DHCX.h"
 //#define SERIAL_OUTPUT
 #if defined(SERIAL_OUTPUT)
 #include <HardwareSerial.h>
 #endif
 #include <cassert>
 
-/*
-https://github.com/STMicroelectronics/lsm6ds3tr-c-pid
-https://github.com/STMicroelectronics/ism330dhcx-pid
-https://github.com/STMicroelectronics/lsm6dsox-pid
-*/
+// see https://github.com/STMicroelectronics/lsm6ds3tr-c-pid
+// see https://github.com/STMicroelectronics/ism330dhcx-pid
 
 namespace { // use anonymous namespace to make items local to this translation unit
 
 constexpr uint8_t REG_RESERVED_00           = 0x00;
 constexpr uint8_t REG_FUNC_CFG_ACCESS       = 0x01;
 
-#if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_LSM6DS3TR_C_SPI)
-
-constexpr uint8_t REG_RESERVED_02           = 0x02;
-constexpr uint8_t REG_RESERVED_03           = 0x03;
-constexpr uint8_t REG_SENSOR_SYNC_TIME_FRAME= 0x04;
-constexpr uint8_t REG_SENSOR_SYNC_RES_RATIO = 0x05;
-constexpr uint8_t REG_FIFO_CTRL1            = 0x06;
-constexpr uint8_t REG_FIFO_CTRL2            = 0x07;
-constexpr uint8_t REG_FIFO_CTRL3            = 0x08;
-constexpr uint8_t REG_FIFO_CTRL4            = 0x09;
-constexpr uint8_t REG_FIFO_CTRL5            = 0x0A;
-constexpr uint8_t REG_DRDY_PULSE_CFG_G      = 0x0B;
-constexpr uint8_t REG_RESERVED_0C           = 0x0C;
-constexpr uint8_t REG_MASTER_CONFIG         = 0x1A;
-
-#elif defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_IMU_ISM330DHCX_SPI)
+#if defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_IMU_ISM330DHCX_SPI)
 
 constexpr uint8_t REG_PIN_CTRL              = 0x02;
 constexpr uint8_t REG_RESERVED_03           = 0x03;
@@ -97,6 +77,7 @@ constexpr uint8_t REG_CTRL2_G               = 0x11;
     constexpr uint8_t GYRO_RANGE_500_DPS   = 0b0100;
     constexpr uint8_t GYRO_RANGE_1000_DPS  = 0b1000;
     constexpr uint8_t GYRO_RANGE_2000_DPS  = 0b1100;
+    constexpr uint8_t GYRO_RANGE_4000_DPS  = 0b0001; // ISM330DHCX only
     constexpr uint8_t GYRO_ODR_12p5_HZ = 0b00010000;
     constexpr uint8_t GYRO_ODR_26_HZ   = 0b00100000;
     constexpr uint8_t GYRO_ODR_52_HZ   = 0b00110000;
@@ -151,21 +132,21 @@ constexpr uint8_t REG_OUTZ_H_ACC            = 0x2D;
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
-#if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) :
+#if defined(USE_IMU_ISM330DHCX_I2C)
+IMU_ISM330DHCX::IMU_ISM330DHCX(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
-    _bus(I2C_address, SDA_pin, SCL_pin)
+    _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
 {
 }
 #else
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, uint8_t CS_pin) :
+IMU_ISM330DHCX::IMU_ISM330DHCX(axis_order_t axisOrder, uint8_t CS_pin) :
     IMU_Base(axisOrder),
-    _bus(frequency, CS_pin, IMU_SPI_SCK_PIN, IMU_SPI_CIPO_PIN, IMU_SPI_COPI_PIN)
+    _bus(CS_pin)
 {
 }
 #endif
 
-void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) // NOLINT(readability-function-cognitive-complexity)
+void IMU_ISM330DHCX::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) // NOLINT(readability-function-cognitive-complexity)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
@@ -174,28 +155,37 @@ void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSen
     delayMs(100);
 
     const uint8_t chipID = _bus.readRegisterWithTimeout(REG_WHO_AM_I, 100);
-    delayMs(1);
 #if defined(SERIAL_OUTPUT)
     Serial.printf("IMU init, chipID=%02x\r\n", chipID);
 #else
     (void)chipID;
 #endif
-    //assert(chipID == REG_WHO_AM_I_RESPONSE_LSM6DS3TR_C || chipID == REG_WHO_AM_I_RESPONSE_ISM330DHCX ||chipID == REG_WHO_AM_I_RESPONSE_LSM6DSOX);
+    //assert(chipID == REG_WHO_AM_I_RESPONSE);
+    delayMs(1);
 
-    _bus.writeRegister(REG_INT1_CTRL, INT1_DRDY_G); // Enable gyro data ready on INT1 pin
-    delayMs(1);
-    _bus.writeRegister(REG_INT2_CTRL, INT2_DRDY_G); // Enable gyro data ready on INT2 pin
-    delayMs(1);
-    _bus.writeRegister(REG_CTRL3_C, BDU | IF_INC); // Block Data Update and automatically increment registers when read via serial interface (I2C or SPI)
-    delayMs(1);
-#if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
-    _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G); // enable gyro LPF
+    struct setting_t {
+        uint8_t reg;
+        uint8_t value;
+    };
+    static constexpr std::array<setting_t, 6> settings = {
+        // Suppress badBitmaskCheck so we can OR with zero values without a warning
+        // cppcheck-suppress-begin badBitmaskCheck
+        REG_INT1_CTRL,          INT1_DRDY_G, // Enable gyro data ready on INT1 pin
+        REG_INT2_CTRL,          INT2_DRDY_G, // Enable gyro data ready on INT2 pin
+        REG_CTRL3_C,            BDU | IF_INC, // Block Data Update and automatically increment registers when read via serial interface (I2C or SPI)
+#if defined(USE_IMU_ISM330DHCX_I2C)
+        REG_CTRL4_C,            LPF1_SEL_G, // enable gyro LPF
 #else
-    _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G | I2C_DISABLE);
+        REG_CTRL4_C,            LPF1_SEL_G | I2C_DISABLE,
 #endif
-    delayMs(1);
-    _bus.writeRegister(REG_CTRL6_C, LPF1_HI);
-    delayMs(1);
+        REG_CTRL6_C,            LPF1_HI
+        // cppcheck-suppress-end badBitmaskCheck
+    };
+
+    for (const setting_t setting : settings) {
+        _bus.writeRegister(setting.reg, setting.value);
+        delayMs(1);
+    }
 
     const uint8_t gyroOutputDataRate = 
         outputDataRateHz == 0 ? GYRO_ODR_6664_HZ :
@@ -209,7 +199,7 @@ void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSen
         outputDataRateHz > 26 ? GYRO_ODR_52_HZ :
         outputDataRateHz > 13 ? GYRO_ODR_26_HZ : GYRO_ODR_12p5_HZ;
     switch (gyroSensitivity) {
-    case GYRO_FULL_SCALE_125_DPS: // NOLINT(bugprone-branch-clone) false positive
+    case GYRO_FULL_SCALE_125_DPS:
         _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_125_DPS | gyroOutputDataRate);
         _gyroResolutionDPS = 245.0F / 32768.0F;
         break;
@@ -230,6 +220,10 @@ void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSen
     default:
         _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_2000_DPS | gyroOutputDataRate);
         _gyroResolutionDPS = 2000.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_4000_DPS:
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_4000_DPS | gyroOutputDataRate);
+        _gyroResolutionDPS = 4000.0F / 32768.0F;
         break;
     }
     _gyroResolutionRPS = _gyroResolutionDPS * degreesToRadians;
@@ -267,7 +261,7 @@ void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSen
     delayMs(1);
 }
 
-IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readGyroRaw()
+IMU_Base::xyz_int32_t IMU_ISM330DHCX::readGyroRaw()
 {
     xyz_int32_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -278,7 +272,7 @@ IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readGyroRaw()
     return gyro;
 }
 
-IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readAccRaw()
+IMU_Base::xyz_int32_t IMU_ISM330DHCX::readAccRaw()
 {
     xyz_int32_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 
@@ -289,12 +283,12 @@ IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readAccRaw()
     return acc;
 }
 
-int32_t IMU_LSM6DS3TR_C::getAccOneG_Raw() const
+int32_t IMU_ISM330DHCX::getAccOneG_Raw() const
 {
     return 2048;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_LSM6DS3TR_C::readGyroRPS_Acc()
+IMU_Base::gyroRPS_Acc_t IMU_ISM330DHCX::readGyroRPS_Acc()
 {
     i2cSemaphoreTake();
     _bus.readRegister(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&_accGyroData), sizeof(_accGyroData)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -303,7 +297,7 @@ IMU_Base::gyroRPS_Acc_t IMU_LSM6DS3TR_C::readGyroRPS_Acc()
     return gyroRPS_AccFromRaw(_accGyroData);
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_LSM6DS3TR_C::gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const
+IMU_Base::gyroRPS_Acc_t IMU_ISM330DHCX::gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const
 {
 #if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
     return gyroRPS_Acc_t {

@@ -1,10 +1,13 @@
 #include "Calibration.h"
 
 #include <AHRS.h>
+#if defined(FRAMEWORK_ARDUINO)
+#include <Arduino.h>
 #if defined(M5_STACK)
 #include <M5Stack.h>
 #elif defined(M5_UNIFIED)
 #include <M5Unified.h>
+#endif
 #endif
 #include <SV_Preferences.h>
 
@@ -41,7 +44,9 @@ static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calib
 
     const int count = 5000;
     for (auto ii = 0; ii < count; ++ii) {
+#if defined(FRAMEWORK_ARDUINO)
         delay(1);
+#endif
         ahrs.readGyroRaw(x, y, z);
         gyroX += x;
         gyroY += y;
@@ -105,7 +110,9 @@ void calibrateGyro(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrat
     M5.Lcd.printf("Please keep the robot\r\n");
     M5.Lcd.printf("still for 10 seconds\r\n\r\n");
 #endif
+#if defined(FRAMEWORK_ARDUINO)
     delay(4000); // delay 4 seconds to allow robot to stabilize after user lets go
+#endif
 
     calibrate(ahrs, preferences, calibrationType);
 
@@ -113,7 +120,9 @@ void calibrateGyro(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrat
     M5.Lcd.printf("Finished calibration\r\n");
 #endif
 
+#if defined(FRAMEWORK_ARDUINO)
     delay(4000); // delay 4 seconds to allow user to read screen
+#endif
 
 #if defined(M5_STACK)
     M5.Power.reset();

@@ -2,7 +2,12 @@
 #include <cassert>
 
 #if defined(USE_ESP32)
-#include <esp32-hal.h>
+//#include <esp32-hal.h>
+#endif
+
+#if defined(FRAMEWORK_ARDUINO)
+#include <Arduino.h>
+#elif defined(FRAMEWORK_PICO)
 #endif
 
 IMU_Base::IMU_Base(axis_order_t axisOrder) :
@@ -20,8 +25,10 @@ IMU_Base::IMU_Base(axis_order_t axisOrder, [[maybe_unused]] void* i2cMutex) :
 
 void IMU_Base::delayMs(int ms)
 {
-#if defined(USE_ESP32)
+#if defined(FRAMEWORK_ARDUINO)
     delay(ms);
+#elif defined(FRAMEWORK_PICO)
+    //sleep_ms(ms);
 #else
     (void)ms;
 #endif

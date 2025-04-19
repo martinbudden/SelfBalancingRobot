@@ -1,8 +1,8 @@
 #pragma once
 
+#include "BUS_I2C.h"
+#include "BUS_SPI.h"
 #include "IMU_Base.h"
-#include <BUS_I2C.h>
-#include <BUS_SPI.h>
 
 
 class IMU_BMI270 : public IMU_Base {
@@ -28,9 +28,16 @@ public:
     };
 #pragma pack(pop)
 public:
-    explicit IMU_BMI270(axis_order_t axisOrder, uint8_t CS_pin);
-    IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
-    IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_BMI270(axisOrder, SDA_pin, SCL_pin, nullptr) {}
+#if defined(USE_IMU_BMI270_I2C)
+    // I2C constructors
+    IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex);
+    IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) : IMU_BMI270(axisOrder, SDA_pin, SCL_pin, I2C_address, nullptr) {}
+    IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) : IMU_BMI270(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS, i2cMutex) {}
+    IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_BMI270(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS, nullptr) {}
+#else
+    // SPI constructors
+    IMU_BMI270(axis_order_t axisOrder, uint32_t frequency, uint8_t CS_pin);
+#endif
 public:
     virtual void init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) override;
     virtual xyz_int32_t readGyroRaw() override;

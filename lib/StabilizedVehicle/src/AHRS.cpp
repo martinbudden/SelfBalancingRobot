@@ -6,8 +6,18 @@
 #include <cmath>
 #if defined(AHRS_IS_INTERRUPT_DRIVEN) || defined(USE_FREERTOS)
 #include <driver/gpio.h>
-#include <esp32-hal-gpio.h>
 #endif
+
+#if defined(USE_FREERTOS) && defined(FRAMEWORK_ARDUINO)
+#include <esp32-hal-gpio.h>
+static uint64_t timeUs() { return micros(); }
+#elif defined(USE_FREERTOS) && defined(FRAMEWORK_ESPIDF)
+#include <esp_timer.h>
+static uint64_t timeUs() { return esp_timer_get_time(); }
+#else
+static uint64_t timeUs() { return 0; }
+#endif
+
 
 // Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
 // The critical section variant seems to give better performance.
@@ -35,23 +45,23 @@ NOTE: calls to YIELD_TASK have no effect on multi-core implementations, but are 
 */
 bool AHRS::readIMUandUpdateOrientation(float deltaT)
 {
-    TIME_CHECK(0);
+    TIME_CHECK(0, timeUs());
 #if defined(IMU_DOES_SENSOR_FUSION)
     const IMU_Base::gyroRPS_Acc_t gyroAcc = {
         .gyroRPS = _IMU.readGyroRPS(),
         .acc = {}
     };
-    TIME_CHECK(1);
-    TIME_CHECK(2);
+    TIME_CHECK(1, timeUs());
+    TIME_CHECK(2, timeUs());
     const Quaternion orientation = _IMU.readOrientation();
-    TIME_CHECK(3);
+    TIME_CHECK(3, timeUs());
 #else
     IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc(); // NOLINT(misc-const-correctness) false positive
-    TIME_CHECK(1);
+    TIME_CHECK(1, timeUs());
     _imuFilters.filter(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 207us
-    TIME_CHECK(2);
+    TIME_CHECK(2, timeUs());
     const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 140us
-    TIME_CHECK(3);
+    TIME_CHECK(3, timeUs());
     if (sensorFusionFilterIsInitializing()) {
         checkFusionFilterConvergence(gyroAcc.acc, orientation);
     }
@@ -62,7 +72,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     if (_vehicleController != nullptr) {
         _vehicleController->updateOutputsUsingPIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
     }
-    TIME_CHECK(4);
+    TIME_CHECK(4, timeUs());
 
     LOCK_AHRS_DATA();
     _ahrsDataUpdatedSinceLastRead = true;
@@ -92,7 +102,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
         LOCK_IMU_DATA_READY(); // wait until the ISR unlocks data ready
         _imuDataReadyCount = 0;
 
-        const uint32_t timeMicroSeconds = micros();
+        const uint32_t timeMicroSeconds = timeUs();
         const float deltaT = static_cast<float>(timeMicroSeconds - _timeMicroSecondsPrevious) * 0.000001F;
         _timeMicroSecondsPrevious = timeMicroSeconds;
         if (deltaT > 0.0F) {
@@ -105,7 +115,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
         _tickCountPrevious = tickCount;
-        const uint32_t timeMicroSeconds = micros();
+        const uint32_t timeMicroSeconds = timeUs();
         _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
         _timeMicroSecondsPrevious = timeMicroSeconds;
 

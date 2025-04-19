@@ -34,6 +34,8 @@ MotorsGPIO::MotorsGPIO(const pins_t& pins) :
     ledcAttachPin(pins.motorRight, motorRight);
     ledcAttachPin(pins.servoLeft, servoLeft);
     ledcAttachPin(pins.servoRight, servoRight);
+#else
+    (void)pins;
 #endif
 }
 
@@ -53,6 +55,9 @@ void MotorsGPIO::setPower(float leftPower, float rightPower)
 #if defined(USE_ESP32)
     ledcWrite(motorLeft,  leftOutput);
     ledcWrite(motorRight, rightOutput);
+#else
+    (void)leftOutput;
+    (void)rightOutput;
 #endif
 }
 #endif

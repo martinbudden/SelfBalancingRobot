@@ -3,7 +3,13 @@
 #include <cstddef>
 #include <cstdint>
 
-class TwoWire;
+#if defined(FRAMEWORK_ARDUINO)
+#include <Wire.h>
+#elif defined(FRAMEWORK_PICO)
+typedef struct i2c_inst i2c_inst_t;
+#elif defined(FRAMEWORK_ESPIDF)
+#include "driver/i2c_master.h" // cppcheck-suppress missingInclude
+#endif
 
 
 class BUS_I2C {
@@ -19,8 +25,13 @@ public:
     uint8_t writeRegister(uint8_t reg, const uint8_t* data, size_t length);
     uint8_t writeBytes(const uint8_t* data, size_t length);
 private:
-#if defined(USE_I2C_ARDUINO)
+#if defined(FRAMEWORK_ARDUINO)
     TwoWire& _wire;
+#elif defined(FRAMEWORK_PICO)
+    i2c_inst_t* _I2C;
+#elif defined(FRAMEWORK_ESPIDF)
+    i2c_master_bus_handle_t _bus_handle {};
+    i2c_master_dev_handle_t _dev_handle {};
 #endif
     uint8_t _I2C_address;
     uint8_t _SDA_pin;

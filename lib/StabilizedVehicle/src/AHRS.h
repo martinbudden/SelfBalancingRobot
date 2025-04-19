@@ -9,9 +9,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #endif
-#if defined(AHRS_RECORD_TIMES_CHECKS)
-#include <esp32-hal.h>
-#endif
 
 
 class IMU_FiltersBase;
@@ -102,11 +99,7 @@ private:
     // instrumentation member data
     uint32_t _fifoCount {0};
     uint32_t _timeChecksMicroSeconds[TIME_CHECKS_COUNT + 1] {};
-#if defined(AHRS_RECORD_TIMES_CHECKS)
-    inline void TIME_CHECK(uint32_t index) { _timeChecksMicroSeconds[index] = micros(); }
-#else
-    inline void TIME_CHECK(uint32_t index) { (void)index; }
-#endif
+    inline void TIME_CHECK(uint32_t index, uint32_t timeMicroSeconds) { _timeChecksMicroSeconds[index] = timeMicroSeconds; }
 
     // data synchronization primitives
 #if defined(USE_IMU_DATA_READY_MUTEX)

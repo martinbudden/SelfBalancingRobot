@@ -1,14 +1,13 @@
 #pragma once
 
+#include "IMU_Base.h"
 #include "BUS_I2C.h"
 #include "BUS_SPI.h"
-#include "IMU_Base.h"
 
 
-class IMU_LSM6DS3TR_C : public IMU_Base {
+class IMU_ISM330DHCX : public IMU_Base {
 public:
     static constexpr uint8_t I2C_ADDRESS = 0x6A;
-    static constexpr uint8_t I2C_ADDRESS_ALTERNATIVE = 0x6B;
 #pragma pack(push, 1)
     struct mems_sensor_data_t {
         enum { DATA_SIZE = 6 };
@@ -27,16 +26,9 @@ public:
     };
 #pragma pack(pop)
 public:
-#if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
-    // I2C constructors
-    IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex);
-    IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) : IMU_LSM6DS3TR_C(axisOrder, SDA_pin, SCL_pin, I2C_address, nullptr) {}
-    IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) : IMU_LSM6DS3TR_C(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS, i2cMutex) {}
-    IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_LSM6DS3TR_C(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS, nullptr) {}
-#else
-    // SPI constructors
-    IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, uint8_t CS_pin);
-#endif
+    IMU_ISM330DHCX(axis_order_t axisOrder, uint8_t CS_pin);
+    IMU_ISM330DHCX(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
+    IMU_ISM330DHCX(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_ISM330DHCX(axisOrder, SDA_pin, SCL_pin, nullptr) {}
 public:
     virtual void init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) override;
     virtual xyz_int32_t readGyroRaw() override;
@@ -46,7 +38,7 @@ public:
 private:
     gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t& data) const;
 private:
-#if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
+#if defined(USE_IMU_ISM330DHCX_I2C)
     BUS_I2C _bus; //!< I2C bus interface
 #else
     BUS_SPI _bus; //!< SPI bus interface,

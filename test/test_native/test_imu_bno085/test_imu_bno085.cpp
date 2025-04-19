@@ -8,7 +8,8 @@ void tearDown() {
 }
 
 void test_bno085_channel_input_sensor_reports() {
-    IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, 0);
+    constexpr uint32_t spiFrequency = 2000000;
+    IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, 0);
     IMU_BNO085::SHTP_Packet packet;
 
     packet.header.channel = IMU_BNO085::CHANNEL_INPUT_SENSOR_REPORTS;
@@ -66,7 +67,8 @@ void test_bno085_channel_input_sensor_reports() {
 }
 
 void test_bno085_channel_gyro_integrated_rotation_vector_report() {
-    IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, 0);
+    constexpr uint32_t spiFrequency = 2000000;
+    IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, 0);
     IMU_BNO085::SHTP_Packet packet;
 
     packet.header.channel = IMU_BNO085::CHANNEL_GYRO_INTEGRATED_ROTATION_VECTOR_REPORT;

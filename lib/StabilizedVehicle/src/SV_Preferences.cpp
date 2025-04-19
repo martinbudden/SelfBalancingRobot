@@ -201,7 +201,7 @@ void SV_Preferences::putGyroOffset(int32_t x, int32_t y, int32_t z)
 #endif
 }
 
-void SV_Preferences::getMacAddress(uint8_t* macAddress, const std::string& name) const
+void SV_Preferences::getMacAddress(uint8_t* macAddress, const std::string& name) const // NOLINT(readability-non-const-parameter)
 {
 #if defined(USE_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_ONLY);

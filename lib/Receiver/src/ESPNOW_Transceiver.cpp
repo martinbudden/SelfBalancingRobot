@@ -3,6 +3,7 @@
 #include "ESPNOW_Transceiver.h"
 
 #include <HardwareSerial.h>
+#include <cstring>
 #include <esp_wifi.h>
 
 //#define USE_INSTRUMENTATION

@@ -42,7 +42,7 @@ size_t packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, const Motor
     td->tickInterval = static_cast<uint8_t>(motorPairController.getTickCountDelta());
 
     td->flags = motorPairController.motorsIsOn() ? TD_MPC::MOTORS_ON_FLAG : 0x00;
-    td->flags |= static_cast<uint8_t>(TD_MPC::CONTROL_MODE_MASK & motorPairController.getControlMode()); // NOLINT(hicpp-signed-bitwise)
+    td->flags |= static_cast<uint8_t>(TD_MPC::CONTROL_MODE_MASK) & static_cast<uint8_t>(motorPairController.getControlMode()); // NOLINT(hicpp-signed-bitwise)
 
     motor_pair_controller_telemetry_t telemetryData;
     motorPairController.getTelemetryData(telemetryData);

@@ -597,15 +597,15 @@ static const std::array<uint8_t, 8192> imu_bmi270_config_data = {
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
 #if defined(USE_IMU_BMI270_I2C)
-IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
+IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
-    _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
+    _bus(I2C_address, SDA_pin, SCL_pin)
 {
 }
 #else
-IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint8_t CS_pin) :
+IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint32_t frequency, uint8_t CS_pin) :
     IMU_Base(axisOrder),
-    _bus(CS_pin)
+    _bus(frequency, CS_pin, IMU_SPI_SCK_PIN, IMU_SPI_CIPO_PIN, IMU_SPI_COPI_PIN)
 {
 }
 #endif

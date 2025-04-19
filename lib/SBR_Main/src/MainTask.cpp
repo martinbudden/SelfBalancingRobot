@@ -4,9 +4,13 @@
 #include <M5Unified.h>
 #endif
 
+#if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
+#endif
 
+#if defined(USE_ESPNOW)
 #include <WiFi.h>
+#endif
 
 #include "ButtonsM5.h"
 #include "Calibration.h"
@@ -15,8 +19,10 @@
 #include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
+#if defined(USE_ESPNOW)
 #include <ESPNOW_Backchannel.h>
 #include <HardwareSerial.h>
+#endif
 #include <IMU_BMI270.h>
 #include <IMU_BNO085.h>
 #include <IMU_Filters.h>
@@ -24,9 +30,15 @@
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
+#if defined(USE_ESPNOW)
 #include <ReceiverAtomJoyStick.h>
+#endif
+#include <ReceiverNull.h>
 #include <SV_Preferences.h>
 #include <SensorFusion.h>
+#if defined(FRAMEWORK_ESPIDF)
+#include <esp_timer.h>
+#endif
 
 /*!
 The ESP32S3 is dual core containing a Protocol CPU (known as CPU 0 or PRO_CPU) and an Application CPU (known as CPU 1 or APP_CPU).
@@ -50,11 +62,13 @@ Updating the screen takes approximately 50 ticks, so packets will be dropped if 
 
 enum { MPC_TASK_PRIORITY = 4, AHRS_TASK_PRIORITY = 5 };
 
+#if defined(USE_FREERTOS)
 enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #if defined(APP_CPU_NUM) // The processor has two cores
     enum { AHRS_TASK_CORE = APP_CPU_NUM };
 #else // single core processor
     enum { AHRS_TASK_CORE = PRO_CPU_NUM };
+#endif
 #endif
 
 enum { MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
@@ -94,8 +108,13 @@ void MainTask::setup()
     M5.Power.begin();
 #endif
 
+#if defined(FRAMEWORK_ESPIDF)
+    esp_timer_init();
+#endif
+#if defined(USE_ESP32)
     Serial.begin(115200);
     delay(400); // delay to allow serial port to initialize before first print
+#endif
 
     // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
     // The mutex is created statically, ie without dynamic memory allocation.
@@ -105,7 +124,7 @@ void MainTask::setup()
     static StaticSemaphore_t i2cMutexBuffer;
     SemaphoreHandle_t i2cMutex = xSemaphoreCreateMutexStatic(&i2cMutexBuffer);
 #else
-    SemaphoreHandle_t i2cMutex = nullptr;
+    void* i2cMutex = nullptr;
 #endif
 
     setupAHRS(i2cMutex);
@@ -128,10 +147,13 @@ void MainTask::setup()
     const esp_err_t err = receiver.setup(JOYSTICK_CHANNEL);
     Serial.printf("\r\n\r\n**** ESP-NOW Ready:%X\r\n\r\n", err);
     assert(err == ESP_OK && "Unable to setup receiver.");
+#else
+    static ReceiverNull receiver;
+    _receiver = &receiver;
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
+    static MotorPairController motorPairController(*_ahrs, *_receiver, i2cMutex);
     _motorPairController = &motorPairController;
     _ahrs->setVehicleController(_motorPairController);
 
@@ -194,26 +216,27 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
 // NOLINTBEGIN(misc-const-correctness)
+    [[maybe_unused]] static const uint32_t spiFrequency = 20000000;
 #if defined(USE_IMU_MPU6886_I2C)
 #if defined(M5_STACK)
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, i2cMutex);
 #else
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex);
 #endif
 #elif defined(USE_IMU_MPU6886_SPI)
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
 #elif defined(USE_IMU_BMI270_I2C)
-    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_BMI270_SPI)
-    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
+    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
 #elif defined(USE_IMU_BNO085_I2C)
-    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_BNO085_SPI)
-    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
 #elif defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
-    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SDA_PIN, IMU_SCL_PIN, i2cMutex);
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, i2cMutex);
 #elif defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
-    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_SPI_CS_PIN);
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
 #elif defined(USE_IMU_M5_STACK)
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex);
 #elif defined(USE_IMU_M5_UNIFIED)
@@ -262,10 +285,14 @@ void MainTask::checkGyroCalibration()
     IMU_Base::xyz_int32_t offset {};
     if (_preferences->getGyroOffset(offset.x, offset.y, offset.z)) {
         _ahrs->setGyroOffset(offset);
+#if defined(USE_ESP32)
         Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", offset.x, offset.y, offset.z);
+#endif
         if (_preferences->getAccOffset(offset.x, offset.y, offset.z)) {
             _ahrs->setAccOffset(offset);
-            Serial.printf("**** AHRS accOffsets loaded from preferences: ax:%5d, ay:%5d, az:%5d\r\n", offset.x, offset.y, offset.z);
+#if defined(USE_ESP32)
+            Serial.printf("**** AHRS accOffsets loaded from preferences:  ax:%5d, ay:%5d, az:%5d\r\n", offset.x, offset.y, offset.z);
+#endif
         }
     } else {
         // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
@@ -288,7 +315,9 @@ void MainTask::resetPreferences()
         _preferences->putPID(pidName, pidNOT_SET);
     }
     _preferences->putFloat(_motorPairController->getBalanceAngleName(), SV_Preferences::NOT_SET);
-    Serial.printf("**** preferences reset\r\n");
+#if defined(USE_ESP32)
+    Serial.print("**** preferences reset");
+#endif
 }
 
 /*!
@@ -305,7 +334,9 @@ void MainTask::loadPreferences()
     const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
     if (pitchBalanceAngleDegrees != SV_Preferences::NOT_SET) {
         _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
+#if defined(USE_ESP32)
         Serial.printf("**** pitch balance angle loaded from preferences:%f\r\n", static_cast<double>(pitchBalanceAngleDegrees));
+#endif
     }
 
     // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
@@ -314,19 +345,24 @@ void MainTask::loadPreferences()
         const PIDF::PIDF_t pid = _preferences->getPID(pidName);
         if (pid.kp != SV_Preferences::NOT_SET) {
             _motorPairController->setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
+#if defined(USE_ESP32)
             Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), static_cast<double>(pid.kp), static_cast<double>(pid.ki), static_cast<double>(pid.kd), static_cast<double>(pid.kf));
+#endif
         }
     }
 }
 
 void MainTask::setupTasks()
 {
+#if defined(USE_FREERTOS)
+#if defined(USE_ESP32)
     // The main task is set up by the framework, so just print its details.
     // It has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
     const char* taskName = pcTaskGetName(taskHandle);
     Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
+#endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
@@ -338,7 +374,9 @@ void MainTask::setupTasks()
     static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
+#if defined(USE_ESP32)
     Serial.printf("**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
+#endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
@@ -350,7 +388,10 @@ void MainTask::setupTasks()
     static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
+#if defined(USE_ESP32)
     Serial.printf("**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
+#endif
+#endif // USE_FREERTOS
 }
 
 /*!
@@ -366,12 +407,16 @@ The motors are controlled in the MotorPairController task.
 */
 void MainTask::loop()
 {
+#if defined(USE_FREERTOS)
     // Delay task to yield to other tasks.
     // Most of the time this task does nothing, but when we get a packet from the receiver we want to process it immediately,
     // hence the short delay
     vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS));
 
     const TickType_t tickCount = xTaskGetTickCount();
+#else
+    const uint32_t tickCount = _tickCountPrevious + 1;
+#endif // USE_FREERTOS
     // calculate _tickCountDelta for instrumentation
     _tickCountDelta = tickCount - _tickCountPrevious;
     _tickCountPrevious = tickCount;

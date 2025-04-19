@@ -9,13 +9,23 @@
 
 #include <cmath>
 #if defined(USE_FREERTOS)
-#include <esp32-hal.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 inline void YIELD_TASK() { taskYIELD(); }
 #else
 inline void YIELD_TASK() {}
 #endif
+
+#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_ARDUINO)
+#include <esp32-hal-gpio.h>
+static int64_t timeUs() { return micros(); }
+#elif defined(FRAMEWORK_ESPIDF)
+#include <esp_timer.h>
+static int64_t timeUs() { return esp_timer_get_time(); }
+#endif
+#endif
+
 
 static const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES = {
     "ROLL_ANGLE",
@@ -385,7 +395,7 @@ Task function for the MotorPairController. Sets up and runs the task loop() func
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
         _tickCountPrevious = tickCount;
-        const uint32_t timeMicroSeconds = micros();
+        const uint32_t timeMicroSeconds = timeUs();
         _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
         _timeMicroSecondsPrevious = timeMicroSeconds;
 
@@ -395,6 +405,7 @@ Task function for the MotorPairController. Sets up and runs the task loop() func
         }
     }
 #else
+    (void)taskParameters;
     while (true) {}
 #endif
 }

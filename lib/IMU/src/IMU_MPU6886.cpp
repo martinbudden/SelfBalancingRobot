@@ -1,6 +1,10 @@
 #if defined(USE_IMU_MPU6886_I2C) || defined(USE_IMU_MPU6886_SPI)
 
 #include "IMU_MPU6886.h"
+//#define SERIAL_OUTPUT
+#if defined(SERIAL_OUTPUT)
+#include <HardwareSerial.h>
+#endif
 
 #include <cassert>
 
@@ -80,7 +84,7 @@ constexpr uint8_t REG_FIFO_COUNT_H          = 0x72;
 constexpr uint8_t REG_FIFO_COUNT_L          = 0x73;
 constexpr uint8_t REG_FIFO_R_W              = 0x74;
 
-constexpr uint8_t REG_WHOAMI                = 0x75;
+constexpr uint8_t REG_WHO_AM_I              = 0x75;
 
 constexpr uint8_t REG_XA_OFFSET_H           = 0x77;
 constexpr uint8_t REG_XA_OFFSET_L           = 0x78;
@@ -93,9 +97,9 @@ constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 
 
 #if defined(USE_IMU_MPU6886_I2C)
-IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) :
+IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
-    _bus(I2C_ADDRESS, SDA_pin, SCL_pin)
+    _bus(I2C_address, SDA_pin, SCL_pin)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
@@ -121,8 +125,13 @@ void IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensiti
 
     i2cSemaphoreTake();
 
-    _imuID = _bus.readRegister(REG_WHOAMI);
+    const uint8_t chipID = _bus.readRegister(REG_WHO_AM_I);
     delayMs(1);
+#if defined(SERIAL_OUTPUT)
+    Serial.printf("IMU init, chipID=%02x\r\n", chipID);
+#else
+    (void)chipID;
+#endif
 
     _bus.writeRegister(REG_PWR_MGMT_1, 0); // clear the power management register
     delayMs(10);
@@ -209,7 +218,7 @@ void IMU_MPU6886::setGyroOffset(const xyz_int32_t& gyroOffset)
 
 IMU_Base::xyz_int32_t IMU_MPU6886::readAccRaw()
 {
-    mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
 
     i2cSemaphoreTake();
     _bus.readRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -224,7 +233,7 @@ IMU_Base::xyz_int32_t IMU_MPU6886::readAccRaw()
 
 xyz_t IMU_MPU6886::readAcc()
 {
-    mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
 
     i2cSemaphoreTake();
     _bus.readRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&acc), sizeof(acc)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -235,7 +244,7 @@ xyz_t IMU_MPU6886::readAcc()
 
 IMU_Base::xyz_int32_t IMU_MPU6886::readGyroRaw()
 {
-    mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
 
     i2cSemaphoreTake();
     _bus.readRegister(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -251,7 +260,7 @@ IMU_Base::xyz_int32_t IMU_MPU6886::readGyroRaw()
 
 xyz_t IMU_MPU6886::readGyroRPS()
 {
-    mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
 
     i2cSemaphoreTake();
     _bus.readRegister(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&gyro), sizeof(gyro)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)

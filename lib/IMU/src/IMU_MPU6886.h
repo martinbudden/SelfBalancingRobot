@@ -1,15 +1,23 @@
 #pragma once
 
+#include "BUS_I2C.h"
+#include "BUS_SPI.h"
 #include "IMU_Base.h"
-#include <BUS_I2C.h>
-#include <BUS_SPI.h>
 
 
 class IMU_MPU6886 : public IMU_Base {
 public:
+#if defined(USE_IMU_MPU6886_I2C)
+    // I2C constructors
+    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex);
+    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, I2C_address, nullptr) {}
+    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS, i2cMutex) {}
+    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS, nullptr) {}
+#else
+    // SPI constructors
     IMU_MPU6886(axis_order_t axisOrder, uint8_t CS_pin);
-    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex);
-    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, nullptr) {}
+#endif
+public:
     virtual void init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) override;
 public:
     static constexpr uint8_t I2C_ADDRESS = 0x68;
@@ -80,5 +88,4 @@ private:
 #endif
     acc_temperature_gyro_data_t _accTemperatureGyroData {};
     acc_temperature_gyro_array_t _fifoBuffer {};
-    uint8_t _imuID {0};
 };
