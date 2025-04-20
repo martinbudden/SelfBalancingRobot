@@ -2,7 +2,7 @@
 
 #include "MotorsGPIO.h"
 #include <cmath>
-#if defined(USE_ESP32)
+#if defined(USE_ARDUINO_ESP32)
 #include <esp32-hal-ledc.h>
 #endif
 
@@ -18,7 +18,7 @@ constexpr int servoRight = 3;
 MotorsGPIO::MotorsGPIO(const pins_t& pins) :
     MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED)
 {
-#if defined(USE_ESP32)
+#if defined(USE_ARDUINO_ESP32)
     // Motor PWM Frequency
     constexpr int freq = 150000;
 
@@ -52,7 +52,7 @@ void MotorsGPIO::setPower(float leftPower, float rightPower)
     const int8_t leftOutput =   static_cast<int8_t>(roundf(leftPower)); // NOLINT(hicpp-use-auto,modernize-use-auto)
     const int8_t rightOutput = -static_cast<int8_t>(roundf(rightPower));
 
-#if defined(USE_ESP32)
+#if defined(USE_ARDUINO_ESP32)
     ledcWrite(motorLeft,  leftOutput);
     ledcWrite(motorRight, rightOutput);
 #else

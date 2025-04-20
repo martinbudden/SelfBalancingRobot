@@ -33,7 +33,7 @@ extern "C" void app_main()
 
 #elif defined(FRAMEWORK_PICO)
 
-[[noreturn]] int main()
+int main()
 {
     static MainTask mainTask;
     mainTask.setup();

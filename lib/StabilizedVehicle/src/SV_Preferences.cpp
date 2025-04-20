@@ -1,6 +1,6 @@
 #include "SV_Preferences.h"
 
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
 namespace { // use anonymous namespace to make items local to this translation unit
 const char* preferencesNamespace {"SV"};
 } // end namespace
@@ -9,7 +9,7 @@ const char* preferencesNamespace {"SV"};
 
 void SV_Preferences::clear()
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
     _preferences.clear();
@@ -20,7 +20,7 @@ void SV_Preferences::clear()
 
 bool SV_Preferences::isSetPID() const
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const bool ret = _preferences.getBool("PIDS_SET", false);
@@ -34,7 +34,7 @@ bool SV_Preferences::isSetPID() const
 
 PIDF::PIDF_t SV_Preferences::getPID(const std::string& name) const
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const PIDF::PIDF_t pid {
@@ -54,7 +54,7 @@ PIDF::PIDF_t SV_Preferences::getPID(const std::string& name) const
 
 void SV_Preferences::putPID(const std::string& name, const PIDF::PIDF_t& pid)
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
     _preferences.putBool("PIDS_SET", true);
@@ -72,7 +72,7 @@ void SV_Preferences::putPID(const std::string& name, const PIDF::PIDF_t& pid)
 
 float SV_Preferences::getFloat(const std::string& name) const
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const float pitchBalanceAngleDegrees = _preferences.getFloat(name.c_str(), NOT_SET);
@@ -87,7 +87,7 @@ float SV_Preferences::getFloat(const std::string& name) const
 
 void SV_Preferences::putFloat(const std::string& name, float value)
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
     _preferences.putFloat(name.c_str(), value);
@@ -101,7 +101,7 @@ void SV_Preferences::putFloat(const std::string& name, float value)
 
 void SV_Preferences::removeAccOffset()
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_WRITE);
     _preferences.remove("acc");
     _preferences.remove("acc_x");
@@ -112,7 +112,7 @@ void SV_Preferences::removeAccOffset()
 
 bool SV_Preferences::getAccOffset(int32_t& x, int32_t& y, int32_t& z) const
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const bool ret = _preferences.getBool("acc", false);
@@ -134,7 +134,7 @@ bool SV_Preferences::getAccOffset(int32_t& x, int32_t& y, int32_t& z) const
 
 void SV_Preferences::putAccOffset(int32_t x, int32_t y, int32_t z)
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
     _preferences.putBool("acc", true);
@@ -152,7 +152,7 @@ void SV_Preferences::putAccOffset(int32_t x, int32_t y, int32_t z)
 
 void SV_Preferences::removeGyroOffset()
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_WRITE);
     _preferences.remove("gyro");
     _preferences.remove("gyro_x");
@@ -163,7 +163,7 @@ void SV_Preferences::removeGyroOffset()
 
 bool SV_Preferences::getGyroOffset(int32_t& x, int32_t& y, int32_t& z) const
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     const bool ret = _preferences.getBool("gyro", false);
@@ -185,7 +185,7 @@ bool SV_Preferences::getGyroOffset(int32_t& x, int32_t& y, int32_t& z) const
 
 void SV_Preferences::putGyroOffset(int32_t x, int32_t y, int32_t z)
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
     _preferences.putBool("gyro", true);
@@ -203,7 +203,7 @@ void SV_Preferences::putGyroOffset(int32_t x, int32_t y, int32_t z)
 
 void SV_Preferences::getMacAddress(uint8_t* macAddress, const std::string& name) const // NOLINT(readability-non-const-parameter)
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_ONLY);
 
     _preferences.getBytes(name.c_str(), macAddress, MAC_ADDRESS_LEN);
@@ -217,7 +217,7 @@ void SV_Preferences::getMacAddress(uint8_t* macAddress, const std::string& name)
 
 void SV_Preferences::putMacAddress(const std::string& name, const uint8_t* macAddress)
 {
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     _preferences.begin(preferencesNamespace, READ_WRITE);
 
     _preferences.putBytes(name.c_str(), macAddress, MAC_ADDRESS_LEN);

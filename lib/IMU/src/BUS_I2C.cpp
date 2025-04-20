@@ -1,6 +1,8 @@
 #include "BUS_I2C.h"
 
-#if defined(FRAMEWORK_PICO)
+#if defined(FRAMEWORK_ARDUINO)
+#include <Arduino.h>
+#elif defined(FRAMEWORK_PICO)
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
@@ -79,10 +81,10 @@ uint8_t BUS_I2C::readRegister(uint8_t reg) const
     uint8_t ret;
     i2c_read_blocking(_I2C, _I2C_address, &ret, 1, false);
     return ret;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
-    return 0;
 #endif
+    return 0;
 }
 
 uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
@@ -104,7 +106,7 @@ uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
     uint8_t ret;
     i2c_read_timeout_us(_I2C, _I2C_address, &ret, 1, false, timeoutMs * 1000);
     return ret;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)timeoutMs;
 #endif
@@ -122,7 +124,7 @@ bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const // N
 #elif defined(FRAMEWORK_PICO)
     i2c_write_blocking(_I2C, _I2C_address, &reg, 1, true); // true to keep control of bus
     i2c_read_blocking(_I2C, _I2C_address, data, length, false);
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)data;
     (void)length;
@@ -142,7 +144,7 @@ bool BUS_I2C::readBytes(uint8_t* data, size_t length) const // NOLINT(readabilit
 #elif defined(FRAMEWORK_PICO)
     i2c_read_blocking(_I2C, _I2C_address, data, length, false);
     return true;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)data;
     (void)length;
 #endif
@@ -166,7 +168,7 @@ bool BUS_I2C::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeou
 #elif defined(FRAMEWORK_PICO)
     i2c_read_timeout_us(_I2C, _I2C_address, data, length, false, timeoutMs *1000);
     return true;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)data;
     (void)length;
     (void)timeoutMs;
@@ -185,11 +187,11 @@ uint8_t BUS_I2C::writeRegister(uint8_t reg, uint8_t data)
     std::array<uint8_t, 2> buf = { reg, data };
     i2c_write_blocking(_I2C, _I2C_address, &buf[0], sizeof(buf), false);
     return 0;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)data;
-    return 0;
 #endif
+    return 0;
 }
 
 uint8_t BUS_I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
@@ -202,12 +204,12 @@ uint8_t BUS_I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 #elif defined(FRAMEWORK_PICO)
     i2c_write_blocking(_I2C, _I2C_address, &reg, 1, false);
     return i2c_write_blocking(_I2C, _I2C_address, data, length, false);
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)data;
     (void)length;
-    return 0;
 #endif
+    return 0;
 }
 
 uint8_t BUS_I2C::writeBytes(const uint8_t* data, size_t length)
@@ -218,9 +220,9 @@ uint8_t BUS_I2C::writeBytes(const uint8_t* data, size_t length)
     return _wire.endTransmission();
 #elif defined(FRAMEWORK_PICO)
     return i2c_write_blocking(_I2C, _I2C_address, data, length, false);
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)data;
     (void)length;
-    return 0;
 #endif
+    return 0;
 }

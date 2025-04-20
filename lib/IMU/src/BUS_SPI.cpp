@@ -15,24 +15,24 @@ static constexpr uint8_t READ_BIT = 0x80;
 #if defined(FRAMEWORK_PICO)
 static inline void cs_select(uint8_t CS_pin) {
     asm volatile("nop \n nop \n nop");
-    //gpio_put(uint8_t CS_pin, 0);  // Active low
+    gpio_put(uint8_t CS_pin, 0);  // Active low
     asm volatile("nop \n nop \n nop");
 }
 
 static inline void cs_deselect(uint8_t CS_pin) {
     asm volatile("nop \n nop \n nop");
-    //gpio_put(uint8_t CS_pin, 1);
+    gpio_put(uint8_t CS_pin, 1);
     asm volatile("nop \n nop \n nop");
 }
 #endif
 
-BUS_SPI::BUS_SPI(uint32_t frequency, uint8_t CS_pin) :
+BUS_SPI::BUS_SPI(uint32_t frequency, uint8_t CS_pin)
 #if defined(FRAMEWORK_ARDUINO)
-    BUS_SPI(frequency, CS_pin, 0, 0, 0)
+    : BUS_SPI(frequency, CS_pin, 0, 0, 0)
 #elif defined(FRAMEWORK_PICO)
-    BUS_SPI(frequency, CS_pin, PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN)
-#else
-    BUS_SPI(frequency, CS_pin, 0, 0, 0)
+    : BUS_SPI(frequency, CS_pin, PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN)
+#elif defined(FRAMEWORK_ESPIDF)
+    : BUS_SPI(frequency, CS_pin, 0, 0, 0)
 #endif
 {
 }
@@ -67,7 +67,7 @@ BUS_SPI::BUS_SPI(uint32_t frequency, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CI
     gpio_put(_CS_pin, 1);
     // Make the CS pin available to picotool
     bi_decl(bi_1pin_with_name(_CS_pin, "SPI CS"));
-#else
+#elif defined(FRAMEWORK_ESPIDF)
 #endif
 }
 
@@ -90,10 +90,10 @@ uint8_t BUS_SPI::readRegister(uint8_t reg) const
     spi_read_blocking(_SPI, 0, &ret, 1);
     cs_deselect(_CS_pin);
     return ret;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
-    return 0;
 #endif
+    return 0;
 }
 
 uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
@@ -121,12 +121,13 @@ bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const
     sleep_ms(10);
     spi_read_blocking(_SPI, 0, data, length);
     cs_deselect(_CS_pin);
-#else
+    return true;
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     *data = 0;
     (void)length;
-    return false;
 #endif
+    return false;
 }
 
 bool BUS_SPI::readBytes(uint8_t* data, size_t length) const
@@ -144,11 +145,12 @@ bool BUS_SPI::readBytes(uint8_t* data, size_t length) const
     cs_select(_CS_pin);
     spi_read_blocking(_SPI, 0, data, length);
     cs_deselect(_CS_pin);
-#else
+    return true;
+#elif defined(FRAMEWORK_ESPIDF)
     *data = 0;
     (void)length;
-    return false;
 #endif
+    return false;
 }
 
 bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint8_t timeoutMs) const
@@ -166,19 +168,17 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data)
     _spi.transfer(data);
     digitalWrite(_CS_pin, HIGH);
     _spi.endTransaction();
-    return 0;
 #elif defined(FRAMEWORK_PICO)
     std::array<uint8_t, 2> buf = { reg & 0x7FU, data }; // remove read bit as this is a write
     cs_select(_CS_pin);
     spi_write_blocking(_SPI, &buf[0], 2);
     cs_deselect(_CS_pin);
     sleep_ms(10);
-    return 0;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)data;
-    return 0;
 #endif
+    return 0;
 }
 
 uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
@@ -192,20 +192,18 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
     }
     digitalWrite(_CS_pin, HIGH);
     _spi.endTransaction();
-    return 0;
 #elif defined(FRAMEWORK_PICO)
     cs_select(_CS_pin);
     reg &= 0x7FU;
     spi_write_blocking(_SPI, &reg, 1);
     spi_write_blocking(_SPI, data, length);
     cs_deselect(_CS_pin);
-    return 0;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)data;
     (void)length;
-    return 0;
 #endif
+    return 0;
 }
 
 uint8_t BUS_SPI::writeBytes(const uint8_t* data, size_t length)
@@ -218,15 +216,13 @@ uint8_t BUS_SPI::writeBytes(const uint8_t* data, size_t length)
     }
     digitalWrite(_CS_pin, HIGH);
     _spi.endTransaction();
-    return 0;
 #elif defined(FRAMEWORK_PICO)
     cs_select(_CS_pin);
     spi_write_blocking(_SPI, data, length);
     cs_deselect(_CS_pin);
-    return 0;
-#else
+#elif defined(FRAMEWORK_ESPIDF)
     (void)data;
     (void)length;
-    return 0;
 #endif
+    return 0;
 }

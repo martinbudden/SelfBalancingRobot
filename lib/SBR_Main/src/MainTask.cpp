@@ -111,7 +111,7 @@ void MainTask::setup()
 #if defined(FRAMEWORK_ESPIDF)
     esp_timer_init();
 #endif
-#if defined(USE_ESP32)
+#if defined(USE_ARDUINO_ESP32)
     Serial.begin(115200);
 #endif
 
@@ -126,7 +126,7 @@ void MainTask::setup()
     void* i2cMutex = nullptr;
 #endif
 
-    setupAHRS(i2cMutex);
+    AHRS* ahrs = setupAHRS(i2cMutex);
 
 #if defined(USE_ESPNOW)
     // Set WiFi to station mode
@@ -153,41 +153,39 @@ void MainTask::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(*_ahrs, *_receiver, i2cMutex);
-    _motorPairController = &motorPairController;
-    _ahrs->setVehicleController(_motorPairController);
+    static MotorPairController motorPairController(*ahrs, receiver, i2cMutex);
+    ahrs->setVehicleController(&motorPairController);
 
     static SV_Preferences preferences;
-    _preferences = &preferences;
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
-        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_ACC_AND_GYRO);
+        calibrateGyro(*ahrs, preferences, CALIBRATE_ACC_AND_GYRO);
     }
 #endif
-    checkGyroCalibration();
+    checkGyroCalibration(preferences, *ahrs);
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnC down while switching on resets the preferences.
     if (M5.BtnC.isPressed()) {
-        resetPreferences();
+        resetPreferences(preferences, motorPairController);
     }
 #endif
-    loadPreferences();
+    loadPreferences(preferences, motorPairController);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the telemetry scale factors
-    static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
+    static TelemetryScaleFactors telemetryScaleFactors(motorPairController.getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, *_ahrs, *this, *_receiver, telemetryScaleFactors, *_preferences);
+    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, motorPairController, *ahrs, *this, receiver, telemetryScaleFactors, preferences);
     _backchannel = &backchannel;
 #endif
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
-    static ScreenM5 screen(*_ahrs, motorPairController, receiver);
+    static ScreenM5 screen(*ahrs, motorPairController, receiver);
     _screen = &screen;
     _screen->update(false); // Update the as soon as we can, to minimize the time the screen is blank
 
@@ -210,10 +208,10 @@ void MainTask::setup()
 #endif // M5_STACK || M5_UNIFIED
 
     // And finally set up the AHRS and MotorPairController tasks.
-    setupTasks();
+    setupTasks(*ahrs, motorPairController);
 }
 
-void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
+AHRS* MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
 // NOLINTBEGIN(misc-const-correctness)
@@ -273,34 +271,34 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 
     // Statically allocate the AHRS object
     static AHRS ahrs(sensorFusionFilter, imuSensor, imuFilters);
-    _ahrs = &ahrs;
+    return &ahrs;
 }
 
-void MainTask::checkGyroCalibration()
+void MainTask::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
 {
     // Set the gyro offsets from non-volatile storage.
 #if defined(USE_IMU_M5_UNIFIED)
     // M5_UNIFIED directly uses NVS (non-volatile storage) to store the gyro offsets.
     if (!M5.Imu.loadOffsetFromNVS()) {
-        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
+        calibrateGyro(ahrs, preferences, CALIBRATE_JUST_GYRO);
     }
 #else
     // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.
     IMU_Base::xyz_int32_t offset {};
-    if (_preferences->getGyroOffset(offset.x, offset.y, offset.z)) {
-        _ahrs->setGyroOffset(offset);
-#if defined(USE_ESP32)
+    if (preferences.getGyroOffset(offset.x, offset.y, offset.z)) {
+        ahrs.setGyroOffset(offset);
+#if defined(USE_ARDUINO_ESP32)
         Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", offset.x, offset.y, offset.z);
 #endif
-        if (_preferences->getAccOffset(offset.x, offset.y, offset.z)) {
-            _ahrs->setAccOffset(offset);
-#if defined(USE_ESP32)
+        if (preferences.getAccOffset(offset.x, offset.y, offset.z)) {
+            ahrs.setAccOffset(offset);
+#if defined(USE_ARDUINO_ESP32)
             Serial.printf("**** AHRS accOffsets loaded from preferences:  ax:%5d, ay:%5d, az:%5d\r\n", offset.x, offset.y, offset.z);
 #endif
         }
     } else {
         // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
-        calibrateGyro(*_ahrs, *_preferences, CALIBRATE_JUST_GYRO);
+        calibrateGyro(ahrs, preferences, CALIBRATE_JUST_GYRO);
     }
 #endif
 }
@@ -308,18 +306,18 @@ void MainTask::checkGyroCalibration()
 /*!
 Resets the PID preferences and the Balance Angle to SV_Preferences::NOT_SET (which represents unset).
 */
-void MainTask::resetPreferences()
+void MainTask::resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController)
 {
     //_preferences->clear();
     //_preferences->removeGyroOffset();
     //_preferences->removeAccOffset();
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        const std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
+        const std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
         constexpr PIDF::PIDF_t pidNOT_SET { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET };
-        _preferences->putPID(pidName, pidNOT_SET);
+        preferences.putPID(pidName, pidNOT_SET);
     }
-    _preferences->putFloat(_motorPairController->getBalanceAngleName(), SV_Preferences::NOT_SET);
-#if defined(USE_ESP32)
+    preferences.putFloat(motorPairController.getBalanceAngleName(), SV_Preferences::NOT_SET);
+#if defined(USE_ARDUINO_ESP32)
     Serial.print("**** preferences reset");
 #endif
 }
@@ -327,39 +325,38 @@ void MainTask::resetPreferences()
 /*!
 Loads the PID settings for the MotorPairController. Must be called *after* the MPC is created.
 */
-void MainTask::loadPreferences()
+void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController)
 {
-    assert(_motorPairController != nullptr); // loadPreferences must be called after the MPC is created
-
     // Set all the preferences to zero if they have not been set
-    if (!_preferences->isSetPID()) {
-        resetPreferences();
+    if (!preferences.isSetPID()) {
+        resetPreferences(preferences, motorPairController);
     }
-    const float pitchBalanceAngleDegrees = _preferences->getFloat(_motorPairController->getBalanceAngleName());
+    const float pitchBalanceAngleDegrees = preferences.getFloat(motorPairController.getBalanceAngleName());
     if (pitchBalanceAngleDegrees != SV_Preferences::NOT_SET) {
-        _motorPairController->setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
-#if defined(USE_ESP32)
+        motorPairController.setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
+#if defined(USE_ARDUINO_ESP32)
         Serial.printf("**** pitch balance angle loaded from preferences:%f\r\n", static_cast<double>(pitchBalanceAngleDegrees));
 #endif
     }
 
     // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        std::string pidName = _motorPairController->getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
-        const PIDF::PIDF_t pid = _preferences->getPID(pidName);
+        std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
+        const PIDF::PIDF_t pid = preferences.getPID(pidName);
         if (pid.kp != SV_Preferences::NOT_SET) {
-            _motorPairController->setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
-#if defined(USE_ESP32)
+            motorPairController.setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
+#if defined(USE_ARDUINO_ESP32)
             Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), static_cast<double>(pid.kp), static_cast<double>(pid.ki), static_cast<double>(pid.kd), static_cast<double>(pid.kf));
 #endif
         }
     }
 }
 
-void MainTask::setupTasks()
+void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
 {
 #if defined(USE_FREERTOS)
-#if defined(USE_ESP32)
+
+#if defined(USE_ARDUINO_ESP32)
     // The main task is set up by the framework, so just print its details.
     // It has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
@@ -370,7 +367,7 @@ void MainTask::setupTasks()
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .ahrs = _ahrs,
+        .ahrs = &ahrs,
         .tickIntervalMilliSeconds = AHRS_TASK_TICK_INTERVAL_MILLISECONDS
     };
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
@@ -378,13 +375,13 @@ void MainTask::setupTasks()
     static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
-#if defined(USE_ESP32)
+#if defined(USE_ARDUINO_ESP32)
     Serial.printf("**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .motorPairController = _motorPairController,
+        .motorPairController = &motorPairController,
         .tickIntervalMilliSeconds = MPC_TASK_TICK_INTERVAL_MILLISECONDS
     };
     enum { MPC_TASK_STACK_DEPTH = 4096 };
@@ -392,9 +389,10 @@ void MainTask::setupTasks()
     static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
-#if defined(USE_ESP32)
+#if defined(USE_ARDUINO_ESP32)
     Serial.printf("**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
 #endif
+
 #endif // USE_FREERTOS
 }
 

@@ -10,21 +10,19 @@ class SV_Preferences;
 class ScreenBase;
 class ButtonsBase;
 
+
 class MainTask : public TaskBase {
 public:
     void setup();
     void loop();
 private:
-    void setupAHRS(void* i2cMutex);
-    void checkGyroCalibration();
-    void resetPreferences();
-    void loadPreferences();
-    void setupTasks();
+    AHRS* setupAHRS(void* i2cMutex);
+    static void checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs);
+    static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
+    static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
+    static void setupTasks(AHRS& ahrs, MotorPairController& motorPairController);
 private:
-    AHRS* _ahrs {nullptr};
-    MotorPairController* _motorPairController {nullptr};
     ReceiverBase* _receiver {nullptr};
-    SV_Preferences* _preferences {nullptr};
     Backchannel* _backchannel {nullptr};
 
     uint32_t _screenTickCount {0};

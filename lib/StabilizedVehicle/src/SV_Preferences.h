@@ -1,7 +1,7 @@
 #pragma once
 
 #include <PIDF.h>
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
 #include <Preferences.h>
 #endif
 #include <cfloat>
@@ -37,7 +37,7 @@ public:
     void getMacAddress(uint8_t* macAddress, const std::string& name) const;
     void putMacAddress(const std::string& name, const uint8_t* macAddress);
 private:
-#if defined(USE_ESP32_PREFERENCES)
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
     mutable Preferences _preferences;
 #endif
 };
