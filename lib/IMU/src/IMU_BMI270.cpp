@@ -615,8 +615,6 @@ void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 
-    delayMs(100);
-
     // Initialization sequence, see page 17 and following from BMI270 Datasheet
     _bus.readRegister(REG_CHIP_ID); // dummy read, required for SPI mode
     [[maybe_unused]] const uint8_t chipID = _bus.readRegisterWithTimeout(REG_CHIP_ID, 100);
@@ -627,7 +625,7 @@ void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
     delayMs(1);
 
     //_bus.writeRegister(REG_CMD, 0xB6); // Soft reset
-    delayMs(100);
+    //delayMs(100);
     _bus.writeRegister(REG_PWR_CONF, 0x00); // Power save disabled
     delayMs(1); // 450us is minimum delay required
 
@@ -645,9 +643,7 @@ void IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
     static_assert(sizeof(imu_bmi270_config_data) % BUS_WRITE_CHUNK_SIZE == 0);
     for (size_t ii = 0; ii < dataSize; ii += BUS_WRITE_CHUNK_SIZE) {
         _bus.writeRegister(REG_INIT_DATA, &imu_bmi270_config_data[ii], BUS_WRITE_CHUNK_SIZE);
-        delayMs(1);
     }
-    delayMs(10);
     _bus.writeRegister(REG_INIT_CTRL, 0x01); // complete config load
     delayMs(10);
     [[maybe_unused]] const uint8_t internalStatus = _bus.readRegister(REG_INTERNAL_STATUS);

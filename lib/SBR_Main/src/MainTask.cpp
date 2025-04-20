@@ -113,7 +113,6 @@ void MainTask::setup()
 #endif
 #if defined(USE_ESP32)
     Serial.begin(115200);
-    delay(400); // delay to allow serial port to initialize before first print
 #endif
 
     // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
@@ -144,9 +143,10 @@ void MainTask::setup()
 #if !defined(JOYSTICK_CHANNEL)
     constexpr uint8_t JOYSTICK_CHANNEL {3};
 #endif
-    const esp_err_t err = receiver.setup(JOYSTICK_CHANNEL);
-    Serial.printf("\r\n\r\n**** ESP-NOW Ready:%X\r\n\r\n", err);
-    assert(err == ESP_OK && "Unable to setup receiver.");
+    const esp_err_t espErr = receiver.setup(JOYSTICK_CHANNEL);
+    //delay(400); // delay to allow serial port to initialize before first print
+    Serial.printf("\r\n\r\n**** ESP-NOW Ready:%X\r\n\r\n", espErr);
+    assert(espErr == ESP_OK && "Unable to setup receiver.");
 #else
     static ReceiverNull receiver;
     _receiver = &receiver;
@@ -189,6 +189,7 @@ void MainTask::setup()
     // Statically allocate the screen.
     static ScreenM5 screen(*_ahrs, motorPairController, receiver);
     _screen = &screen;
+    _screen->update(false); // Update the as soon as we can, to minimize the time the screen is blank
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(motorPairController, receiver, _screen);
@@ -244,6 +245,9 @@ void MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 #else
     static_assert(false);
 #endif
+
+    //static_cast<IMU_Base&>(imuSensor).init(1000 / AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
+    static_cast<IMU_Base&>(imuSensor).init();
 
     // Statically allocate the Sensor Fusion Filter
     // Timings are for 240MHz ESP32-S3
@@ -408,11 +412,6 @@ The motors are controlled in the MotorPairController task.
 void MainTask::loop()
 {
 #if defined(USE_FREERTOS)
-    // Delay task to yield to other tasks.
-    // Most of the time this task does nothing, but when we get a packet from the receiver we want to process it immediately,
-    // hence the short delay
-    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS));
-
     const TickType_t tickCount = xTaskGetTickCount();
 #else
     const uint32_t tickCount = _tickCountPrevious + 1;
@@ -439,5 +438,12 @@ void MainTask::loop()
         _buttonsTickCount = tickCount;
         _buttons->update();
     }
+#endif
+
+#if defined(USE_FREERTOS)
+    // Delay task to yield to other tasks.
+    // Most of the time this task does nothing, but when we get a packet from the receiver we want to process it immediately,
+    // hence the short delay
+    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS));
 #endif
 }

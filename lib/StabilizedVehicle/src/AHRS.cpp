@@ -89,8 +89,6 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 */
 [[noreturn]] void AHRS::Task([[maybe_unused]] const TaskParameters* taskParameters)
 {
-    //_IMU.init(1000 / taskParameters->tickIntervalMilliSeconds);
-    _IMU.init();
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
     _tickIntervalTicks = pdMS_TO_TICKS(taskParameters->tickIntervalMilliSeconds);
@@ -233,7 +231,7 @@ Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
 }
 
 /*!
-Returns orientation without clearing _orientationUpdatedSinceLastRead.
+Returns orientation without clearing the _orientationUpdatedSinceLastRead flag.
 */
 Quaternion AHRS::getOrientationForInstrumentationUsingLock() const
 {
@@ -259,6 +257,9 @@ AHRS::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
     return ret;
 }
 
+/*!
+Returns AHRS data without clearing the _ahrsDataUpdatedSinceLastRead flag.
+*/
 AHRS::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
 {
     LOCK_AHRS_DATA();
