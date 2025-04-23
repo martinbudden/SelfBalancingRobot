@@ -6,3 +6,5 @@
 !.vscode/settings.json
 
 compile_commands.json
+CMakeLists.txt
+sdkconfig.CodeCellEspIdf
