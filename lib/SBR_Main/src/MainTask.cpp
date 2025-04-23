@@ -111,7 +111,7 @@ void MainTask::setup()
 #if defined(FRAMEWORK_ESPIDF)
     esp_timer_init();
 #endif
-#if defined(USE_ARDUINO_ESP32)
+#if !defined(FRAMEWORK_ESPIDF)
     Serial.begin(115200);
 #endif
 
@@ -145,7 +145,9 @@ void MainTask::setup()
 #endif
     const esp_err_t espErr = receiver.setup(JOYSTICK_CHANNEL);
     //delay(400); // delay to allow serial port to initialize before first print
-    Serial.printf("\r\n\r\n**** ESP-NOW Ready:%X\r\n\r\n", espErr);
+    Serial.print("\r\n\r\n**** ESP-NOW Ready:");
+    Serial.println(espErr);
+    Serial.println();
     assert(espErr == ESP_OK && "Unable to setup receiver.");
 #else
     static ReceiverNull receiver;
@@ -287,13 +289,16 @@ void MainTask::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
     IMU_Base::xyz_int32_t offset {};
     if (preferences.getGyroOffset(offset.x, offset.y, offset.z)) {
         ahrs.setGyroOffset(offset);
-#if defined(USE_ARDUINO_ESP32)
-        Serial.printf("**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", offset.x, offset.y, offset.z);
+#if !defined(FRAMEWORK_ESPIDF)
+        std::array<char, 256> buf;
+        sprintf(&buf[0], "**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
+        Serial.print(&buf[0]);
 #endif
         if (preferences.getAccOffset(offset.x, offset.y, offset.z)) {
             ahrs.setAccOffset(offset);
-#if defined(USE_ARDUINO_ESP32)
-            Serial.printf("**** AHRS accOffsets loaded from preferences:  ax:%5d, ay:%5d, az:%5d\r\n", offset.x, offset.y, offset.z);
+#if !defined(FRAMEWORK_ESPIDF)
+            sprintf(&buf[0], "**** AHRS accOffsets loaded from preferences:  ax:%5d, ay:%5d, az:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
+            Serial.print(&buf[0]);
 #endif
         }
     } else {
@@ -317,7 +322,7 @@ void MainTask::resetPreferences(SV_Preferences& preferences, MotorPairController
         preferences.putPID(pidName, pidNOT_SET);
     }
     preferences.putFloat(motorPairController.getBalanceAngleName(), SV_Preferences::NOT_SET);
-#if defined(USE_ARDUINO_ESP32)
+#if !defined(FRAMEWORK_ESPIDF)
     Serial.print("**** preferences reset");
 #endif
 }
@@ -334,8 +339,9 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
     const float pitchBalanceAngleDegrees = preferences.getFloat(motorPairController.getBalanceAngleName());
     if (pitchBalanceAngleDegrees != SV_Preferences::NOT_SET) {
         motorPairController.setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
-#if defined(USE_ARDUINO_ESP32)
-        Serial.printf("**** pitch balance angle loaded from preferences:%f\r\n", static_cast<double>(pitchBalanceAngleDegrees));
+#if !defined(FRAMEWORK_ESPIDF)
+        Serial.print("**** pitch balance angle loaded from preferences:");
+        Serial.print(pitchBalanceAngleDegrees);
 #endif
     }
 
@@ -345,8 +351,10 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
         const PIDF::PIDF_t pid = preferences.getPID(pidName);
         if (pid.kp != SV_Preferences::NOT_SET) {
             motorPairController.setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
-#if defined(USE_ARDUINO_ESP32)
-            Serial.printf("**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), static_cast<double>(pid.kp), static_cast<double>(pid.ki), static_cast<double>(pid.kd), static_cast<double>(pid.kf));
+#if !defined(FRAMEWORK_ESPIDF)
+            std::array<char, 256> buf;
+            sprintf(&buf[0], "**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), static_cast<double>(pid.kp), static_cast<double>(pid.ki), static_cast<double>(pid.kd), static_cast<double>(pid.kf));
+            Serial.print(&buf[0]);
 #endif
         }
     }
@@ -355,14 +363,17 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
 void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
 {
 #if defined(USE_FREERTOS)
-
+#if !defined(FRAMEWORK_ESPIDF)
+    std::array<char, 256> buf;
+#endif
 #if defined(USE_ARDUINO_ESP32)
     // The main task is set up by the framework, so just print its details.
     // It has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
     const char* taskName = pcTaskGetName(taskHandle);
-    Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
+    sprintf(&buf[0], "\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
+    Serial.print(&buf[0]);
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
@@ -375,8 +386,9 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
-#if defined(USE_ARDUINO_ESP32)
-    Serial.printf("**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
+#if !defined(FRAMEWORK_ESPIDF)
+    sprintf(&buf[0], "**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
+    Serial.print(&buf[0]);
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
@@ -389,8 +401,9 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
-#if defined(USE_ARDUINO_ESP32)
-    Serial.printf("**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
+#if !defined(FRAMEWORK_ESPIDF)
+    sprintf(&buf[0], "**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
+    Serial.print(&buf[0]);
 #endif
 
 #endif // USE_FREERTOS

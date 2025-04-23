@@ -7,9 +7,16 @@
 class IMU_Test : public IMU_Base {
 public:
     explicit IMU_Test(axis_order_t axisOrder) : IMU_Base(axisOrder) {}
+    void init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) override;
     xyz_int32_t readGyroRaw() override;
     xyz_int32_t readAccRaw() override;
 };
+void IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
+{
+    (void)outputDataRateHz;
+    (void)gyroSensitivity;
+    (void)accSensitivity;
+}
 IMU_Base::xyz_int32_t IMU_Test::readGyroRaw() { return xyz_int32_t {}; }
 IMU_Base::xyz_int32_t IMU_Test::readAccRaw() { return xyz_int32_t {}; }
 
