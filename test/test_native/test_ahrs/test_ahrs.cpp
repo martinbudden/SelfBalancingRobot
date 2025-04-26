@@ -7,15 +7,17 @@
 class IMU_Test : public IMU_Base {
 public:
     explicit IMU_Test(axis_order_t axisOrder) : IMU_Base(axisOrder) {}
-    void init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) override;
+    int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
     xyz_int32_t readGyroRaw() override;
     xyz_int32_t readAccRaw() override;
 };
-void IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
+int IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+    (void)i2cMutex;
+    return 0;
 }
 IMU_Base::xyz_int32_t IMU_Test::readGyroRaw() { return xyz_int32_t {}; }
 IMU_Base::xyz_int32_t IMU_Test::readAccRaw() { return xyz_int32_t {}; }

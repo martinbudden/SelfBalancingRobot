@@ -16,7 +16,7 @@ public:
     void setup();
     void loop();
 private:
-    AHRS* setupAHRS(void* i2cMutex);
+    AHRS& setupAHRS(void* i2cMutex);
     static void checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs);
     static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);

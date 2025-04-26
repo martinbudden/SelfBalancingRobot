@@ -126,7 +126,7 @@ void MainTask::setup()
     void* i2cMutex = nullptr;
 #endif
 
-    AHRS* ahrs = setupAHRS(i2cMutex);
+    AHRS& ahrs = setupAHRS(i2cMutex);
 
 #if defined(USE_ESPNOW)
     // Set WiFi to station mode
@@ -155,18 +155,18 @@ void MainTask::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(*ahrs, receiver, i2cMutex);
-    ahrs->setVehicleController(&motorPairController);
+    static MotorPairController motorPairController(ahrs, receiver, i2cMutex);
+    ahrs.setVehicleController(&motorPairController);
 
     static SV_Preferences preferences;
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
-        calibrateGyro(*ahrs, preferences, CALIBRATE_ACC_AND_GYRO);
+        calibrateGyro(ahrs, preferences, CALIBRATE_ACC_AND_GYRO);
     }
 #endif
-    checkGyroCalibration(preferences, *ahrs);
+    checkGyroCalibration(preferences, ahrs);
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnC down while switching on resets the preferences.
@@ -181,13 +181,13 @@ void MainTask::setup()
     static TelemetryScaleFactors telemetryScaleFactors(motorPairController.getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, motorPairController, *ahrs, *this, receiver, telemetryScaleFactors, preferences);
+    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, motorPairController, ahrs, *this, receiver, telemetryScaleFactors, preferences);
     _backchannel = &backchannel;
 #endif
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
-    static ScreenM5 screen(*ahrs, motorPairController, receiver);
+    static ScreenM5 screen(ahrs, motorPairController, receiver);
     _screen = &screen;
     _screen->update(false); // Update the as soon as we can, to minimize the time the screen is blank
 
@@ -210,44 +210,44 @@ void MainTask::setup()
 #endif // M5_STACK || M5_UNIFIED
 
     // And finally set up the AHRS and MotorPairController tasks.
-    setupTasks(*ahrs, motorPairController);
+    setupTasks(ahrs, motorPairController);
 }
 
-AHRS* MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
+AHRS& MainTask::setupAHRS(void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
 // NOLINTBEGIN(misc-const-correctness)
     [[maybe_unused]] static const uint32_t spiFrequency = 20000000;
 #if defined(USE_IMU_MPU6886_I2C)
 #if defined(M5_STACK)
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, i2cMutex);
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
 #else
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL(), i2cMutex);
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, M5.In_I2C.getSDA(), M5.In_I2C.getSCL());
 #endif
 #elif defined(USE_IMU_MPU6886_SPI)
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, spiFrequency, BUS_SPI::SPI_INDEX_0, {IMU_SPI_CS_PIN, IMU_SPI_SCK_PIN, IMU_SPI_CIPO_PIN, IMU_SPI_COPI_PIN});
 #elif defined(USE_IMU_BMI270_I2C)
-    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, i2cMutex);
+    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
 #elif defined(USE_IMU_BMI270_SPI)
-    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
+    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, spiFrequency, BUS_SPI::SPI_INDEX_0, {IMU_SPI_CS_PIN, IMU_SPI_SCK_PIN, IMU_SPI_CIPO_PIN, IMU_SPI_COPI_PIN});
 #elif defined(USE_IMU_BNO085_I2C)
-    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, i2cMutex);
+    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
 #elif defined(USE_IMU_BNO085_SPI)
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
 #elif defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
-    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, i2cMutex);
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
 #elif defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
-    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, spiFrequency, BUS_SPI::SPI_INDEX_0, {IMU_SPI_CS_PIN, IMU_SPI_SCK_PIN, IMU_SPI_CIPO_PIN, IMU_SPI_COPI_PIN});
 #elif defined(USE_IMU_M5_STACK)
-    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER, i2cMutex);
+    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER);
 #elif defined(USE_IMU_M5_UNIFIED)
-    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER, i2cMutex);
+    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER);
 #else
     static_assert(false);
 #endif
 
-    //static_cast<IMU_Base&>(imuSensor).init(1000 / AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
-    static_cast<IMU_Base&>(imuSensor).init();
+    //static_cast<IMU_Base&>(imuSensor).init(1000 / AHRS_TASK_TICK_INTERVAL_MILLISECONDS, i2cMutex);
+    static_cast<IMU_Base&>(imuSensor).init(i2cMutex);
 
     // Statically allocate the Sensor Fusion Filter
     // Timings are for 240MHz ESP32-S3
@@ -273,7 +273,7 @@ AHRS* MainTask::setupAHRS([[maybe_unused]] void* i2cMutex)
 
     // Statically allocate the AHRS object
     static AHRS ahrs(sensorFusionFilter, imuSensor, imuFilters);
-    return &ahrs;
+    return ahrs;
 }
 
 void MainTask::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
@@ -290,7 +290,7 @@ void MainTask::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
     if (preferences.getGyroOffset(offset.x, offset.y, offset.z)) {
         ahrs.setGyroOffset(offset);
 #if !defined(FRAMEWORK_ESPIDF)
-        std::array<char, 256> buf;
+        std::array<char, 128> buf;
         sprintf(&buf[0], "**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
         Serial.print(&buf[0]);
 #endif
@@ -352,7 +352,7 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
         if (pid.kp != SV_Preferences::NOT_SET) {
             motorPairController.setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
 #if !defined(FRAMEWORK_ESPIDF)
-            std::array<char, 256> buf;
+            std::array<char, 128> buf;
             sprintf(&buf[0], "**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), static_cast<double>(pid.kp), static_cast<double>(pid.ki), static_cast<double>(pid.kd), static_cast<double>(pid.kf));
             Serial.print(&buf[0]);
 #endif
@@ -364,7 +364,7 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
 {
 #if defined(USE_FREERTOS)
 #if !defined(FRAMEWORK_ESPIDF)
-    std::array<char, 256> buf;
+    std::array<char, 128> buf;
 #endif
 #if defined(USE_ARDUINO_ESP32)
     // The main task is set up by the framework, so just print its details.

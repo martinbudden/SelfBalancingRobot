@@ -12,8 +12,8 @@
     },
     "dependencies": [
         {
-            "name": "IMU",
-            "version": "^0.0.1"
+            "name": "martinbudden/IMU",
+            "version": "^0.1.0"
         },
         {
             "name": "martinbudden/IMU_TYPES",
