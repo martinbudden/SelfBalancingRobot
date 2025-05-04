@@ -17,6 +17,7 @@ size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, const Motor
     td->id = id;
     td->type = TD_SBR_PIDS::TYPE;
     td->len = sizeof(TD_SBR_PIDS);
+    td->subType = 0;
 
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         td->data.spids[ii].setpoint = motorPairController.getPID_Setpoint(static_cast<MotorPairController::pid_index_t>(ii));
@@ -40,6 +41,7 @@ size_t packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, const Motor
     td->type = TD_MPC::TYPE;
     td->len = sizeof(TD_MPC);
     td->tickInterval = static_cast<uint8_t>(motorPairController.getTickCountDelta());
+    td->subType = 0;
 
     td->flags = motorPairController.motorsIsOn() ? TD_MPC::MOTORS_ON_FLAG : 0x00;
     td->flags |= static_cast<uint8_t>(TD_MPC::CONTROL_MODE_MASK) & static_cast<uint8_t>(motorPairController.getControlMode()); // NOLINT(hicpp-signed-bitwise)

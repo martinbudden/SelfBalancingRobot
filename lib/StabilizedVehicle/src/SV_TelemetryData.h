@@ -13,10 +13,11 @@ Telemetry data type 0 is reserved for future use.
 struct TD_RESERVED {
     enum { TYPE = 0 };
     uint32_t id {0};
+
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_RESERVED)}; //!< length of whole packet, ie sizeof(TD_Reserved)
+    uint8_t subType {0};
     uint8_t filler0 {0};
-    uint8_t filler1 {0};
 };
 
 /*!
@@ -25,11 +26,11 @@ Minimal sized packet. May be useful in future.
 struct TD_MINIMAL {
     enum { TYPE = 1 };
     uint32_t id {0};
+
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_MINIMAL)}; //!< length of whole packet, ie sizeof(TD_MINIMAL)
-
+    uint8_t subType {0};
     uint8_t data0 {0};
-    uint8_t data1 {0};
 };
 
 /*!
@@ -38,11 +39,12 @@ Packet for the the transmission of AHRS, Vehicle Controller, and MAIN tick inter
 struct TD_TICK_INTERVALS {
     enum { TYPE = 2 };
     uint32_t id {0};
+
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_TICK_INTERVALS)}; //!< length of whole packet, ie sizeof(TD_TICK_INTERVALS)
-
+    uint8_t subType {0};
     uint8_t ahrsTaskTickIntervalTicks {0}; //!< tick interval of the AHRS_TASK
-    uint8_t ahrsTaskFifoCount {0}; //!< tick interval of the AHRS_TASK
+
     uint16_t ahrsTaskTickIntervalMicroSeconds {0}; //!< execution interval of AHRS_TASK in microseconds
     static constexpr int TIME_CHECKS_COUNT = 4;
     std::array<uint16_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
@@ -61,12 +63,16 @@ Packet for the transmission of AHRS telemetry data.
 struct TD_AHRS {
     enum { TYPE = 3 };
     uint32_t id {0};
+
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_AHRS)}; //!< length of whole packet, ie sizeof(TD_AHRS)
-
+    uint8_t subType {0};
     uint8_t tickInterval {0}; //!< tick interval of the AHRS task
-    enum : uint8_t { FILTER_INITIALIZING_FLAG = 0x01 };
-    uint8_t flags {0};
+
+    enum : uint16_t { FILTER_INITIALIZING_FLAG = 0x01 };
+    uint16_t flags {0};
+    uint16_t fifoCount {0};
+
     struct xyz_int16_t {
         int16_t x;
         int16_t y;

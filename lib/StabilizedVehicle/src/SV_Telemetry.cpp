@@ -12,11 +12,11 @@ size_t packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id)
     TD_MINIMAL* td = reinterpret_cast<TD_MINIMAL*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
+
     td->type = TD_MINIMAL::TYPE;
     td->len = sizeof(TD_MINIMAL);
-
+    td->subType = 0;
     td->data0 = 0;
-    td->data1 = 0;
 
     return td->len;
 }
@@ -37,12 +37,12 @@ size_t packTelemetryData_TickIntervals(uint8_t* telemetryDataPtr, uint32_t id,
     td->id = id;
     td->type = TD_TICK_INTERVALS::TYPE;
     td->len = sizeof(TD_TICK_INTERVALS);
+    td->subType = 0;
 
     td->ahrsTaskTickIntervalTicks = static_cast<uint8_t>(ahrs.getTickCountDelta());
     td->ahrsTaskTickIntervalMicroSeconds = static_cast<uint16_t>(ahrs.getTimeMicroSecondDelta());
 
     static_assert(TD_TICK_INTERVALS::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
-    td->ahrsTaskFifoCount = static_cast<uint8_t>(ahrs.getFifoCount());
     for (size_t ii = 0; ii < TD_TICK_INTERVALS::TIME_CHECKS_COUNT; ++ii) {
         td->ahrsTimeChecksMicroSeconds[ii] = static_cast<uint16_t>(ahrs.getTimeChecksMicroSeconds(ii));
     }
@@ -68,6 +68,7 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS
     td->id = id;
     td->type = TD_AHRS::TYPE;
     td->len = sizeof(TD_AHRS);
+    td->subType = 0;
 
     const AHRS::data_t ahrsData = ahrs.getAhrsDataForInstrumentationUsingLock();
     const IMU_Base::xyz_int32_t gyroOffset = ahrs.getGyroOffsetMapped();
@@ -93,6 +94,7 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, const AHRS
     td->tickInterval = static_cast<uint8_t>(ahrsData.tickCountDelta);
 
     td->flags = ahrs.sensorFusionFilterIsInitializing() ? TD_AHRS::FILTER_INITIALIZING_FLAG : 0x00;
+    td->fifoCount = static_cast<uint16_t>(ahrs.getFifoCount());
 
     return td->len;
 }
