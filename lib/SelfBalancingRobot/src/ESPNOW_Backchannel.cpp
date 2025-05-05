@@ -79,9 +79,15 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
     static_assert(sizeof(TD_MPC) < sizeof(_transmitDataBuffer));
 
     switch (packet.value) {
-    case CommandPacketRequestData::REQUEST_STOP_SENDING_DATA:
-        _sendType = SEND_NO_DATA;
+    case CommandPacketRequestData::REQUEST_STOP_SENDING_DATA: {
+        _sendType = RESET_SCREEN_AND_SEND_NO_DATA;
+        // probably not necessary to send a minimal packet both here and again in update()
+        // when the _sendType is acted upon, but this way we send two reset screen packets
+        // making it less likely the reset screen is missed
+        const size_t len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID);
+        sendData(_transmitDataBuffer, len);
         break;
+    }
     case CommandPacketRequestData::REQUEST_TICK_INTERVAL_DATA: {
         _sendType = SEND_TICK_INTERVAL_DATA;
         const size_t len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
