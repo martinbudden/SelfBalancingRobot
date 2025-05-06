@@ -20,7 +20,7 @@ since generally all things related to encoders are done together. However we hav
 
 ## Abbreviations
 
-A policy of "no unnecessary abbreviations" is adopted. This means names are spelt out in full, so we have *filter* not *fltr*, *screen* not *scrn*.
+A policy of "no unnecessary abbreviations" is adopted. This means names are spelt out in full, so we have *filter* not *fltr*, and *screen* not *scrn*.
 
 When there are generally established abbreviations, they are used, for example: *PID* and *IMU*.
 
