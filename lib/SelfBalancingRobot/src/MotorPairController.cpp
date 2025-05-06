@@ -8,6 +8,7 @@
 #include <ReceiverBase.h>
 
 #include <cmath>
+
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -17,13 +18,15 @@ inline void YIELD_TASK() {}
 #endif
 
 #if defined(USE_FREERTOS)
+
 #if defined(FRAMEWORK_ARDUINO)
-#include <esp32-hal-gpio.h>
-static int64_t timeUs() { return micros(); }
+#include <esp32-hal.h>
+static uint32_t timeUs() { return micros(); }
 #elif defined(FRAMEWORK_ESPIDF)
 #include <esp_timer.h>
-static int64_t timeUs() { return esp_timer_get_time(); }
+static uint32_t timeUs() { return static_cast<uint32_t>(esp_timer_get_time()); }
 #endif
+
 #endif
 
 
@@ -384,14 +387,14 @@ Task function for the MotorPairController. Sets up and runs the task loop() func
 {
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-    _tickIntervalTicks = pdMS_TO_TICKS(taskParameters->tickIntervalMilliSeconds);
+    _taskIntervalTicks = pdMS_TO_TICKS(taskParameters->taskIntervalMilliSeconds);
     _previousWakeTimeTicks = xTaskGetTickCount();
 
     while (true) {
-        // delay until the end of the next tickIntervalTicks
-        vTaskDelayUntil(&_previousWakeTimeTicks, _tickIntervalTicks);
+        // delay until the end of the next taskIntervalTicks
+        vTaskDelayUntil(&_previousWakeTimeTicks, _taskIntervalTicks);
 
-        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than _tickIntervalTicks
+        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than _taskIntervalTicks
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
         _tickCountPrevious = tickCount;

@@ -379,7 +379,7 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
         .ahrs = &ahrs,
-        .tickIntervalMilliSeconds = AHRS_TASK_TICK_INTERVAL_MILLISECONDS
+        .taskIntervalMilliSeconds = AHRS_TASK_TICK_INTERVAL_MILLISECONDS
     };
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t ahrsTaskBuffer;
@@ -394,7 +394,7 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
         .motorPairController = &motorPairController,
-        .tickIntervalMilliSeconds = MPC_TASK_TICK_INTERVAL_MILLISECONDS
+        .taskIntervalMilliSeconds = MPC_TASK_TICK_INTERVAL_MILLISECONDS
     };
     enum { MPC_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t mpcTaskBuffer;

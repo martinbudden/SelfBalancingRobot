@@ -64,10 +64,11 @@ public:
 
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { assert(index < TIME_CHECKS_COUNT); return _timeChecksMicroSeconds[index + 1] - _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
+    inline void TIME_CHECK(size_t index, uint32_t timeMicroSeconds) { _timeChecksMicroSeconds[index] = timeMicroSeconds; }
 public:
     struct TaskParameters {
         AHRS* ahrs;
-        uint32_t tickIntervalMilliSeconds;
+        uint32_t taskIntervalMilliSeconds;
     };
     [[noreturn]] static void Task(void* arg);
     bool readIMUandUpdateOrientation(float deltaT);
@@ -92,8 +93,7 @@ private:
 
     // instrumentation member data
     uint32_t _fifoCount {0};
-    uint32_t _timeChecksMicroSeconds[TIME_CHECKS_COUNT + 1] {};
-    inline void TIME_CHECK(uint32_t index, uint32_t timeMicroSeconds) { _timeChecksMicroSeconds[index] = timeMicroSeconds; }
+    std::array<uint32_t, TIME_CHECKS_COUNT + 1> _timeChecksMicroSeconds {};
 
     // data synchronization primitives
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)

@@ -9,7 +9,7 @@ public:
 protected:
     uint32_t _tickCountDelta {0};
     uint32_t _tickCountPrevious {0};
-    uint32_t _tickIntervalTicks {0};
+    uint32_t _taskIntervalTicks {0};
     uint32_t _previousWakeTimeTicks {0};
     uint32_t _timeMicroSecondsDelta {0};
     uint32_t _timeMicroSecondsPrevious {0};

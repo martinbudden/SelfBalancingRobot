@@ -4,12 +4,12 @@
 
 #if defined(USE_FREERTOS) && defined(FRAMEWORK_ARDUINO)
 #include <esp32-hal.h>
-static uint64_t timeUs() { return micros(); }
+static uint32_t timeUs() { return micros(); }
 #elif defined(USE_FREERTOS) && defined(FRAMEWORK_ESPIDF)
 #include <esp_timer.h>
-static uint64_t timeUs() { return esp_timer_get_time(); }
+static uint32_t timeUs() { return static_cast<uint32_t>(esp_timer_get_time()); }
 #else
-static uint64_t timeUs() { return 0; }
+static uint32_t timeUs() { return 0; }
 #endif
 
 #if !defined(UNIT_TEST_BUILD)

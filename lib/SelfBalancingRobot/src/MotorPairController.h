@@ -90,7 +90,7 @@ public:
 public:
     struct TaskParameters {
         MotorPairController* motorPairController;
-        uint32_t tickIntervalMilliSeconds;
+        uint32_t taskIntervalMilliSeconds;
     };
     [[noreturn]] static void Task(void* arg);
     void loop(float deltaT, uint32_t tickCount);

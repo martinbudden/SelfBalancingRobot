@@ -8,7 +8,7 @@
 
 TD_Reserved             KEYWORD1
 TD_Minimal              KEYWORD1
-TD_TickIntervals        KEYWORD1
+TD_TaskIntervals        KEYWORD1
 TD_AHRS                 KEYWORD1
 
 
