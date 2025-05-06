@@ -14,7 +14,7 @@
 #include <SV_Telemetry.h>
 #include <SV_TelemetryData.h>
 
-static_assert(sizeof(TD_TICK_INTERVALS) <= ESP_NOW_MAX_DATA_LEN);
+static_assert(sizeof(TD_TASK_INTERVALS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN);
@@ -73,7 +73,7 @@ void Backchannel::packetControl(const CommandPacketControl& packet) {
 
 void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
     //Serial.printf("TransmitRequest packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
-    static_assert(sizeof(TD_TICK_INTERVALS) < sizeof(_transmitDataBuffer));
+    static_assert(sizeof(TD_TASK_INTERVALS) < sizeof(_transmitDataBuffer));
     static_assert(sizeof(TD_SBR_PIDS) < sizeof(_transmitDataBuffer));
     static_assert(sizeof(TD_AHRS) < sizeof(_transmitDataBuffer));
     static_assert(sizeof(TD_MPC) < sizeof(_transmitDataBuffer));
@@ -84,13 +84,13 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
         // probably not necessary to send a minimal packet both here and again in update()
         // when the _sendType is acted upon, but this way we send two reset screen packets
         // making it less likely the reset screen is missed
-        const size_t len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID);
+        const size_t len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID, _sequenceNumber);
         sendData(_transmitDataBuffer, len);
         break;
     }
     case CommandPacketRequestData::REQUEST_TICK_INTERVAL_DATA: {
         _sendType = SEND_TICK_INTERVAL_DATA;
-        const size_t len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
+        const size_t len = packTelemetryData_TaskIntervals(_transmitDataBuffer, _telemetryID, _sequenceNumber,
                 _ahrs,
                 _motorPairController,
                 _motorPairController.getOutputPowerTimeMicroSeconds(),
@@ -102,25 +102,25 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
     }
     case CommandPacketRequestData::REQUEST_AHRS_DATA: {
         _sendType = SEND_AHRS_DATA;
-        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
+        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _sequenceNumber, _ahrs, _motorPairController);
         sendData(_transmitDataBuffer, len);
         break;
     }
     case CommandPacketRequestData::REQUEST_RECEIVER_DATA: {
         _sendType = SEND_RECEIVER_DATA;
-        const size_t len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _receiver);
+        const size_t len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _sequenceNumber, _receiver);
         sendData(_transmitDataBuffer, len);
         break;
     }
     case CommandPacketRequestData::REQUEST_PID_DATA: {
         _sendType = SEND_PID_DATA;
-        const size_t len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController, _telemetryScaleFactors);
+        const size_t len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
         sendData(_transmitDataBuffer, len);
         break;
     }
     case CommandPacketRequestData::REQUEST_VEHICLE_CONTROLLER_DATA: {
         _sendType = SEND_MPC_DATA;
-        const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
+        const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController);
         sendData(_transmitDataBuffer, len);
         break;
     }
@@ -191,7 +191,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
 
     if (transmit) {
         // send back the new data for display
-        const size_t len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _motorPairController, _telemetryScaleFactors);
+        const size_t len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
         sendData(_transmitDataBuffer, len);
     }
 }
@@ -248,7 +248,7 @@ void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
 
     if (transmit) {
         // send back the new data for display
-        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
+        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _sequenceNumber, _ahrs, _motorPairController);
         sendData(_transmitDataBuffer, len);
     }
 }
@@ -306,13 +306,13 @@ bool Backchannel::update()
         return false;
     }
     case RESET_SCREEN_AND_SEND_NO_DATA: {
-        const size_t len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID);
+        const size_t len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID, _sequenceNumber);
         sendData(_transmitDataBuffer, len);
         _sendType = SEND_NO_DATA;
         break;
     }
     case SEND_TICK_INTERVAL_DATA: {
-        const size_t len = packTelemetryData_TickIntervals(_transmitDataBuffer, _telemetryID,
+        const size_t len = packTelemetryData_TaskIntervals(_transmitDataBuffer, _telemetryID, _sequenceNumber,
             _ahrs,
             _motorPairController,
             _motorPairController.getOutputPowerTimeMicroSeconds(),
@@ -324,19 +324,19 @@ bool Backchannel::update()
         break;
     }
     case SEND_AHRS_DATA: {
-        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _ahrs, _motorPairController);
+        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _sequenceNumber, _ahrs, _motorPairController);
         //Serial.printf("ahrsLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
         break;
     }
     case SEND_RECEIVER_DATA: {
-        const size_t len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _receiver);
+        const size_t len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _sequenceNumber, _receiver);
         //Serial.printf("receiverLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
         break;
     }
     case SEND_MPC_DATA: {
-        const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _motorPairController);
+        const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController);
         //Serial.printf("mpcLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
         break;

@@ -17,7 +17,7 @@ struct TD_RESERVED {
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_RESERVED)}; //!< length of whole packet, ie sizeof(TD_Reserved)
     uint8_t subType {0};
-    uint8_t filler0 {0};
+    uint8_t sequenceNumber {0};
 };
 
 /*!
@@ -30,31 +30,35 @@ struct TD_MINIMAL {
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_MINIMAL)}; //!< length of whole packet, ie sizeof(TD_MINIMAL)
     uint8_t subType {0};
-    uint8_t data0 {0};
+    uint8_t sequenceNumber {0};
 };
 
 /*!
 Packet for the the transmission of AHRS, Vehicle Controller, and MAIN tick intervals and timings;
 */
-struct TD_TICK_INTERVALS {
+struct TD_TASK_INTERVALS {
     enum { TYPE = 2 };
     uint32_t id {0};
 
     uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_TICK_INTERVALS)}; //!< length of whole packet, ie sizeof(TD_TICK_INTERVALS)
+    uint8_t len {sizeof(TD_TASK_INTERVALS)}; //!< length of whole packet, ie sizeof(TD_TASK_INTERVALS)
     uint8_t subType {0};
-    uint8_t ahrsTaskTickIntervalTicks {0}; //!< tick interval of the AHRS_TASK
+    uint8_t sequenceNumber {0};
 
-    uint16_t ahrsTaskTickIntervalMicroSeconds {0}; //!< execution interval of AHRS_TASK in microseconds
-    static constexpr int TIME_CHECKS_COUNT = 4;
-    std::array<uint16_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
-
-    uint16_t vcTaskTickIntervalMicroSeconds {0}; //!< execution interval of the Vehicle Controller task in microseconds
-    uint16_t vcOutputPowerTimeMicroSeconds {0}; //!< time taken to set the Vehicle output power
-    uint8_t vcTaskTickIntervalTicks {0}; //!< tick interval of the Vehicle Controller task
-    uint8_t mainTaskTickInterval {0}; //!< tick interval of the MAIN_LOOP_TASK
+    uint8_t mainTaskIntervalTicks {0}; //!< tick interval of the MAIN_LOOP_TASK
+    uint8_t ahrsTaskIntervalTicks {0}; //!< tick interval of the AHRS_TASK
+    uint8_t vcTaskIntervalTicks {0}; //!< tick interval of the Vehicle Controller task
     uint8_t transceiverTickCountDelta; //<<! tick interval of the ESP_NOW transceiver
+ 
+    static constexpr int TIME_CHECKS_COUNT = 4;
+    std::array<uint32_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
+
+    uint32_t ahrsTaskIntervalMicroSeconds {0}; //!< execution interval of AHRS_TASK in microseconds
+    uint32_t vcTaskIntervalMicroSeconds {0}; //!< execution interval of the Vehicle Controller task in microseconds
+    uint32_t vcOutputPowerTimeMicroSeconds {0}; //!< time taken to set the Vehicle output power
+
     uint8_t receiverDroppedPacketCount {0}; //!< the number of packets dropped by the receiver
+    uint8_t filler0;
 };
 
 /*!
@@ -67,10 +71,11 @@ struct TD_AHRS {
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_AHRS)}; //!< length of whole packet, ie sizeof(TD_AHRS)
     uint8_t subType {0};
-    uint8_t tickInterval {0}; //!< tick interval of the AHRS task
+    uint8_t sequenceNumber {0};
 
-    enum : uint16_t { FILTER_INITIALIZING_FLAG = 0x01 };
-    uint16_t flags {0};
+    uint8_t taskIntervalTicks {0}; //!< interval of the AHRS task, in ticks
+    enum : uint8_t { FILTER_INITIALIZING_FLAG = 0x01 };
+    uint8_t flags {0};
     uint16_t fifoCount {0};
 
     struct xyz_int16_t {
