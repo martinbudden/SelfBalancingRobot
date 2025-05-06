@@ -39,13 +39,16 @@ public:
 void IMU_Filters_Test::filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) { (void)gyroRPS; (void)acc; (void)deltaT; }
 
 
-void setUp() {
+void setUp()
+{
 }
 
-void tearDown() {
+void tearDown()
+{
 }
 
-void test_ahrs() {
+void test_ahrs()
+{
     MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness)
     IMU_Test imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
     IMU_Filters_Test imuFilters; // NOLINT(misc-const-correctness) false positive
@@ -60,11 +63,31 @@ void test_ahrs() {
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
 }
 
+void test_ahrs_time_checks()
+{
+    MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness)
+    IMU_Test imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
+    IMU_Filters_Test imuFilters; // NOLINT(misc-const-correctness) false positive
+    AHRS ahrs(sensorFusionFilter, imu, imuFilters);
+
+    ahrs.TIME_CHECK(0,  80002);
+    ahrs.TIME_CHECK(1, 120005);
+    ahrs.TIME_CHECK(2, 120010);
+    ahrs.TIME_CHECK(3, 150017);
+    ahrs.TIME_CHECK(4, 850028);
+
+    TEST_ASSERT_EQUAL_UINT32(40003, ahrs.getTimeChecksMicroSeconds(0));
+    TEST_ASSERT_EQUAL_UINT32(5, ahrs.getTimeChecksMicroSeconds(1));
+    TEST_ASSERT_EQUAL_UINT32(30007, ahrs.getTimeChecksMicroSeconds(2));
+    TEST_ASSERT_EQUAL_UINT32(700011, ahrs.getTimeChecksMicroSeconds(3));
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
     UNITY_BEGIN();
 
     RUN_TEST(test_ahrs);
+    RUN_TEST(test_ahrs_time_checks);
 
     UNITY_END();
 }
