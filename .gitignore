@@ -5,6 +5,8 @@
 .vscode/*.*
 !.vscode/settings.json
 
+build/*
+
 compile_commands.json
 CMakeLists.txt
 sdkconfig.CodeCellEspIdf
