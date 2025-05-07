@@ -49,7 +49,25 @@ struct TD_TASK_INTERVALS {
     uint8_t ahrsTaskIntervalTicks {0}; //!< tick interval of the AHRS_TASK
     uint8_t vcTaskIntervalTicks {0}; //!< tick interval of the Vehicle Controller task
     uint8_t transceiverTickCountDelta; //<<! tick interval of the ESP_NOW transceiver
- 
+};
+
+/*!
+Packet for the the transmission of AHRS, Vehicle Controller, and MAIN tick intervals and timings;
+*/
+struct TD_TASK_INTERVALS_EXTENDED {
+    enum { TYPE = 3 };
+    uint32_t id {0};
+
+    uint8_t type {TYPE};
+    uint8_t len {sizeof(TD_TASK_INTERVALS_EXTENDED)}; //!< length of whole packet, ie sizeof(TD_TASK_INTERVALS)
+    uint8_t subType {0};
+    uint8_t sequenceNumber {0};
+
+    uint8_t mainTaskIntervalTicks {0}; //!< tick interval of the MAIN_LOOP_TASK
+    uint8_t ahrsTaskIntervalTicks {0}; //!< tick interval of the AHRS_TASK
+    uint8_t vcTaskIntervalTicks {0}; //!< tick interval of the Vehicle Controller task
+    uint8_t transceiverTickCountDelta; //<<! tick interval of the ESP_NOW transceiver
+
     static constexpr int TIME_CHECKS_COUNT = 4;
     std::array<uint32_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
 
@@ -65,7 +83,7 @@ struct TD_TASK_INTERVALS {
 Packet for the transmission of AHRS telemetry data.
 */
 struct TD_AHRS {
-    enum { TYPE = 3 };
+    enum { TYPE = 4 };
     uint32_t id {0};
 
     uint8_t type {TYPE};

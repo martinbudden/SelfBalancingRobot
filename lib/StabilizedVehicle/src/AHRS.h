@@ -75,7 +75,7 @@ public:
 private:
     [[noreturn]] void Task(const TaskParameters* taskParameters);
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
-    static IRAM_ATTR void imuDataReadyInterruptServiceRoutine();
+    static IRAM_ATTR void imuDataReadyISR();
 #endif
 private:
     SensorFusionFilterBase& _sensorFusionFilter;

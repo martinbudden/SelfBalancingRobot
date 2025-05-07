@@ -22,15 +22,13 @@ size_t packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id, uint32_
 }
 
 /*!
-Packs the tick interval telemetry data into a TD_TASK_INTERVALS packet. Returns the length of the packet.
+Packs the tick interval telemetry data into a TD_TASK_INTERVALS_EXTENDED packet. Returns the length of the packet.
 */
 size_t packTelemetryData_TaskIntervals(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber,
         const AHRS& ahrs,
         const VehicleControllerBase& vehicleController,
-        uint32_t vcOutputPowerTimeMicroSeconds,
         uint32_t mainTaskTickCountDelta,
-        uint32_t transceiverTickCountDelta,
-        uint32_t receiverDroppedPacketCount)
+        uint32_t transceiverTickCountDelta)
 {
     TD_TASK_INTERVALS* td = reinterpret_cast<TD_TASK_INTERVALS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
@@ -45,10 +43,37 @@ size_t packTelemetryData_TaskIntervals(uint8_t* telemetryDataPtr, uint32_t id, u
     td->vcTaskIntervalTicks = vehicleController.getTickCountDelta();
     td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
 
+    return td->len;
+}
+
+/*!
+Packs the tick interval telemetry data into a TD_TASK_INTERVALS_EXTENDED packet. Returns the length of the packet.
+*/
+size_t packTelemetryData_TaskIntervalsExtended(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber,
+        const AHRS& ahrs,
+        const VehicleControllerBase& vehicleController,
+        uint32_t vcOutputPowerTimeMicroSeconds,
+        uint32_t mainTaskTickCountDelta,
+        uint32_t transceiverTickCountDelta,
+        uint32_t receiverDroppedPacketCount)
+{
+    TD_TASK_INTERVALS_EXTENDED* td = reinterpret_cast<TD_TASK_INTERVALS_EXTENDED*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
+
+    td->id = id;
+    td->type = TD_TASK_INTERVALS_EXTENDED::TYPE;
+    td->len = sizeof(TD_TASK_INTERVALS_EXTENDED);
+    td->subType = 0;
+    td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
+
+    td->mainTaskIntervalTicks = static_cast<uint8_t>(mainTaskTickCountDelta);
+    td->ahrsTaskIntervalTicks = static_cast<uint8_t>(ahrs.getTickCountDelta());
+    td->vcTaskIntervalTicks = vehicleController.getTickCountDelta();
+    td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
+
     td->ahrsTaskIntervalMicroSeconds = static_cast<uint16_t>(ahrs.getTimeMicroSecondDelta());
 
-    static_assert(TD_TASK_INTERVALS::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
-    for (size_t ii = 0; ii < TD_TASK_INTERVALS::TIME_CHECKS_COUNT; ++ii) {
+    static_assert(TD_TASK_INTERVALS_EXTENDED::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
+    for (size_t ii = 0; ii < TD_TASK_INTERVALS_EXTENDED::TIME_CHECKS_COUNT; ++ii) {
         td->ahrsTimeChecksMicroSeconds[ii] = ahrs.getTimeChecksMicroSeconds(ii);
     }
 

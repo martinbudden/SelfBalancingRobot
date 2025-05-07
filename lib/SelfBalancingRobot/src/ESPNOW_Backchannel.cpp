@@ -88,9 +88,19 @@ void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
         sendData(_transmitDataBuffer, len);
         break;
     }
-    case CommandPacketRequestData::REQUEST_TICK_INTERVAL_DATA: {
-        _sendType = SEND_TICK_INTERVAL_DATA;
+    case CommandPacketRequestData::REQUEST_TASK_INTERVAL_DATA: {
+        _sendType = SEND_TASK_INTERVAL_DATA;
         const size_t len = packTelemetryData_TaskIntervals(_transmitDataBuffer, _telemetryID, _sequenceNumber,
+                _ahrs,
+                _motorPairController,
+                _mainTask.getTickCountDelta(),
+                _transceiver.getTickCountDeltaAndReset());
+        sendData(_transmitDataBuffer, len);
+        break;
+    }
+    case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA: {
+        _sendType = SEND_TASK_INTERVAL_EXTENDED_DATA;
+        const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBuffer, _telemetryID, _sequenceNumber,
                 _ahrs,
                 _motorPairController,
                 _motorPairController.getOutputPowerTimeMicroSeconds(),
@@ -311,8 +321,18 @@ bool Backchannel::update()
         _sendType = SEND_NO_DATA;
         break;
     }
-    case SEND_TICK_INTERVAL_DATA: {
+    case SEND_TASK_INTERVAL_DATA: {
         const size_t len = packTelemetryData_TaskIntervals(_transmitDataBuffer, _telemetryID, _sequenceNumber,
+            _ahrs,
+            _motorPairController,
+            _mainTask.getTickCountDelta(),
+            _receiver.getDroppedPacketCountDelta());
+        //Serial.printf("tiLen:%d\r\n", len);
+        sendData(_transmitDataBuffer, len);
+        break;
+    }
+    case SEND_TASK_INTERVAL_EXTENDED_DATA: {
+        const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBuffer, _telemetryID, _sequenceNumber,
             _ahrs,
             _motorPairController,
             _motorPairController.getOutputPowerTimeMicroSeconds(),

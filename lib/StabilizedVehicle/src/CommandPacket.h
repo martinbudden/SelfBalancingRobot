@@ -39,11 +39,12 @@ struct CommandPacketRequestData {
     enum { TYPE = 2 };
     enum { NO_REQUEST = 0,
         REQUEST_STOP_SENDING_DATA = 1,
-        REQUEST_TICK_INTERVAL_DATA = 2,
-        REQUEST_AHRS_DATA = 3,
-        REQUEST_RECEIVER_DATA = 4,
-        REQUEST_PID_DATA = 5,
-        REQUEST_VEHICLE_CONTROLLER_DATA = 6
+        REQUEST_TASK_INTERVAL_DATA = 2,
+        REQUEST_TASK_INTERVAL_EXTENDED_DATA = 3,
+        REQUEST_AHRS_DATA = 4,
+        REQUEST_RECEIVER_DATA = 5,
+        REQUEST_PID_DATA = 6,
+        REQUEST_VEHICLE_CONTROLLER_DATA = 7
     };
     uint32_t id;
     uint8_t type;

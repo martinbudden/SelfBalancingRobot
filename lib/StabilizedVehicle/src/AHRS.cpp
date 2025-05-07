@@ -297,7 +297,10 @@ void AHRS::checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orie
 }
 
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
-IRAM_ATTR void AHRS::imuDataReadyInterruptServiceRoutine()
+/*!
+IMU data ready interrupt service routine (ISR)
+*/
+IRAM_ATTR void AHRS::imuDataReadyISR()
 {
     ++ahrs->_imuDataReadyCount;
     ahrs->UNLOCK_IMU_DATA_READY();
@@ -321,7 +324,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 {
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
     ahrs = this;
-    attachInterrupt(digitalPinToInterrupt(IMU_INTERRUPT_PIN), imuDataReadyInterruptServiceRoutine, LOW);
+    attachInterrupt(digitalPinToInterrupt(IMU_INTERRUPT_PIN), imuDataReadyISR, LOW);
 #endif
     setSensorFusionFilterInitializing(true);
 
