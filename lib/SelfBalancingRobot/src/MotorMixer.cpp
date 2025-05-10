@@ -48,6 +48,7 @@ void MotorMixer::outputToMotors(const output_t& outputs, float deltaT, uint32_t 
         }
         // Motors switched off, so set everything to zero, ready for motors to be switched on again.
         _motors.setPower(0.0F, 0.0F);
+        _outputPowerTimeMicroSeconds = 0;
         _powerLeft  = 0.0F;
         _powerRight = 0.0F;
         _powerLeftFilter.reset();

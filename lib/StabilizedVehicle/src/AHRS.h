@@ -63,8 +63,7 @@ public:
     inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
 
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
-    inline uint32_t getTimeChecksMicroSeconds(size_t index) const { assert(index < TIME_CHECKS_COUNT); return _timeChecksMicroSeconds[index + 1] - _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
-    inline void TIME_CHECK(size_t index, uint32_t timeMicroSeconds) { _timeChecksMicroSeconds[index] = timeMicroSeconds; }
+    inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
 public:
     struct TaskParameters {
         AHRS* ahrs;

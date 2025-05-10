@@ -42,23 +42,33 @@ NOTE: calls to YIELD_TASK have no effect on multi-core implementations, but are 
 */
 bool AHRS::readIMUandUpdateOrientation(float deltaT)
 {
-    TIME_CHECK(0, timeUs());
+    const uint32_t time0 = timeUs();
 #if defined(IMU_DOES_SENSOR_FUSION)
     const IMU_Base::gyroRPS_Acc_t gyroAcc = {
         .gyroRPS = _IMU.readGyroRPS(),
         .acc = {}
     };
-    TIME_CHECK(1, timeUs());
-    TIME_CHECK(2, timeUs());
+    const uint32_t time1 = timeUs();
+    _timeChecksMicroSeconds[0] = time1 - time0;
+    _timeChecksMicroSeconds[1] = 0; // filter time set to zero, since filtering is as part of IMU sensor fusion
     const Quaternion orientation = _IMU.readOrientation();
-    TIME_CHECK(3, timeUs());
+    const uint32_t time2 = timeUs();
+    _timeChecksMicroSeconds[2] = time2 - time1;
 #else
     IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc(); // NOLINT(misc-const-correctness) false positive
-    TIME_CHECK(1, timeUs());
+    const uint32_t time1 = timeUs();
+    _timeChecksMicroSeconds[0] = time1 - time0;
+
     _imuFilters.filter(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 207us
-    TIME_CHECK(2, timeUs());
+
+    const uint32_t time2 = timeUs();
+    _timeChecksMicroSeconds[1] = time2 - time1;
+
     const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 140us
-    TIME_CHECK(3, timeUs());
+
+    const uint32_t time3 = timeUs();
+    _timeChecksMicroSeconds[2] = time3 - time2;
+
     if (sensorFusionFilterIsInitializing()) {
         checkFusionFilterConvergence(gyroAcc.acc, orientation);
     }
@@ -69,7 +79,8 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     if (_vehicleController != nullptr) {
         _vehicleController->updateOutputsUsingPIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
     }
-    TIME_CHECK(4, timeUs());
+    const uint32_t time4 = timeUs();
+    _timeChecksMicroSeconds[3] = time4 - time3;
 
     LOCK_AHRS_DATA();
     _ahrsDataUpdatedSinceLastRead = true;
