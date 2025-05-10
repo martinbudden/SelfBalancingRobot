@@ -52,8 +52,8 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     _timeChecksMicroSeconds[0] = time1 - time0;
     _timeChecksMicroSeconds[1] = 0; // filter time set to zero, since filtering is as part of IMU sensor fusion
     const Quaternion orientation = _IMU.readOrientation();
-    const uint32_t time2 = timeUs();
-    _timeChecksMicroSeconds[2] = time2 - time1;
+    const uint32_t time3 = timeUs();
+    _timeChecksMicroSeconds[2] = time3 - time1;
 #else
     IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc(); // NOLINT(misc-const-correctness) false positive
     const uint32_t time1 = timeUs();
