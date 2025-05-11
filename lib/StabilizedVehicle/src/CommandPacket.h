@@ -64,7 +64,7 @@ struct CommandPacketSetPID {
         SAVE_PITCH_BALANCE_ANGLE = 12
     };
     enum { MPC_ROLL_ANGLE=0, MPC_PITCH_ANGLE=1, MPC_YAW_RATE=2, MPC_SPEED=3, MPC_POSITION=4, MPC_PID_COUNT=5, MPC_PID_BEGIN=0 };
-    enum { FC_ROLL_RATE=0, FC_PITCH_RATE=1, FC_YAW_RATE=2, FC_ROLL_ANGLE=3, FC_PITCH_ANGLE=4, FC_PID_COUNT=5, FC_PID_BEGIN=0 };
+    enum { FC_ROLL_RATE=0,   FC_PITCH_RATE=1, FC_YAW_RATE=2, FC_ROLL_ANGLE=3, FC_PITCH_ANGLE=4, FC_PID_COUNT=5, FC_PID_BEGIN=0 };
     uint32_t id;
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetPID)
@@ -74,10 +74,10 @@ struct CommandPacketSetPID {
 };
 
 struct CommandPacketSetOffset {
-    enum { TYPE = 5 };
+    enum { TYPE = 4 };
     enum { NO_ACTION = 0,
         SET_GYRO_OFFSET_X = 1, SET_GYRO_OFFSET_Y = 2, SET_GYRO_OFFSET_Z = 3, SAVE_GYRO_OFFSET = 4,
-        SET_ACC_OFFSET_X = 5, SET_ACC_OFFSET_Y = 6, SET_ACC_OFFSET_Z = 7, SAVE_ACC_OFFSET = 8
+        SET_ACC_OFFSET_X = 5,  SET_ACC_OFFSET_Y = 6,  SET_ACC_OFFSET_Z = 7,  SAVE_ACC_OFFSET = 8
     };
     uint32_t id;
     uint8_t type;
@@ -88,7 +88,7 @@ struct CommandPacketSetOffset {
 };
 
 struct CommandPacketSetFilter {
-    enum { TYPE = 6 };
+    enum { TYPE = 5 };
     enum { GYRO_ALL_LPF, GYRO_X_LPF, GYRO_Y_LPF, GYRO_Z_LPF, ACC_ALL_LPF, ACC_X_LPF, ACC_Y_LPF, ACC_Z_LPF };
     uint32_t id;
     uint8_t type;
@@ -101,4 +101,3 @@ struct CommandPacketSetFilter {
     float value3;
 };
 #pragma pack(pop)
-

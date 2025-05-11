@@ -195,7 +195,7 @@ void ScreenM5::updateReceivedData128x128() const
     M5.Lcd.printf("%6d", controls.yawStickQ4dot12);
 }
 
-void ScreenM5::update128x128(const TD_AHRS::Data& ahrsData) const
+void ScreenM5::update128x128(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 35;
 
@@ -284,7 +284,7 @@ void ScreenM5::updateReceivedData80x160() const
     M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == ReceiverAtomJoyStick::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 }
 
-void ScreenM5::update80x160(const TD_AHRS::Data& ahrsData) const
+void ScreenM5::update80x160(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 30;
     const bool displayAcc = true;
@@ -383,7 +383,7 @@ void ScreenM5::updateReceivedData135x240() const
     updateReceivedData80x160();
 }
 
-void ScreenM5::update135x240(const TD_AHRS::Data& ahrsData) const
+void ScreenM5::update135x240(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 45;
 
@@ -502,7 +502,7 @@ void ScreenM5::updateReceivedData320x240() const
     M5.Lcd.printf("%3d", _receiver.getDroppedPacketCountDelta());
 }
 
-void ScreenM5::update320x240(const TD_AHRS::Data& ahrsData) const
+void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 45;
     M5.Lcd.setCursor(36, yPos);
@@ -596,7 +596,7 @@ void ScreenM5::updateReceivedData() const
 void ScreenM5::updateAHRS_Data() const
 {
     const AHRS::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
-    const TD_AHRS::Data tdAhrsData {
+    const TD_AHRS::data_t tdAhrsData {
         .pitch = _motorPairController.getPitchAngleDegreesRaw(),
         .roll = _motorPairController.getRollAngleDegreesRaw(),
         .yaw = _motorPairController.getYawAngleDegreesRaw(),

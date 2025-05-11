@@ -66,17 +66,16 @@ struct TD_TASK_INTERVALS_EXTENDED {
     uint8_t mainTaskIntervalTicks {0}; //!< tick interval of the MAIN_LOOP_TASK
     uint8_t ahrsTaskIntervalTicks {0}; //!< tick interval of the AHRS_TASK
     uint8_t vcTaskIntervalTicks {0}; //!< tick interval of the Vehicle Controller task
-    uint8_t transceiverTickCountDelta; //<<! tick interval of the ESP_NOW transceiver
+    uint8_t transceiverTickCountDelta {0}; //<<! tick interval of the ESP_NOW transceiver
 
     static constexpr int TIME_CHECKS_COUNT = 4;
-    std::array<uint32_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
+    std::array<uint16_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
 
-    uint32_t ahrsTaskIntervalMicroSeconds {0}; //!< execution interval of AHRS_TASK in microseconds
-    uint32_t vcTaskIntervalMicroSeconds {0}; //!< execution interval of the Vehicle Controller task in microseconds
-    uint32_t vcOutputPowerTimeMicroSeconds {0}; //!< time taken to set the Vehicle output power
+    uint16_t ahrsTaskIntervalMicroSeconds {0}; //!< execution interval of AHRS_TASK in microseconds
+    uint16_t vcTaskIntervalMicroSeconds {0}; //!< execution interval of the Vehicle Controller task in microseconds
+    uint16_t vcOutputPowerTimeMicroSeconds {0}; //!< time taken to set the Vehicle output power
 
-    uint8_t receiverDroppedPacketCount {0}; //!< the number of packets dropped by the receiver
-    uint8_t filler0;
+    uint16_t receiverDroppedPacketCount {0}; //!< the number of packets dropped by the receiver
 };
 
 /*!
@@ -101,15 +100,15 @@ struct TD_AHRS {
         int16_t y;
         int16_t z;
     };
-    struct Data {
-        float pitch; //!< estimated pitch value calculated by Madgwick Orientation Filter
-        float roll; //!< estimated roll value calculated by Madgwick Orientation Filter
-        float yaw; //!< estimated yaw value calculated by Madgwick Orientation Filter
+    struct data_t {
+        float pitch; //!< estimated pitch value calculated by Sensor Fusion Filter
+        float roll; //!< estimated roll value calculated by Sensor Fusion Filter
+        float yaw; //!< estimated yaw value calculated by Sensor Fusion Filter
         xyz_t gyroRPS; //!< gyro outputs from IMU
         xyz_t acc; //!< acceleration outputs from IMU
         xyz_int16_t gyroOffset;
         xyz_int16_t accOffset;
     };
-    Data data;
+    data_t data;
 };
 #pragma pack(pop)

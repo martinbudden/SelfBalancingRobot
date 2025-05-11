@@ -46,10 +46,10 @@ private:
     void updateReceivedData135x240() const;
     void updateReceivedData320x240() const;
 
-    void update80x160(const TD_AHRS::Data& ahrsData) const; // M5StickC
-    void update128x128(const TD_AHRS::Data& ahrsData) const; // M5Atom
-    void update135x240(const TD_AHRS::Data& ahrsData) const; // M5StickC Plus
-    void update320x240(const TD_AHRS::Data& ahrsData) const; // MCore
+    void update80x160(const TD_AHRS::data_t& ahrsData) const; // M5StickC
+    void update128x128(const TD_AHRS::data_t& ahrsData) const; // M5Atom
+    void update135x240(const TD_AHRS::data_t& ahrsData) const; // M5StickC Plus
+    void update320x240(const TD_AHRS::data_t& ahrsData) const; // MCore
 
     void updateAHRS_Data() const;
 
