@@ -28,11 +28,11 @@ struct TD_SBR_PIDS {
         PIDF::PIDF_t pid;
         PIDF::PIDF_t scale; //!< factor to scale value to range ~ [0, 100], for consistent display
     };
-    struct Data {
+    struct data_t {
         std::array<SPID_t, PID_COUNT> spids;
         float pitchBalanceAngleDegrees;
     };
-    Data data;
+    data_t data;
 };
 
 /*!
