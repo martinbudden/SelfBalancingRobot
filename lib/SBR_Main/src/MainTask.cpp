@@ -71,18 +71,18 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #endif
 #endif
 
-enum { MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
+enum { MAIN_LOOP_TASK_INTERVAL_MILLISECONDS = 5 };
 
-#if !defined(MPC_TASK_TICK_INTERVAL_MILLISECONDS)
+#if !defined(MPC_TASK_INTERVAL_MILLISECONDS)
 #if defined(USE_IMU_MPU6886)
-    enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
+    enum { MPC_TASK_INTERVAL_MILLISECONDS = 5 };
 #else
-    enum { MPC_TASK_TICK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
+    enum { MPC_TASK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
 #endif
 #endif
 
-#if !defined(AHRS_TASK_TICK_INTERVAL_MILLISECONDS)
-enum { AHRS_TASK_TICK_INTERVAL_MILLISECONDS = 5 };
+#if !defined(AHRS_TASK_INTERVAL_MILLISECONDS)
+enum { AHRS_TASK_INTERVAL_MILLISECONDS = 5 };
 #endif
 
 
@@ -246,7 +246,7 @@ AHRS& MainTask::setupAHRS(void* i2cMutex)
     static_assert(false);
 #endif
 
-    //static_cast<IMU_Base&>(imuSensor).init(1000 / AHRS_TASK_TICK_INTERVAL_MILLISECONDS, i2cMutex);
+    //static_cast<IMU_Base&>(imuSensor).init(1000 / AHRS_TASK_INTERVAL_MILLISECONDS, i2cMutex);
     static_cast<IMU_Base&>(imuSensor).init(i2cMutex);
 
     // Statically allocate the Sensor Fusion Filter
@@ -258,17 +258,17 @@ AHRS& MainTask::setupAHRS(void* i2cMutex)
     // approx 10 microseconds per update
     static MahonyFilter sensorFusionFilter;
 #elif defined(USE_VQF)
-    const float deltaT = static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F;
+    const float deltaT = static_cast<float>(AHRS_TASK_INTERVAL_MILLISECONDS) / 1000.0F;
     static VQF sensorFusionFilter(deltaT, deltaT, deltaT, true, false, false);
 #elif defined(USE_VQF_BASIC)
-    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
+    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_TASK_INTERVAL_MILLISECONDS) / 1000.0F);
 #else
     // approx 16 microseconds per update
     static MadgwickFilter sensorFusionFilter;
 #endif
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
-    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_TICK_INTERVAL_MILLISECONDS) / 1000.0F);
+    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MILLISECONDS) / 1000.0F);
 // NOLINTEND(misc-const-correctness)
 
     // Statically allocate the AHRS object
@@ -379,7 +379,7 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
         .ahrs = &ahrs,
-        .taskIntervalMilliSeconds = AHRS_TASK_TICK_INTERVAL_MILLISECONDS
+        .taskIntervalMilliSeconds = AHRS_TASK_INTERVAL_MILLISECONDS
     };
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t ahrsTaskBuffer;
@@ -387,14 +387,14 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
 #if !defined(FRAMEWORK_ESPIDF)
-    sprintf(&buf[0], "**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_TICK_INTERVAL_MILLISECONDS);
+    sprintf(&buf[0], "**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_INTERVAL_MILLISECONDS);
     Serial.print(&buf[0]);
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
         .motorPairController = &motorPairController,
-        .taskIntervalMilliSeconds = MPC_TASK_TICK_INTERVAL_MILLISECONDS
+        .taskIntervalMilliSeconds = MPC_TASK_INTERVAL_MILLISECONDS
     };
     enum { MPC_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t mpcTaskBuffer;
@@ -402,7 +402,7 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
 #if !defined(FRAMEWORK_ESPIDF)
-    sprintf(&buf[0], "**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_TICK_INTERVAL_MILLISECONDS);
+    sprintf(&buf[0], "**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_INTERVAL_MILLISECONDS);
     Serial.print(&buf[0]);
 #endif
 
@@ -455,6 +455,6 @@ void MainTask::loop()
     // Delay task to yield to other tasks.
     // Most of the time this task does nothing, but when we get a packet from the receiver we want to process it immediately,
     // hence the short delay
-    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_TICK_INTERVAL_MILLISECONDS));
+    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MILLISECONDS));
 #endif
 }
