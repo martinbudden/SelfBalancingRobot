@@ -17,7 +17,10 @@ struct CommandPacketReserved {
 struct CommandPacketControl {
     enum { TYPE = 1 };
     enum {
-        NO_ACTION = 0, MOTORS_SWITCH_OFF = 1, MOTORS_SWITCH_ON = 2, RESET = 3,
+        NO_ACTION = 0, 
+        MOTORS_SWITCH_OFF = 1,
+        MOTORS_SWITCH_ON = 2, 
+        RESET = 3,
         CONTROL_MODE_0 = 20,
         CONTROL_MODE_1 = 21,
         CONTROL_MODE_2 = 22,
@@ -37,7 +40,8 @@ struct CommandPacketControl {
 
 struct CommandPacketRequestData {
     enum { TYPE = 2 };
-    enum { NO_REQUEST = 0,
+    enum {
+        NO_REQUEST = 0,
         REQUEST_STOP_SENDING_DATA = 1,
         REQUEST_TASK_INTERVAL_DATA = 2,
         REQUEST_TASK_INTERVAL_EXTENDED_DATA = 3,
@@ -75,7 +79,8 @@ struct CommandPacketSetPID {
 
 struct CommandPacketSetOffset {
     enum { TYPE = 4 };
-    enum { NO_ACTION = 0,
+    enum {
+        NO_ACTION = 0,
         SET_GYRO_OFFSET_X = 1, SET_GYRO_OFFSET_Y = 2, SET_GYRO_OFFSET_Z = 3, SAVE_GYRO_OFFSET = 4,
         SET_ACC_OFFSET_X = 5,  SET_ACC_OFFSET_Y = 6,  SET_ACC_OFFSET_Z = 7,  SAVE_ACC_OFFSET = 8
     };
@@ -89,7 +94,10 @@ struct CommandPacketSetOffset {
 
 struct CommandPacketSetFilter {
     enum { TYPE = 5 };
-    enum { GYRO_ALL_LPF, GYRO_X_LPF, GYRO_Y_LPF, GYRO_Z_LPF, ACC_ALL_LPF, ACC_X_LPF, ACC_Y_LPF, ACC_Z_LPF };
+    enum { 
+        GYRO_ALL_LPF, GYRO_X_LPF, GYRO_Y_LPF, GYRO_Z_LPF,
+        ACC_ALL_LPF,  ACC_X_LPF,  ACC_Y_LPF,  ACC_Z_LPF
+    };
     uint32_t id;
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetFilter)
