@@ -6,7 +6,6 @@
 #include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
-#include <CommandPacket.h>
 #include <HardwareSerial.h>
 #include <ReceiverTelemetry.h>
 #include <ReceiverTelemetryData.h>
@@ -37,11 +36,13 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
     _telemetryScaleFactors(telemetryScaleFactors),
     _preferences(preferences)
 {
-    static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) < sizeof(_transmitDataBuffer));
-    static_assert(sizeof(TD_AHRS) < sizeof(_transmitDataBuffer));
-    static_assert(sizeof(TD_RECEIVER) < sizeof(_transmitDataBuffer));
-    static_assert(sizeof(TD_SBR_PIDS) < sizeof(_transmitDataBuffer));
-    static_assert(sizeof(TD_MPC) < sizeof(_transmitDataBuffer));
+    // NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
+    static_assert(sizeof(TD_TASK_INTERVALS) < sizeof(_transmitDataBuffer)); // 12
+    static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) < sizeof(_transmitDataBuffer)); // 28
+    static_assert(sizeof(TD_AHRS) < sizeof(_transmitDataBuffer)); // 60
+    static_assert(sizeof(TD_RECEIVER) < sizeof(_transmitDataBuffer)); // 40
+    static_assert(sizeof(TD_SBR_PIDS) < sizeof(_transmitDataBuffer)); //192
+    static_assert(sizeof(TD_MPC) < sizeof(_transmitDataBuffer)); // 100
 
     _peer_data.receivedDataPtr = &_received_data;
     // add the backchannel as a secondary peer so data may be received from the backchannel
@@ -75,7 +76,10 @@ void Backchannel::packetControl(const CommandPacketControl& packet) {
         _motorPairController.setControlMode(MotorPairController::CONTROL_MODE_PARALLEL_PIDS);
         _telemetryScaleFactors.setControlMode(MotorPairController::CONTROL_MODE_PARALLEL_PIDS);
         break;
-    }
+    default:
+        // do nothing
+        break;
+    } // end switch
 }
 
 void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
@@ -204,48 +208,25 @@ void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
 void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
     //Serial.printf("TransmitRequest packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
 
-    switch (packet.value) {
-    case CommandPacketRequestData::REQUEST_STOP_SENDING_DATA:
-        _sendType = RESET_SCREEN_AND_SEND_NO_DATA;
-        break;
-    case CommandPacketRequestData::REQUEST_TASK_INTERVAL_DATA:
-        _sendType = SEND_TASK_INTERVAL_DATA;
-        break;
-    case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA:
-        _sendType = SEND_TASK_INTERVAL_EXTENDED_DATA;
-        break;
-    case CommandPacketRequestData::REQUEST_AHRS_DATA:
-        _sendType = SEND_AHRS_DATA;
-        break;
-    case CommandPacketRequestData::REQUEST_RECEIVER_DATA:
-        _sendType = SEND_RECEIVER_DATA;
-        break;
-    case CommandPacketRequestData::REQUEST_PID_DATA:
-        _sendType = SEND_PID_DATA;
-        break;
-    case CommandPacketRequestData::REQUEST_VEHICLE_CONTROLLER_DATA:
-        _sendType = SEND_MPC_DATA;
-        break;
-    default:
-        // do nothing
-        return;
-    } // end switch
+    _requestType = packet.value;
     sendTelemetryPacket();
 }
 
 bool Backchannel::sendTelemetryPacket()
 {
-    switch (_sendType) {
-    case SEND_NO_DATA: {
+    switch (_requestType) {
+    case CommandPacketRequestData::NO_REQUEST: {
         return false;
     }
-    case RESET_SCREEN_AND_SEND_NO_DATA: {
+    case CommandPacketRequestData::REQUEST_STOP_SENDING_DATA: {
+        // send a minimal packet so the client can reset its screen
         const size_t len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID, _sequenceNumber);
         sendData(_transmitDataBuffer, len);
-        _sendType = SEND_NO_DATA;
+        // set _requestType to NO_REQUEST so no further data sent
+        _requestType = CommandPacketRequestData::NO_REQUEST;
         break;
     }
-    case SEND_TASK_INTERVAL_DATA: {
+    case CommandPacketRequestData::REQUEST_TASK_INTERVAL_DATA: {
         const size_t len = packTelemetryData_TaskIntervals(_transmitDataBuffer, _telemetryID, _sequenceNumber,
             _ahrs,
             _motorPairController,
@@ -255,7 +236,7 @@ bool Backchannel::sendTelemetryPacket()
         sendData(_transmitDataBuffer, len);
         break;
     }
-    case SEND_TASK_INTERVAL_EXTENDED_DATA: {
+    case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA: {
         const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBuffer, _telemetryID, _sequenceNumber,
             _ahrs,
             _motorPairController,
@@ -267,26 +248,26 @@ bool Backchannel::sendTelemetryPacket()
         sendData(_transmitDataBuffer, len);
         break;
     }
-    case SEND_AHRS_DATA: {
+    case CommandPacketRequestData::REQUEST_AHRS_DATA: {
         const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _sequenceNumber, _ahrs, _motorPairController);
         //Serial.printf("ahrsLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
         break;
     }
-    case SEND_RECEIVER_DATA: {
+    case CommandPacketRequestData::REQUEST_RECEIVER_DATA: {
         const size_t len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _sequenceNumber, _receiver);
         //Serial.printf("receiverLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
         break;
     }
-    case SEND_PID_DATA: {
+    case CommandPacketRequestData::REQUEST_PID_DATA: {
         const size_t len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
         //Serial.printf("pidLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
-        _sendType = SEND_NO_DATA; // reset _sendType to SEND_NO_DATA, since SEND_PID_DATA is a one shot, as response to keypress
+        _requestType = CommandPacketRequestData::NO_REQUEST; // reset _sendType to NO_REQUEST, since SEND_PID_DATA is a one shot, as response to keypress
         break;
     }
-    case SEND_MPC_DATA: {
+    case CommandPacketRequestData::REQUEST_VEHICLE_CONTROLLER_DATA: {
         const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController);
         //Serial.printf("mpcLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
@@ -299,17 +280,16 @@ bool Backchannel::sendTelemetryPacket()
 }
 
 /*!
-If no data was received then send telemetry data if it has been requested and return false.
-
 If data was received then interpret it as a packet and return true.
-Three types of packets may be received:
+Four types of packets may be received:
 
 1. A command packet, for example a command to switch off the motors.
 2. A request to transmit telemetry. In this case format the telemetry data and send it.
-3. A request to set a PID value. In this case set the PID value and then send back the value of all the PIDs.
+3. A request to set a PID value. In this case set the PID value and then send back a TD_SBR_PIDS packet for display.
+4. A request to set an IMU offset value. In this case set the offset value and send back an TD_AHRS packet for display.
 
-NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
-packet lengths are 10(TICK_INTERVAL), 44(AHRS), and 88(MPC)
+
+If no data was received then send a telemetry data packet if there is an outstanding telemetry request.
 */
 bool Backchannel::update()
 {
