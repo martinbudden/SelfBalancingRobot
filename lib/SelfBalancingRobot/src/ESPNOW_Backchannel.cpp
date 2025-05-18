@@ -41,7 +41,7 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
     static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) < sizeof(_transmitDataBuffer)); // 28
     static_assert(sizeof(TD_AHRS) < sizeof(_transmitDataBuffer)); // 60
     static_assert(sizeof(TD_RECEIVER) < sizeof(_transmitDataBuffer)); // 40
-    static_assert(sizeof(TD_SBR_PIDS) < sizeof(_transmitDataBuffer)); //192
+    static_assert(sizeof(TD_SBR_PIDS) < sizeof(_transmitDataBuffer)); // 192
     static_assert(sizeof(TD_MPC) < sizeof(_transmitDataBuffer)); // 100
 
     _peer_data.receivedDataPtr = &_received_data;

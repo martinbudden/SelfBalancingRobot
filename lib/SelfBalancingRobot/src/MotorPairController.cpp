@@ -4,7 +4,6 @@
 #include "MotorPairControllerTelemetry.h"
 #include <AHRS.h>
 #include <Filters.h>
-
 #include <ReceiverBase.h>
 
 #include <cmath>
