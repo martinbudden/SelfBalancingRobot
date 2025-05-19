@@ -50,7 +50,7 @@ MotorPairBase& MotorPairController::allocateMotors()
     motors.setup();
 #elif defined(MOTORS_ROLLER_CAN)
 #elif defined(MOTORS_GPIO)
-    const MotorsGPIO::pins_t pins = MOTOR_PINS;
+    const MotorsGPIO::pins_t pins = MOTOR_GPIO_PINS;
     static MotorsGPIO motors(pins);// NOLINT(misc-const-correctness) false positive
 #endif
 
