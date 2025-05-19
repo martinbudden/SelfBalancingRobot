@@ -12,7 +12,7 @@
 
 Motors4EncoderMotor::Motors4EncoderMotor(uint8_t SDA_pin, uint8_t SCL_pin, float encoderStepsPerRevolution) :
     MotorPairBase(encoderStepsPerRevolution, CANNOT_ACCURATELY_ESTIMATE_SPEED),
-    _I2C(I2C_ADDRESS, SDA_pin, SCL_pin)
+    _I2C(I2C_ADDRESS, BUS_I2C::pins_t{.sda=SDA_pin, .scl=SCL_pin, .irq=BUS_I2C::IRQ_NOT_SET, .irqLevel=0})
 {
     // cppcheck-suppress badBitmaskCheck
     _I2C.writeRegister(REGISTER_CONFIGURE | (MOTOR_LEFT << 4), NORMAL_MODE);

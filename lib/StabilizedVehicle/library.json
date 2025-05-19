@@ -16,8 +16,8 @@
             "version": "^0.1.0"
         },
         {
-            "name": "martinbudden/IMU_TYPES",
-            "version": "^0.2.2"
+            "name": "martinbudden/VectorQuaternionMatrix",
+            "version": "^0.3.0"
         },
         {
             "name": "martinbudden/Filters",

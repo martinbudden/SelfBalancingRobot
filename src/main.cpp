@@ -31,7 +31,7 @@ extern "C" void app_main()
     mainTask.loop();
 }
 
-#elif defined(FRAMEWORK_PICO)
+#elif defined(FRAMEWORK_RPI_PICO)
 
 int main()
 {

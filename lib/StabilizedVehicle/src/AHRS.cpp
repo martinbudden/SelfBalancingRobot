@@ -5,12 +5,16 @@
 #include <SensorFusion.h>
 #include <cmath>
 
-#if defined(USE_FREERTOS) && defined(FRAMEWORK_ARDUINO)
+#if defined(USE_ARDUINO_ESP32) && defined(FRAMEWORK_ARDUINO)
 #include <esp32-hal.h>
 static uint32_t timeUs() { return micros(); }
-#elif defined(USE_FREERTOS) && defined(FRAMEWORK_ESPIDF)
+#elif defined(FRAMEWORK_ESPIDF)
 #include <esp_timer.h>
 static uint32_t timeUs() { return static_cast<uint32_t>(esp_timer_get_time()); }
+#elif defined(FRAMEWORK_RPI_PICO)
+#include <hardware/irq.h>
+#include <pico/time.h>
+static uint32_t timeUs() { return time_us_32(); }
 #else
 static uint32_t timeUs() { return 0; }
 #endif
@@ -22,17 +26,34 @@ static uint32_t timeUs() { return 0; }
 static_assert(false);
 #endif
 
-
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
-AHRS* AHRS::ahrs {nullptr};
-#endif
-
 #if defined(USE_FREERTOS)
 inline void YIELD_TASK() { taskYIELD(); }
 #else
 inline void YIELD_TASK() {}
 #endif
 
+
+AHRS* AHRS::ahrs {nullptr};
+
+/*!
+IMU data ready interrupt service routine (ISR)
+Interrupt set by the IMU when it has data ready.
+*/
+#if defined(FRAMEWORK_RPI_PICO)
+void AHRS::dataReadyISR(unsigned int gpio, uint32_t events)
+{
+    irq_clear(ahrs->_userIrq);
+    ++ahrs->_imuDataReadyCount;
+    ahrs->UNLOCK_IMU_DATA_READY();
+}
+#else
+IRAM_ATTR void AHRS::imuDataReadyISR()
+{
+    //!!TODO need to clear the interrupt
+    ++ahrs->_imuDataReadyCount;
+    ahrs->UNLOCK_IMU_DATA_READY();
+}
+#endif
 
 /*!
 Main AHRS task function. Reads the IMU and uses the sensor fusion filter to update the orientation quaternion.
@@ -44,10 +65,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
 {
     const uint32_t time0 = timeUs();
 #if defined(IMU_DOES_SENSOR_FUSION)
-    const IMU_Base::gyroRPS_Acc_t gyroAcc = {
-        .gyroRPS = _IMU.readGyroRPS(),
-        .acc = {}
-    };
+    _gyroRPS_Acc.gyroRPS = _IMU.readGyroRPS();
     const uint32_t time1 = timeUs();
     _timeChecksMicroSeconds[0] = time1 - time0;
     _timeChecksMicroSeconds[1] = 0; // filter time set to zero, since filtering is as part of IMU sensor fusion
@@ -55,39 +73,39 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     const uint32_t time3 = timeUs();
     _timeChecksMicroSeconds[2] = time3 - time1;
 #else
-    IMU_Base::gyroRPS_Acc_t gyroAcc = _IMU.readGyroRPS_Acc(); // NOLINT(misc-const-correctness) false positive
+    _gyroRPS_Acc = _IMU.readGyroRPS_Acc();
     const uint32_t time1 = timeUs();
     _timeChecksMicroSeconds[0] = time1 - time0;
-
-    _imuFilters.filter(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 207us
+    _imuFilters.filter(_gyroRPS_Acc.gyroRPS, _gyroRPS_Acc.acc, deltaT); // 15us, 207us
 
     const uint32_t time2 = timeUs();
     _timeChecksMicroSeconds[1] = time2 - time1;
 
-    const Quaternion orientation = _sensorFusionFilter.update(gyroAcc.gyroRPS, gyroAcc.acc, deltaT); // 15us, 140us
+    const Quaternion orientation = _sensorFusionFilter.update(_gyroRPS_Acc.gyroRPS, _gyroRPS_Acc.acc, deltaT); // 15us, 140us
 
     const uint32_t time3 = timeUs();
     _timeChecksMicroSeconds[2] = time3 - time2;
 
     if (sensorFusionFilterIsInitializing()) {
-        checkFusionFilterConvergence(gyroAcc.acc, orientation);
+        checkFusionFilterConvergence(_gyroRPS_Acc.acc, orientation);
     }
 #endif
 
     // If _vehicleController is not nullptr, then things have been configured so that updateOutputsUsingPIDs
     // is called by the AHRS rather than the motor controller.
     if (_vehicleController != nullptr) {
-        _vehicleController->updateOutputsUsingPIDs(gyroAcc.gyroRPS, gyroAcc.acc, orientation, deltaT); //25us, 900us
+        _vehicleController->updateOutputsUsingPIDs(_gyroRPS_Acc.gyroRPS, _gyroRPS_Acc.acc, orientation, deltaT); //25us, 900us
     }
     const uint32_t time4 = timeUs();
     _timeChecksMicroSeconds[3] = time4 - time3;
 
+    // If _vehicleController != nullptr then the locked data is only used for instrumentation (screen display and telemetry),
+    // so it might be possible not to use the lock in this case.
     LOCK_AHRS_DATA();
     _ahrsDataUpdatedSinceLastRead = true;
     _orientationUpdatedSinceLastRead = true;
     _orientation = orientation;
-    _gyroRPS = gyroAcc.gyroRPS;
-    _acc = gyroAcc.acc;
+    _gyroRPS_AccLocked = _gyroRPS_Acc;
     UNLOCK_AHRS_DATA();
 
     return true;
@@ -125,7 +143,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
         _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
         _timeMicroSecondsPrevious = timeMicroSeconds;
 
-        if (_tickCountDelta > 0) { // guard against the case of the while loop executing twice on the same tick interval
+        if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
             readIMUandUpdateOrientation(deltaT);
         }
@@ -143,6 +161,7 @@ Wrapper function for AHRS::Task with the correct signature to be used in xTaskCr
 {
     const AHRS::TaskParameters* taskParameters = static_cast<AHRS::TaskParameters*>(arg);
 
+    assert(ahrs == taskParameters->ahrs);
     taskParameters->ahrs->Task(taskParameters);
 }
 
@@ -258,8 +277,8 @@ AHRS::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
     _ahrsDataUpdatedSinceLastRead = false;
     const data_t ret {
         .tickCountDelta = _tickCountDelta,
-        .gyroRPS = _gyroRPS,
-        .acc = _acc
+        .gyroRPS = _gyroRPS_AccLocked.gyroRPS,
+        .acc = _gyroRPS_AccLocked.acc
     };
     UNLOCK_AHRS_DATA();
 
@@ -274,8 +293,8 @@ AHRS::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
     LOCK_AHRS_DATA();
     const data_t ret {
         .tickCountDelta = _tickCountDelta,
-        .gyroRPS = _gyroRPS,
-        .acc = _acc
+        .gyroRPS = _gyroRPS_Acc.gyroRPS,
+        .acc = _gyroRPS_Acc.acc
     };
     UNLOCK_AHRS_DATA();
 
@@ -307,16 +326,14 @@ void AHRS::checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orie
 #endif
 }
 
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
-/*!
-IMU data ready interrupt service routine (ISR)
-*/
-IRAM_ATTR void AHRS::imuDataReadyISR()
+AHRS::~AHRS() // NOLINT(hicpp-use-equals-default,modernize-use-equals-default)
 {
-    ++ahrs->_imuDataReadyCount;
-    ahrs->UNLOCK_IMU_DATA_READY();
-}
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+#if defined(FRAMEWORK_RPI_PICO)
+    user_irq_unclaim(_userIrq);
 #endif
+#endif
+}
 
 /*!
 Constructor: sets the sensor fusion filter, IMU, and IMU filters
@@ -325,18 +342,26 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
     _sensorFusionFilter(sensorFusionFilter),
     _IMU(imuSensor),
     _imuFilters(imuFilters)
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+#if defined(AHRS_IS_INTERRUPT_DRIVEN) && defined(USE_FREERTOS)
     , _imuDataReadyMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataReadyMutexBuffer)) // statically allocate the imuDataMutex
 #endif
-#if defined(USE_AHRS_DATA_MUTEX)
+#if defined(USE_AHRS_DATA_MUTEX) && defined(USE_FREERTOS)
     , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
 #endif
 
 {
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
     ahrs = this;
-    attachInterrupt(digitalPinToInterrupt(IMU_INTERRUPT_PIN), imuDataReadyISR, LOW);
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+    // interrupt triggered on the IMU interrupt pin
+#if defined(USE_ARDUINO_ESP32) && defined(FRAMEWORK_ARDUINO)
+    attachInterrupt(digitalPinToInterrupt(IMU_IRQ_PIN), imuDataReadyISR, HIGH); // esp32-hal-gpio.h
+#elif defined(FRAMEWORK_RPI_PICO)
+    _userIrq = user_irq_claim_unused(true); // true means panic if none available
+    enum { IRQ_PRIORITY = 128 }; //!!TODO need to review value
+    irq_add_shared_handler(_userIrq, &imuDataReadyISR, IRQ_PRIORITY); 
+    _IMU.setInterrupt(_userIrq);
 #endif
+#endif // AHRS_IS_INTERRUPT_DRIVEN
     setSensorFusionFilterInitializing(true);
 
 #if defined(USE_FREERTOS)
@@ -353,7 +378,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 #endif
 #pragma GCC diagnostic pop
 
-#elif defined(USE_PICO_BARE_METAL)
+#elif defined(FRAMEWORK_RPI_PICO)
 
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
     mutex_init(&_imuDataReadyMutex);
@@ -361,7 +386,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
 #if defined(USE_AHRS_DATA_MUTEX)
     mutex_init(&_ahrsDataMutex);
 #elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
-    critical_section_init(_ahrsDataCriticalSection);
+    critical_section_init(&_ahrsDataCriticalSection);
 #endif
 
 #endif

@@ -9,6 +9,12 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #endif
+#if defined(PICO_BUILD)
+#include <pico/critical_section.h>
+#endif
+#if !defined(IRAM_ATTR)
+#define IRAM_ATTR
+#endif
 
 
 class IMU_FiltersBase;
@@ -27,6 +33,7 @@ public:
     };
     static constexpr int TIME_CHECKS_COUNT = 4;
 public:
+    virtual ~AHRS();
     AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
     void setVehicleController(VehicleControllerBase* vehicleController) { _vehicleController = vehicleController; }
@@ -73,7 +80,9 @@ public:
     bool readIMUandUpdateOrientation(float deltaT);
 private:
     [[noreturn]] void Task(const TaskParameters* taskParameters);
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+#if defined(FRAMEWORK_RPI_PICO)
+    void dataReadyISR(unsigned int gpio, uint32_t events);
+#else
     static IRAM_ATTR void imuDataReadyISR();
 #endif
 private:
@@ -82,8 +91,8 @@ private:
     IMU_FiltersBase& _imuFilters;
     VehicleControllerBase* _vehicleController {nullptr};
 
-    xyz_t _acc {0.0, 0.0, 0.0};
-    xyz_t _gyroRPS {0.0, 0.0, 0.0};
+    IMU_Base::gyroRPS_Acc_t _gyroRPS_Acc {};
+    IMU_Base::gyroRPS_Acc_t _gyroRPS_AccLocked {};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
 
     uint32_t _sensorFusionFilterInitializing {true};
@@ -95,16 +104,17 @@ private:
     std::array<uint32_t, TIME_CHECKS_COUNT + 1> _timeChecksMicroSeconds {};
 
     // data synchronization primitives
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
     // interrupt service routine data
     static AHRS* ahrs; //!< alias of `this` to be used in imuDataReceivedInterruptServiceRoutine
     uint32_t _imuDataReadyCount {0}; //<! data ready count, used in interrupt service routine
+    int _userIrq {0};
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
 #if defined(USE_FREERTOS)
     StaticSemaphore_t _imuDataReadyMutexBuffer {}; // _imuDataReadyMutexBuffer must be declared before _imuDataReadyMutex
     SemaphoreHandle_t _imuDataReadyMutex {};
     inline void LOCK_IMU_DATA_READY() const { xSemaphoreTake(_imuDataReadyMutex, portMAX_DELAY); }
     inline void UNLOCK_IMU_DATA_READY() const { xSemaphoreGive(_imuDataReadyMutex); }
-#elif defined(USE_PICO_BARE_METAL)
+#elif defined(FRAMEWORK_RPI_PICO)
     mutable mutex_t _imuDataReadyMutex{};
     inline void LOCK_IMU_DATA_READY() const { mutex_enter_blocking(_imuDataReadyMutex); }
     inline void UNLOCK_IMU_DATA_READY() const { mutex_exit(_imuDataReadyMutex); }
@@ -112,7 +122,7 @@ private:
 #else
     inline void LOCK_IMU_DATA_READY() const {}
     inline void UNLOCK_IMU_DATA_READY() const {}
-#endif
+#endif // AHRS_IS_INTERRUPT_DRIVEN
 
 #if defined(USE_AHRS_DATA_MUTEX)
 #if defined(USE_FREERTOS)
@@ -120,7 +130,7 @@ private:
     mutable SemaphoreHandle_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { xSemaphoreTake(_ahrsDataMutex, portMAX_DELAY); }
     inline void UNLOCK_AHRS_DATA() const { xSemaphoreGive(_ahrsDataMutex); }
-#elif defined(USE_PICO_BARE_METAL)
+#elif defined(FRAMEWORK_RPI_PICO)
     mutable mutex_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(_ahrsDataMutex); }
     inline void UNLOCK_AHRS_DATA() const { mutex_exit(_ahrsDataMutex); }
@@ -133,7 +143,7 @@ private:
     mutable portMUX_TYPE _ahrsDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
     inline void LOCK_AHRS_DATA() const { taskENTER_CRITICAL(&_ahrsDataSpinlock); }
     inline void UNLOCK_AHRS_DATA() const { taskEXIT_CRITICAL(&_ahrsDataSpinlock); }
-#elif defined(USE_PICO_BARE_METAL)
+#elif defined(FRAMEWORK_RPI_PICO)
     mutable critical_section_t _ahrsDataCriticalSection {};
     inline void LOCK_AHRS_DATA() const { critical_section_enter_blocking(&_ahrsDataCriticalSection); }
     inline void UNLOCK_AHRS_DATA() const { critical_section_exit(&_ahrsDataCriticalSection); }
