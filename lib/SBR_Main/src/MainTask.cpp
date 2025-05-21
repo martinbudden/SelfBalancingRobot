@@ -242,7 +242,7 @@ AHRS& MainTask::setupAHRS(void* i2cMutex)
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, pins);
 #elif defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
     const BUS_SPI::pins_t pins = IMU_SPI_PINS;
-    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, spiFrequency, pins);
+    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, spiFrequency, BUS_SPI::SPI_INDEX_0, pins);
 #elif defined(USE_IMU_M5_STACK)
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER);
 #elif defined(USE_IMU_M5_UNIFIED)

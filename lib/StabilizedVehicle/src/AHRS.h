@@ -7,10 +7,12 @@
 
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
 #include <freertos/semphr.h>
 #endif
 #if defined(PICO_BUILD)
 #include <pico/critical_section.h>
+#include <pico/mutex.h>
 #endif
 #if !defined(IRAM_ATTR)
 #define IRAM_ATTR
@@ -80,11 +82,6 @@ public:
     bool readIMUandUpdateOrientation(float deltaT);
 private:
     [[noreturn]] void Task(const TaskParameters* taskParameters);
-#if defined(FRAMEWORK_RPI_PICO)
-    void dataReadyISR(unsigned int gpio, uint32_t events);
-#else
-    static IRAM_ATTR void imuDataReadyISR();
-#endif
 private:
     SensorFusionFilterBase& _sensorFusionFilter;
     IMU_Base& _IMU;
@@ -105,19 +102,27 @@ private:
 
     // data synchronization primitives
     // interrupt service routine data
-    static AHRS* ahrs; //!< alias of `this` to be used in imuDataReceivedInterruptServiceRoutine
-    uint32_t _imuDataReadyCount {0}; //<! data ready count, used in interrupt service routine
+    static AHRS* ahrs; //!< alias of `this` to be used in imuDataReadyISR
+    uint32_t _imuDataReadyCount {0}; //<! data ready count, set in interrupt service routine for instrumentation
     int _userIrq {0};
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
 #if defined(USE_FREERTOS)
     StaticSemaphore_t _imuDataReadyMutexBuffer {}; // _imuDataReadyMutexBuffer must be declared before _imuDataReadyMutex
     SemaphoreHandle_t _imuDataReadyMutex {};
-    inline void LOCK_IMU_DATA_READY() const { xSemaphoreTake(_imuDataReadyMutex, portMAX_DELAY); }
-    inline void UNLOCK_IMU_DATA_READY() const { xSemaphoreGive(_imuDataReadyMutex); }
+    //inline void LOCK_IMU_DATA_READY() const { xSemaphoreTake(_imuDataReadyMutex, portMAX_DELAY); }
+    //inline void UNLOCK_IMU_DATA_READY() const { xSemaphoreGive(_imuDataReadyMutex); }
+    QueueHandle_t _imuDataReadyQueue {};
+    mutable uint32_t _imuDataReadyQueueItem {}; // this is just a dummy item whose value is not used
+    enum { IMU_DATA_READY_QUEUE_LENGTH = 8 };
+    std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_imuDataReadyQueueItem)> _imuDataReadyQueueStorageArea {};
+    StaticQueue_t _imuDataReadyQueueStatic {};
+    inline void LOCK_IMU_DATA_READY() const { xQueueReceive(_imuDataReadyQueue, &_imuDataReadyQueueItem, portMAX_DELAY); }
+    // for FREERTOS, UNLOCK_IMU_DATA_READY() is implemented in BUS_SPI and BUS_I2C
 #elif defined(FRAMEWORK_RPI_PICO)
+    static void imuDataReadyISR();
     mutable mutex_t _imuDataReadyMutex{};
-    inline void LOCK_IMU_DATA_READY() const { mutex_enter_blocking(_imuDataReadyMutex); }
-    inline void UNLOCK_IMU_DATA_READY() const { mutex_exit(_imuDataReadyMutex); }
+    inline void LOCK_IMU_DATA_READY() const { mutex_enter_blocking(&_imuDataReadyMutex); }
+    inline void UNLOCK_IMU_DATA_READY() const { mutex_exit(&_imuDataReadyMutex); }
 #endif
 #else
     inline void LOCK_IMU_DATA_READY() const {}
@@ -132,8 +137,8 @@ private:
     inline void UNLOCK_AHRS_DATA() const { xSemaphoreGive(_ahrsDataMutex); }
 #elif defined(FRAMEWORK_RPI_PICO)
     mutable mutex_t _ahrsDataMutex {};
-    inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(_ahrsDataMutex); }
-    inline void UNLOCK_AHRS_DATA() const { mutex_exit(_ahrsDataMutex); }
+    inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(&_ahrsDataMutex); }
+    inline void UNLOCK_AHRS_DATA() const { mutex_exit(&_ahrsDataMutex); }
 #else
     inline void LOCK_AHRS_DATA() const {}
     inline void UNLOCK_AHRS_DATA() const {}

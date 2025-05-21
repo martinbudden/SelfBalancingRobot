@@ -12,6 +12,8 @@ static uint32_t timeUs() { return micros(); }
 #include <esp_timer.h>
 static uint32_t timeUs() { return static_cast<uint32_t>(esp_timer_get_time()); }
 #elif defined(FRAMEWORK_RPI_PICO)
+#include <boards/pico.h> // for PICO_DEFAULT_LED_PIN
+#include <hardware/gpio.h>
 #include <hardware/irq.h>
 #include <pico/time.h>
 static uint32_t timeUs() { return time_us_32(); }
@@ -35,21 +37,17 @@ inline void YIELD_TASK() {}
 
 AHRS* AHRS::ahrs {nullptr};
 
+#if defined(FRAMEWORK_RPI_PICO)
 /*!
 IMU data ready interrupt service routine (ISR)
-Interrupt set by the IMU when it has data ready.
+Software interrupt set by the IMU when it has data ready.
+
+FREERTOS uses a message queue instead of a software interrupt.
 */
-#if defined(FRAMEWORK_RPI_PICO)
-void AHRS::dataReadyISR(unsigned int gpio, uint32_t events)
+void AHRS::imuDataReadyISR()
 {
+    gpio_put(PICO_DEFAULT_LED_PIN, 1); // to confirm the ISR has been called
     irq_clear(ahrs->_userIrq);
-    ++ahrs->_imuDataReadyCount;
-    ahrs->UNLOCK_IMU_DATA_READY();
-}
-#else
-IRAM_ATTR void AHRS::imuDataReadyISR()
-{
-    //!!TODO need to clear the interrupt
     ++ahrs->_imuDataReadyCount;
     ahrs->UNLOCK_IMU_DATA_READY();
 }
@@ -73,7 +71,11 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     const uint32_t time3 = timeUs();
     _timeChecksMicroSeconds[2] = time3 - time1;
 #else
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+    _gyroRPS_Acc = _IMU.getGyroRPS_Acc(); // just get the gyroRPS_Acc, since it was read in the BUS_SPI or BUS_I2C ISR
+#else
     _gyroRPS_Acc = _IMU.readGyroRPS_Acc();
+#endif
     const uint32_t time1 = timeUs();
     _timeChecksMicroSeconds[0] = time1 - time0;
     _imuFilters.filter(_gyroRPS_Acc.gyroRPS, _gyroRPS_Acc.acc, deltaT); // 15us, 207us
@@ -123,7 +125,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 
     while (true) {
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
-        LOCK_IMU_DATA_READY(); // wait until the ISR unlocks data ready
+        LOCK_IMU_DATA_READY(); // wait until there is IMU data. Unlocked in IMU when using FREERTOS, unlocked by imuDataReadyISR when using FRAMEWORK_RPI_PICO
         _imuDataReadyCount = 0;
 
         const uint32_t timeMicroSeconds = timeUs();
@@ -344,6 +346,7 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
     _imuFilters(imuFilters)
 #if defined(AHRS_IS_INTERRUPT_DRIVEN) && defined(USE_FREERTOS)
     , _imuDataReadyMutex(xSemaphoreCreateRecursiveMutexStatic(&_imuDataReadyMutexBuffer)) // statically allocate the imuDataMutex
+    , _imuDataReadyQueue(xQueueCreateStatic(IMU_DATA_READY_QUEUE_LENGTH, sizeof(_imuDataReadyQueueItem), &_imuDataReadyQueueStorageArea[0], &_imuDataReadyQueueStatic))
 #endif
 #if defined(USE_AHRS_DATA_MUTEX) && defined(USE_FREERTOS)
     , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
@@ -353,12 +356,17 @@ AHRS::AHRS(SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_
     ahrs = this;
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
     // interrupt triggered on the IMU interrupt pin
-#if defined(USE_ARDUINO_ESP32) && defined(FRAMEWORK_ARDUINO)
-    attachInterrupt(digitalPinToInterrupt(IMU_IRQ_PIN), imuDataReadyISR, HIGH); // esp32-hal-gpio.h
+#if defined(USE_FREERTOS)
+    //_imuDataReadyQueue = xQueueCreateStatic(IMU_DATA_READY_QUEUE_LENGTH, sizeof(_imuDataReadyQueueItem), &_imuDataReadyQueueStorageArea[0], &_imuDataReadyQueueStatic);
+    _IMU.setInterrupt(reinterpret_cast<int>(_imuDataReadyQueue));
 #elif defined(FRAMEWORK_RPI_PICO)
-    _userIrq = user_irq_claim_unused(true); // true means panic if none available
-    enum { IRQ_PRIORITY = 128 }; //!!TODO need to review value
-    irq_add_shared_handler(_userIrq, &imuDataReadyISR, IRQ_PRIORITY); 
+    // use the LED to check if the ISR has been called
+    gpio_init(PICO_DEFAULT_LED_PIN); // 25
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    enum { PANIC_IF_NONE_AVAILABLE = true };
+    _userIrq = user_irq_claim_unused(PANIC_IF_NONE_AVAILABLE); // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    irq_set_enabled(_userIrq, true);
+    irq_set_exclusive_handler(_userIrq,  &imuDataReadyISR);
     _IMU.setInterrupt(_userIrq);
 #endif
 #endif // AHRS_IS_INTERRUPT_DRIVEN
