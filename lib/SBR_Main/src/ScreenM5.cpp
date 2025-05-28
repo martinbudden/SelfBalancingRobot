@@ -45,11 +45,11 @@ ScreenM5::ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairControl
     M5.Lcd.setTextSize(_screenSize == ScreenM5::SIZE_128x128 || _screenSize == ScreenM5::SIZE_80x160 || _screenSize == ScreenM5::SIZE_135x240 ? 1 : 2);
 }
 
-ScreenM5::screen_size_t ScreenM5::screenSize()
+ScreenM5::screen_size_e ScreenM5::screenSize()
 {
     M5.Lcd.setRotation(1); // set to default, to find screen size
 
-    screen_size_t screenSize;
+    screen_size_e screenSize;
     switch (M5.Lcd.height()) {
     case SCREEN_HEIGHT_M5_ATOM_S3:
         screenSize = SIZE_128x128;

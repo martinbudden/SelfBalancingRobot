@@ -2,7 +2,7 @@
 #include "MotorPairControllerDefaults.h"
 
 
-void TelemetryScaleFactors::setControlMode(MotorPairController::control_mode_t controlMode)
+void TelemetryScaleFactors::setControlMode(MotorPairController::control_mode_e controlMode)
 {
     _scaleFactors[MotorPairController::SPEED_DPS] = (controlMode == MotorPairController::CONTROL_MODE_SERIAL_PIDS)
         ? speedPID_TelemetryScaleFactorsSerial : speedPID_TelemetryScaleFactorsParallel;
@@ -11,7 +11,7 @@ void TelemetryScaleFactors::setControlMode(MotorPairController::control_mode_t c
 /*!
 Constructor. Sets member data.
 */
-TelemetryScaleFactors::TelemetryScaleFactors(MotorPairController::control_mode_t controlMode)
+TelemetryScaleFactors::TelemetryScaleFactors(MotorPairController::control_mode_e controlMode)
 {
     setControlMode(controlMode);
     _scaleFactors[MotorPairController::PITCH_ANGLE_DEGREES] = pitchPID_TelemetryScaleFactors;

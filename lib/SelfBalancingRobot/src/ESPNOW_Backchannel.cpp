@@ -84,7 +84,7 @@ void Backchannel::packetControl(const CommandPacketControl& packet) {
 
 void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     //Serial.printf("SetPID packet type:%d, len:%d, pidIndex:%d setType:%d value:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value);
-    const MotorPairController::pid_index_t pidIndex = static_cast<MotorPairController::pid_index_t>(packet.pidIndex); // NOLINT(hicpp-use-auto,modernize-use-auto)
+    const MotorPairController::pid_index_e pidIndex = static_cast<MotorPairController::pid_index_e>(packet.pidIndex); // NOLINT(hicpp-use-auto,modernize-use-auto)
 
     if (pidIndex >= MotorPairController::PID_COUNT) {
         //Serial.printf("Backchannel::packetSetPID invalid pidIndex:%d\r\n", packet.pidIndex);

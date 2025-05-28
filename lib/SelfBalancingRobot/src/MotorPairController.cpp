@@ -18,12 +18,14 @@ inline void YIELD_TASK() {}
 
 #if defined(USE_FREERTOS)
 
-#if defined(FRAMEWORK_ARDUINO)
-#include <esp32-hal.h>
-static uint32_t timeUs() { return micros(); }
+#if defined(FRAMEWORK_RPI_PICO)
 #elif defined(FRAMEWORK_ESPIDF)
 #include <esp_timer.h>
 static uint32_t timeUs() { return static_cast<uint32_t>(esp_timer_get_time()); }
+#elif defined(FRAMEWORK_TEST)
+#else // defaults to FRAMEWORK_ARDUINO
+#include <esp32-hal.h>
+static uint32_t timeUs() { return micros(); }
 #endif
 
 #endif
@@ -37,7 +39,7 @@ static const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES =
     "POSITION"
 };
 
-std::string MotorPairController::getPID_Name(pid_index_t pidIndex) const
+const std::string& MotorPairController::getPID_Name(pid_index_e pidIndex) const
 {
     return PID_NAMES[pidIndex];
 }
@@ -320,12 +322,9 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 
     // calculate _outputs[PITCH_ANGLE_DEGREES]
     const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
-    float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDegreesPrevious;
-    _pitchAngleDegreesPrevious = pitchAngleDegrees;
-    // Calculate the filtered value to use as input into the PID, so the D-term is calculated using the filtered value.
-    // This is beneficial because the D-term is especially susceptible to noise.
-    static FilterMovingAverage<4> pitchAngleDeltaFilter;
-    pitchAngleDegreesDelta = pitchAngleDeltaFilter.update(pitchAngleDegreesDelta);
+    // Calculate the filtered value to use as input into the PID, so the DTerm is calculated using the filtered value.
+    // This is beneficial because the DTerm is especially susceptible to noise.
+    const float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDTermFilter.update(_PIDS[PITCH_ANGLE_DEGREES].getPreviousMeasurement());
     _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
 
     // calculate _outputs[YAW_RATE_DPS]
@@ -384,16 +383,17 @@ Task function for the MotorPairController. Sets up and runs the task loop() func
 */
 [[noreturn]] void MotorPairController::Task(const TaskParameters* taskParameters)
 {
+    _taskIntervalMicroSeconds = taskParameters->taskIntervalMicroSeconds;
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-    _taskIntervalTicks = pdMS_TO_TICKS(taskParameters->taskIntervalMilliSeconds);
+    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(taskParameters->taskIntervalMicroSeconds / 1000);
     _previousWakeTimeTicks = xTaskGetTickCount();
 
     while (true) {
         // delay until the end of the next taskIntervalTicks
-        vTaskDelayUntil(&_previousWakeTimeTicks, _taskIntervalTicks);
+        vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
 
-        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than _taskIntervalTicks
+        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
         _tickCountPrevious = tickCount;

@@ -8,15 +8,23 @@
 
 #include <unity.h>
 
+#if !defined(MPC_TASK_INTERVAL_MICROSECONDS)
+    enum { MPC_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
+
+#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
+enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
+
 
 class IMU_Test : public IMU_Base {
 public:
-    explicit IMU_Test(axis_order_t axisOrder) : IMU_Base(axisOrder) {}
-    int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
+    explicit IMU_Test(axis_order_e axisOrder) : IMU_Base(axisOrder) {}
+    int init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
     xyz_int32_t readGyroRaw() override;
     xyz_int32_t readAccRaw() override;
 };
-int IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
+int IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
@@ -55,11 +63,11 @@ void test_motor_pair_controller()
     static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
     static IMU_Test imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
     static IMU_Filters_Test imuFilters; // NOLINT(misc-const-correctness) false positive
-    static AHRS ahrs(sensorFusionFilter, imu, imuFilters);
+    static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imu, imuFilters);
     static ReceiverNull receiver; // NOLINT(misc-const-correctness) false positive
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
-    MotorPairController mpc(ahrs, receiver);
+    MotorPairController mpc(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, receiver);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();

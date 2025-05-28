@@ -1,26 +1,12 @@
 #include "AHRS.h"
 #include "IMU_FiltersBase.h"
+#include <IMU_Null.h>
 #include <SensorFusion.h>
 #include <unity.h>
 
-
-class IMU_Test : public IMU_Base {
-public:
-    explicit IMU_Test(axis_order_t axisOrder) : IMU_Base(axisOrder) {}
-    int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
-    xyz_int32_t readGyroRaw() override;
-    xyz_int32_t readAccRaw() override;
-};
-int IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
-{
-    (void)outputDataRateHz;
-    (void)gyroSensitivity;
-    (void)accSensitivity;
-    (void)i2cMutex;
-    return 0;
-}
-IMU_Base::xyz_int32_t IMU_Test::readGyroRaw() { return xyz_int32_t {}; }
-IMU_Base::xyz_int32_t IMU_Test::readAccRaw() { return xyz_int32_t {}; }
+#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
+enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
 
 
 class IMU_Filters_Test : public IMU_FiltersBase {
@@ -50,9 +36,9 @@ void tearDown()
 void test_ahrs()
 {
     MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness)
-    IMU_Test imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
+    IMU_Null imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
     IMU_Filters_Test imuFilters; // NOLINT(misc-const-correctness) false positive
-    AHRS ahrs(sensorFusionFilter, imu, imuFilters);
+    AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imu, imuFilters);
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing()); // initializing should be set on construction
     ahrs.setSensorFusionFilterInitializing(true);

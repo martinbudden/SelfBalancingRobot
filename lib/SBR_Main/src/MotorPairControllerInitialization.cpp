@@ -63,7 +63,7 @@ MotorPairBase& MotorPairController::allocateMotors()
 /*!
 Sets the control mode and adjusts the _PIDS[SPEED_DPS] constants accordingly.
 */
-void MotorPairController::setControlMode(control_mode_t controlMode)
+void MotorPairController::setControlMode(control_mode_e controlMode)
 {
     _controlMode = controlMode;
     _PIDS[SPEED_DPS].setPID((controlMode == CONTROL_MODE_SERIAL_PIDS) ? speedPID_DefaultSerial : speedPID_DefaultParallel);
@@ -73,7 +73,8 @@ void MotorPairController::setControlMode(control_mode_t controlMode)
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
+    VehicleControllerBase(taskIntervalMicroSeconds),
     _ahrs(ahrs),
     _receiver(receiver),
     _motors(allocateMotors()),

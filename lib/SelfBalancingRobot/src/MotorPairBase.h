@@ -16,10 +16,10 @@ Allows the Motor Controller to work with different kinds of motors.
 */
 class MotorPairBase {
 public:
-    enum can_accurately_estimate_speed_t { CANNOT_ACCURATELY_ESTIMATE_SPEED = 0,  CAN_ACCURATELY_ESTIMATE_SPEED = 1};
+    enum can_accurately_estimate_speed_e { CANNOT_ACCURATELY_ESTIMATE_SPEED = 0,  CAN_ACCURATELY_ESTIMATE_SPEED = 1};
 public:
     virtual ~MotorPairBase() = default;
-    inline MotorPairBase(float stepsPerRevolution, can_accurately_estimate_speed_t canAccuratelyEstimateSpeed) :
+    inline MotorPairBase(float stepsPerRevolution, can_accurately_estimate_speed_e canAccuratelyEstimateSpeed) :
         _stepsPerRevolution(stepsPerRevolution),
         _canAccuratelyEstimateSpeed(canAccuratelyEstimateSpeed)
         {}

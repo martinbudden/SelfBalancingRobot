@@ -31,8 +31,8 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
-    MotorPairController(const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(taskIntervalMicroSeconds, ahrs, receiver, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -40,12 +40,12 @@ private:
     MotorPairController(MotorPairController&&) = delete;
     MotorPairController& operator=(MotorPairController&&) = delete;
 public:
-    enum control_mode_t {
+    enum control_mode_e {
         CONTROL_MODE_SERIAL_PIDS, //!< Serial configuration for pitch and speed PIDs. Output from speed PID is added to the setpoint of the pitch PID.
         CONTROL_MODE_PARALLEL_PIDS, //!< Parallel configuration for pitch and speed PIDs. Pitch and speed are independently set.
         CONTROL_MODE_POSITION //!< The speed PID is used to set position rather than speed. Movement is obtained by incrementing position.
     };
-    enum pid_index_t {
+    enum pid_index_e {
         ROLL_ANGLE_DEGREES=0, // allow possibility of roll control in future implementation
         PITCH_ANGLE_DEGREES=1,
         YAW_RATE_DPS=2,
@@ -63,22 +63,22 @@ public:
     inline bool motorsIsDisabled() const { return _mixer.motorsIsDisabled(); }
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
 
-    inline control_mode_t getControlMode() const { return _controlMode; }
-    void setControlMode(control_mode_t controlMode);
+    inline control_mode_e getControlMode() const { return _controlMode; }
+    void setControlMode(control_mode_e controlMode);
 
     inline void setFailSafeTickCountThreshold(uint32_t failSafeTickCountThreshold) { _failSafeTickCountThreshold = failSafeTickCountThreshold; }
     inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failSafeTickCountSwitchOffThreshold) { _failSafeTickCountSwitchOffThreshold = failSafeTickCountSwitchOffThreshold; }
 
-    std::string getPID_Name(pid_index_t pidIndex) const;
-    inline const PIDF::PIDF_t& getPID_Constants(pid_index_t pidIndex) const { return _PIDS[pidIndex].getPID(); }
-    inline void setPID_Constants(pid_index_t pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
-    inline void setPID_P(pid_index_t pidIndex, float kp) { _PIDS[pidIndex].setP(kp); }
-    inline void setPID_I(pid_index_t pidIndex, float ki) { _PIDS[pidIndex].setI(ki); }
-    inline void setPID_D(pid_index_t pidIndex, float kd) { _PIDS[pidIndex].setD(kd); }
-    inline void setPID_F(pid_index_t pidIndex, float kf) { _PIDS[pidIndex].setF(kf); }
+    const std::string& getPID_Name(pid_index_e pidIndex) const;
+    inline const PIDF::PIDF_t& getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
+    inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
+    inline void setPID_P(pid_index_e pidIndex, float kp) { _PIDS[pidIndex].setP(kp); }
+    inline void setPID_I(pid_index_e pidIndex, float ki) { _PIDS[pidIndex].setI(ki); }
+    inline void setPID_D(pid_index_e pidIndex, float kd) { _PIDS[pidIndex].setD(kd); }
+    inline void setPID_F(pid_index_e pidIndex, float kf) { _PIDS[pidIndex].setF(kf); }
 
-    inline float getPID_Setpoint(pid_index_t pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
-    void setPID_Setpoint(pid_index_t pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
+    inline float getPID_Setpoint(pid_index_e pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
+    void setPID_Setpoint(pid_index_e pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
 
     std::string getBalanceAngleName() const;
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }
@@ -90,7 +90,7 @@ public:
 public:
     struct TaskParameters {
         MotorPairController* motorPairController;
-        uint32_t taskIntervalMilliSeconds;
+        uint32_t taskIntervalMicroSeconds;
     };
     [[noreturn]] static void Task(void* arg);
     void loop(float deltaT, uint32_t tickCount);
@@ -110,7 +110,7 @@ private:
     ReceiverBase& _receiver;
     MotorPairBase& _motors; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorMixer _mixer;
-    control_mode_t _controlMode;
+    control_mode_e _controlMode;
 
     int32_t _onOffSwitchPressed {false};
     int32_t _receiverInUse {false};
@@ -147,10 +147,10 @@ private:
 
     const float _rollMaxAngleDegrees {45.0};
     float _pitchBalanceAngleDegrees {0.0};
-    float _pitchAngleDegreesPrevious {0.0};
     const float _pitchMaxAngleDegrees {20.0};
+    FilterMovingAverage<4> _pitchAngleDTermFilter {};
     float _yawStickMultiplier {1.0};
 
-    std::array<PIDF, PID_COUNT> _PIDS;
+    std::array<PIDF, PID_COUNT> _PIDS {};
     std::array<float, PID_COUNT> _outputs {}; //<! PID outputs, stored since the output from on PID may be used as the input to another
 };

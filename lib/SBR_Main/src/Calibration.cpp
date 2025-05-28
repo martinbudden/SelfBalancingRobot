@@ -12,7 +12,7 @@
 #include <SV_Preferences.h>
 
 
-static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrationType)
+static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_e calibrationType)
 {
 #if defined(USE_IMU_M5_UNIFIED)
     (void)ahrs;
@@ -96,7 +96,7 @@ static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calib
     }
 }
 
-void calibrateGyro(AHRS& ahrs, SV_Preferences& preferences, calibrate_t calibrationType)
+void calibrateGyro(AHRS& ahrs, SV_Preferences& preferences, calibrate_e calibrationType)
 {
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     if (M5.Lcd.width() > 300) {

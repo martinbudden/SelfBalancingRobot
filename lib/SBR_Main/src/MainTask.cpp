@@ -60,29 +60,17 @@ The Atom JoyStick transmits a packet every 10ms, so the MAIN_LOOP_TASK must run 
 Updating the screen takes approximately 50 ticks, so packets will be dropped if the screen is not in QRCODE mode.
 */
 
-enum { MPC_TASK_PRIORITY = 4, AHRS_TASK_PRIORITY = 5 };
 
-#if defined(USE_FREERTOS)
-enum { MPC_TASK_CORE = PRO_CPU_NUM };
-#if defined(APP_CPU_NUM) // The processor has two cores
-    enum { AHRS_TASK_CORE = APP_CPU_NUM };
-#else // single core processor
-    enum { AHRS_TASK_CORE = PRO_CPU_NUM };
-#endif
-#endif
-
-enum { MAIN_LOOP_TASK_INTERVAL_MILLISECONDS = 5 };
-
-#if !defined(MPC_TASK_INTERVAL_MILLISECONDS)
+#if !defined(MPC_TASK_INTERVAL_MICROSECONDS)
 #if defined(USE_IMU_M5_UNIFIED) || defined(USE_IMU_M5_STACK)
-    enum { MPC_TASK_INTERVAL_MILLISECONDS = 10 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
+    enum { MPC_TASK_INTERVAL_MICROSECONDS = 10000 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
 #else
-    enum { MPC_TASK_INTERVAL_MILLISECONDS = 5 };
+    enum { MPC_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 #endif
 
-#if !defined(AHRS_TASK_INTERVAL_MILLISECONDS)
-enum { AHRS_TASK_INTERVAL_MILLISECONDS = 5 };
+#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
+enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
 
@@ -108,9 +96,11 @@ void MainTask::setup()
     M5.Power.begin();
 #endif
 
-#if defined(FRAMEWORK_ESPIDF)
+#if defined(FRAMEWORK_RPI_PICO)
+#elif defined(FRAMEWORK_ESPIDF)
     esp_timer_init();
-#else
+#elif defined(FRAMEWORK_TEST)
+#else // defaults to FRAMEWORK_ARDUINO
     Serial.begin(115200);
 #endif
 
@@ -154,7 +144,7 @@ void MainTask::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(ahrs, receiver, i2cMutex);
+    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, receiver, i2cMutex);
     ahrs.setVehicleController(&motorPairController);
 
     static SV_Preferences preferences;
@@ -251,7 +241,7 @@ AHRS& MainTask::setupAHRS(void* i2cMutex)
     static_assert(false);
 #endif
 
-    //static_cast<IMU_Base&>(imuSensor).init(1000 / AHRS_TASK_INTERVAL_MILLISECONDS, i2cMutex);
+    //static_cast<IMU_Base&>(imuSensor).init(1000000 / AHRS_TASK_INTERVAL_MICROSECONDS, i2cMutex);
     static_cast<IMU_Base&>(imuSensor).init(i2cMutex);
 
     // Statically allocate the Sensor Fusion Filter
@@ -263,21 +253,21 @@ AHRS& MainTask::setupAHRS(void* i2cMutex)
     // approx 10 microseconds per update
     static MahonyFilter sensorFusionFilter;
 #elif defined(USE_VQF)
-    const float deltaT = static_cast<float>(AHRS_TASK_INTERVAL_MILLISECONDS) / 1000.0F;
+    const float deltaT = static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F;
     static VQF sensorFusionFilter(deltaT, deltaT, deltaT, true, false, false);
 #elif defined(USE_VQF_BASIC)
-    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_TASK_INTERVAL_MILLISECONDS) / 1000.0F);
+    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
 #else
     // approx 16 microseconds per update
     static MadgwickFilter sensorFusionFilter;
 #endif
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
-    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MILLISECONDS) / 1000.0F);
+    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
 // NOLINTEND(misc-const-correctness)
 
     // Statically allocate the AHRS object
-    static AHRS ahrs(sensorFusionFilter, imuSensor, imuFilters);
+    static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imuSensor, imuFilters);
     return ahrs;
 }
 
@@ -294,14 +284,14 @@ void MainTask::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
     IMU_Base::xyz_int32_t offset {};
     if (preferences.getGyroOffset(offset.x, offset.y, offset.z)) {
         ahrs.setGyroOffset(offset);
-#if !defined(FRAMEWORK_ESPIDF)
+#if defined(FRAMEWORK_ARDUINO)
         std::array<char, 128> buf;
         sprintf(&buf[0], "**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
         Serial.print(&buf[0]);
 #endif
         if (preferences.getAccOffset(offset.x, offset.y, offset.z)) {
             ahrs.setAccOffset(offset);
-#if !defined(FRAMEWORK_ESPIDF)
+#if defined(FRAMEWORK_ARDUINO)
             sprintf(&buf[0], "**** AHRS accOffsets loaded from preferences:  ax:%5d, ay:%5d, az:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
             Serial.print(&buf[0]);
 #endif
@@ -322,12 +312,12 @@ void MainTask::resetPreferences(SV_Preferences& preferences, MotorPairController
     //_preferences->removeGyroOffset();
     //_preferences->removeAccOffset();
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        const std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
+        const std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_e>(ii));
         constexpr PIDF::PIDF_t pidNOT_SET { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET };
         preferences.putPID(pidName, pidNOT_SET);
     }
     preferences.putFloat(motorPairController.getBalanceAngleName(), SV_Preferences::NOT_SET);
-#if !defined(FRAMEWORK_ESPIDF)
+#if defined(FRAMEWORK_ARDUINO)
     Serial.print("**** preferences reset");
 #endif
 }
@@ -344,7 +334,7 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
     const float pitchBalanceAngleDegrees = preferences.getFloat(motorPairController.getBalanceAngleName());
     if (pitchBalanceAngleDegrees != SV_Preferences::NOT_SET) {
         motorPairController.setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
-#if !defined(FRAMEWORK_ESPIDF)
+#if defined(FRAMEWORK_ARDUINO)
         Serial.print("**** pitch balance angle loaded from preferences:");
         Serial.print(pitchBalanceAngleDegrees);
 #endif
@@ -352,11 +342,11 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
 
     // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_t>(ii));
+        std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_e>(ii));
         const PIDF::PIDF_t pid = preferences.getPID(pidName);
         if (pid.kp != SV_Preferences::NOT_SET) {
-            motorPairController.setPID_Constants(static_cast<MotorPairController::pid_index_t>(ii), pid);
-#if !defined(FRAMEWORK_ESPIDF)
+            motorPairController.setPID_Constants(static_cast<MotorPairController::pid_index_e>(ii), pid);
+#if defined(FRAMEWORK_ARDUINO)
             std::array<char, 128> buf;
             sprintf(&buf[0], "**** %s PID loaded from preferences: P:%f, I:%f, D:%f, F:%f\r\n", pidName.c_str(), static_cast<double>(pid.kp), static_cast<double>(pid.ki), static_cast<double>(pid.kd), static_cast<double>(pid.kf));
             Serial.print(&buf[0]);
@@ -368,6 +358,15 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
 void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
 {
 #if defined(USE_FREERTOS)
+enum { MPC_TASK_PRIORITY = 4, AHRS_TASK_PRIORITY = 5 };
+
+enum { MPC_TASK_CORE = PRO_CPU_NUM };
+#if defined(APP_CPU_NUM) // The processor has two cores
+    enum { AHRS_TASK_CORE = APP_CPU_NUM }; // AHRS should be the only task running on the second core
+#else // single core processor
+    enum { AHRS_TASK_CORE = PRO_CPU_NUM };
+#endif
+
 #if !defined(FRAMEWORK_ESPIDF)
     std::array<char, 128> buf;
 #endif
@@ -384,7 +383,7 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
         .ahrs = &ahrs,
-        .taskIntervalMilliSeconds = AHRS_TASK_INTERVAL_MILLISECONDS
+        .taskIntervalMicroSeconds = AHRS_TASK_INTERVAL_MICROSECONDS
     };
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t ahrsTaskBuffer;
@@ -392,14 +391,14 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
 #if !defined(FRAMEWORK_ESPIDF)
-    sprintf(&buf[0], "**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_INTERVAL_MILLISECONDS);
+    sprintf(&buf[0], "**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
         .motorPairController = &motorPairController,
-        .taskIntervalMilliSeconds = MPC_TASK_INTERVAL_MILLISECONDS
+        .taskIntervalMicroSeconds = MPC_TASK_INTERVAL_MICROSECONDS
     };
     enum { MPC_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t mpcTaskBuffer;
@@ -407,7 +406,7 @@ void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
     const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
 #if !defined(FRAMEWORK_ESPIDF)
-    sprintf(&buf[0], "**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_INTERVAL_MILLISECONDS);
+    sprintf(&buf[0], "**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
 #endif
 
@@ -460,6 +459,6 @@ void MainTask::loop()
     // Delay task to yield to other tasks.
     // Most of the time this task does nothing, but when we get a packet from the receiver we want to process it immediately,
     // hence the short delay
-    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MILLISECONDS));
+    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000));
 #endif
 }

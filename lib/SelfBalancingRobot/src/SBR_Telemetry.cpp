@@ -21,9 +21,9 @@ size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
     td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
 
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        td->data.spids[ii].setpoint = motorPairController.getPID_Setpoint(static_cast<MotorPairController::pid_index_t>(ii));
-        td->data.spids[ii].pid = motorPairController.getPID_Constants(static_cast<MotorPairController::pid_index_t>(ii));
-        td->data.spids[ii].scale = scaleFactors.getTelemetryScaleFactor(static_cast<MotorPairController::pid_index_t>(ii));
+        td->data.spids[ii].setpoint = motorPairController.getPID_Setpoint(static_cast<MotorPairController::pid_index_e>(ii));
+        td->data.spids[ii].pid = motorPairController.getPID_Constants(static_cast<MotorPairController::pid_index_e>(ii));
+        td->data.spids[ii].scale = scaleFactors.getTelemetryScaleFactor(static_cast<MotorPairController::pid_index_e>(ii));
     }
 
     td->data.pitchBalanceAngleDegrees = motorPairController.getPitchBalanceAngleDegrees();

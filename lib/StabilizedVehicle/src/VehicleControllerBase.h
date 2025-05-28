@@ -10,6 +10,9 @@ Abstract base class defining a controller for a stabilized vehicle.
 */
 class VehicleControllerBase : public TaskBase {
 public:
+    VehicleControllerBase(uint32_t taskIntervalMicroSeconds) : TaskBase(taskIntervalMicroSeconds) {}
+    explicit VehicleControllerBase() : VehicleControllerBase(0) {}
+public:
     inline float getPitchAngleDegreesRaw() const { return _pitchAngleDegreesRaw; }
     inline float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; }
     inline float getYawAngleDegreesRaw() const { return _yawAngleDegreesRaw; }

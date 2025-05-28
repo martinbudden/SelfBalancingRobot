@@ -7,7 +7,7 @@
 
 class ScreenM5 : public ScreenBase {
 public:
-    enum screen_size_t {
+    enum screen_size_e {
         SIZE_128x128,
         SIZE_80x160,
         SIZE_135x240,
@@ -25,14 +25,14 @@ private:
     ScreenM5(ScreenM5&&) = delete;
     ScreenM5& operator=(ScreenM5&&) = delete;
 public:
-    inline screen_size_t getScreenSize() const { return _screenSize; }
+    inline screen_size_e getScreenSize() const { return _screenSize; }
 
     virtual void nextScreenMode() override;
     virtual void update(bool packetReceived) override;
 private:
     void setScreenMode(mode_t screenMode);
     inline mode_t getScreenMode() const { return _screenMode; }
-    screen_size_t screenSize();
+    screen_size_e screenSize();
 
     void updateTemplate();
     void updateTemplate128x128() const;
@@ -56,7 +56,7 @@ private:
     static void displayEUI(const char* prompt, const ReceiverBase::EUI_48_t& eui);
     static void displayEUI_Compact(const char* prompt, const ReceiverBase::EUI_48_t& eui);
 private:
-    screen_size_t _screenSize {SIZE_320x240};
+    screen_size_e _screenSize {SIZE_320x240};
     mode_t _screenMode {MODE_NORMAL};
     int _screenRotationOffset {0};
     int _templateIsUpdated {false};
