@@ -27,6 +27,8 @@ private:
     static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     static void setupTasks(AHRS& ahrs, MotorPairController& motorPairController);
 private:
+    AHRS* _ahrs {nullptr};
+    MotorPairController* _motorPairController {};
     ReceiverBase* _receiver {nullptr};
     Backchannel* _backchannel {nullptr};
 

@@ -36,6 +36,7 @@
 #include <ReceiverNull.h>
 #include <SV_Preferences.h>
 #include <SensorFusion.h>
+#include <TimeMicroSeconds.h>
 #if defined(FRAMEWORK_ESPIDF)
 #include <esp_timer.h>
 #endif
@@ -115,7 +116,7 @@ void MainTask::setup()
     void* i2cMutex = nullptr;
 #endif
 
-    AHRS& ahrs = setupAHRS(i2cMutex);
+    _ahrs = &setupAHRS(i2cMutex);
 
 #if defined(USE_ESPNOW)
     // Set WiFi to station mode
@@ -144,43 +145,44 @@ void MainTask::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, receiver, i2cMutex);
-    ahrs.setVehicleController(&motorPairController);
+    static MotorPairController motorPairControllerStatic(MPC_TASK_INTERVAL_MICROSECONDS, *_ahrs, receiver, i2cMutex);
+    _motorPairController = &motorPairControllerStatic;
+    _ahrs->setVehicleController(_motorPairController);
 
     static SV_Preferences preferences;
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
-        calibrateGyro(ahrs, preferences, CALIBRATE_ACC_AND_GYRO);
+        calibrateGyro(*_ahrs, preferences, CALIBRATE_ACC_AND_GYRO);
     }
-    checkGyroCalibration(preferences, ahrs);
+    checkGyroCalibration(preferences, *_ahrs);
     // Holding BtnC down while switching on resets the preferences.
     if (M5.BtnC.isPressed()) {
-        resetPreferences(preferences, motorPairController);
+        resetPreferences(preferences, *_motorPairController);
     }
 #else
-    checkGyroCalibration(preferences, ahrs);
+    checkGyroCalibration(preferences, *_ahrs);
 #endif
-    loadPreferences(preferences, motorPairController);
+    loadPreferences(preferences, *_motorPairController);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the telemetry scale factors
-    static TelemetryScaleFactors telemetryScaleFactors(motorPairController.getControlMode());
+    static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, motorPairController, ahrs, *this, receiver, telemetryScaleFactors, preferences);
+    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, *_ahrs, *this, receiver, telemetryScaleFactors, preferences);
     _backchannel = &backchannel;
 #endif
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
-    static ScreenM5 screen(ahrs, motorPairController, receiver);
+    static ScreenM5 screen(*_ahrs, *_motorPairController, receiver);
     _screen = &screen;
     _screen->update(false); // Update the as soon as we can, to minimize the time the screen is blank
 
     // Statically allocate the buttons.
-    static ButtonsM5 buttons(motorPairController, receiver, _screen);
+    static ButtonsM5 buttons(*_motorPairController, receiver, _screen);
     _buttons = &buttons;
 
 #if defined(M5_ATOM)
@@ -198,7 +200,7 @@ void MainTask::setup()
 #endif // M5_STACK || M5_UNIFIED
 
     // And finally set up the AHRS and MotorPairController tasks.
-    setupTasks(ahrs, motorPairController);
+    setupTasks(*_ahrs, *_motorPairController);
 }
 
 AHRS& MainTask::setupAHRS(void* i2cMutex)
@@ -410,6 +412,9 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
     Serial.print(&buf[0]);
 #endif
 
+#else
+    (void)ahrs;
+    (void)motorPairController;
 #endif // USE_FREERTOS
 }
 
@@ -428,11 +433,17 @@ void MainTask::loop()
 {
 #if defined(USE_FREERTOS)
     const TickType_t tickCount = xTaskGetTickCount();
-#else
-    const uint32_t tickCount = _tickCountPrevious + 1;
-#endif // USE_FREERTOS
-    // calculate _tickCountDelta for instrumentation
     _tickCountDelta = tickCount - _tickCountPrevious;
+#else
+    // simple round-robbin scheduling
+    _ahrs->loop();
+    _motorPairController->loop();
+    const uint32_t tickCount = timeUs() * 0.001;
+    _tickCountDelta = tickCount - _tickCountPrevious;
+    if (_tickCountDelta < MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000) {
+        return;
+    }
+#endif // USE_FREERTOS
     _tickCountPrevious = tickCount;
 
     [[maybe_unused]] const bool packetReceived = _receiver->update(_tickCountDelta);

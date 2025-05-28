@@ -1,25 +1,10 @@
 #include "AHRS.h"
 #include "IMU_FiltersBase.h"
+#include "TimeMicroSeconds.h"
 #include "VehicleControllerBase.h"
 
 #include <SensorFusion.h>
 #include <cmath>
-
-#if defined(FRAMEWORK_RPI_PICO)
-#include <pico/time.h>
-static uint32_t timeUs() { return time_us_32(); }
-#elif defined(FRAMEWORK_ESPIDF)
-#include <esp_timer.h>
-static uint32_t timeUs() { return static_cast<uint32_t>(esp_timer_get_time()); }
-#elif defined(FRAMEWORK_TEST)
-static uint32_t timeUs() { return 0; }
-#else // defaults to FRAMEWORK_ARDUINO
-#if defined(USE_ARDUINO_ESP32)
-#include <esp32-hal.h>
-#endif
-#include <Arduino.h>
-static uint32_t timeUs() { return micros(); }
-#endif // FRAMEWORK
 
 
 // Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
@@ -106,9 +91,9 @@ void AHRS::loop()
 {
     const uint32_t timeMicroSeconds = timeUs();
     _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-    _timeMicroSecondsPrevious = timeMicroSeconds;
 
-    if (_timeMicroSecondsDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
+    if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
+        _timeMicroSecondsPrevious = timeMicroSeconds;
         const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
         readIMUandUpdateOrientation(deltaT);
     }

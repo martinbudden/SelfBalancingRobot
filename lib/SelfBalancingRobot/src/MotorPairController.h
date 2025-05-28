@@ -93,6 +93,7 @@ public:
         uint32_t taskIntervalMicroSeconds;
     };
     [[noreturn]] static void Task(void* arg);
+    void loop();
     void loop(float deltaT, uint32_t tickCount);
 public:
     static float mapYawStick(float yawStick);

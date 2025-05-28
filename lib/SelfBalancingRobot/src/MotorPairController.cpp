@@ -2,6 +2,7 @@
 
 #include "MotorPairBase.h"
 #include "MotorPairControllerTelemetry.h"
+#include "TimeMicroSeconds.h"
 #include <AHRS.h>
 #include <Filters.h>
 #include <ReceiverBase.h>
@@ -14,20 +15,6 @@
 inline void YIELD_TASK() { taskYIELD(); }
 #else
 inline void YIELD_TASK() {}
-#endif
-
-#if defined(USE_FREERTOS)
-
-#if defined(FRAMEWORK_RPI_PICO)
-#elif defined(FRAMEWORK_ESPIDF)
-#include <esp_timer.h>
-static uint32_t timeUs() { return static_cast<uint32_t>(esp_timer_get_time()); }
-#elif defined(FRAMEWORK_TEST)
-#else // defaults to FRAMEWORK_ARDUINO
-#include <esp32-hal.h>
-static uint32_t timeUs() { return micros(); }
-#endif
-
 #endif
 
 
@@ -358,6 +345,22 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     const float updatePositionDegreesPrevious = _outputs[POSITION_DEGREES];
     _outputs[POSITION_DEGREES] = _PIDS[POSITION_DEGREES].update(_positionDegrees, deltaT);
     _outputs[SPEED_DPS] = (_outputs[POSITION_DEGREES] - updatePositionDegreesPrevious) / deltaT;
+}
+
+/*!
+loop() function for when not using FREERTOS
+*/
+void MotorPairController::loop()
+{
+    const uint32_t timeMicroSeconds = timeUs();
+    _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
+
+    if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
+        _timeMicroSecondsPrevious = timeMicroSeconds;
+        const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
+        const uint32_t tickCount = timeUs() * 0.001;
+        loop(deltaT, tickCount);
+    }
 }
 
 /*!
