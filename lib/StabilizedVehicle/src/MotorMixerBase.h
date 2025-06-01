@@ -5,7 +5,7 @@
 
 class MotorMixerBase {
 public:
-    struct output_t {
+    struct commands_t {
         float speed;
         float roll;
         float pitch;
@@ -17,7 +17,7 @@ public:
     inline void motorsSwitchOff() { _motorsIsOn = false; }
     inline bool motorsIsDisabled() const { return _motorsIsDisabled; }
 
-    virtual void outputToMotors(const output_t& outputs, float deltaT, uint32_t tickCount) = 0;
+    virtual void outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount) = 0;
 public:
     static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
 protected:

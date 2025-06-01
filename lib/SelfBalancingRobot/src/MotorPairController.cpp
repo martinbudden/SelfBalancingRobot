@@ -106,22 +106,22 @@ void MotorPairController::motorsToggleOnOff()
 
 void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 {
-    const MotorMixerBase::output_t outputs =
+    const MotorMixerBase::commands_t commands =
     _failSafeOn ?
-        MotorMixerBase::output_t {
+        MotorMixerBase::commands_t {
             .speed  = 0.0F,
             .roll   = 0.0F,
             .pitch  = 0.0F,
             .yaw    = 0.0F
         }
     :
-        MotorMixerBase::output_t {
+        MotorMixerBase::commands_t {
             .speed  = _outputs[SPEED_DPS],
             .roll   = _outputs[ROLL_ANGLE_DEGREES],
             .pitch  = _outputs[PITCH_ANGLE_DEGREES],
             .yaw    = _outputs[YAW_RATE_DPS]
         };
-    _mixer.outputToMotors(outputs, deltaT, tickCount);
+    _mixer.outputToMotors(commands, deltaT, tickCount);
 }
 
 /*!

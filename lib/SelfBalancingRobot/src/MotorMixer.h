@@ -12,7 +12,7 @@ class MotorMixer : public MotorMixerBase {
 public:
     explicit MotorMixer(MotorPairBase& motors) : _motors(motors) {}
 public:
-    virtual void outputToMotors(const output_t& outputs, float deltaT, uint32_t tickCount) override;
+    virtual void outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount) override;
 
     void setMotorSwitchOffAngleDegrees(float motorSwitchOffAngleDegrees) { _motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees; }
     inline void setPitchAngleDegreesRaw(float pitchAngleDegreesRaw) { _pitchAngleDegreesRaw = pitchAngleDegreesRaw; }

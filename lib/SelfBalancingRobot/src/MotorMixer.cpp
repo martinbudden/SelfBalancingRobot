@@ -20,7 +20,7 @@ static uint32_t timeUs() { return 0; }
 #endif
 
 
-void MotorMixer::outputToMotors(const output_t& outputs, float deltaT, uint32_t tickCount)
+void MotorMixer::outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount)
 {
     (void)deltaT;
 
@@ -32,15 +32,15 @@ void MotorMixer::outputToMotors(const output_t& outputs, float deltaT, uint32_t 
     if (_motorsIsOn && !_motorsIsDisabled) {
         _motorSwitchOffTickCount = 0; // reset the bounce prevention tickcount
 
-        _powerLeft  = outputs.pitch + outputs.speed - outputs.yaw;
-        _powerRight = outputs.pitch + outputs.speed + outputs.yaw;
+        _powerLeft  = commands.pitch + commands.speed - commands.yaw;
+        _powerRight = commands.pitch + commands.speed + commands.yaw;
 
         // filter the power input into the motors so they run more smoothly.
         const float powerLeftFiltered = _powerLeftFilter.update(_powerLeft);
         const float powerRightFiltered = _powerRightFilter.update(_powerRight);
         const uint32_t timeMicroSeconds0 = timeUs();
         _motors.setPower(powerLeftFiltered, powerRightFiltered);
-        _outputPowerTimeMicroSeconds = timeUs() - timeMicroSeconds0;
+        _outputPowerTimeMicroSeconds = timeUs() - timeMicroSeconds0; // for instrumentation
     } else {
         if (_motorSwitchOffTickCount == 0) { // the motors haven't already been switched off
             // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.
@@ -61,19 +61,19 @@ void MotorMixer::outputToMotors(const output_t& outputs, float deltaT, uint32_t 
         loopCount = 0;
 
     //Serial.printf(">pitchPidErrorP:%8.2f, pidErrorI:%8.2f, pidErrorD:%8.2f, update:%8.2f\r\n",
-    //    _pitchPID.getError().P, _pitchPID.getError().I, _pitchPID.getError().D, _outputs[PITCH_ANGLE_DEGREES]);
+    //    _pitchPID.getError().P, _pitchPID.getError().I, _pitchPID.getError().D, _commands[PITCH_ANGLE_DEGREES]);
 
     //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchOutput:%8.4f, speedSetpoint:%7.2f, speedOutput:%7.3f, speedError:%7.3f\r\n",
-    //   _pitchPID.getSetpoint(), _pitchAngleDegreesRaw, _outputs[PITCH_ANGLE_DEGREES], _PIDS[SPEED_DPS].getSetpoint(), _outputs[SPEED_DPS], _PIDS[SPEED_DPS].getError().P/_PIDS[SPEED_DPS].getP());
+    //   _pitchPID.getSetpoint(), _pitchAngleDegreesRaw, _commands[PITCH_ANGLE_DEGREES], _PIDS[SPEED_DPS].getSetpoint(), _commands[SPEED_DPS], _PIDS[SPEED_DPS].getError().P/_PIDS[SPEED_DPS].getP());
 
     //Serial.printf(">pitchSetpoint:%7.2f, pitchAngleDegrees:%6.2f, pitchOutput:%8.4f, speedSetpoint:%7.2f, speedOutput:%7.3f\r\n",
-    //   _pitchPID.getSetpoint(), _pitchAngleDegreesRaw, _outputs[PITCH_ANGLE_DEGREES], _PIDS[SPEED_DPS].getSetpoint(), _outputs[SPEED_DPS]);
+    //   _pitchPID.getSetpoint(), _pitchAngleDegreesRaw, _commands[PITCH_ANGLE_DEGREES], _PIDS[SPEED_DPS].getSetpoint(), _commands[SPEED_DPS]);
 
     //Serial.printf(">pitchAngleDegrees:%6.2f, pitchOutput:%6.3f, speedDPS:%5.0F, speedOutput:%8.5f\r\n",
-    //    _pitchAngleDegreesRaw, _outputs[PITCH_ANGLE_DEGREES], _speedDPS, _outputs[SPEED_DPS]);
+    //    _pitchAngleDegreesRaw, _commands[PITCH_ANGLE_DEGREES], _speedDPS, _commands[SPEED_DPS]);
 
     Serial.printf(">speed:%8.2f, setpoint:%8.2f, pidErrorP:%8.2f, update:%8.2f, eL:%d, eR:%d\r\n",
-        _speedDPS, _PIDS[SPEED_DPS].getSetpoint(), _PIDS[SPEED_DPS].getError().P, _outputs[SPEED_DPS], _encoderLeftDelta, _encoderRightDelta);
+        _speedDPS, _PIDS[SPEED_DPS].getSetpoint(), _PIDS[SPEED_DPS].getError().P, _commands[SPEED_DPS], _encoderLeftDelta, _encoderRightDelta);
     }
 #endif
 }

@@ -19,10 +19,12 @@
 #include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
+
 #if defined(USE_ESPNOW)
 #include <ESPNOW_Backchannel.h>
 #include <HardwareSerial.h>
 #endif
+
 #include <IMU_BMI270.h>
 #include <IMU_BNO085.h>
 #include <IMU_Filters.h>
@@ -30,13 +32,16 @@
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
+
 #if defined(USE_ESPNOW)
 #include <ReceiverAtomJoyStick.h>
 #endif
+
 #include <ReceiverNull.h>
 #include <SV_Preferences.h>
 #include <SensorFusion.h>
 #include <TimeMicroSeconds.h>
+
 #if defined(FRAMEWORK_ESPIDF)
 #include <esp_timer.h>
 #endif
@@ -372,6 +377,7 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #if !defined(FRAMEWORK_ESPIDF)
     std::array<char, 128> buf;
 #endif
+
 #if defined(USE_ARDUINO_ESP32)
     // The main task is set up by the framework, so just print its details.
     // It has name "loopTask" and priority 1.
@@ -389,8 +395,17 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
     };
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t ahrsTaskBuffer;
-    static StackType_t ahrsStack[AHRS_TASK_STACK_DEPTH];
-    const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(AHRS::Task, "AHRS_Task", AHRS_TASK_STACK_DEPTH, &ahrsTaskParameters, AHRS_TASK_PRIORITY, ahrsStack, &ahrsTaskBuffer, AHRS_TASK_CORE);
+    static std::array <StackType_t, AHRS_TASK_STACK_DEPTH> ahrsStack;
+    const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(
+        AHRS::Task,
+        "AHRS_Task",
+        AHRS_TASK_STACK_DEPTH, 
+        &ahrsTaskParameters,
+        AHRS_TASK_PRIORITY, 
+        &ahrsStack[0],
+        &ahrsTaskBuffer,
+        AHRS_TASK_CORE
+    );
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
 #if !defined(FRAMEWORK_ESPIDF)
     sprintf(&buf[0], "**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_INTERVAL_MICROSECONDS / 1000);
@@ -404,8 +419,16 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
     };
     enum { MPC_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t mpcTaskBuffer;
-    static StackType_t mpcStack[MPC_TASK_STACK_DEPTH];
-    const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task, "MPC_Task", MPC_TASK_STACK_DEPTH, &mpcTaskParameters, MPC_TASK_PRIORITY, mpcStack, &mpcTaskBuffer, MPC_TASK_CORE);
+    static std::array<StackType_t, MPC_TASK_STACK_DEPTH> mpcStack;
+    const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task,
+        "MPC_Task",
+        MPC_TASK_STACK_DEPTH,
+        &mpcTaskParameters,
+        MPC_TASK_PRIORITY, 
+        &mpcStack[0],
+        &mpcTaskBuffer,
+        MPC_TASK_CORE
+    );
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
 #if !defined(FRAMEWORK_ESPIDF)
     sprintf(&buf[0], "**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_INTERVAL_MICROSECONDS / 1000);
