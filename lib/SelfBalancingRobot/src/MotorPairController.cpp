@@ -358,7 +358,7 @@ void MotorPairController::loop()
     if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
         _timeMicroSecondsPrevious = timeMicroSeconds;
         const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
-        const uint32_t tickCount = timeUs() * 0.001;
+        const uint32_t tickCount = timeUs() / 1000;
         loop(deltaT, tickCount);
     }
 }
