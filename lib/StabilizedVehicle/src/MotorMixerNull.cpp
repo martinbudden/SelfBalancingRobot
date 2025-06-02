@@ -6,3 +6,15 @@ void MotorMixerNull::outputToMotors(const commands_t& commands, float deltaT, ui
     (void) deltaT;
     (void) tickCount;
 }
+
+float MotorMixerNull::getMotorOutput(size_t motorIndex) const
+{
+    (void)motorIndex;
+    return 0.0F;
+}
+
+float MotorMixerNull::getMotorRPM(size_t motorIndex) const
+{
+    (void)motorIndex;
+    return 0.0F;
+}

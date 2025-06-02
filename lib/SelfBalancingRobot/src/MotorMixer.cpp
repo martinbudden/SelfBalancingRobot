@@ -78,3 +78,13 @@ void MotorMixer::outputToMotors(const commands_t& commands, float deltaT, uint32
 #endif
 }
 
+float MotorMixer::getMotorOutput(size_t motorIndex) const
+{
+    return motorIndex == 0 ? _powerLeft : _powerRight;
+}
+
+float MotorMixer::getMotorRPM(size_t motorIndex) const
+{   
+    (void)motorIndex;
+    return 0.0F;
+}
