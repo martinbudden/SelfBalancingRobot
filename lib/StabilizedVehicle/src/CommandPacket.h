@@ -48,12 +48,14 @@ struct CommandPacketRequestData {
         REQUEST_AHRS_DATA = 4,
         REQUEST_RECEIVER_DATA = 5,
         REQUEST_PID_DATA = 6,
-        REQUEST_VEHICLE_CONTROLLER_DATA = 7
+        REQUEST_VEHICLE_CONTROLLER_DATA = 7,
+        REQUEST_MSP_DATA = 8
     };
     uint32_t id;
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketRequestData)
-    uint16_t value;
+    uint8_t requestType;
+    uint8_t valueType;
 };
 
 struct CommandPacketSetPID {

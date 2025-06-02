@@ -1,11 +1,11 @@
 #include "MotorPairController.h"
 
 #include "MotorPairBase.h"
-#include "MotorPairControllerTelemetry.h"
 #include "TimeMicroSeconds.h"
 #include <AHRS.h>
 #include <Filters.h>
 #include <ReceiverBase.h>
+#include <SV_TelemetryData.h>
 
 #include <cmath>
 

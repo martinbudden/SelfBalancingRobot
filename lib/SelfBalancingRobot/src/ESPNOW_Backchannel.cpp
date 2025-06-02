@@ -2,7 +2,6 @@
 
 #include "ESPNOW_Backchannel.h"
 #include "SBR_Telemetry.h"
-#include "SBR_TelemetryData.h"
 #include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
@@ -18,6 +17,7 @@ static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_RECEIVER) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN);
+static_assert(sizeof(TD_MSP) <= ESP_NOW_MAX_DATA_LEN);
 
 
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
@@ -208,7 +208,7 @@ void Backchannel::packetSetOffset(const CommandPacketSetOffset& packet) {
 void Backchannel::packetRequestData(const CommandPacketRequestData& packet) {
     //Serial.printf("TransmitRequest packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
 
-    _requestType = packet.value;
+    _requestType = packet.requestType;
     sendTelemetryPacket();
 }
 
@@ -305,26 +305,29 @@ bool Backchannel::update()
             switch (controlPacket->type) {
             case CommandPacketControl::TYPE: // NOLINT(bugprone-branch-clone) false positive
                 packetControl(*reinterpret_cast<const CommandPacketControl*>(_receivedDataBuffer));
+                return true;
                 break;
             case CommandPacketRequestData::TYPE: // NOLINT(bugprone-branch-clone) false positive
                 packetRequestData(*reinterpret_cast<const CommandPacketRequestData*>(_receivedDataBuffer));
+                return true;
                 break;
             case CommandPacketSetPID::TYPE: // NOLINT(bugprone-branch-clone) false positive
                 packetSetPID(*reinterpret_cast<const CommandPacketSetPID*>(_receivedDataBuffer));
+                return true;
                 break;
             case CommandPacketSetOffset::TYPE: // NOLINT(bugprone-branch-clone) false positive
                 packetSetOffset(*reinterpret_cast<const CommandPacketSetOffset*>(_receivedDataBuffer));
+                return true;
                 break;
             default:
                 // do nothing
                 break;
             } // end switch
-
-            return true;
         }
     }
 
-    // We haven't received a packet, so take the opportunity to send a telemetry packet if we have one to send
+    // We haven't received a packet, or did not need to process the packet we received,
+    // so take the opportunity to send a telemetry packet if we have one to send
     return sendTelemetryPacket();
 }
 
