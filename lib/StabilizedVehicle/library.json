@@ -1,7 +1,7 @@
 {
     "name": "StabilizedVehicle",
-    "description": "Library for stabilized vehicles",
-    "keywords": "",
+    "description": "Library for stabilized vehicles such as self-balancing robots",
+    "keywords": "stabilized vehicle quadcopter IMU AHRS",
     "authors": {
         "name": "Martin Budden",
         "url": "https://github.com/martinbudden"
@@ -13,7 +13,7 @@
     "dependencies": [
         {
             "name": "martinbudden/IMU",
-            "version": "^0.1.0"
+            "version": "^0.7.2"
         },
         {
             "name": "martinbudden/VectorQuaternionMatrix",
@@ -21,20 +21,20 @@
         },
         {
             "name": "martinbudden/Filters",
-            "version": "^0.3.0"
+            "version": "^0.4.0"
         },
         {
             "name": "martinbudden/PIDF",
-            "version": "^0.0.2"
+            "version": "^0.1.0"
         },
         {
             "name": "martinbudden/SensorFusion",
-            "version": "^0.1.3"
+            "version": "^0.2.0"
         }
     ],
     "license": "MIT",
     "version": "0.0.1",
     "frameworks": "*",
     "platforms": "*",
-    "headers": ["AHRS.h", "CommandPacket.h", "IMU_FiltersBase.h", "MotorMixerBase.h", "SV_Preferences.h", "SV_Telemetry.h", "SV_TelemetryData.h", "TaskBase.h", "VehicleControllerBase.h"]
+    "headers": ["AHRS.h", "CommandPacket.h", "IMU_FiltersBase.h", "IMU_FiltersNull.h", "MotorMixerBase.h", "MotorMixerNull.h", "SV_Preferences.h", "SV_Telemetry.h", "SV_TelemetryData.h", "TaskBase.h", "VehicleControllerBase.h"]
 }
