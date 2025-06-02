@@ -31,6 +31,7 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     const uint32_t time0 = timeUs();
 
 #if defined(IMU_DOES_SENSOR_FUSION)
+    // Some IMUs, eg the BNO085, do on-chip sensor fusion
     _accGyroRPS.gyroRPS = _IMU.readGyroRPS();
     const uint32_t time1 = timeUs();
     _timeChecksMicroSeconds[0] = time1 - time0;
