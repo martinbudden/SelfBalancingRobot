@@ -16,7 +16,7 @@ public:
 public:
     virtual void outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount) override;
     virtual float getMotorOutput(size_t motorIndex) const override;
-    virtual float getMotorRPM(size_t motorIndex) const override;
+    virtual int32_t getMotorRPM(size_t motorIndex) const override;
 
     void setMotorSwitchOffAngleDegrees(float motorSwitchOffAngleDegrees) { _motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees; }
     inline void setPitchAngleDegreesRaw(float pitchAngleDegreesRaw) { _pitchAngleDegreesRaw = pitchAngleDegreesRaw; }

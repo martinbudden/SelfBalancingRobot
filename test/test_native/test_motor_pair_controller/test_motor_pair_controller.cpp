@@ -4,6 +4,7 @@
 #include <IMU_FiltersBase.h>
 #include <ReceiverNull.h>
 #include <SensorFusion.h>
+#include <SV_TelemetryData.h>
 
 #include <unity.h>
 

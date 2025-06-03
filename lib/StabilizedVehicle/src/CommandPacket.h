@@ -1,5 +1,6 @@
 # pragma once
 
+#include <array>
 #include <cstdint>
 
 #pragma pack(push, 1)
@@ -109,5 +110,35 @@ struct CommandPacketSetFilter {
     float value1;
     float value2;
     float value3;
+};
+
+/*
+NOTE: enough space is reserved for a full-size MSP packet, this is more than
+can be accommodated in an ESP_NOW packet, so size payloadSize must be checked
+before the packet is sent over ESP_NOW.
+*/
+struct CommandPacketMSP {
+    enum { TYPE = 36 }; // '$'
+    uint32_t id;
+
+    enum { MAX_MSP_DATA_SIZE = 256 };
+    enum { MSP_HEADER_AND_CHECKSUM_SIZE = 6 };
+    enum { PACKET_OVERHEAD = sizeof(id) + MSP_HEADER_AND_CHECKSUM_SIZE };
+    enum { ESP_NOW_MAX_DATA_SIZE = 250 };
+    enum { MAX_PAYLOAD_SIZE_FOR_ESP = ESP_NOW_MAX_DATA_SIZE - PACKET_OVERHEAD };
+
+    struct msp_t {
+        uint8_t headerDollar;
+        uint8_t headerM;
+        uint8_t headerDirection;
+        uint8_t payloadSize;
+        uint8_t messageType;
+        std::array<uint8_t, MAX_MSP_DATA_SIZE - 5> payload; // includes checksum
+    };
+    union u {
+        msp_t msp;
+        std::array<uint8_t, MAX_MSP_DATA_SIZE> buffer;
+    };
+    u data;
 };
 #pragma pack(pop)

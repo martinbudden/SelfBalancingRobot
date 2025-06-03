@@ -129,24 +129,33 @@ payload
 checksum - XOR of the size, type, and payload bytes.
 
 The checksum of a request (ie a message with no payload) equals the type.
+
+NOTE: enough space is reserved for a full-size MSP packet, this is more than
+can be accommodated in an ESP_NOW packet, so size payloadSize must be checked
+before the packet is sent over ESP_NOW.
 */
 
 struct TD_MSP {
-    enum { TYPE = 36 }; // 'M'
+    enum { TYPE = 36 }; // '$'
     uint32_t id {0};
 
-    enum { MAX_DATA_LEN = 246 }; // ESP_NOW_MAX_DATA_LEN - sizeof(id)
+    enum { MAX_MSP_DATA_SIZE = 256 };
+    enum { MSP_HEADER_AND_CHECKSUM_SIZE = 6 };
+    enum { PACKET_OVERHEAD = sizeof(id) + MSP_HEADER_AND_CHECKSUM_SIZE };
+    enum { ESP_NOW_MAX_DATA_SIZE = 250 };
+    enum { MAX_PAYLOAD_SIZE_FOR_ESP = ESP_NOW_MAX_DATA_SIZE - PACKET_OVERHEAD };
+
     struct msp_t {
         uint8_t headerDollar;
         uint8_t headerM;
         uint8_t headerDirection;
-        uint8_t payloadLength;
+        uint8_t payloadSize;
         uint8_t messageType;
-        std::array<uint8_t, MAX_DATA_LEN - 5> payload;
+        std::array<uint8_t, MAX_MSP_DATA_SIZE - 5> payload; // includes checksum
     };
     union u {
         msp_t msp;
-        std::array<uint8_t, MAX_DATA_LEN> buffer;
+        std::array<uint8_t, MAX_MSP_DATA_SIZE> buffer;
     };
     u data;
 };
@@ -160,15 +169,6 @@ Packet for the transmission of FlightController telemetry data for a Quadcopter.
 */
 struct TD_FC_QUADCOPTER {
     enum { TYPE = 40 };
-    enum {
-        ROLL_RATE_DPS = 0,
-        PITCH_RATE_DPS = 1,
-        YAW_RATE_DPS = 2,
-        ROLL_ANGLE_DEGREES = 3,
-        PITCH_ANGLE_DEGREES = 4,
-        PID_COUNT = 5,
-        PID_BEGIN = 0
-    };
     enum { MOTOR_COUNT = 4 };
 
     uint32_t id {0};
@@ -183,7 +183,7 @@ struct TD_FC_QUADCOPTER {
 
     struct power_rpm_t {
         float power;
-        float rpm;
+        int32_t rpm;
     };
     struct data_t {
         std::array<power_rpm_t, MOTOR_COUNT> motors;

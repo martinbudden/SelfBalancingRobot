@@ -13,8 +13,8 @@ float MotorMixerNull::getMotorOutput(size_t motorIndex) const
     return 0.0F;
 }
 
-float MotorMixerNull::getMotorRPM(size_t motorIndex) const
+int32_t MotorMixerNull::getMotorRPM(size_t motorIndex) const
 {
     (void)motorIndex;
-    return 0.0F;
+    return 0;
 }

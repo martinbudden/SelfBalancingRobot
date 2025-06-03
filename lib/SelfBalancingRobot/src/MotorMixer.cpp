@@ -83,8 +83,8 @@ float MotorMixer::getMotorOutput(size_t motorIndex) const
     return motorIndex == 0 ? _powerLeft : _powerRight;
 }
 
-float MotorMixer::getMotorRPM(size_t motorIndex) const
+int32_t MotorMixer::getMotorRPM(size_t motorIndex) const
 {   
     (void)motorIndex;
-    return 0.0F;
+    return 0;
 }

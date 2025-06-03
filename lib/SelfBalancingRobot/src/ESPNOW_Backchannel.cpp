@@ -17,7 +17,6 @@ static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_RECEIVER) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN);
-static_assert(sizeof(TD_MSP) <= ESP_NOW_MAX_DATA_LEN);
 
 
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
