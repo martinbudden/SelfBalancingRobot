@@ -111,8 +111,8 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 #if !defined(AHRS_IS_INTERRUPT_DRIVEN)
     const uint32_t taskIntervalTicks = pdMS_TO_TICKS(taskParameters->taskIntervalMicroSeconds / 1000);
     assert(taskIntervalTicks > 0 && "AHRS taskIntervalTicks is zero.");
-    Serial.print("AHRS us:");
-    Serial.println(taskIntervalTicks);
+    //Serial.print("AHRS us:");
+    //Serial.println(taskIntervalTicks);
 #endif
     _previousWakeTimeTicks = xTaskGetTickCount();
 
