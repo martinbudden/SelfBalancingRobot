@@ -240,11 +240,6 @@ void AHRS::setAccOffsetMapped(const IMU_Base::xyz_int32_t& offset)
     _IMU.setAccOffset(mapOffset(offset, IMU_Base::axisOrderInverse(_IMU.getAxisOrder())));
 }
 
-void AHRS::setFilters(const filters_t& filters)
-{
-    _filters = filters;
-}
-
 Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
 {
     LOCK_AHRS_DATA();
@@ -355,11 +350,7 @@ AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusi
 
 #elif defined(FRAMEWORK_RPI_PICO)
 
-#if defined(USE_AHRS_DATA_MUTEX)
     mutex_init(&_ahrsDataMutex);
-#elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
-    critical_section_init(&_ahrsDataCriticalSection);
-#endif
 
 #endif
 }

@@ -27,7 +27,7 @@
 
 #include <IMU_BMI270.h>
 #include <IMU_BNO085.h>
-#include <IMU_Filters.h>
+#include <IMU_FiltersDefault.h>
 #include <IMU_LSM6DS3TR_C.h>
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
@@ -270,7 +270,7 @@ AHRS& MainTask::setupAHRS(void* i2cMutex)
 #endif
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
-    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
+    static IMU_FiltersDefault imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
 // NOLINTEND(misc-const-correctness)
 
     // Statically allocate the AHRS object
@@ -461,7 +461,7 @@ void MainTask::loop()
     // simple round-robbin scheduling
     _ahrs->loop();
     _motorPairController->loop();
-    const uint32_t tickCount = timeUs() * 0.001;
+    const uint32_t tickCount = timeUs() / 1000;
     _tickCountDelta = tickCount - _tickCountPrevious;
     if (_tickCountDelta < MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000) {
         return;

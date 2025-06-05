@@ -2,6 +2,7 @@
 
 #include "TaskBase.h"
 #include <IMU_Base.h>
+#include <IMU_FiltersDefault.h>
 
 #include <cassert>
 
@@ -16,7 +17,6 @@
 #endif
 
 
-class IMU_FiltersBase;
 class VehicleControllerBase;
 class SensorFusionFilterBase;
 
@@ -31,9 +31,6 @@ public:
         xyz_t acc;
     };
     static constexpr int TIME_CHECKS_COUNT = 4;
-    struct filters_t {
-        uint16_t gyro_lpf1_static_hz;
-    };
 public:
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
@@ -72,8 +69,8 @@ public:
     inline bool sensorFusionFilterIsInitializing() const { return _sensorFusionFilterInitializing; }
     inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
 
-    const filters_t& getFilters() const { return _filters; }
-    void setFilters(const filters_t& filters);
+    const IMU_FiltersBase::filters_t& getFilters() const { return _imuFilters.getFilters(); }
+    void setFilters(const IMU_FiltersBase::filters_t& filters) { _imuFilters.setFilters(filters, static_cast<float>(_timeMicroSecondsDelta) * 0.000001F); }
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
 public:
@@ -103,14 +100,18 @@ private:
     // instrumentation member data
     uint32_t _fifoCount {0};
     std::array<uint32_t, TIME_CHECKS_COUNT + 1> _timeChecksMicroSeconds {};
-    filters_t _filters {};
 
-#if defined(USE_AHRS_DATA_MUTEX)
 #if defined(USE_FREERTOS)
+#if defined(USE_AHRS_DATA_MUTEX)
     StaticSemaphore_t _ahrsDataMutexBuffer {}; // _ahrsDataMutexBuffer must be declared before _ahrsDataMutex
     mutable SemaphoreHandle_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { xSemaphoreTake(_ahrsDataMutex, portMAX_DELAY); }
     inline void UNLOCK_AHRS_DATA() const { xSemaphoreGive(_ahrsDataMutex); }
+#elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
+    mutable portMUX_TYPE _ahrsDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
+    inline void LOCK_AHRS_DATA() const { taskENTER_CRITICAL(&_ahrsDataSpinlock); }
+    inline void UNLOCK_AHRS_DATA() const { taskEXIT_CRITICAL(&_ahrsDataSpinlock); }
+#endif
 #elif defined(FRAMEWORK_RPI_PICO)
     mutable mutex_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(&_ahrsDataMutex); }
@@ -119,21 +120,4 @@ private:
     inline void LOCK_AHRS_DATA() const {}
     inline void UNLOCK_AHRS_DATA() const {}
 #endif // USE_FREERTOS
-#elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
-#if defined(USE_FREERTOS)
-    mutable portMUX_TYPE _ahrsDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
-    inline void LOCK_AHRS_DATA() const { taskENTER_CRITICAL(&_ahrsDataSpinlock); }
-    inline void UNLOCK_AHRS_DATA() const { taskEXIT_CRITICAL(&_ahrsDataSpinlock); }
-#elif defined(FRAMEWORK_RPI_PICO)
-    mutable critical_section_t _ahrsDataCriticalSection {};
-    inline void LOCK_AHRS_DATA() const { critical_section_enter_blocking(&_ahrsDataCriticalSection); }
-    inline void UNLOCK_AHRS_DATA() const { critical_section_exit(&_ahrsDataCriticalSection); }
-#else
-    inline void LOCK_AHRS_DATA() const {}
-    inline void UNLOCK_AHRS_DATA() const {}
-#endif // USE_FREERTOS
-#else
-    inline void LOCK_AHRS_DATA() const {}
-    inline void UNLOCK_AHRS_DATA() const {}
-#endif // USE_AHRS_DATA_MUTEX
 };

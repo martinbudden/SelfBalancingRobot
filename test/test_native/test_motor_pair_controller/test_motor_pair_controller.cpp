@@ -1,10 +1,10 @@
 #include "MotorPairController.h"
 
 #include <AHRS.h>
-#include <IMU_FiltersBase.h>
+#include <IMU_FiltersNull.h>
 #include <ReceiverNull.h>
-#include <SensorFusion.h>
 #include <SV_TelemetryData.h>
+#include <SensorFusion.h>
 
 #include <unity.h>
 
@@ -36,22 +36,6 @@ IMU_Base::xyz_int32_t IMU_Test::readGyroRaw() { return xyz_int32_t {}; }
 IMU_Base::xyz_int32_t IMU_Test::readAccRaw() { return xyz_int32_t {}; }
 
 
-class IMU_Filters_Test : public IMU_FiltersBase {
-public:
-    virtual ~IMU_Filters_Test() = default;
-    IMU_Filters_Test() = default;
-
-    // IMU_Filters_Test is not copyable or moveable
-    IMU_Filters_Test(const IMU_Filters_Test&) = delete;
-    IMU_Filters_Test& operator=(const IMU_Filters_Test&) = delete;
-    IMU_Filters_Test(IMU_Filters_Test&&) = delete;
-    IMU_Filters_Test& operator=(IMU_Filters_Test&&) = delete;
-
-    void filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) override;
-};
-void IMU_Filters_Test::filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) { (void)gyroRPS; (void)acc; (void)deltaT; }
-
-
 void setUp() {
 }
 
@@ -62,7 +46,7 @@ void test_motor_pair_controller()
 {
     static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
     static IMU_Test imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
-    static IMU_Filters_Test imuFilters; // NOLINT(misc-const-correctness) false positive
+    static IMU_FiltersNull imuFilters; // NOLINT(misc-const-correctness) false positive
     static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imu, imuFilters);
     static ReceiverNull receiver; // NOLINT(misc-const-correctness) false positive
 

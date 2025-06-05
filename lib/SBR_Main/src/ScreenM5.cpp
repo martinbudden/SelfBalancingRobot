@@ -9,8 +9,8 @@
 #include <M5Unified.h>
 #endif
 #include <MotorPairController.h>
-#include <SV_TelemetryData.h>
 #include <ReceiverAtomJoyStick.h>
+#include <SV_TelemetryData.h>
 
 
 enum {

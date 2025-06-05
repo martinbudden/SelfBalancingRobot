@@ -13,6 +13,7 @@
         "BACKUPDMA",
         "BAUDRATE",
         "BEIE",
+        "BIQUAD",
         "BITLEN",
         "BITWIDTH",
         "BLDC",
