@@ -70,7 +70,7 @@ public:
     inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failSafeTickCountSwitchOffThreshold) { _failSafeTickCountSwitchOffThreshold = failSafeTickCountSwitchOffThreshold; }
 
     const std::string& getPID_Name(pid_index_e pidIndex) const;
-    inline const PIDF::PIDF_t& getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
+    inline const PIDF::PIDF_t getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
     inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
     inline void setPID_P(pid_index_e pidIndex, float kp) { _PIDS[pidIndex].setP(kp); }
     inline void setPID_I(pid_index_e pidIndex, float ki) { _PIDS[pidIndex].setI(ki); }
@@ -153,5 +153,5 @@ private:
     float _yawStickMultiplier {1.0};
 
     std::array<PIDF, PID_COUNT> _PIDS {};
-    std::array<float, PID_COUNT> _outputs {}; //<! PID outputs, stored since the output from on PID may be used as the input to another
+    std::array<float, PID_COUNT> _outputs {}; //<! PID outputs, stored since the output from one PID may be used as the input to another
 };

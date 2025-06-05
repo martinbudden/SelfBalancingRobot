@@ -89,6 +89,10 @@ void MotorPairController::motorsSwitchOff()
 
 void MotorPairController::motorsSwitchOn()
 {
+    // reset the PID integrals when we switch the motors on, so they don't start with residual I-term windup
+    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
+        _PIDS[ii].resetIntegral();
+    }
     // don't allow motors to be switched on if the sensor fusion has not initialized
     if (!_ahrs.sensorFusionFilterIsInitializing()) {
         _mixer.motorsSwitchOn();
@@ -309,10 +313,10 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 
     // calculate _outputs[PITCH_ANGLE_DEGREES]
     const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
-    // Calculate the filtered value to use as input into the PID, so the DTerm is calculated using the filtered value.
-    // This is beneficial because the DTerm is especially susceptible to noise.
-    const float pitchAngleDegreesDelta = pitchAngleDegrees - _pitchAngleDTermFilter.update(_PIDS[PITCH_ANGLE_DEGREES].getPreviousMeasurement());
-    _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleDegreesDelta, deltaT);
+    const float pitchAngleDegreesDelta = pitchAngleDegrees - _PIDS[PITCH_ANGLE_DEGREES].getPreviousMeasurement();
+    // Use the filtered value of pitchAngleDegreesDelta as input into the PID update.
+    // This is beneficial because the DTerm is especially susceptible to noise (since it is the derivative of a noisy value).
+    _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, _pitchAngleDTermFilter.update(pitchAngleDegreesDelta), deltaT);
 
     // calculate _outputs[YAW_RATE_DPS]
     const float yawRateDPS = -gyroRPS.z * Quaternion::radiansToDegrees;
