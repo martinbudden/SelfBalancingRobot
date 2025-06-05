@@ -192,14 +192,93 @@ struct TD_FC_QUADCOPTER {
 };
 
 /*!
-TYPE RANGE of 60-69 reserved for multi-rotors
+TYPE RANGE of 60-90 reserved for blackbox
+This includes ASCII 'A' (65) to ASCII 'Z' (90)
+Blackbox currently uses 'E'(69), 'I'(73), 'P'(80), and 'S'(83) frames, so this reservation is probably too broad.
+*/
+
+struct TD_BLACKBOX_E {
+    enum { TYPE = 69 }; // 'E'
+    uint32_t id {0};
+
+    enum { MAX_BLACKBOX_DATA_SIZE = 246 }; // !!TODO - check this is sufficient
+    enum { ESP_NOW_MAX_DATA_SIZE = 250 };
+
+    struct blackbox_t {
+        uint8_t headerI;
+        std::array<uint8_t, MAX_BLACKBOX_DATA_SIZE - 1> payload;
+    };
+    union u {
+        blackbox_t blackbox;
+        std::array<uint8_t, MAX_BLACKBOX_DATA_SIZE> buffer;
+    };
+    u data;
+};
+
+struct TD_BLACKBOX_I {
+    enum { TYPE = 73 }; // 'I'
+    uint32_t id {0};
+
+    enum { MAX_BLACKBOX_DATA_SIZE = 246 }; // !!TODO - check this is sufficient
+    enum { ESP_NOW_MAX_DATA_SIZE = 250 };
+
+    struct blackbox_t {
+        uint8_t headerI;
+        std::array<uint8_t, MAX_BLACKBOX_DATA_SIZE - 1> payload;
+    };
+    union u {
+        blackbox_t blackbox;
+        std::array<uint8_t, MAX_BLACKBOX_DATA_SIZE> buffer;
+    };
+    u data;
+};
+
+struct TD_BLACKBOX_P {
+    enum { TYPE = 80 }; // 'P'
+    uint32_t id {0};
+
+    enum { MAX_BLACKBOX_DATA_SIZE = 246 }; // !!TODO - check this is sufficient
+    enum { ESP_NOW_MAX_DATA_SIZE = 250 };
+
+    struct blackbox_t {
+        uint8_t headerI;
+        std::array<uint8_t, MAX_BLACKBOX_DATA_SIZE - 1> payload;
+    };
+    union u {
+        blackbox_t blackbox;
+        std::array<uint8_t, MAX_BLACKBOX_DATA_SIZE> buffer;
+    };
+    u data;
+};
+
+struct TD_BLACKBOX_S {
+    enum { TYPE = 83 }; // 'S'
+    uint32_t id {0};
+
+    enum { MAX_BLACKBOX_DATA_SIZE = 246 }; // !!TODO - check this is sufficient
+    enum { ESP_NOW_MAX_DATA_SIZE = 250 };
+
+    struct blackbox_t {
+        uint8_t headerI;
+        std::array<uint8_t, MAX_BLACKBOX_DATA_SIZE - 1> payload;
+    };
+    union u {
+        blackbox_t blackbox;
+        std::array<uint8_t, MAX_BLACKBOX_DATA_SIZE> buffer;
+    };
+    u data;
+};
+
+
+/*!
+TYPE RANGE of 100-109 reserved for self balancing robots
 */
 
 /*!
 Packet for the the transmission of PID constants, setpoints, and the balance angle, for self-balancing robots, to enable remote tuning.
 */
 struct TD_SBR_PIDS {
-    enum { TYPE = 60 };
+    enum { TYPE = 100 };
     uint32_t id {0};
 
     uint8_t type {TYPE};
@@ -248,7 +327,7 @@ struct motor_pair_controller_telemetry_t {
 Packet for the transmission of MotorPairController telemetry data.
 */
 struct TD_MPC {
-    enum { TYPE = 61 };
+    enum { TYPE = 101 };
     uint32_t id {0};
 
     uint8_t type {TYPE};
