@@ -74,15 +74,11 @@ public:
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
 public:
-    struct TaskParameters {
-        AHRS* ahrs;
-        uint32_t taskIntervalMicroSeconds;
-    };
     [[noreturn]] static void Task(void* arg);
     bool readIMUandUpdateOrientation(float deltaT);
     void loop();
 private:
-    [[noreturn]] void Task(const TaskParameters* taskParameters);
+    [[noreturn]] void task();
 private:
     SensorFusionFilterBase& _sensorFusionFilter;
     IMU_Base& _IMU;

@@ -11,7 +11,7 @@ namespace { // use anonymous namespace to make items local to this translation u
 
 void setup()// cppcheck-suppress unusedFunction
 {
-    static MainTask mainTaskStatic(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
+    static MainTask mainTaskStatic;
     mainTask = &mainTaskStatic;
     mainTask->setup();
 }
@@ -26,7 +26,7 @@ void loop()// cppcheck-suppress unusedFunction
 
 extern "C" void app_main()
 {
-    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
+    static MainTask mainTask;
     mainTask.setup();
     mainTask.loop();
 }
@@ -35,7 +35,7 @@ extern "C" void app_main()
 
 int main()
 {
-    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
+    static MainTask mainTask;
     mainTask.setup();
     mainTask.loop();
 }

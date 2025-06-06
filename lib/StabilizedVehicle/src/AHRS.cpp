@@ -103,13 +103,12 @@ void AHRS::loop()
 /*!
 Task function for the AHRS. Sets up and runs the task loop() function.
 */
-[[noreturn]] void AHRS::Task([[maybe_unused]] const TaskParameters* taskParameters)
+[[noreturn]] void AHRS::task()
 {
-    _taskIntervalMicroSeconds = taskParameters->taskIntervalMicroSeconds;
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
 #if !defined(AHRS_IS_INTERRUPT_DRIVEN)
-    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(taskParameters->taskIntervalMicroSeconds / 1000);
+    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
     assert(taskIntervalTicks > 0 && "AHRS taskIntervalTicks is zero.");
     //Serial.print("AHRS us:");
     //Serial.println(taskIntervalTicks);
@@ -153,9 +152,10 @@ Wrapper function for AHRS::Task with the correct signature to be used in xTaskCr
 */
 [[noreturn]] void AHRS::Task(void* arg)
 {
-    const AHRS::TaskParameters* taskParameters = static_cast<AHRS::TaskParameters*>(arg);
+    const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
-    taskParameters->ahrs->Task(taskParameters);
+    AHRS* ahrs = static_cast<AHRS*>(parameters->task);
+    ahrs->task();
 }
 
 /*!

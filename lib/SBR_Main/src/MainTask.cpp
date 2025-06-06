@@ -67,6 +67,10 @@ Updating the screen takes approximately 50 ticks, so packets will be dropped if 
 */
 
 
+#if !defined(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS)
+enum { MAIN_LOOP_TASK_INTERVAL_MICROSECONDS = 10000 };
+#endif
+
 #if !defined(MPC_TASK_INTERVAL_MICROSECONDS)
 #if defined(USE_IMU_M5_UNIFIED) || defined(USE_IMU_M5_STACK)
     enum { MPC_TASK_INTERVAL_MICROSECONDS = 10000 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
@@ -79,6 +83,8 @@ Updating the screen takes approximately 50 ticks, so packets will be dropped if 
 enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
+MainTask::MainTask() : 
+    TaskBase(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS) {}
 
 /*!
 Setup for the main loop, motor control task, and AHRS(Attitude and Heading Reference System) task.
@@ -390,9 +396,8 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static AHRS::TaskParameters ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .ahrs = &ahrs,
-        .taskIntervalMicroSeconds = AHRS_TASK_INTERVAL_MICROSECONDS
+    static TaskBase::parameters_t ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &ahrs,
     };
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t ahrsTaskBuffer;
@@ -414,9 +419,8 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static MotorPairController::TaskParameters mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .motorPairController = &motorPairController,
-        .taskIntervalMicroSeconds = MPC_TASK_INTERVAL_MICROSECONDS
+    static TaskBase::parameters_t mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &motorPairController,
     };
     enum { MPC_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t mpcTaskBuffer;

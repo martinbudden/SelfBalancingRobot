@@ -10,13 +10,9 @@ class SV_Preferences;
 class ScreenBase;
 class ButtonsBase;
 
-#if !defined(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS)
-enum { MAIN_LOOP_TASK_INTERVAL_MICROSECONDS = 5000 };
-#endif
-
 class MainTask : public TaskBase {
 public:
-    explicit MainTask(uint32_t taskIntervalMicroSeconds) : TaskBase(taskIntervalMicroSeconds) {}
+    MainTask();
 public:
     void setup();
     void loop();

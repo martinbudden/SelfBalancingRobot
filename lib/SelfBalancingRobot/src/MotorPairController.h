@@ -88,10 +88,6 @@ public:
 
     void motorsResetEncodersToZero();
 public:
-    struct TaskParameters {
-        MotorPairController* motorPairController;
-        uint32_t taskIntervalMicroSeconds;
-    };
     [[noreturn]] static void Task(void* arg);
     void loop();
     void loop(float deltaT, uint32_t tickCount);
@@ -105,7 +101,7 @@ public:
 private:
     void updatePositionOutputs(float deltaT);
     MotorPairBase& allocateMotors();
-    [[noreturn]] void Task(const TaskParameters* taskParameters);
+    [[noreturn]] void task();
 private:
     const AHRS& _ahrs;
     ReceiverBase& _receiver;

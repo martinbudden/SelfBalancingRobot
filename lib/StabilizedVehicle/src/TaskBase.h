@@ -4,6 +4,11 @@
 
 class TaskBase {
 public:
+    struct parameters_t {
+        TaskBase* task;
+    };
+
+public:
     explicit TaskBase(uint32_t taskIntervalMicroSeconds) : _taskIntervalMicroSeconds(taskIntervalMicroSeconds) {}
     TaskBase() : TaskBase(0) {}
 public:
@@ -13,9 +18,9 @@ public:
     inline uint32_t getTimeMicroSecondDelta() const { return _timeMicroSecondsDelta; }
 protected:
     uint32_t _taskIntervalMicroSeconds {0};
+    uint32_t _previousWakeTimeTicks {0};
     uint32_t _tickCountDelta {0};
     uint32_t _tickCountPrevious {0};
-    uint32_t _previousWakeTimeTicks {0};
     uint32_t _timeMicroSecondsDelta {0};
     uint32_t _timeMicroSecondsPrevious {0};
 };

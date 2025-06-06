@@ -388,12 +388,11 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
 /*!
 Task function for the MotorPairController. Sets up and runs the task loop() function.
 */
-[[noreturn]] void MotorPairController::Task(const TaskParameters* taskParameters)
+[[noreturn]] void MotorPairController::task()
 {
-    _taskIntervalMicroSeconds = taskParameters->taskIntervalMicroSeconds;
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(taskParameters->taskIntervalMicroSeconds / 1000);
+    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
     _previousWakeTimeTicks = xTaskGetTickCount();
 
     while (true) {
@@ -424,8 +423,8 @@ Wrapper function for MotorPairController::Task with the correct signature to be 
 */
 [[noreturn]] void MotorPairController::Task(void* arg)
 {
-    const MotorPairController::TaskParameters* taskParameters = static_cast<MotorPairController::TaskParameters*>(arg);
+    const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
-    MotorPairController* mpc = taskParameters->motorPairController;
-    mpc->Task(taskParameters);
+    MotorPairController* mpc = static_cast<MotorPairController*>(parameters->task);
+    mpc->task();
 }
