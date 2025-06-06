@@ -184,7 +184,7 @@ void MainTask::setup()
     // Statically allocate the screen.
     static ScreenM5 screen(*_ahrs, *_motorPairController, receiver);
     _screen = &screen;
-    _screen->update(false); // Update the as soon as we can, to minimize the time the screen is blank
+    _screen->updateFull(); // Update the as soon as we can, to minimize the time the screen is blank
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(*_motorPairController, receiver, _screen);
@@ -271,6 +271,7 @@ AHRS& MainTask::setupAHRS(void* i2cMutex)
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
     static IMU_FiltersDefault imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
+    //static IMU_FiltersDefault imuFilters;
 // NOLINTEND(misc-const-correctness)
 
     // Statically allocate the AHRS object
@@ -469,7 +470,9 @@ void MainTask::loop()
 #endif // USE_FREERTOS
     _tickCountPrevious = tickCount;
 
-    [[maybe_unused]] const bool packetReceived = _receiver->update(_tickCountDelta);
+    if (_receiver->update(_tickCountDelta)) {
+        _screen->setNewReceiverPacketAvailable();
+    }
 #if defined(BACKCHANNEL_MAC_ADDRESS)
     _backchannel->update();
 #endif
@@ -478,7 +481,7 @@ void MainTask::loop()
     // update the screen every 101 ticks (0.1 seconds)
     if (_screenTickCount - tickCount > 101) {
         _screenTickCount = tickCount;
-        _screen->update(packetReceived);
+        _screen->update();
     }
 #endif
 #if defined(USE_BUTTONS)

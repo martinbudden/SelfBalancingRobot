@@ -12,10 +12,21 @@ IMU_FiltersDefault::IMU_FiltersDefault(float frequencyCutoff, float deltaT) :
 {
 }
 
+IMU_FiltersDefault::IMU_FiltersDefault() :
+    _deltaT(1.0F)
+{
+    _gyroX_PT1_LPF1.setToPassthrough();
+    _gyroY_PT1_LPF1.setToPassthrough();
+    _gyroZ_PT1_LPF1.setToPassthrough();
+
+    _accX_PT1_LPF1.setToPassthrough();
+    _accY_PT1_LPF1.setToPassthrough();
+    _accZ_PT1_LPF1.setToPassthrough();
+}
+
 void IMU_FiltersDefault::filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) // cppcheck-suppress constParameterReference false positive
 {
     (void)deltaT;
-
     gyroRPS.x = _gyroX_PT1_LPF1.update(gyroRPS.x);
     gyroRPS.y = _gyroY_PT1_LPF1.update(gyroRPS.y);
     gyroRPS.z = _gyroZ_PT1_LPF1.update(gyroRPS.z);

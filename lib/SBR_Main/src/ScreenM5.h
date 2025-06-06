@@ -28,7 +28,7 @@ public:
     inline screen_size_e getScreenSize() const { return _screenSize; }
 
     virtual void nextScreenMode() override;
-    virtual void update(bool packetReceived) override;
+    virtual void update() override;
 private:
     void setScreenMode(mode_t screenMode);
     inline mode_t getScreenMode() const { return _screenMode; }
@@ -59,5 +59,4 @@ private:
     screen_size_e _screenSize {SIZE_320x240};
     mode_t _screenMode {MODE_NORMAL};
     int _screenRotationOffset {0};
-    int _templateIsUpdated {false};
 };

@@ -12,14 +12,20 @@ public:
         _ahrs(ahrs), _motorPairController(motorPairController), _receiver(receiver) {}
 public:
     virtual void nextScreenMode() = 0;
-    virtual void update(bool packetReceived) = 0;
-    inline void update() { update(false); }
+    virtual void update() = 0;
+    void updateFull() { _templateIsUpdated = false; setNewReceiverPacketAvailable(); update(); }
     inline int getScreenSizeX() const { return _screenSizeX; }
     inline int getScreenSizeY() const { return _screenSizeY; }
+    inline void setNewReceiverPacketAvailable() { _newReceiverPacketAvailable = true; }
+protected:
+    inline void clearNewReceiverPacketAvailable() { _newReceiverPacketAvailable = false; }
+    inline bool isNewReceiverPacketAvailable() const { return _newReceiverPacketAvailable; }
 protected:
     const AHRS& _ahrs;
     const MotorPairController& _motorPairController;
     const ReceiverBase& _receiver;
     int _screenSizeX {};
     int _screenSizeY {};
+    int _newReceiverPacketAvailable {};
+    int _templateIsUpdated {false};
 };

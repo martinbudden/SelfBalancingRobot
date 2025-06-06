@@ -104,8 +104,7 @@ void ScreenM5::setScreenMode(ScreenM5::mode_t screenMode)
         }
     } else {
         M5.Lcd.setRotation(_screenMode + _screenRotationOffset);
-        updateTemplate();
-        update(false);
+        updateFull();
     }
 }
 
@@ -625,7 +624,7 @@ void ScreenM5::updateAHRS_Data() const
 /*!
 Update the screen with data from the AHRS and the receiver.
 */
-void ScreenM5::update(bool packetReceived)
+void ScreenM5::update()
 {
     // update the screen with the AHRS data
     if (_screenMode != ScreenM5::MODE_QRCODE) {
@@ -634,7 +633,8 @@ void ScreenM5::update(bool packetReceived)
             updateTemplate();
         }
         updateAHRS_Data();
-        if (packetReceived) {
+        if (isNewReceiverPacketAvailable()) {
+            clearNewReceiverPacketAvailable();
             // update the screen with data received from the receiver
             updateReceivedData();
         }
