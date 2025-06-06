@@ -19,6 +19,7 @@
 #include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
+#include <AHRS_Task.h>
 
 #if defined(USE_ESPNOW)
 #include <ESPNOW_Backchannel.h>
@@ -131,6 +132,7 @@ void MainTask::setup()
 #endif
 
     _ahrs = &setupAHRS(i2cMutex);
+    static AHRS_Task ahrsTask(AHRS_TASK_INTERVAL_MICROSECONDS, *_ahrs);
 
 #if defined(USE_ESPNOW)
     // Set WiFi to station mode
@@ -185,7 +187,7 @@ void MainTask::setup()
     static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, *_ahrs, *this, receiver, telemetryScaleFactors, preferences);
+    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, ahrsTask, *this, receiver, telemetryScaleFactors, preferences);
     _backchannel = &backchannel;
 #endif
 
@@ -194,7 +196,6 @@ void MainTask::setup()
     static ScreenM5 screen(*_ahrs, *_motorPairController, receiver);
     _screen = &screen;
     _screen->updateFull(); // Update the as soon as we can, to minimize the time the screen is blank
-    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, &screen);
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(*_motorPairController, receiver, _screen);
@@ -209,13 +210,16 @@ void MainTask::setup()
         receiver.broadcastMyEUI();
     }
 #endif
+    // And finally set up the AHRS and MotorPairController and Receiver tasks.
+    setupTasks(ahrsTask, *_motorPairController, receiver, _screen);
 #else
     // no buttons defined, so always broadcast address for binding on startup
+    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, nullptr);
     receiver.broadcastMyEUI();
+    // And finally set up the AHRS and MotorPairController and Receiver tasks.
+    setupTasks(ahrsTask, *_motorPairController, receiver, nullptr);
 #endif // M5_STACK || M5_UNIFIED
 
-    // And finally set up the AHRS and MotorPairController tasks.
-    setupTasks(*_ahrs, *_motorPairController, receiverTask);
 }
 
 AHRS& MainTask::setupAHRS(void* i2cMutex)
@@ -373,7 +377,7 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
     }
 }
 
-void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverTask& receiverTask)
+void MainTask::setupTasks(AHRS_Task& ahrsTask, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher)
 {
 #if defined(USE_FREERTOS)
     enum { AHRS_TASK_PRIORITY = 5, MPC_TASK_PRIORITY = 4, RECEIVER_TASK_PRIORITY = 3, MSP_TASK_PRIORITY = 2 };
@@ -402,13 +406,13 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &ahrs,
+        .task = &ahrsTask,
     };
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t ahrsTaskBuffer;
     static std::array <StackType_t, AHRS_TASK_STACK_DEPTH> ahrsStack;
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(
-        AHRS::Task,
+        AHRS_Task::Task,
         "AHRS_Task",
         AHRS_TASK_STACK_DEPTH, 
         &ahrsTaskParameters,
@@ -446,6 +450,7 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, receiverWatcher);
     static TaskBase::parameters_t receiverTaskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &receiverTask,
     };

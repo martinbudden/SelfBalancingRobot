@@ -4,19 +4,20 @@
 #include <cstdint>
 
 class AHRS;
+class AHRS_Task;
 class VehicleControllerBase;
 
 
 size_t packTelemetryData_Minimal(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber);
 
 size_t packTelemetryData_TaskIntervals(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber,
-        const AHRS& ahrs, // NOLINT(readability-avoid-const-params-in-decls) false positive
+        const AHRS_Task& ahrsTask, // NOLINT(readability-avoid-const-params-in-decls) false positive
         const VehicleControllerBase& vehicleController,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta); // NOLINT(readability-avoid-const-params-in-decls) false positive
 
 size_t packTelemetryData_TaskIntervalsExtended(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber,
-        const AHRS& ahrs, // NOLINT(readability-avoid-const-params-in-decls) false positive
+        const AHRS_Task& ahrsTask, // NOLINT(readability-avoid-const-params-in-decls) false positive
         const VehicleControllerBase& vehicleController,
         uint32_t vcOutputPowerTimeMicroSeconds,
         uint32_t mainTaskTickCountDelta,

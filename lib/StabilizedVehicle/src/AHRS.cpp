@@ -14,13 +14,50 @@ static_assert(false);
 #endif
 
 /*!
+Constructor: sets the sensor fusion filter, IMU, and IMU filters
+*/
+AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters) :
+    _sensorFusionFilter(sensorFusionFilter),
+    _IMU(imuSensor),
+    _imuFilters(imuFilters),
+    _taskIntervalSeconds(static_cast<float>(taskIntervalMicroSeconds/1000))
+#if defined(USE_AHRS_DATA_MUTEX) && defined(USE_FREERTOS)
+    , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
+#endif
+
+{
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+    _IMU.setInterruptDriven();
+#endif
+
+    setSensorFusionFilterInitializing(true);
+
+#if defined(USE_FREERTOS)
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#if defined(USE_AHRS_DATA_MUTEX)
+    // ensure _ahrsDataMutexBuffer declared before _ahrsDataMutex
+    static_assert(offsetof(AHRS, _ahrsDataMutex) > offsetof(AHRS, _ahrsDataMutexBuffer));
+#endif
+#pragma GCC diagnostic pop
+
+#elif defined(FRAMEWORK_RPI_PICO)
+
+    mutex_init(&_ahrsDataMutex);
+
+#endif
+}
+
+/*!
 Main AHRS task function. Reads the IMU and uses the sensor fusion filter to update the orientation quaternion.
 Returns false if there was no new data to be read from the IMU.
 
 NOTE: calls to YIELD_TASK have no effect on multi-core implementations, but are useful for single-core variants.
 */
-bool AHRS::readIMUandUpdateOrientation(float deltaT)
+bool AHRS::readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta)
 {
+    _tickCountDelta = tickCountDelta;
     const uint32_t time0 = timeUs();
 
 #if defined(IMU_DOES_SENSOR_FUSION)
@@ -171,6 +208,11 @@ Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
     return ret;
 }
 
+void AHRS::setFilters(const IMU_FiltersBase::filters_t& filters)
+{
+    _imuFilters.setFilters(filters, _taskIntervalSeconds);
+}
+
 /*!
 Returns orientation without clearing the _orientationUpdatedSinceLastRead flag.
 */
@@ -237,112 +279,4 @@ void AHRS::checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orie
     (void)orientation;
     setSensorFusionFilterInitializing(false);
 #endif
-}
-
-/*!
-Constructor: sets the sensor fusion filter, IMU, and IMU filters
-*/
-AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters) :
-    TaskBase(taskIntervalMicroSeconds),
-    _sensorFusionFilter(sensorFusionFilter),
-    _IMU(imuSensor),
-    _imuFilters(imuFilters)
-#if defined(USE_AHRS_DATA_MUTEX) && defined(USE_FREERTOS)
-    , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
-#endif
-
-{
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
-    _IMU.setInterruptDriven();
-#endif
-
-    setSensorFusionFilterInitializing(true);
-
-#if defined(USE_FREERTOS)
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-#if defined(USE_AHRS_DATA_MUTEX)
-    // ensure _ahrsDataMutexBuffer declared before _ahrsDataMutex
-    static_assert(offsetof(AHRS, _ahrsDataMutex) > offsetof(AHRS, _ahrsDataMutexBuffer));
-#endif
-#pragma GCC diagnostic pop
-
-#elif defined(FRAMEWORK_RPI_PICO)
-
-    mutex_init(&_ahrsDataMutex);
-
-#endif
-}
-/*!
-loop() function for when not using FREERTOS
-*/
-void AHRS::loop()
-{
-    const uint32_t timeMicroSeconds = timeUs();
-    _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-
-    if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-        const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
-        readIMUandUpdateOrientation(deltaT);
-    }
-}
-
-/*!
-Task function for the AHRS. Sets up and runs the task loop() function.
-*/
-[[noreturn]] void AHRS::task()
-{
-#if defined(USE_FREERTOS)
-    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-#if !defined(AHRS_IS_INTERRUPT_DRIVEN)
-    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
-    assert(taskIntervalTicks > 0 && "AHRS taskIntervalTicks is zero.");
-    //Serial.print("AHRS us:");
-    //Serial.println(taskIntervalTicks);
-#endif
-    _previousWakeTimeTicks = xTaskGetTickCount();
-
-    while (true) {
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
-        _IMU.WAIT_IMU_DATA_READY(); // wait until there is IMU data.
-
-        const uint32_t timeMicroSeconds = timeUs();
-        const uint32_t timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-        if (timeMicroSecondsDelta > 0) {
-            readIMUandUpdateOrientation(static_cast<float>(timeMicroSecondsDelta)* 0.000001F);
-        }
-#else
-        // delay until the end of the next taskIntervalTicks
-        vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
-        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
-        const TickType_t tickCount = xTaskGetTickCount();
-        _tickCountDelta = tickCount - _tickCountPrevious;
-        _tickCountPrevious = tickCount;
-        const uint32_t timeMicroSeconds = timeUs();
-        _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-
-        if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
-            const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
-            readIMUandUpdateOrientation(deltaT);
-        }
-#endif // AHRS_IS_INTERRUPT_DRIVEN
-    }
-#else
-    while (true) {}
-#endif // USE_FREERTOS
-}
-
-/*!
-Wrapper function for AHRS::Task with the correct signature to be used in xTaskCreate.
-*/
-[[noreturn]] void AHRS::Task(void* arg)
-{
-    const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
-
-    AHRS* ahrs = static_cast<AHRS*>(parameters->task);
-    ahrs->task();
 }

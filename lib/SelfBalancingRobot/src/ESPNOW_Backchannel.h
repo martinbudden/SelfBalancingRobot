@@ -4,6 +4,7 @@
 #include <ESPNOW_Transceiver.h>
 
 class AHRS;
+class AHRS_Task;
 class MotorPairController;
 class ReceiverBase;
 class SV_Preferences;
@@ -13,7 +14,7 @@ class TelemetryScaleFactors;
 
 class Backchannel {
 public:
-    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, AHRS& ahrs, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences& preferences);
+    Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* macAddress, MotorPairController& motorPairController, AHRS_Task& ahrsTask, const TaskBase& mainTask, const ReceiverBase& receiver, TelemetryScaleFactors& telemetryScaleFactors, SV_Preferences& preferences);
 private:
     // Backchannel is not copyable or moveable
     Backchannel(const Backchannel&) = delete;
@@ -37,6 +38,7 @@ private:
     ESPNOW_Transceiver::peer_data_t _peer_data {};
 private:
     MotorPairController& _motorPairController;
+    const AHRS_Task& _ahrsTask;
     AHRS& _ahrs;
     const TaskBase& _mainTask;
     const ReceiverBase& _receiver;

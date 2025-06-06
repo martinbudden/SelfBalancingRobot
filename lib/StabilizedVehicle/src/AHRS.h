@@ -1,6 +1,5 @@
 #pragma once
 
-#include "TaskBase.h"
 #include <IMU_Base.h>
 #include <IMU_FiltersDefault.h>
 
@@ -23,7 +22,7 @@ class SensorFusionFilterBase;
 /*!
 The AHRS uses the ENU (East North Up) coordinate frame.
 */
-class AHRS : public TaskBase {
+class AHRS {
 public:
     struct data_t {
         uint32_t tickCountDelta;
@@ -70,15 +69,11 @@ public:
     inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
 
     const IMU_FiltersBase::filters_t& getFilters() const { return _imuFilters.getFilters(); }
-    void setFilters(const IMU_FiltersBase::filters_t& filters) { _imuFilters.setFilters(filters, static_cast<float>(_timeMicroSecondsDelta) * 0.000001F); }
+    void setFilters(const IMU_FiltersBase::filters_t& filters);
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
 public:
-    [[noreturn]] static void Task(void* arg);
-    bool readIMUandUpdateOrientation(float deltaT);
-    void loop();
-private:
-    [[noreturn]] void task();
+    bool readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta);
 private:
     SensorFusionFilterBase& _sensorFusionFilter;
     IMU_Base& _IMU;
@@ -92,6 +87,8 @@ private:
     uint32_t _sensorFusionFilterInitializing {true};
     Quaternion _orientation {};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
+    float _taskIntervalSeconds;
+    uint32_t _tickCountDelta;
 
     // instrumentation member data
     uint32_t _fifoCount {0};

@@ -5,6 +5,7 @@
 #include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
+#include <AHRS_Task.h>
 #include <HardwareSerial.h>
 #include <ReceiverTelemetry.h>
 #include <ReceiverTelemetryData.h>
@@ -21,7 +22,7 @@ static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN);
 
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
         MotorPairController& motorPairController,
-        AHRS& ahrs,
+        AHRS_Task& ahrsTask,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
         TelemetryScaleFactors& telemetryScaleFactors,
@@ -29,7 +30,8 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
     _transceiver(transceiver),
     _received_data(_receivedDataBuffer, sizeof(_receivedDataBuffer)),
     _motorPairController(motorPairController),
-    _ahrs(ahrs),
+    _ahrsTask(ahrsTask),
+    _ahrs(ahrsTask.getAHRS()),
     _mainTask(mainTask),
     _receiver(receiver),
     _telemetryScaleFactors(telemetryScaleFactors),
@@ -227,7 +229,7 @@ bool Backchannel::sendTelemetryPacket()
     }
     case CommandPacketRequestData::REQUEST_TASK_INTERVAL_DATA: {
         const size_t len = packTelemetryData_TaskIntervals(_transmitDataBuffer, _telemetryID, _sequenceNumber,
-            _ahrs,
+            _ahrsTask,
             _motorPairController,
             _mainTask.getTickCountDelta(),
             _receiver.getDroppedPacketCountDelta());
@@ -237,7 +239,7 @@ bool Backchannel::sendTelemetryPacket()
     }
     case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA: {
         const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBuffer, _telemetryID, _sequenceNumber,
-            _ahrs,
+            _ahrsTask,
             _motorPairController,
             _motorPairController.getOutputPowerTimeMicroSeconds(),
             _mainTask.getTickCountDelta(),
