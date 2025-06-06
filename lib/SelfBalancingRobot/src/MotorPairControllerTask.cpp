@@ -1,12 +1,12 @@
-#include "AHRS.h"
-#include "AHRS_Task.h"
+#include "MotorPairController.h"
+#include "MotorPairControllerTask.h"
 
 #include "TimeMicroSeconds.h"
 
 /*!
 loop() function for when not using FREERTOS
 */
-void AHRS_Task::loop()
+void MotorPairControllerTask::loop()
 {
     const uint32_t timeMicroSeconds = timeUs();
     _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
@@ -14,36 +14,22 @@ void AHRS_Task::loop()
     if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
         _timeMicroSecondsPrevious = timeMicroSeconds;
         const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
-        _ahrs.readIMUandUpdateOrientation(deltaT, _timeMicroSecondsDelta / 1000);
+        const uint32_t tickCount = timeUs() / 1000;
+        _mpc.loop(deltaT, tickCount);
     }
 }
 
 /*!
-Task function for the AHRS. Sets up and runs the task loop() function.
+Task function for the MotorPairController. Sets up and runs the task loop() function.
 */
-[[noreturn]] void AHRS_Task::task()
+[[noreturn]] void MotorPairControllerTask::task()
 {
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-#if !defined(AHRS_IS_INTERRUPT_DRIVEN)
     const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
-    assert(taskIntervalTicks > 0 && "AHRS taskIntervalTicks is zero.");
-    //Serial.print("AHRS us:");
-    //Serial.println(taskIntervalTicks);
-#endif
     _previousWakeTimeTicks = xTaskGetTickCount();
 
     while (true) {
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
-        _IMU.WAIT_IMU_DATA_READY(); // wait until there is IMU data.
-
-        const uint32_t timeMicroSeconds = timeUs();
-        const uint32_t timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-        if (timeMicroSecondsDelta > 0) {
-            readIMUandUpdateOrientation(static_cast<float>(timeMicroSecondsDelta)* 0.000001F, timeMicroSecondsDelta / 1000);
-        }
-#else
         // delay until the end of the next taskIntervalTicks
         vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
 
@@ -57,9 +43,8 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 
         if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
-            _ahrs.readIMUandUpdateOrientation(deltaT, _tickCountDelta);
+            _mpc.loop(deltaT, tickCount);
         }
-#endif // AHRS_IS_INTERRUPT_DRIVEN
     }
 #else
     while (true) {}
@@ -67,12 +52,12 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 }
 
 /*!
-Wrapper function for AHRS::Task with the correct signature to be used in xTaskCreate.
+Wrapper function for MotorPairController::Task with the correct signature to be used in xTaskCreate.
 */
-[[noreturn]] void AHRS_Task::Task(void* arg)
+[[noreturn]] void MotorPairControllerTask::Task(void* arg)
 {
     const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
-    AHRS_Task* ahrsTask = static_cast<AHRS_Task*>(parameters->task);
-    ahrsTask->task();
+    MotorPairControllerTask* mpcTask = static_cast<MotorPairControllerTask*>(parameters->task);
+    mpcTask->task();
 }

@@ -88,8 +88,6 @@ public:
 
     void motorsResetEncodersToZero();
 public:
-    [[noreturn]] static void Task(void* arg);
-    void loop();
     void loop(float deltaT, uint32_t tickCount);
 public:
     static float mapYawStick(float yawStick);
@@ -101,7 +99,6 @@ public:
 private:
     void updatePositionOutputs(float deltaT);
     MotorPairBase& allocateMotors();
-    [[noreturn]] void task();
 private:
     const AHRS& _ahrs;
     ReceiverBase& _receiver;

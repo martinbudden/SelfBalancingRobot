@@ -33,6 +33,7 @@
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
+#include <MotorPairControllerTask.h>
 #if defined(USE_ESPNOW)
 #include <ReceiverAtomJoyStick.h>
 #endif
@@ -132,7 +133,6 @@ void MainTask::setup()
 #endif
 
     _ahrs = &setupAHRS(i2cMutex);
-    static AHRS_Task ahrsTask(AHRS_TASK_INTERVAL_MICROSECONDS, *_ahrs);
 
 #if defined(USE_ESPNOW)
     // Set WiFi to station mode
@@ -182,15 +182,6 @@ void MainTask::setup()
 #endif
     loadPreferences(preferences, *_motorPairController);
 
-#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
-    // Statically allocate the telemetry scale factors
-    static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
-    // Statically allocate the backchannel.
-    constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, *_motorPairController, ahrsTask, *this, receiver, telemetryScaleFactors, preferences);
-    _backchannel = &backchannel;
-#endif
-
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
     static ScreenM5 screen(*_ahrs, *_motorPairController, receiver);
@@ -211,14 +202,23 @@ void MainTask::setup()
     }
 #endif
     // And finally set up the AHRS and MotorPairController and Receiver tasks.
-    setupTasks(ahrsTask, *_motorPairController, receiver, _screen);
+    tasks_t tasks = setupTasks(*_ahrs, *_motorPairController, receiver, _screen);
 #else
     // no buttons defined, so always broadcast address for binding on startup
-    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, nullptr);
     receiver.broadcastMyEUI();
     // And finally set up the AHRS and MotorPairController and Receiver tasks.
     setupTasks(ahrsTask, *_motorPairController, receiver, nullptr);
 #endif // M5_STACK || M5_UNIFIED
+
+#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
+    // Statically allocate the telemetry scale factors
+    static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
+    // Statically allocate the backchannel.
+    constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
+    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, tasks.mpcTask, tasks.ahrsTask, *this, receiver, telemetryScaleFactors, preferences);
+    _backchannel = &backchannel;
+#endif
+
 
 }
 
@@ -377,7 +377,7 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
     }
 }
 
-void MainTask::setupTasks(AHRS_Task& ahrsTask, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher)
+MainTask::tasks_t MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher)
 {
 #if defined(USE_FREERTOS)
     enum { AHRS_TASK_PRIORITY = 5, MPC_TASK_PRIORITY = 4, RECEIVER_TASK_PRIORITY = 3, MSP_TASK_PRIORITY = 2 };
@@ -405,6 +405,7 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static AHRS_Task ahrsTask(AHRS_TASK_INTERVAL_MICROSECONDS, *_ahrs);
     static TaskBase::parameters_t ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &ahrsTask,
     };
@@ -428,13 +429,14 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static MotorPairControllerTask mpcTask(MPC_TASK_INTERVAL_MICROSECONDS, motorPairController);
     static TaskBase::parameters_t mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &motorPairController,
+        .task = &mpcTask,
     };
     enum { MPC_TASK_STACK_DEPTH = 4096 };
     static StaticTask_t mpcTaskBuffer;
     static std::array<StackType_t, MPC_TASK_STACK_DEPTH> mpcStack;
-    const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairController::Task,
+    const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairControllerTask::Task,
         "MPC_Task",
         MPC_TASK_STACK_DEPTH,
         &mpcTaskParameters,
@@ -470,6 +472,13 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
     assert(receiverTaskHandle != nullptr && "Unable to create ReceiverTask task.");
     sprintf(&buf[0], "**** RECEIVER_Task,  core:%d, priority:%d, task interval:%dms\r\n\r\n", RECEIVER_TASK_CORE, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
+
+    const tasks_t ret {
+        .ahrsTask = ahrsTask,
+        .mpcTask = mpcTask,
+        .receiverTask = receiverTask
+    };
+    return ret;
 #else
     (void)ahrs;
     (void)motorPairController;

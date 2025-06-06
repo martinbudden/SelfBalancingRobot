@@ -6,7 +6,9 @@ class AHRS;
 class AHRS_Task;
 class Backchannel;
 class MotorPairController;
+class MotorPairControllerTask;
 class ReceiverBase;
+class ReceiverTask;
 class ReceiverWatcher;
 class SV_Preferences;
 class ScreenBase;
@@ -23,7 +25,12 @@ private:
     static void checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs);
     static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
-    static void setupTasks(AHRS_Task& ahrsTask, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
+    struct tasks_t {
+        AHRS_Task& ahrsTask;
+        MotorPairControllerTask& mpcTask;
+        ReceiverTask& receiverTask;
+    };
+    tasks_t setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
 private:
     AHRS* _ahrs {nullptr};
     MotorPairController* _motorPairController {};

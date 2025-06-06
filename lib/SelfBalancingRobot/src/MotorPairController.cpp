@@ -352,22 +352,6 @@ void MotorPairController::updatePositionOutputs(float deltaT)
 }
 
 /*!
-loop() function for when not using FREERTOS
-*/
-void MotorPairController::loop()
-{
-    const uint32_t timeMicroSeconds = timeUs();
-    _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-
-    if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-        const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
-        const uint32_t tickCount = timeUs() / 1000;
-        loop(deltaT, tickCount);
-    }
-}
-
-/*!
 Task loop for the MotorPairController. Uses PID controllers to update the motor pair.
 
 Setpoints are provided by the receiver(joystick), and inputs(process variables) come from the AHRS and the motor encoders.
@@ -383,48 +367,4 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
         updateOutputsUsingPIDs(deltaT);
     }
     outputToMotors(deltaT, tickCount);
-}
-
-/*!
-Task function for the MotorPairController. Sets up and runs the task loop() function.
-*/
-[[noreturn]] void MotorPairController::task()
-{
-#if defined(USE_FREERTOS)
-    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
-    _previousWakeTimeTicks = xTaskGetTickCount();
-
-    while (true) {
-        // delay until the end of the next taskIntervalTicks
-        vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
-
-        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
-        const TickType_t tickCount = xTaskGetTickCount();
-        _tickCountDelta = tickCount - _tickCountPrevious;
-        _tickCountPrevious = tickCount;
-        const uint32_t timeMicroSeconds = timeUs();
-        _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-
-        if (_tickCountDelta > 0) { // guard against the case of the while loop executing twice on the same tick interval
-            const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
-            loop(deltaT, tickCount);
-        }
-    }
-#else
-    (void)taskParameters;
-    while (true) {}
-#endif
-}
-
-/*!
-Wrapper function for MotorPairController::Task with the correct signature to be used in xTaskCreate.
-*/
-[[noreturn]] void MotorPairController::Task(void* arg)
-{
-    const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
-
-    MotorPairController* mpc = static_cast<MotorPairController*>(parameters->task);
-    mpc->task();
 }

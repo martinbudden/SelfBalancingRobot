@@ -7,6 +7,8 @@
 #include <AHRS.h>
 #include <AHRS_Task.h>
 #include <HardwareSerial.h>
+#include <MotorPairController.h>
+#include <MotorPairControllerTask.h>
 #include <ReceiverTelemetry.h>
 #include <ReceiverTelemetryData.h>
 #include <SV_Preferences.h>
@@ -21,7 +23,7 @@ static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN);
 
 
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
-        MotorPairController& motorPairController,
+        MotorPairControllerTask& motorPairControllerTask,
         AHRS_Task& ahrsTask,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
@@ -29,7 +31,8 @@ Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backcha
         SV_Preferences& preferences) :
     _transceiver(transceiver),
     _received_data(_receivedDataBuffer, sizeof(_receivedDataBuffer)),
-    _motorPairController(motorPairController),
+    _motorPairControllerTask(motorPairControllerTask),
+    _motorPairController(motorPairControllerTask.getMotorPairController()),
     _ahrsTask(ahrsTask),
     _ahrs(ahrsTask.getAHRS()),
     _mainTask(mainTask),
@@ -230,7 +233,7 @@ bool Backchannel::sendTelemetryPacket()
     case CommandPacketRequestData::REQUEST_TASK_INTERVAL_DATA: {
         const size_t len = packTelemetryData_TaskIntervals(_transmitDataBuffer, _telemetryID, _sequenceNumber,
             _ahrsTask,
-            _motorPairController,
+            _motorPairControllerTask,
             _mainTask.getTickCountDelta(),
             _receiver.getDroppedPacketCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);
@@ -240,7 +243,7 @@ bool Backchannel::sendTelemetryPacket()
     case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA: {
         const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBuffer, _telemetryID, _sequenceNumber,
             _ahrsTask,
-            _motorPairController,
+            _motorPairControllerTask,
             _motorPairController.getOutputPowerTimeMicroSeconds(),
             _mainTask.getTickCountDelta(),
             _transceiver.getTickCountDeltaAndReset(),
@@ -269,7 +272,7 @@ bool Backchannel::sendTelemetryPacket()
         break;
     }
     case CommandPacketRequestData::REQUEST_VEHICLE_CONTROLLER_DATA: {
-        const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController);
+        const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairControllerTask);
         //Serial.printf("mpcLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
         break;

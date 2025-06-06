@@ -8,10 +8,7 @@ struct xyz_t;
 /*!
 Abstract base class defining a controller for a stabilized vehicle.
 */
-class VehicleControllerBase : public TaskBase {
-public:
-    explicit VehicleControllerBase(uint32_t taskIntervalMicroSeconds) : TaskBase(taskIntervalMicroSeconds) {}
-    VehicleControllerBase() : VehicleControllerBase(0) {}
+class VehicleControllerBase {
 public:
     inline float getPitchAngleDegreesRaw() const { return _pitchAngleDegreesRaw; }
     inline float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; }
