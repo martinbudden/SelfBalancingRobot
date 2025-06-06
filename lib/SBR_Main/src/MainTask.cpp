@@ -32,12 +32,11 @@
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
 #include <IMU_MPU6886.h>
-
 #if defined(USE_ESPNOW)
 #include <ReceiverAtomJoyStick.h>
 #endif
-
 #include <ReceiverNull.h>
+#include <ReceiverTask.h>
 #include <SV_Preferences.h>
 #include <SensorFusion.h>
 #include <TimeMicroSeconds.h>
@@ -71,6 +70,10 @@ Updating the screen takes approximately 50 ticks, so packets will be dropped if 
 enum { MAIN_LOOP_TASK_INTERVAL_MICROSECONDS = 10000 };
 #endif
 
+#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
+enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
+
 #if !defined(MPC_TASK_INTERVAL_MICROSECONDS)
 #if defined(USE_IMU_M5_UNIFIED) || defined(USE_IMU_M5_STACK)
     enum { MPC_TASK_INTERVAL_MICROSECONDS = 10000 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
@@ -79,8 +82,8 @@ enum { MAIN_LOOP_TASK_INTERVAL_MICROSECONDS = 10000 };
 #endif
 #endif
 
-#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
-enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
+#if !defined(RECEIVER_TASK_INTERVAL_MICROSECONDS)
+enum { RECEIVER_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
 MainTask::MainTask() : 
@@ -191,6 +194,7 @@ void MainTask::setup()
     static ScreenM5 screen(*_ahrs, *_motorPairController, receiver);
     _screen = &screen;
     _screen->updateFull(); // Update the as soon as we can, to minimize the time the screen is blank
+    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, &screen);
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(*_motorPairController, receiver, _screen);
@@ -211,7 +215,7 @@ void MainTask::setup()
 #endif // M5_STACK || M5_UNIFIED
 
     // And finally set up the AHRS and MotorPairController tasks.
-    setupTasks(*_ahrs, *_motorPairController);
+    setupTasks(*_ahrs, *_motorPairController, receiverTask);
 }
 
 AHRS& MainTask::setupAHRS(void* i2cMutex)
@@ -369,12 +373,13 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
     }
 }
 
-void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController)
+void MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverTask& receiverTask)
 {
 #if defined(USE_FREERTOS)
-enum { MPC_TASK_PRIORITY = 4, AHRS_TASK_PRIORITY = 5 };
+    enum { AHRS_TASK_PRIORITY = 5, MPC_TASK_PRIORITY = 4, RECEIVER_TASK_PRIORITY = 3, MSP_TASK_PRIORITY = 2 };
 
 enum { MPC_TASK_CORE = PRO_CPU_NUM };
+enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
 #if defined(APP_CPU_NUM) // The processor has two cores
     enum { AHRS_TASK_CORE = APP_CPU_NUM }; // AHRS should be the only task running on the second core
 #else // single core processor
@@ -414,7 +419,7 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
     );
     assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
 #if !defined(FRAMEWORK_ESPIDF)
-    sprintf(&buf[0], "**** AHRS_Task, core:%d, priority:%d, tick interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_INTERVAL_MICROSECONDS / 1000);
+    sprintf(&buf[0], "**** AHRS_Task,      core:%d, priority:%d, task interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
 #endif
 
@@ -436,13 +441,34 @@ enum { MPC_TASK_CORE = PRO_CPU_NUM };
     );
     assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
 #if !defined(FRAMEWORK_ESPIDF)
-    sprintf(&buf[0], "**** MPC_Task,  core:%d, priority:%d, tick interval:%dms\r\n\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_INTERVAL_MICROSECONDS / 1000);
+    sprintf(&buf[0], "**** MPC_Task,       core:%d, priority:%d, task interval:%dms\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
 #endif
 
+    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static TaskBase::parameters_t receiverTaskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &receiverTask,
+    };
+    enum { RECEIVER_TASK_STACK_DEPTH = 4096 };
+    static std::array<StackType_t, RECEIVER_TASK_STACK_DEPTH> receiverStack;
+    static StaticTask_t receiverTaskBuffer;
+    const TaskHandle_t receiverTaskHandle = xTaskCreateStaticPinnedToCore(
+        ReceiverTask::Task,
+        "Receiver_Task",
+        RECEIVER_TASK_STACK_DEPTH,
+        &receiverTaskParameters,
+        RECEIVER_TASK_PRIORITY,
+        &receiverStack[0],
+        &receiverTaskBuffer,
+        RECEIVER_TASK_CORE
+    );
+    assert(receiverTaskHandle != nullptr && "Unable to create ReceiverTask task.");
+    sprintf(&buf[0], "**** RECEIVER_Task,  core:%d, priority:%d, task interval:%dms\r\n\r\n", RECEIVER_TASK_CORE, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_INTERVAL_MICROSECONDS / 1000);
+    Serial.print(&buf[0]);
 #else
     (void)ahrs;
     (void)motorPairController;
+    (void)receiverTask;
 #endif // USE_FREERTOS
 }
 
@@ -466,6 +492,9 @@ void MainTask::loop()
     // simple round-robbin scheduling
     _ahrs->loop();
     _motorPairController->loop();
+    if (_receiver->update(_tickCountDelta)) {
+        _screen->newReceiverPacketAvailable();
+    }
     const uint32_t tickCount = timeUs() / 1000;
     _tickCountDelta = tickCount - _tickCountPrevious;
     if (_tickCountDelta < MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000) {
@@ -474,9 +503,6 @@ void MainTask::loop()
 #endif // USE_FREERTOS
     _tickCountPrevious = tickCount;
 
-    if (_receiver->update(_tickCountDelta)) {
-        _screen->setNewReceiverPacketAvailable();
-    }
 #if defined(BACKCHANNEL_MAC_ADDRESS)
     _backchannel->update();
 #endif

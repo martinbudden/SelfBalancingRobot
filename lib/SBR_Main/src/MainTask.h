@@ -6,6 +6,7 @@ class AHRS;
 class Backchannel;
 class MotorPairController;
 class ReceiverBase;
+class ReceiverTask;
 class SV_Preferences;
 class ScreenBase;
 class ButtonsBase;
@@ -21,7 +22,7 @@ private:
     static void checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs);
     static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
-    static void setupTasks(AHRS& ahrs, MotorPairController& motorPairController);
+    static void setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverTask& receiverTask);
 private:
     AHRS* _ahrs {nullptr};
     MotorPairController* _motorPairController {};

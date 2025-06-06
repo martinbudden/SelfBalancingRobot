@@ -5,7 +5,7 @@ class MotorPairController;
 class ReceiverBase;
 
 
-class ScreenBase {
+class ScreenBase  : public ReceiverWatcher {
 public:
     virtual ~ScreenBase() = default;
     ScreenBase(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver) :
@@ -13,10 +13,11 @@ public:
 public:
     virtual void nextScreenMode() = 0;
     virtual void update() = 0;
-    void updateFull() { _templateIsUpdated = false; setNewReceiverPacketAvailable(); update(); }
+    void updateFull() { _templateIsUpdated = false; newReceiverPacketAvailable(); update(); }
     inline int getScreenSizeX() const { return _screenSizeX; }
     inline int getScreenSizeY() const { return _screenSizeY; }
-    inline void setNewReceiverPacketAvailable() { _newReceiverPacketAvailable = true; }
+
+    virtual void newReceiverPacketAvailable() override { _newReceiverPacketAvailable = true; }
 protected:
     inline void clearNewReceiverPacketAvailable() { _newReceiverPacketAvailable = false; }
     inline bool isNewReceiverPacketAvailable() const { return _newReceiverPacketAvailable; }

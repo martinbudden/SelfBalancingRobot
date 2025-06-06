@@ -183,15 +183,15 @@ void ScreenM5::updateReceivedData128x128() const
     const ReceiverBase::controls_t controls = _receiver.getControls();
 
     M5.Lcd.setCursor(12, yPos);
-    M5.Lcd.printf("%6d", controls.throttleStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.throttleStickQ12dot4);
     M5.Lcd.setCursor(72, yPos);
-    M5.Lcd.printf("%6d", controls.rollStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.rollStickQ12dot4);
 
     yPos += 10;
     M5.Lcd.setCursor(12, yPos);
-    M5.Lcd.printf("%6d", controls.pitchStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.pitchStickQ12dot4);
     M5.Lcd.setCursor(72, yPos);
-    M5.Lcd.printf("%6d", controls.yawStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.yawStickQ12dot4);
 }
 
 void ScreenM5::update128x128(const TD_AHRS::data_t& ahrsData) const
@@ -261,19 +261,19 @@ void ScreenM5::updateReceivedData80x160() const
     int32_t yPos = 90;
     M5.Lcd.setCursor(12, yPos);
     const ReceiverBase::controls_t controls = _receiver.getControls();
-    M5.Lcd.printf("%6d", controls.throttleStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.throttleStickQ12dot4);
 
     yPos += 10;
     M5.Lcd.setCursor(12, yPos);
-    M5.Lcd.printf("%6d", controls.rollStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.rollStickQ12dot4);
 
     yPos += 10;
     M5.Lcd.setCursor(12, yPos);
-    M5.Lcd.printf("%6d", controls.pitchStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.pitchStickQ12dot4);
 
     yPos += 10;
     M5.Lcd.setCursor(12, yPos);
-    M5.Lcd.printf("%6d", controls.yawStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.yawStickQ12dot4);
 
     yPos += 10;
     M5.Lcd.setCursor(0, yPos);
@@ -480,15 +480,15 @@ void ScreenM5::updateReceivedData320x240() const
 
     M5.Lcd.setCursor(20, yPos);
     const ReceiverBase::controls_t controls = _receiver.getControls();
-    M5.Lcd.printf("%6d", controls.throttleStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.throttleStickQ12dot4);
     M5.Lcd.setCursor(180, yPos);
-    M5.Lcd.printf("%6d", controls.rollStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.rollStickQ12dot4);
 
     yPos += 20;
     M5.Lcd.setCursor(20, yPos);
-    M5.Lcd.printf("%6d", controls.yawStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.yawStickQ12dot4);
     M5.Lcd.setCursor(180, yPos);
-    M5.Lcd.printf("%6d", controls.pitchStickQ4dot12);
+    M5.Lcd.printf("%6d", controls.pitchStickQ12dot4);
 
     yPos += 20;
     M5.Lcd.setCursor(0, yPos);
