@@ -13,13 +13,6 @@
 static_assert(false);
 #endif
 
-#if defined(USE_FREERTOS)
-inline void YIELD_TASK() { taskYIELD(); }
-#else
-inline void YIELD_TASK() {}
-#endif
-
-
 /*!
 Main AHRS task function. Reads the IMU and uses the sensor fusion filter to update the orientation quaternion.
 Returns false if there was no new data to be read from the IMU.
@@ -83,79 +76,6 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT)
     UNLOCK_AHRS_DATA();
 
     return true;
-}
-
-/*!
-loop() function for when not using FREERTOS
-*/
-void AHRS::loop()
-{
-    const uint32_t timeMicroSeconds = timeUs();
-    _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-
-    if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-        const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
-        readIMUandUpdateOrientation(deltaT);
-    }
-}
-
-/*!
-Task function for the AHRS. Sets up and runs the task loop() function.
-*/
-[[noreturn]] void AHRS::task()
-{
-#if defined(USE_FREERTOS)
-    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-#if !defined(AHRS_IS_INTERRUPT_DRIVEN)
-    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
-    assert(taskIntervalTicks > 0 && "AHRS taskIntervalTicks is zero.");
-    //Serial.print("AHRS us:");
-    //Serial.println(taskIntervalTicks);
-#endif
-    _previousWakeTimeTicks = xTaskGetTickCount();
-
-    while (true) {
-#if defined(AHRS_IS_INTERRUPT_DRIVEN)
-        _IMU.WAIT_IMU_DATA_READY(); // wait until there is IMU data.
-
-        const uint32_t timeMicroSeconds = timeUs();
-        const uint32_t timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-        if (timeMicroSecondsDelta > 0) {
-            readIMUandUpdateOrientation(static_cast<float>(timeMicroSecondsDelta)* 0.000001F);
-        }
-#else
-        // delay until the end of the next taskIntervalTicks
-        vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
-        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
-        const TickType_t tickCount = xTaskGetTickCount();
-        _tickCountDelta = tickCount - _tickCountPrevious;
-        _tickCountPrevious = tickCount;
-        const uint32_t timeMicroSeconds = timeUs();
-        _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-        _timeMicroSecondsPrevious = timeMicroSeconds;
-
-        if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
-            const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
-            readIMUandUpdateOrientation(deltaT);
-        }
-#endif // AHRS_IS_INTERRUPT_DRIVEN
-    }
-#else
-    while (true) {}
-#endif // USE_FREERTOS
-}
-
-/*!
-Wrapper function for AHRS::Task with the correct signature to be used in xTaskCreate.
-*/
-[[noreturn]] void AHRS::Task(void* arg)
-{
-    const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
-
-    AHRS* ahrs = static_cast<AHRS*>(parameters->task);
-    ahrs->task();
 }
 
 /*!
@@ -353,4 +273,76 @@ AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusi
     mutex_init(&_ahrsDataMutex);
 
 #endif
+}
+/*!
+loop() function for when not using FREERTOS
+*/
+void AHRS::loop()
+{
+    const uint32_t timeMicroSeconds = timeUs();
+    _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
+
+    if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
+        _timeMicroSecondsPrevious = timeMicroSeconds;
+        const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
+        readIMUandUpdateOrientation(deltaT);
+    }
+}
+
+/*!
+Task function for the AHRS. Sets up and runs the task loop() function.
+*/
+[[noreturn]] void AHRS::task()
+{
+#if defined(USE_FREERTOS)
+    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
+#if !defined(AHRS_IS_INTERRUPT_DRIVEN)
+    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
+    assert(taskIntervalTicks > 0 && "AHRS taskIntervalTicks is zero.");
+    //Serial.print("AHRS us:");
+    //Serial.println(taskIntervalTicks);
+#endif
+    _previousWakeTimeTicks = xTaskGetTickCount();
+
+    while (true) {
+#if defined(AHRS_IS_INTERRUPT_DRIVEN)
+        _IMU.WAIT_IMU_DATA_READY(); // wait until there is IMU data.
+
+        const uint32_t timeMicroSeconds = timeUs();
+        const uint32_t timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
+        _timeMicroSecondsPrevious = timeMicroSeconds;
+        if (timeMicroSecondsDelta > 0) {
+            readIMUandUpdateOrientation(static_cast<float>(timeMicroSecondsDelta)* 0.000001F);
+        }
+#else
+        // delay until the end of the next taskIntervalTicks
+        vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
+        // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
+        const TickType_t tickCount = xTaskGetTickCount();
+        _tickCountDelta = tickCount - _tickCountPrevious;
+        _tickCountPrevious = tickCount;
+        const uint32_t timeMicroSeconds = timeUs();
+        _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
+        _timeMicroSecondsPrevious = timeMicroSeconds;
+
+        if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
+            const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
+            readIMUandUpdateOrientation(deltaT);
+        }
+#endif // AHRS_IS_INTERRUPT_DRIVEN
+    }
+#else
+    while (true) {}
+#endif // USE_FREERTOS
+}
+
+/*!
+Wrapper function for AHRS::Task with the correct signature to be used in xTaskCreate.
+*/
+[[noreturn]] void AHRS::Task(void* arg)
+{
+    const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
+
+    AHRS* ahrs = static_cast<AHRS*>(parameters->task);
+    ahrs->task();
 }
