@@ -14,7 +14,7 @@
 
 #include "ButtonsM5.h"
 #include "Calibration.h"
-#include "MainTask.h"
+#include "Main.h"
 #include "ScreenM5.h"
 #include "TelemetryScaleFactors.h"
 
@@ -285,7 +285,7 @@ The IMU(Inertial Measurement Unit) is read in the AHRS(Attitude and Heading Refe
 The motors are controlled in the MotorPairController task.
 The receiver (joystick) values are obtained in the Receiver task.
 */
-void Main::loop()
+void Main::loop() // NOLINT(readability-make-member-function-const)
 {
 #if defined(USE_FREERTOS)
     vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000));
