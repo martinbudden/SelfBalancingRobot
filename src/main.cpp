@@ -6,12 +6,12 @@
 #include <Arduino.h>
 
 namespace { // use anonymous namespace to make items local to this translation unit
-    MainTask* mainTask;
+    Main* mainTask;
 } // end namespace
 
 void setup()// cppcheck-suppress unusedFunction
 {
-    static MainTask mainTaskStatic;
+    static Main mainTaskStatic;
     mainTask = &mainTaskStatic;
     mainTask->setup();
 }
@@ -26,18 +26,22 @@ void loop()// cppcheck-suppress unusedFunction
 
 extern "C" void app_main()
 {
-    static MainTask mainTask;
+    static Main mainTask;
     mainTask.setup();
-    mainTask.loop();
+    while (true) {
+        mainTask.loop();
+    }
 }
 
 #elif defined(FRAMEWORK_RPI_PICO)
 
 int main()
 {
-    static MainTask mainTask;
+    static Main mainTask;
     mainTask.setup();
-    mainTask.loop();
+    while (true) {
+        mainTask.loop();
+    }
 }
 
 #endif

@@ -31,8 +31,8 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
-    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(taskIntervalMicroSeconds, ahrs, receiver, nullptr) {}
+    MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
+    MotorPairController(const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;

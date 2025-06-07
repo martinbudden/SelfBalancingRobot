@@ -18,9 +18,9 @@ struct CommandPacketReserved {
 struct CommandPacketControl {
     enum { TYPE = 1 };
     enum {
-        NO_ACTION = 0, 
+        NO_ACTION = 0,
         MOTORS_SWITCH_OFF = 1,
-        MOTORS_SWITCH_ON = 2, 
+        MOTORS_SWITCH_ON = 2,
         RESET = 3,
         CONTROL_MODE_0 = 20,
         CONTROL_MODE_1 = 21,
@@ -97,7 +97,7 @@ struct CommandPacketSetOffset {
 
 struct CommandPacketSetFilter {
     enum { TYPE = 5 };
-    enum { 
+    enum {
         GYRO_ALL_LPF, GYRO_X_LPF, GYRO_Y_LPF, GYRO_Z_LPF,
         ACC_ALL_LPF,  ACC_X_LPF,  ACC_Y_LPF,  ACC_Z_LPF
     };

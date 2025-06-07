@@ -58,6 +58,6 @@ Wrapper function for MotorPairController::Task with the correct signature to be 
 {
     const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
-    MotorPairControllerTask* mpcTask = static_cast<MotorPairControllerTask*>(parameters->task);
+    auto* mpcTask = static_cast<MotorPairControllerTask*>(parameters->task); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
     mpcTask->task();
 }

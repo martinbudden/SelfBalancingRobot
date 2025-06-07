@@ -18,10 +18,10 @@ public:
     Backchannel(ESPNOW_Transceiver& transceiver,
         const uint8_t* macAddress,
         MotorPairControllerTask& motorPairControllerTask,
-        AHRS_Task& ahrsTask, 
-        const TaskBase& mainTask, 
-        const ReceiverBase& receiver, 
-        TelemetryScaleFactors& telemetryScaleFactors, 
+        AHRS_Task& ahrsTask,
+        const TaskBase& mainTask,
+        const ReceiverBase& receiver,
+        TelemetryScaleFactors& telemetryScaleFactors,
         SV_Preferences& preferences
     );
 private:

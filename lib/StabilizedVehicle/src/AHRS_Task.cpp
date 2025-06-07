@@ -73,6 +73,6 @@ Wrapper function for AHRS::Task with the correct signature to be used in xTaskCr
 {
     const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
-    AHRS_Task* ahrsTask = static_cast<AHRS_Task*>(parameters->task);
+    auto* ahrsTask = static_cast<AHRS_Task*>(parameters->task); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
     ahrsTask->task();
 }

@@ -88,7 +88,7 @@ private:
     Quaternion _orientation {};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
     float _taskIntervalSeconds;
-    uint32_t _tickCountDelta;
+    uint32_t _tickCountDelta {};
 
     // instrumentation member data
     uint32_t _fifoCount {0};

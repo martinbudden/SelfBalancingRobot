@@ -6,7 +6,7 @@ class AHRS;
 
 class AHRS_Task : public TaskBase {
 public:
-    AHRS_Task(uint32_t taskIntervalMicroSeconds, AHRS& ahrs) : 
+    AHRS_Task(uint32_t taskIntervalMicroSeconds, AHRS& ahrs) :
         TaskBase(taskIntervalMicroSeconds),
         _ahrs(ahrs) {}
 

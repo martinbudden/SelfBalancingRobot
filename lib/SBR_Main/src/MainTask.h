@@ -16,7 +16,13 @@ class ButtonsBase;
 
 class MainTask : public TaskBase {
 public:
-    MainTask();
+    explicit MainTask(uint32_t taskIntervalMicroSeconds) : TaskBase(taskIntervalMicroSeconds) {}
+    void loop();
+};
+
+class Main {
+public:
+    Main() = default;
 public:
     void setup();
     void loop();
@@ -26,12 +32,14 @@ private:
     static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     struct tasks_t {
-        AHRS_Task& ahrsTask;
-        MotorPairControllerTask& mpcTask;
-        ReceiverTask& receiverTask;
+        MainTask* mainTask;
+        AHRS_Task* ahrsTask;
+        MotorPairControllerTask* mpcTask;
+        ReceiverTask* receiverTask;
     };
     tasks_t setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
 private:
+    tasks_t _tasks {};
     AHRS* _ahrs {nullptr};
     MotorPairController* _motorPairController {};
     ReceiverBase* _receiver {nullptr};

@@ -84,7 +84,7 @@ float MotorMixer::getMotorOutput(size_t motorIndex) const
 }
 
 int32_t MotorMixer::getMotorRPM(size_t motorIndex) const
-{   
+{
     (void)motorIndex;
     return 0;
 }

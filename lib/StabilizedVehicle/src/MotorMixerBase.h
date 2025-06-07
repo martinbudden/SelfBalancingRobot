@@ -25,7 +25,7 @@ public:
 public:
     static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
 protected:
-    const uint32_t _motorCount; 
+    const uint32_t _motorCount;
     int32_t _motorsIsOn {false};
     int32_t _motorsIsDisabled {false};
 };

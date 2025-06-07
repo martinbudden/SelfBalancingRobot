@@ -35,7 +35,6 @@ void ReceiverTask::loop()
     }
 }
 
-#define RECEIVER_TASK_IS_INTERRUPT_DRIVEN
 /*!
 Task function for the ReceiverTask. Sets up and runs the task loop() function.
 */

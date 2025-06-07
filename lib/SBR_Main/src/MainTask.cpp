@@ -88,13 +88,10 @@ enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
 enum { RECEIVER_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
-MainTask::MainTask() : 
-    TaskBase(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS) {}
-
 /*!
 Setup for the main loop, motor control task, and AHRS(Attitude and Heading Reference System) task.
 */
-void MainTask::setup()
+void Main::setup()
 {
     // Initialize the M5Stack object
 #if defined(M5_UNIFIED)
@@ -161,7 +158,7 @@ void MainTask::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairControllerStatic(MPC_TASK_INTERVAL_MICROSECONDS, *_ahrs, receiver, i2cMutex);
+    static MotorPairController motorPairControllerStatic(*_ahrs, receiver, i2cMutex);
     _motorPairController = &motorPairControllerStatic;
     _ahrs->setVehicleController(_motorPairController);
 
@@ -185,13 +182,13 @@ void MainTask::setup()
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
     static ScreenM5 screen(*_ahrs, *_motorPairController, receiver);
+    ReceiverWatcher* receiverWatcher =  &screen;
     _screen = &screen;
     _screen->updateFull(); // Update the as soon as we can, to minimize the time the screen is blank
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(*_motorPairController, receiver, _screen);
     _buttons = &buttons;
-
 #if defined(M5_ATOM)
     // The Atom has no BtnB, so it always broadcasts address for binding on startup.
     receiver.broadcastMyEUI();
@@ -201,28 +198,37 @@ void MainTask::setup()
         receiver.broadcastMyEUI();
     }
 #endif
-    // And finally set up the AHRS and MotorPairController and Receiver tasks.
-    tasks_t tasks = setupTasks(*_ahrs, *_motorPairController, receiver, _screen);
+
 #else
+
     // no buttons defined, so always broadcast address for binding on startup
     receiver.broadcastMyEUI();
-    // And finally set up the AHRS and MotorPairController and Receiver tasks.
-    setupTasks(ahrsTask, *_motorPairController, receiver, nullptr);
+    ReceiverWatcher* receiverWatcher =  nullptr; // no screen available
 #endif // M5_STACK || M5_UNIFIED
+
+    // And finally set up the AHRS and MotorPairController and Receiver tasks.
+    _tasks = setupTasks(*_ahrs, *_motorPairController, receiver, receiverWatcher);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the telemetry scale factors
     static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(receiver.getESPNOW_Transceiver(), backchannelMacAddress, tasks.mpcTask, tasks.ahrsTask, *this, receiver, telemetryScaleFactors, preferences);
+    static Backchannel backchannel(
+        receiver.getESPNOW_Transceiver(),
+        backchannelMacAddress,
+        *_tasks.mpcTask,
+        *_tasks.ahrsTask,
+        *_tasks.mainTask,
+        *_receiver,
+        telemetryScaleFactors,
+        preferences
+    );
     _backchannel = &backchannel;
 #endif
-
-
 }
 
-AHRS& MainTask::setupAHRS(void* i2cMutex)
+AHRS& Main::setupAHRS(void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
 // NOLINTBEGIN(misc-const-correctness)
@@ -293,7 +299,7 @@ AHRS& MainTask::setupAHRS(void* i2cMutex)
     return ahrs;
 }
 
-void MainTask::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
+void Main::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
 {
     // Set the gyro offsets from non-volatile storage.
 #if defined(USE_IMU_M5_UNIFIED)
@@ -328,7 +334,7 @@ void MainTask::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
 /*!
 Resets the PID preferences and the Balance Angle to SV_Preferences::NOT_SET (which represents unset).
 */
-void MainTask::resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController)
+void Main::resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController)
 {
     //_preferences->clear();
     //_preferences->removeGyroOffset();
@@ -347,7 +353,7 @@ void MainTask::resetPreferences(SV_Preferences& preferences, MotorPairController
 /*!
 Loads the PID settings for the MotorPairController. Must be called *after* the MPC is created.
 */
-void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController)
+void Main::loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController)
 {
     // Set all the preferences to zero if they have not been set
     if (!preferences.isSetPID()) {
@@ -377,8 +383,21 @@ void MainTask::loadPreferences(SV_Preferences& preferences, MotorPairController&
     }
 }
 
-MainTask::tasks_t MainTask::setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher)
+Main::tasks_t Main::setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher)
 {
+    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
+    static AHRS_Task ahrsTask(AHRS_TASK_INTERVAL_MICROSECONDS, ahrs);
+    static MotorPairControllerTask mpcTask(MPC_TASK_INTERVAL_MICROSECONDS, motorPairController);
+    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, receiverWatcher);
+
+    const tasks_t ret {
+        .mainTask = &mainTask,
+        .ahrsTask = &ahrsTask,
+        .mpcTask = &mpcTask,
+        .receiverTask = &receiverTask
+    };
+
 #if defined(USE_FREERTOS)
     enum { AHRS_TASK_PRIORITY = 5, MPC_TASK_PRIORITY = 4, RECEIVER_TASK_PRIORITY = 3, MSP_TASK_PRIORITY = 2 };
 
@@ -405,7 +424,6 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static AHRS_Task ahrsTask(AHRS_TASK_INTERVAL_MICROSECONDS, *_ahrs);
     static TaskBase::parameters_t ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &ahrsTask,
     };
@@ -415,9 +433,9 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
     const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(
         AHRS_Task::Task,
         "AHRS_Task",
-        AHRS_TASK_STACK_DEPTH, 
+        AHRS_TASK_STACK_DEPTH,
         &ahrsTaskParameters,
-        AHRS_TASK_PRIORITY, 
+        AHRS_TASK_PRIORITY,
         &ahrsStack[0],
         &ahrsTaskBuffer,
         AHRS_TASK_CORE
@@ -428,8 +446,6 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
     Serial.print(&buf[0]);
 #endif
 
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static MotorPairControllerTask mpcTask(MPC_TASK_INTERVAL_MICROSECONDS, motorPairController);
     static TaskBase::parameters_t mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &mpcTask,
     };
@@ -440,7 +456,7 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
         "MPC_Task",
         MPC_TASK_STACK_DEPTH,
         &mpcTaskParameters,
-        MPC_TASK_PRIORITY, 
+        MPC_TASK_PRIORITY,
         &mpcStack[0],
         &mpcTaskBuffer,
         MPC_TASK_CORE
@@ -452,7 +468,6 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
 #endif
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, receiverWatcher);
     static TaskBase::parameters_t receiverTaskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &receiverTask,
     };
@@ -473,17 +488,8 @@ enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
     sprintf(&buf[0], "**** RECEIVER_Task,  core:%d, priority:%d, task interval:%dms\r\n\r\n", RECEIVER_TASK_CORE, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
 
-    const tasks_t ret {
-        .ahrsTask = ahrsTask,
-        .mpcTask = mpcTask,
-        .receiverTask = receiverTask
-    };
-    return ret;
-#else
-    (void)ahrs;
-    (void)motorPairController;
-    (void)receiverTask;
 #endif // USE_FREERTOS
+    return ret;
 }
 
 /*!
@@ -503,22 +509,29 @@ void MainTask::loop()
     const TickType_t tickCount = xTaskGetTickCount();
     _tickCountDelta = tickCount - _tickCountPrevious;
 #else
-    // simple round-robbin scheduling
-    _ahrs->loop();
-    _motorPairController->loop();
-    if (_receiver->update(_tickCountDelta)) {
-        _screen->newReceiverPacketAvailable();
-    }
     const uint32_t tickCount = timeUs() / 1000;
     _tickCountDelta = tickCount - _tickCountPrevious;
-    if (_tickCountDelta < MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000) {
+    if (_tickCountDelta < _taskIntervalMicroSeconds / 1000) {
         return;
     }
 #endif // USE_FREERTOS
     _tickCountPrevious = tickCount;
+}
 
+void Main::loop()
+{
+#if !defined(USE_FREERTOS)
+    // simple round-robbin scheduling
+    _tasks.mainTask->loop();
+    _tasks.ahrsTask->loop();
+    _tasks.mpcTask->loop();
+    _tasks.receiverTask->loop();
+#endif
 #if defined(BACKCHANNEL_MAC_ADDRESS)
     _backchannel->update();
+#endif
+#if defined(USE_SCREEN) || defined(USE_BUTTONS)
+    const uint32_t tickCount = _tasks.mainTask->getTickCountPrevious();
 #endif
 #if defined(USE_SCREEN)
     // screen and button update tick counts are coprime, so screen and buttons are not normally updated in same loop
