@@ -20,6 +20,7 @@ AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusi
     _sensorFusionFilter(sensorFusionFilter),
     _IMU(imuSensor),
     _imuFilters(imuFilters),
+    _taskIntervalMicroSeconds(taskIntervalMicroSeconds),
     _taskIntervalSeconds(static_cast<float>(taskIntervalMicroSeconds)/1000.0F)
 #if defined(USE_AHRS_DATA_MUTEX) && defined(USE_FREERTOS)
     , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex

@@ -26,66 +26,19 @@
 #include <HardwareSerial.h>
 #endif
 
-#include <IMU_BMI270.h>
-#include <IMU_BNO085.h>
-#include <IMU_FiltersDefault.h>
-#include <IMU_LSM6DS3TR_C.h>
-#include <IMU_M5Stack.h>
-#include <IMU_M5Unified.h>
-#include <IMU_MPU6886.h>
+#include <MotorPairController.h>
 #include <MotorPairControllerTask.h>
+
 #if defined(USE_ESPNOW)
 #include <ReceiverAtomJoyStick.h>
 #endif
 #include <ReceiverNull.h>
 #include <ReceiverTask.h>
 #include <SV_Preferences.h>
-#include <SensorFusion.h>
 #include <TimeMicroSeconds.h>
 
 #if defined(FRAMEWORK_ESPIDF)
 #include <esp_timer.h>
-#endif
-
-/*!
-The ESP32S3 is dual core containing a Protocol CPU (known as CPU 0 or PRO_CPU) and an Application CPU (known as CPU 1 or APP_CPU).
-
-The core affinities, priorities, and tick intervals and priorities for the 3 application tasks (AHRS_TASK, MPC_TASK, and MAIN_LOOP_TASK).
-1. The AHRS_TASK must have a higher priority than the MAIN_LOOP_TASK.
-2. The MPC_TASK must have a higher priority than the MAIN_LOOP_TASK
-3. For single-processors the AHRS_TASK and the MPC_TASK must have the same priority.
-4. For dual-core processors
-    1. The AHRS_TASK runs on the Application CPU (CPU 1).
-    2. The MPC_TASK runs on the Protocol CPU (CPU 0).
-5. The MAIN_LOOP_TASK runs on the Application CPU (CPU 1) with priority 1 (this is set by the ESP32 Arduino framework).
-
-The AHRS_TASK and the MPC_TASK are deliberately chosen to run on different cores on ESP32 dual-core processors. This is so
-that a context switch between the AHRS_TASK and the MPC_TASK does not require saving the FPU(Floating Point Unit) registers
-(see https://docs.espressif.com/projects/esp-idf/en/v4.4.3/esp32/api-guides/freertos-smp.html#floating-point-usage).
-
-The Atom JoyStick transmits a packet every 10ms, so the MAIN_LOOP_TASK must run at least every 10m to ensure no dropped packets.
-Updating the screen takes approximately 50 ticks, so packets will be dropped if the screen is not in QRCODE mode.
-*/
-
-
-#if !defined(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS)
-enum { MAIN_LOOP_TASK_INTERVAL_MICROSECONDS = 10000 };
-#endif
-
-#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
-enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
-#endif
-
-#if !defined(MPC_TASK_INTERVAL_MICROSECONDS)
-#if defined(USE_IMU_M5_UNIFIED) || defined(USE_IMU_M5_STACK)
-    enum { MPC_TASK_INTERVAL_MICROSECONDS = 10000 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
-#else
-    enum { MPC_TASK_INTERVAL_MICROSECONDS = 5000 };
-#endif
-#endif
-
-#if !defined(RECEIVER_TASK_INTERVAL_MICROSECONDS)
-enum { RECEIVER_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
 /*!
@@ -143,10 +96,10 @@ void Main::setup()
     // Statically allocate and setup the receiver.
     static ReceiverAtomJoyStick receiver(&myMacAddress[0]);
     _receiver = &receiver;
-#if !defined(JOYSTICK_CHANNEL)
-    constexpr uint8_t JOYSTICK_CHANNEL {3};
+#if !defined(RECEIVER_CHANNEL)
+    constexpr uint8_t RECEIVER_CHANNEL {3};
 #endif
-    const esp_err_t espErr = receiver.setup(JOYSTICK_CHANNEL);
+    const esp_err_t espErr = receiver.setup(RECEIVER_CHANNEL);
     //delay(400); // delay to allow serial port to initialize before first print
     Serial.print("\r\n\r\n**** ESP-NOW Ready:");
     Serial.println(espErr);
@@ -207,7 +160,7 @@ void Main::setup()
 #endif // M5_STACK || M5_UNIFIED
 
     // And finally set up the AHRS and MotorPairController and Receiver tasks.
-    _tasks = setupTasks(*_ahrs, *_motorPairController, receiver, receiverWatcher);
+    setupTasks(_tasks, *_ahrs, *_motorPairController, receiver, receiverWatcher);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the telemetry scale factors
@@ -226,77 +179,6 @@ void Main::setup()
     );
     _backchannel = &backchannel;
 #endif
-}
-
-AHRS& Main::setupAHRS(void* i2cMutex)
-{
-    // Statically allocate the IMU according the the build flags
-// NOLINTBEGIN(misc-const-correctness)
-    [[maybe_unused]] static const uint32_t spiFrequency = 20000000;
-#if defined(USE_IMU_MPU6886_I2C)
-#if defined(M5_STACK)
-    const BUS_I2C::pins_t pins = IMU_I2C_PINS;
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, pins);
-#else
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, BUS_I2C::pins_t{.sda=static_cast<uint8_t>(M5.In_I2C.getSDA()), .scl=static_cast<uint8_t>(M5.In_I2C.getSCL()), .irq=BUS_I2C::IRQ_NOT_SET, .irqLevel=0});
-#endif
-#elif defined(USE_IMU_MPU6886_SPI)
-    const BUS_SPI::pins_t pins = IMU_SPI_PINS;
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, spiFrequency, BUS_SPI::SPI_INDEX_0, pins);
-#elif defined(USE_IMU_BMI270_I2C)
-    const BUS_I2C::pins_t pins = IMU_I2C_PINS;
-    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, pins);
-#elif defined(USE_IMU_BMI270_SPI)
-    const BUS_SPI::pins_t pins = IMU_SPI_PINS;
-    static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, spiFrequency, BUS_SPI::SPI_INDEX_0, pins);
-#elif defined(USE_IMU_BNO085_I2C)
-    const BUS_I2C::pins_t pins = IMU_I2C_PINS;
-    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, pins);
-#elif defined(USE_IMU_BNO085_SPI)
-    static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, spiFrequency, IMU_SPI_CS_PIN);
-#elif defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
-    const BUS_I2C::pins_t pins = IMU_I2C_PINS;
-    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, pins);
-#elif defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
-    const BUS_SPI::pins_t pins = IMU_SPI_PINS;
-    static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, spiFrequency, BUS_SPI::SPI_INDEX_0, pins);
-#elif defined(USE_IMU_M5_STACK)
-    static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER);
-#elif defined(USE_IMU_M5_UNIFIED)
-    static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER);
-#else
-    static_assert(false);
-#endif
-
-    //static_cast<IMU_Base&>(imuSensor).init(1000000 / AHRS_TASK_INTERVAL_MICROSECONDS, i2cMutex);
-    static_cast<IMU_Base&>(imuSensor).init(i2cMutex);
-
-    // Statically allocate the Sensor Fusion Filter
-    // Timings are for 240MHz ESP32-S3
-#if defined(USE_COMPLEMENTARY_FILTER)
-    // approx 130 microseconds per update
-    static ComplementaryFilter sensorFusionFilter;
-#elif defined(USE_MAHONY_FILTER)
-    // approx 10 microseconds per update
-    static MahonyFilter sensorFusionFilter;
-#elif defined(USE_VQF)
-    const float deltaT = static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F;
-    static VQF sensorFusionFilter(deltaT, deltaT, deltaT, true, false, false);
-#elif defined(USE_VQF_BASIC)
-    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
-#else
-    // approx 16 microseconds per update
-    static MadgwickFilter sensorFusionFilter;
-#endif
-    // statically allocate the IMU_Filters
-    constexpr float cutoffFrequency = 100.0F;
-    static IMU_FiltersDefault imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
-    //static IMU_FiltersDefault imuFilters;
-// NOLINTEND(misc-const-correctness)
-
-    // Statically allocate the AHRS object
-    static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imuSensor, imuFilters);
-    return ahrs;
 }
 
 void Main::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
@@ -383,156 +265,44 @@ void Main::loadPreferences(SV_Preferences& preferences, MotorPairController& mot
     }
 }
 
-Main::tasks_t Main::setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher)
-{
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
-    static AHRS_Task ahrsTask(AHRS_TASK_INTERVAL_MICROSECONDS, ahrs);
-    static MotorPairControllerTask mpcTask(MPC_TASK_INTERVAL_MICROSECONDS, motorPairController);
-    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, receiverWatcher);
-
-    const tasks_t ret {
-        .mainTask = &mainTask,
-        .ahrsTask = &ahrsTask,
-        .mpcTask = &mpcTask,
-        .receiverTask = &receiverTask
-    };
-
-#if defined(USE_FREERTOS)
-    enum { AHRS_TASK_PRIORITY = 5, MPC_TASK_PRIORITY = 4, RECEIVER_TASK_PRIORITY = 3, MSP_TASK_PRIORITY = 2 };
-
-enum { MPC_TASK_CORE = PRO_CPU_NUM };
-enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
-#if defined(APP_CPU_NUM) // The processor has two cores
-    enum { AHRS_TASK_CORE = APP_CPU_NUM }; // AHRS should be the only task running on the second core
-#else // single core processor
-    enum { AHRS_TASK_CORE = PRO_CPU_NUM };
-#endif
-
-#if !defined(FRAMEWORK_ESPIDF)
-    std::array<char, 128> buf;
-#endif
-
-#if defined(USE_ARDUINO_ESP32)
-    // The main task is set up by the framework, so just print its details.
-    // It has name "loopTask" and priority 1.
-    const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
-    const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
-    const char* taskName = pcTaskGetName(taskHandle);
-    sprintf(&buf[0], "\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
-    Serial.print(&buf[0]);
-#endif
-
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static TaskBase::parameters_t ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &ahrsTask,
-    };
-    enum { AHRS_TASK_STACK_DEPTH = 4096 };
-    static StaticTask_t ahrsTaskBuffer;
-    static std::array <StackType_t, AHRS_TASK_STACK_DEPTH> ahrsStack;
-    const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(
-        AHRS_Task::Task,
-        "AHRS_Task",
-        AHRS_TASK_STACK_DEPTH,
-        &ahrsTaskParameters,
-        AHRS_TASK_PRIORITY,
-        &ahrsStack[0],
-        &ahrsTaskBuffer,
-        AHRS_TASK_CORE
-    );
-    assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
-#if !defined(FRAMEWORK_ESPIDF)
-    sprintf(&buf[0], "**** AHRS_Task,      core:%d, priority:%d, task interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_INTERVAL_MICROSECONDS / 1000);
-    Serial.print(&buf[0]);
-#endif
-
-    static TaskBase::parameters_t mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &mpcTask,
-    };
-    enum { MPC_TASK_STACK_DEPTH = 4096 };
-    static StaticTask_t mpcTaskBuffer;
-    static std::array<StackType_t, MPC_TASK_STACK_DEPTH> mpcStack;
-    const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairControllerTask::Task,
-        "MPC_Task",
-        MPC_TASK_STACK_DEPTH,
-        &mpcTaskParameters,
-        MPC_TASK_PRIORITY,
-        &mpcStack[0],
-        &mpcTaskBuffer,
-        MPC_TASK_CORE
-    );
-    assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
-#if !defined(FRAMEWORK_ESPIDF)
-    sprintf(&buf[0], "**** MPC_Task,       core:%d, priority:%d, task interval:%dms\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_INTERVAL_MICROSECONDS / 1000);
-    Serial.print(&buf[0]);
-#endif
-
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static TaskBase::parameters_t receiverTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &receiverTask,
-    };
-    enum { RECEIVER_TASK_STACK_DEPTH = 4096 };
-    static std::array<StackType_t, RECEIVER_TASK_STACK_DEPTH> receiverStack;
-    static StaticTask_t receiverTaskBuffer;
-    const TaskHandle_t receiverTaskHandle = xTaskCreateStaticPinnedToCore(
-        ReceiverTask::Task,
-        "Receiver_Task",
-        RECEIVER_TASK_STACK_DEPTH,
-        &receiverTaskParameters,
-        RECEIVER_TASK_PRIORITY,
-        &receiverStack[0],
-        &receiverTaskBuffer,
-        RECEIVER_TASK_CORE
-    );
-    assert(receiverTaskHandle != nullptr && "Unable to create ReceiverTask task.");
-    sprintf(&buf[0], "**** RECEIVER_Task,  core:%d, priority:%d, task interval:%dms\r\n\r\n", RECEIVER_TASK_CORE, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_INTERVAL_MICROSECONDS / 1000);
-    Serial.print(&buf[0]);
-
-#endif // USE_FREERTOS
-    return ret;
-}
-
-/*!
-The main loop handles:
-1. Input from the receiver(joystick)
-2. Input from the backchannel(PID tuning).
-3. Input from the buttons
-4. Output to the backchannel(telemetry).
-5. Output to the screen
-
-The IMU(Inertial Measurement Unit) is read in the AHRS(Attitude and Heading Reference System) task.
-The motors are controlled in the MotorPairController task.
-*/
 void MainTask::loop()
 {
 #if defined(USE_FREERTOS)
     const TickType_t tickCount = xTaskGetTickCount();
     _tickCountDelta = tickCount - _tickCountPrevious;
-#else
-    const uint32_t tickCount = timeUs() / 1000;
-    _tickCountDelta = tickCount - _tickCountPrevious;
-    if (_tickCountDelta < _taskIntervalMicroSeconds / 1000) {
-        return;
-    }
-#endif // USE_FREERTOS
     _tickCountPrevious = tickCount;
+#endif // USE_FREERTOS
 }
 
+/*!
+The main loop handles:
+1. Input from the backchannel(PID tuning).
+2. Input from the buttons
+3. Output to the backchannel(telemetry).
+4. Output to the screen
+
+The IMU(Inertial Measurement Unit) is read in the AHRS(Attitude and Heading Reference System) task.
+The motors are controlled in the MotorPairController task.
+The receiver (joystick) values are obtained in the Receiver task.
+*/
 void Main::loop()
 {
-#if !defined(USE_FREERTOS)
+#if defined(USE_FREERTOS)
+    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000));
+    [[maybe_unused]] const TickType_t tickCount = xTaskGetTickCount();
+#else
     // simple round-robbin scheduling
     _tasks.mainTask->loop();
     _tasks.ahrsTask->loop();
     _tasks.mpcTask->loop();
     _tasks.receiverTask->loop();
+    [[maybe_unused]] const uint32_t tickCount = timeUs() / 1000;
 #endif
+
 #if defined(BACKCHANNEL_MAC_ADDRESS)
     _backchannel->update();
 #endif
-#if defined(USE_SCREEN) || defined(USE_BUTTONS)
-    const uint32_t tickCount = _tasks.mainTask->getTickCountPrevious();
-#endif
+
 #if defined(USE_SCREEN)
     // screen and button update tick counts are coprime, so screen and buttons are not normally updated in same loop
     // update the screen every 101 ticks (0.1 seconds)
@@ -547,12 +317,5 @@ void Main::loop()
         _buttonsTickCount = tickCount;
         _buttons->update();
     }
-#endif
-
-#if defined(USE_FREERTOS)
-    // Delay task to yield to other tasks.
-    // Most of the time this task does nothing, but when we get a packet from the receiver we want to process it immediately,
-    // hence the short delay
-    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000));
 #endif
 }

@@ -70,6 +70,7 @@ public:
 
     const IMU_FiltersBase::filters_t& getFilters() const { return _imuFilters.getFilters(); }
     void setFilters(const IMU_FiltersBase::filters_t& filters);
+    inline uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
 public:
@@ -87,6 +88,7 @@ private:
     uint32_t _sensorFusionFilterInitializing {true};
     Quaternion _orientation {};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
+    uint32_t _taskIntervalMicroSeconds;
     float _taskIntervalSeconds;
     uint32_t _tickCountDelta {};
 

@@ -14,6 +14,27 @@ class SV_Preferences;
 class ScreenBase;
 class ButtonsBase;
 
+#if !defined(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS)
+enum { MAIN_LOOP_TASK_INTERVAL_MICROSECONDS = 10000 };
+#endif
+
+#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
+enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
+
+#if !defined(MPC_TASK_INTERVAL_MICROSECONDS)
+#if defined(USE_IMU_M5_UNIFIED) || defined(USE_IMU_M5_STACK)
+    enum { MPC_TASK_INTERVAL_MICROSECONDS = 10000 }; // M5Stack IMU code blocks I2C bus for extended periods, so MPC_TASK must be set to run slower.
+#else
+    enum { MPC_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
+#endif
+
+#if !defined(RECEIVER_TASK_INTERVAL_MICROSECONDS)
+enum { RECEIVER_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
+
+
 class MainTask : public TaskBase {
 public:
     explicit MainTask(uint32_t taskIntervalMicroSeconds) : TaskBase(taskIntervalMicroSeconds) {}
@@ -37,9 +58,9 @@ private:
         MotorPairControllerTask* mpcTask;
         ReceiverTask* receiverTask;
     };
-    tasks_t setupTasks(AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
-private:
+    void setupTasks(tasks_t& tasks, AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
     tasks_t _tasks {};
+private:
     AHRS* _ahrs {nullptr};
     MotorPairController* _motorPairController {};
     ReceiverBase* _receiver {nullptr};
