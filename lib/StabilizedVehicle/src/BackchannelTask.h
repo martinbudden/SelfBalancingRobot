@@ -6,7 +6,7 @@ class BackchannelBase;
 
 class BackchannelTask : public TaskBase {
 public:
-    BackchannelTask(BackchannelBase& backchannel);
+    explicit BackchannelTask(BackchannelBase& backchannel);
 private:
     // class is not copyable or moveable
     BackchannelTask(const BackchannelTask&) = delete;

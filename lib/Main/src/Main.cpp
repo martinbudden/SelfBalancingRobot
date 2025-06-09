@@ -34,6 +34,7 @@
 #include <ReceiverNull.h>
 #include <ReceiverTask.h>
 #include <SV_Preferences.h>
+#include <SV_Tasks.h>
 #include <TimeMicroSeconds.h>
 #include <VehicleControllerTask.h>
 
@@ -160,10 +161,12 @@ void Main::setup()
 #endif // M5_STACK || M5_UNIFIED
 
     // Set up the AHRS and MotorPairController and Receiver tasks.
-    _tasks.mainTask = setupMainTask();
-    _tasks.ahrsTask = setupTask(*_ahrs);
-    _tasks.vehicleControllerTask = setupTask(*_motorPairController);
-    _tasks.receiverTask = setupTask(receiver, receiverWatcher);
+    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
+    _tasks.mainTask = &mainTask;
+    Tasks::reportMainTask();
+    _tasks.ahrsTask = Tasks::setupTask(*_ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
+    _tasks.vehicleControllerTask = Tasks::setupTask(*_motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
+    _tasks.receiverTask = Tasks::setupTask(receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE, RECEIVER_TASK_INTERVAL_MICROSECONDS);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the telemetry scale factors
@@ -182,7 +185,7 @@ void Main::setup()
         preferences
     );
     _backchannel = &backchannel;
-    _tasks.backchannelTask = setupTask(backchannel);
+    _tasks.backchannelTask = Tasks::setupTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
 #endif
 }
 

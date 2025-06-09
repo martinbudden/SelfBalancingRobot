@@ -12,10 +12,6 @@
     },
     "dependencies": [
         {
-            "name": "martinbudden/IMU",
-            "version": "^0.8.1"
-        },
-        {
             "name": "martinbudden/VectorQuaternionMatrix",
             "version": "^0.3.0"
         },
@@ -28,8 +24,16 @@
             "version": "^0.2.0"
         },
         {
+            "name": "martinbudden/IMU",
+            "version": "^0.8.1"
+        },
+        {
             "name": "martinbudden/SensorFusion",
             "version": "^0.2.0"
+        },
+        {
+            "name": "martinbudden/Receiver",
+            "version": "^0.3.2"
         }
     ],
     "license": "MIT",

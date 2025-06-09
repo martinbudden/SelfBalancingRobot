@@ -1,6 +1,6 @@
 #include "ReceiverTask.h"
-#include <ReceiverBase.h>
-#include <TimeMicroSeconds.h>
+#include "ReceiverBase.h"
+#include "TimeMicroSeconds.h"
 
 ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroSeconds, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher) :
     TaskBase(taskIntervalMicroSeconds),

@@ -2,6 +2,10 @@
 
 #include <TaskBase.h>
 
+#if defined(USE_FREERTOS)
+#include <freertos/FreeRTOS.h>
+#endif
+
 class AHRS;
 class AHRS_Task;
 class BackchannelBase;
@@ -36,6 +40,33 @@ enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
 #if !defined(RECEIVER_TASK_INTERVAL_MICROSECONDS)
 enum { RECEIVER_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
+#if !defined(BACKCHANNEL_TASK_INTERVAL_MICROSECONDS)
+enum { BACKCHANNEL_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
+
+enum {
+    AHRS_TASK_PRIORITY = 6,
+    MPC_TASK_PRIORITY = 5,
+    RECEIVER_TASK_PRIORITY = MPC_TASK_PRIORITY,
+    BACKCHANNEL_TASK_PRIORITY = 3,
+    MSP_TASK_PRIORITY = 2
+};
+
+#if !defined(PRO_CPU_NUM)
+#define PRO_CPU_NUM (0)
+#endif
+#if !defined(APP_CPU_NUM)
+// the processor has only one core
+#define APP_CPU_NUM PRO_CPU_NUM
+#endif
+
+enum {
+    AHRS_TASK_CORE = APP_CPU_NUM, // AHRS should be the only task running on the second core
+    MPC_TASK_CORE = PRO_CPU_NUM,
+    RECEIVER_TASK_CORE = PRO_CPU_NUM,
+    BACKCHANNEL_TASK_CORE = PRO_CPU_NUM,
+    MSP_TASK_CORE = PRO_CPU_NUM,
+};
 
 
 class MainTask : public TaskBase {
@@ -62,11 +93,6 @@ private:
         ReceiverTask* receiverTask;
         BackchannelTask* backchannelTask;
     };
-    MainTask* setupMainTask();
-    AHRS_Task* setupTask(AHRS& ahrs);
-    VehicleControllerTask* setupTask(VehicleControllerBase& vehicleController);
-    ReceiverTask* setupTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
-    BackchannelTask* setupTask(BackchannelBase& backchannel);
 private:
     tasks_t _tasks {};
     AHRS* _ahrs {nullptr};
