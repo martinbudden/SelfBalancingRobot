@@ -34,7 +34,7 @@ void test_motor_pair_controller()
 
     mpc.motorsSwitchOn();
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
-    ahrs.setSensorFusionFilterInitializing(false);
+    ahrs.setSensorFusionInitializing(false);
     mpc.motorsSwitchOn();
     TEST_ASSERT_TRUE(mpc.motorsIsOn());
 

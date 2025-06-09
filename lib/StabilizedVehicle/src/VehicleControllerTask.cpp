@@ -1,12 +1,12 @@
-#include "MotorPairController.h"
-#include "MotorPairControllerTask.h"
+#include "VehicleControllerBase.h"
+#include "VehicleControllerTask.h"
 
 #include "TimeMicroSeconds.h"
 
 /*!
 loop() function for when not using FREERTOS
 */
-void MotorPairControllerTask::loop()
+void VehicleControllerTask::loop()
 {
     const uint32_t timeMicroSeconds = timeUs();
     _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
@@ -15,14 +15,14 @@ void MotorPairControllerTask::loop()
         _timeMicroSecondsPrevious = timeMicroSeconds;
         const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
         const uint32_t tickCount = timeUs() / 1000;
-        _mpc.loop(deltaT, tickCount);
+        _vehicleController.loop(deltaT, tickCount);
     }
 }
 
 /*!
 Task function for the MotorPairController. Sets up and runs the task loop() function.
 */
-[[noreturn]] void MotorPairControllerTask::task()
+[[noreturn]] void VehicleControllerTask::task()
 {
 #if defined(USE_FREERTOS)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
@@ -43,7 +43,7 @@ Task function for the MotorPairController. Sets up and runs the task loop() func
 
         if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
-            _mpc.loop(deltaT, tickCount);
+            _vehicleController.loop(deltaT, tickCount);
         }
     }
 #else
@@ -54,10 +54,9 @@ Task function for the MotorPairController. Sets up and runs the task loop() func
 /*!
 Wrapper function for MotorPairController::Task with the correct signature to be used in xTaskCreate.
 */
-[[noreturn]] void MotorPairControllerTask::Task(void* arg)
+[[noreturn]] void VehicleControllerTask::Task(void* arg)
 {
     const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
-    auto* mpcTask = static_cast<MotorPairControllerTask*>(parameters->task); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
-    mpcTask->task();
+    static_cast<VehicleControllerTask*>(parameters->task)->task(); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 }

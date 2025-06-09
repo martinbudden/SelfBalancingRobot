@@ -7,19 +7,22 @@
 #include <cmath>
 
 
-// Either the USE_AHRS_DATA_MUTEX or USE_AHRS_DATA_CRITICAL_SECTION build flag can be set (but not both).
-// The critical section variant seems to give better performance.
-#if defined(USE_AHRS_DATA_MUTEX) && defined(USE_AHRS_DATA_CRITICAL_SECTION)
-static_assert(false);
-#endif
+/*!
+Construction, with sensorFusionFilterRequiresInitializing set to true by default (as is required by Madgwick filter).
+*/
+AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters) :
+    AHRS(taskIntervalMicroSeconds, sensorFusionFilter, imuSensor, imuFilters, SENSOR_FUSION_REQUIRES_INITIALIZATION)
+{
+}
 
 /*!
 Constructor: sets the sensor fusion filter, IMU, and IMU filters
 */
-AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters) :
+AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, bool sensorFusionRequiresInitializing) :
     _sensorFusionFilter(sensorFusionFilter),
     _IMU(imuSensor),
     _imuFilters(imuFilters),
+    _sensorFusionRequiresInitializing(sensorFusionRequiresInitializing),
     _taskIntervalMicroSeconds(taskIntervalMicroSeconds),
     _taskIntervalSeconds(static_cast<float>(taskIntervalMicroSeconds)/1000.0F)
 #if defined(USE_AHRS_DATA_MUTEX) && defined(USE_FREERTOS)
@@ -31,7 +34,7 @@ AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusi
     _IMU.setInterruptDriven();
 #endif
 
-    setSensorFusionFilterInitializing(true);
+    setSensorFusionInitializing(sensorFusionRequiresInitializing);
 
 #if defined(USE_FREERTOS)
 
@@ -198,6 +201,11 @@ void AHRS::setAccOffsetMapped(const IMU_Base::xyz_int32_t& offset)
     _IMU.setAccOffset(mapOffset(offset, IMU_Base::axisOrderInverse(_IMU.getAxisOrder())));
 }
 
+void AHRS::setFilters(const IMU_FiltersBase::filters_t& filters)
+{
+    _imuFilters.setFilters(filters, _taskIntervalSeconds);
+}
+
 Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
 {
     LOCK_AHRS_DATA();
@@ -209,9 +217,14 @@ Quaternion AHRS::getOrientationUsingLock(bool& updatedSinceLastRead) const
     return ret;
 }
 
-void AHRS::setFilters(const IMU_FiltersBase::filters_t& filters)
+Quaternion AHRS::getOrientationUsingLock() const
 {
-    _imuFilters.setFilters(filters, _taskIntervalSeconds);
+    LOCK_AHRS_DATA();
+    _orientationUpdatedSinceLastRead = false;
+    const Quaternion ret = _orientation;
+    UNLOCK_AHRS_DATA();
+
+    return ret;
 }
 
 /*!
@@ -241,6 +254,20 @@ AHRS::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
     return ret;
 }
 
+AHRS::data_t AHRS::getAhrsDataUsingLock() const
+{
+    LOCK_AHRS_DATA();
+    _ahrsDataUpdatedSinceLastRead = false;
+    const data_t ret {
+        .tickCountDelta = _tickCountDelta,
+        .gyroRPS = _accGyroRPS_Locked.gyroRPS,
+        .acc = _accGyroRPS_Locked.acc
+    };
+    UNLOCK_AHRS_DATA();
+
+    return ret;
+}
+
 /*!
 Returns AHRS data without clearing the _ahrsDataUpdatedSinceLastRead flag.
 */
@@ -259,7 +286,6 @@ AHRS::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
 
 void AHRS::checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orientation)
 {
-#if defined(USE_MADGWICK_FILTER)
     constexpr float twoDegreesInRadians = 2.0F * Quaternion::degreesToRadians;
 
     // NOTE COORDINATE TRANSFORM: Madgwick filter uses Euler angles where roll is defined as rotation around the x-axis and pitch is rotation around the y-axis.
@@ -272,12 +298,7 @@ void AHRS::checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orie
     //Serial.printf("acc:P%5.1f mag:P%5.1f         diff:%5.1f\r\n", accPitchAngleRadians/Quaternion::degreesToRadians, madgwickRollAngleRadians/Quaternion::degreesToRadians, fabsf(accPitchAngleRadians - madgwickRollAngleRadians)/Quaternion::degreesToRadians);
     if (fabsf(accPitchAngleRadians - madgwickRollAngleRadians) < twoDegreesInRadians && accPitchAngleRadians != madgwickRollAngleRadians) {
         // the angles have converged to within 2 degrees, so we can reduce the gain.
-        setSensorFusionFilterInitializing(false);
+        setSensorFusionInitializing(false);
         _sensorFusionFilter.setFreeParameters(0.615F, 0.0F); // corresponds to gyro measurement error of 15*2.7 degrees/second, as discussed by Madgwick
     }
-#else
-    (void)acc;
-    (void)orientation;
-    setSensorFusionFilterInitializing(false);
-#endif
 }

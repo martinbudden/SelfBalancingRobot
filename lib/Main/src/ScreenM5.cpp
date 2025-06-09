@@ -104,7 +104,7 @@ void ScreenM5::setScreenMode(ScreenM5::mode_t screenMode)
         }
     } else {
         M5.Lcd.setRotation(_screenMode + _screenRotationOffset);
-        updateFull();
+        updateScreenAndTemplate();
     }
 }
 
@@ -142,8 +142,6 @@ void ScreenM5::updateTemplate128x128() const
 {
     M5.Lcd.setCursor(0, 10);
     displayEUI("M:", _receiver.getMyEUI());
-    M5.Lcd.setCursor(0, 20);
-    displayEUI("J:", _receiver.getPrimaryPeerEUI());
 
     int32_t yPos = 35;
     M5.Lcd.setCursor(0, yPos);
@@ -173,11 +171,16 @@ void ScreenM5::updateTemplate128x128() const
     M5.Lcd.printf("M:");
 
     M5.Lcd.setCursor(60, 118);
-    M5.Lcd.printf("D:");
+    M5.Lcd.printf("I:");
 }
 
 void ScreenM5::updateReceivedData128x128() const
 {
+    if (!_remoteEUI_updated) {
+        M5.Lcd.setCursor(0, 20);
+        displayEUI("J:", _receiver.getPrimaryPeerEUI());
+    }
+
     // M5StickC
     int32_t yPos = 95;
     const ReceiverBase::controls_t controls = _receiver.getControls();
@@ -218,15 +221,13 @@ void ScreenM5::update128x128(const TD_AHRS::data_t& ahrsData) const
     M5.Lcd.print(_motorPairController.motorsIsOn() ? "ON " : "OFF");
 
     M5.Lcd.setCursor(72, 118);
-    M5.Lcd.printf("%2d  ", _receiver.getDroppedPacketCountDelta());
+    M5.Lcd.printf("%2d  ", _receiver.getTickCountDelta());
 }
 
 void ScreenM5::updateTemplate80x160() const
 {
     M5.Lcd.setCursor(0, 10);
     displayEUI_Compact("", _receiver.getMyEUI());
-    M5.Lcd.setCursor(0, 20);
-    displayEUI_Compact("", _receiver.getPrimaryPeerEUI());
 
     int32_t yPos = 30;
     M5.Lcd.setCursor(0, yPos);
@@ -252,11 +253,15 @@ void ScreenM5::updateTemplate80x160() const
     M5.Lcd.printf("M:");
 
     M5.Lcd.setCursor(40, 150);
-    M5.Lcd.printf("D:");
+    M5.Lcd.printf("I:");
 }
 
 void ScreenM5::updateReceivedData80x160() const
 {
+    if (!_remoteEUI_updated) {
+        M5.Lcd.setCursor(0, 20);
+        displayEUI_Compact("", _receiver.getPrimaryPeerEUI());
+    }
     // M5StickC
     int32_t yPos = 90;
     M5.Lcd.setCursor(12, yPos);
@@ -331,15 +336,13 @@ void ScreenM5::update80x160(const TD_AHRS::data_t& ahrsData) const
     M5.Lcd.print(_motorPairController.motorsIsOn() ? "ON " : "OFF");
 
     M5.Lcd.setCursor(52, 150);
-    M5.Lcd.printf("%2d  ", _receiver.getDroppedPacketCountDelta());
+    M5.Lcd.printf("%2d  ", _receiver.getTickCountDelta());
 }
 
 void ScreenM5::updateTemplate135x240() const
 {
     M5.Lcd.setCursor(0, 0);
     displayEUI("M:", _receiver.getMyEUI());
-    M5.Lcd.setCursor(0, 20);
-    displayEUI("J:", _receiver.getPrimaryPeerEUI());
 
     int32_t yPos = 45;
     M5.Lcd.setCursor(0, yPos);
@@ -417,8 +420,6 @@ void ScreenM5::updateTemplate320x240() const
 {
     M5.Lcd.setCursor(0, 0);
     displayEUI("MAC:", _receiver.getMyEUI());
-    M5.Lcd.setCursor(0, 20);
-    displayEUI("REM:", _receiver.getPrimaryPeerEUI());
 
     int32_t yPos = 45;
     M5.Lcd.setCursor(0, yPos);
@@ -446,7 +447,7 @@ void ScreenM5::updateTemplate320x240() const
 
     yPos += 20;
     M5.Lcd.setCursor(160, yPos);
-    M5.Lcd.printf("Dropped:");
+    M5.Lcd.printf("Interval");
 
 #if defined(MOTORS_HAVE_ENCODERS)
     yPos = 180;
@@ -476,6 +477,11 @@ void ScreenM5::updateTemplate320x240() const
 
 void ScreenM5::updateReceivedData320x240() const
 {
+    if (!_remoteEUI_updated) {
+        M5.Lcd.setCursor(0, 20);
+        displayEUI("REM:", _receiver.getPrimaryPeerEUI());
+    }
+
     int32_t yPos = 110;
 
     M5.Lcd.setCursor(20, yPos);
@@ -498,7 +504,7 @@ void ScreenM5::updateReceivedData320x240() const
     M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == ReceiverAtomJoyStick::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 
     M5.Lcd.setCursor(255, yPos);
-    M5.Lcd.printf("%3d", _receiver.getDroppedPacketCountDelta());
+    M5.Lcd.printf("%3d", _receiver.getTickCountDelta());
 }
 
 void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
@@ -555,7 +561,6 @@ void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
 
 void ScreenM5::updateTemplate()
 {
-    _templateIsUpdated = true;
     M5.Lcd.fillScreen(TFT_BLACK);
 
     switch (_screenSize) {
@@ -572,9 +577,10 @@ void ScreenM5::updateTemplate()
     default:
         updateTemplate320x240();
     }
+    _templateIsUpdated = true;
 }
 
-void ScreenM5::updateReceivedData() const
+void ScreenM5::updateReceivedData()
 {
     switch (_screenSize) {
     case SIZE_128x128:
@@ -590,6 +596,7 @@ void ScreenM5::updateReceivedData() const
     default:
         updateReceivedData320x240();
     }
+    _remoteEUI_updated = true;
 }
 
 void ScreenM5::updateAHRS_Data() const

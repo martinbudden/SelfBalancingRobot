@@ -1,6 +1,15 @@
 #pragma once
 
 #include <PIDF.h>
+
+// ESP32 and/or ARDUINO_ARCH_ESP32 are defined by Arduino in platform.txt
+#if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)
+#if !defined(USE_ARDUINO_ESP32_PREFERENCES)
+#define USE_ARDUINO_ESP32_PREFERENCES
+#endif
+#endif
+
+
 #if defined(USE_ARDUINO_ESP32_PREFERENCES)
 #include <Preferences.h>
 #endif

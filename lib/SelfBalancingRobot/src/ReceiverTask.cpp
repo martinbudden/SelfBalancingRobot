@@ -41,20 +41,23 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
 [[noreturn]] void ReceiverTask::task()
 {
 #if defined(USE_FREERTOS)
+#if defined(RECEIVER_TASK_IS_INTERRUPT_DRIVEN)
+    while (true) {
+        _receiver.WAIT_FOR_DATA_RECEIVED();
+        loop();
+    }
+#else
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
     const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
     assert(taskIntervalTicks > 0 && "ReceiverTask taskIntervalTicks is zero.");
     _previousWakeTimeTicks = xTaskGetTickCount();
 
     while (true) {
-#if defined(RECEIVER_TASK_IS_INTERRUPT_DRIVEN)
-        _receiver.WAIT_FOR_DATA_RECEIVED();
-#else
         // delay until the end of the next taskIntervalTicks
         vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
-#endif // RECEIVER_TASK_IS_INTERRUPT_DRIVEN
         loop();
     }
+#endif // RECEIVER_TASK_IS_INTERRUPT_DRIVEN
 #else
     while (true) {}
 #endif // USE_FREERTOS

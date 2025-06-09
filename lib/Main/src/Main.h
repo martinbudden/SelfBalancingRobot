@@ -4,13 +4,16 @@
 
 class AHRS;
 class AHRS_Task;
-class Backchannel;
+class BackchannelBase;
+class BackchannelTask;
 class MotorPairController;
-class MotorPairControllerTask;
 class ReceiverBase;
 class ReceiverTask;
 class ReceiverWatcher;
 class SV_Preferences;
+class VehicleControllerBase;
+class VehicleControllerTask;
+
 class ScreenBase;
 class ButtonsBase;
 
@@ -55,16 +58,21 @@ private:
     struct tasks_t {
         MainTask* mainTask;
         AHRS_Task* ahrsTask;
-        MotorPairControllerTask* mpcTask;
+        VehicleControllerTask* vehicleControllerTask;
         ReceiverTask* receiverTask;
+        BackchannelTask* backchannelTask;
     };
-    void setupTasks(tasks_t& tasks, AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
-    tasks_t _tasks {};
+    MainTask* setupMainTask();
+    AHRS_Task* setupTask(AHRS& ahrs);
+    VehicleControllerTask* setupTask(VehicleControllerBase& vehicleController);
+    ReceiverTask* setupTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
+    BackchannelTask* setupTask(BackchannelBase& backchannel);
 private:
+    tasks_t _tasks {};
     AHRS* _ahrs {nullptr};
     MotorPairController* _motorPairController {};
     ReceiverBase* _receiver {nullptr};
-    Backchannel* _backchannel {nullptr};
+    BackchannelBase* _backchannel {nullptr};
 
     uint32_t _screenTickCount {0};
     ScreenBase* _screen {nullptr};

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MotorMixer.h"
+#include "MotorPairMixer.h"
 #include <Filters.h>
 #include <PIDF.h>
 #include <VehicleControllerBase.h>
@@ -56,12 +56,12 @@ public:
     };
     static constexpr float NOT_SET = FLT_MAX;
 public:
-    inline bool motorsIsOn() const { return _mixer.motorsIsOn(); }
+    inline bool motorsIsOn() const { return _motorPairMixer.motorsIsOn(); }
     void motorsSwitchOff();
     void motorsSwitchOn();
     void motorsToggleOnOff();
-    inline bool motorsIsDisabled() const { return _mixer.motorsIsDisabled(); }
-    inline uint32_t getOutputPowerTimeMicroSeconds() const { return _mixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
+    inline bool motorsIsDisabled() const { return _motorPairMixer.motorsIsDisabled(); }
+    inline uint32_t getOutputPowerTimeMicroSeconds() const { return _motorPairMixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
 
     inline control_mode_e getControlMode() const { return _controlMode; }
     void setControlMode(control_mode_e controlMode);
@@ -88,7 +88,7 @@ public:
 
     void motorsResetEncodersToZero();
 public:
-    void loop(float deltaT, uint32_t tickCount);
+    virtual void loop(float deltaT, uint32_t tickCount) override;
 public:
     static float mapYawStick(float yawStick);
     void updateSetpoints(float deltaT, uint32_t tickCount);
@@ -102,8 +102,8 @@ private:
 private:
     const AHRS& _ahrs;
     ReceiverBase& _receiver;
-    MotorPairBase& _motors; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
-    MotorMixer _mixer;
+    MotorPairBase& _motorPair; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
+    MotorPairMixer _motorPairMixer;
     control_mode_e _controlMode;
 
     int32_t _onOffSwitchPressed {false};

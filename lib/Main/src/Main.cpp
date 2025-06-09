@@ -22,12 +22,11 @@
 #include <AHRS_Task.h>
 
 #if defined(USE_ESPNOW)
-#include <ESPNOW_Backchannel.h>
+#include <BackchannelESPNOW.h>
 #include <HardwareSerial.h>
 #endif
 
 #include <MotorPairController.h>
-#include <MotorPairControllerTask.h>
 
 #if defined(USE_ESPNOW)
 #include <ReceiverAtomJoyStick.h>
@@ -36,6 +35,7 @@
 #include <ReceiverTask.h>
 #include <SV_Preferences.h>
 #include <TimeMicroSeconds.h>
+#include <VehicleControllerTask.h>
 
 #if defined(FRAMEWORK_ESPIDF)
 #include <esp_timer.h>
@@ -137,7 +137,7 @@ void Main::setup()
     static ScreenM5 screen(*_ahrs, *_motorPairController, receiver);
     ReceiverWatcher* receiverWatcher =  &screen;
     _screen = &screen;
-    _screen->updateFull(); // Update the as soon as we can, to minimize the time the screen is blank
+    _screen->updateScreenAndTemplate(); // Update the as soon as we can, to minimize the time the screen is blank
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(*_motorPairController, receiver, _screen);
@@ -159,8 +159,11 @@ void Main::setup()
     ReceiverWatcher* receiverWatcher =  nullptr; // no screen available
 #endif // M5_STACK || M5_UNIFIED
 
-    // And finally set up the AHRS and MotorPairController and Receiver tasks.
-    setupTasks(_tasks, *_ahrs, *_motorPairController, receiver, receiverWatcher);
+    // Set up the AHRS and MotorPairController and Receiver tasks.
+    _tasks.mainTask = setupMainTask();
+    _tasks.ahrsTask = setupTask(*_ahrs);
+    _tasks.vehicleControllerTask = setupTask(*_motorPairController);
+    _tasks.receiverTask = setupTask(receiver, receiverWatcher);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the telemetry scale factors
@@ -170,7 +173,8 @@ void Main::setup()
     static Backchannel backchannel(
         receiver.getESPNOW_Transceiver(),
         backchannelMacAddress,
-        *_tasks.mpcTask,
+        *_tasks.vehicleControllerTask,
+        *_motorPairController,
         *_tasks.ahrsTask,
         *_tasks.mainTask,
         *_receiver,
@@ -178,6 +182,7 @@ void Main::setup()
         preferences
     );
     _backchannel = &backchannel;
+    _tasks.backchannelTask = setupTask(backchannel);
 #endif
 }
 
@@ -294,13 +299,14 @@ void Main::loop() // NOLINT(readability-make-member-function-const)
     // simple round-robbin scheduling
     _tasks.mainTask->loop();
     _tasks.ahrsTask->loop();
-    _tasks.mpcTask->loop();
+    _tasks.vehicleControllerTask->loop();
     _tasks.receiverTask->loop();
     [[maybe_unused]] const uint32_t tickCount = timeUs() / 1000;
 #endif
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)
-    _backchannel->update();
+    //_backchannel->update();
+    _backchannel->sendTelemetryPacket();
 #endif
 
 #if defined(USE_SCREEN)

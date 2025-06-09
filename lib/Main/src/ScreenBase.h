@@ -1,8 +1,9 @@
 #pragma once
 
+#include <ReceiverBase.h>
+
 class AHRS;
 class MotorPairController;
-class ReceiverBase;
 
 
 class ScreenBase  : public ReceiverWatcher {
@@ -13,7 +14,7 @@ public:
 public:
     virtual void nextScreenMode() = 0;
     virtual void update() = 0;
-    void updateFull() { _templateIsUpdated = false; newReceiverPacketAvailable(); update(); }
+    void updateScreenAndTemplate() { _templateIsUpdated = false; update(); }
     inline int getScreenSizeX() const { return _screenSizeX; }
     inline int getScreenSizeY() const { return _screenSizeY; }
 
@@ -29,4 +30,5 @@ protected:
     int _screenSizeY {};
     int _newReceiverPacketAvailable {};
     int _templateIsUpdated {false};
+    int _remoteEUI_updated {false};
 };

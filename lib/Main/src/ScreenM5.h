@@ -34,23 +34,24 @@ private:
     inline mode_t getScreenMode() const { return _screenMode; }
     screen_size_e screenSize();
 
-    void updateTemplate();
     void updateTemplate128x128() const;
-    void updateTemplate80x160() const;
-    void updateTemplate135x240() const;
-    void updateTemplate320x240() const;
-
-    void updateReceivedData() const;
-    void updateReceivedData80x160() const;
     void updateReceivedData128x128() const;
-    void updateReceivedData135x240() const;
-    void updateReceivedData320x240() const;
-
-    void update80x160(const TD_AHRS::data_t& ahrsData) const; // M5StickC
     void update128x128(const TD_AHRS::data_t& ahrsData) const; // M5Atom
+
+    void updateTemplate80x160() const;
+    void updateReceivedData80x160() const;
+    void update80x160(const TD_AHRS::data_t& ahrsData) const; // M5StickC
+
+    void updateTemplate135x240() const;
+    void updateReceivedData135x240() const;
     void update135x240(const TD_AHRS::data_t& ahrsData) const; // M5StickC Plus
+
+    void updateTemplate320x240() const;
+    void updateReceivedData320x240() const;
     void update320x240(const TD_AHRS::data_t& ahrsData) const; // MCore
 
+    void updateTemplate();
+    void updateReceivedData();
     void updateAHRS_Data() const;
 
     static void displayEUI(const char* prompt, const ReceiverBase::EUI_48_t& eui);

@@ -1,4 +1,4 @@
-#include "MotorMixer.h"
+#include "MotorPairMixer.h"
 
 #include <MotorPairBase.h>
 
@@ -20,7 +20,7 @@ static uint32_t timeUs() { return 0; }
 #endif
 
 
-void MotorMixer::outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount)
+void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount)
 {
     (void)deltaT;
 
@@ -39,7 +39,7 @@ void MotorMixer::outputToMotors(const commands_t& commands, float deltaT, uint32
         const float powerLeftFiltered = _powerLeftFilter.update(_powerLeft);
         const float powerRightFiltered = _powerRightFilter.update(_powerRight);
         const uint32_t timeMicroSeconds0 = timeUs();
-        _motors.setPower(powerLeftFiltered, powerRightFiltered);
+        _motorPair.setPower(powerLeftFiltered, powerRightFiltered);
         _outputPowerTimeMicroSeconds = timeUs() - timeMicroSeconds0; // for instrumentation
     } else {
         if (_motorSwitchOffTickCount == 0) { // the motors haven't already been switched off
@@ -47,7 +47,7 @@ void MotorMixer::outputToMotors(const commands_t& commands, float deltaT, uint32
             _motorSwitchOffTickCount = tickCount;
         }
         // Motors switched off, so set everything to zero, ready for motors to be switched on again.
-        _motors.setPower(0.0F, 0.0F);
+        _motorPair.setPower(0.0F, 0.0F);
         _outputPowerTimeMicroSeconds = 0;
         _powerLeft  = 0.0F;
         _powerRight = 0.0F;
@@ -78,12 +78,12 @@ void MotorMixer::outputToMotors(const commands_t& commands, float deltaT, uint32
 #endif
 }
 
-float MotorMixer::getMotorOutput(size_t motorIndex) const
+float MotorPairMixer::getMotorOutput(size_t motorIndex) const
 {
     return motorIndex == 0 ? _powerLeft : _powerRight;
 }
 
-int32_t MotorMixer::getMotorRPM(size_t motorIndex) const
+int32_t MotorPairMixer::getMotorRPM(size_t motorIndex) const
 {
     (void)motorIndex;
     return 0;

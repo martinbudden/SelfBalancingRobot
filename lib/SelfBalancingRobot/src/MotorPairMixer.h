@@ -8,11 +8,11 @@ class MotorPairBase;
 /*!
 The MotorMixer takes the outputs from the MotorPairController and "mixes" the values, to set the appropriate power for each motor.
 */
-class MotorMixer : public MotorMixerBase {
+class MotorPairMixer : public MotorMixerBase {
 public:
     enum { MOTOR_COUNT = 2 };
 public:
-    explicit MotorMixer(MotorPairBase& motors) : MotorMixerBase(MOTOR_COUNT), _motors(motors) {}
+    explicit MotorPairMixer(MotorPairBase& motorPair) : MotorMixerBase(MOTOR_COUNT), _motorPair(motorPair) {}
 public:
     virtual void outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount) override;
     virtual float getMotorOutput(size_t motorIndex) const override;
@@ -25,7 +25,7 @@ public:
     float getPowerRight() const { return _powerRight; } //!< for telemetry
     uint32_t getOutputPowerTimeMicroSeconds() const { return _outputPowerTimeMicroSeconds; } //!< for telemetry
 private:
-    MotorPairBase& _motors; //<! The MotorMixer has a reference to the motors for output, ie setting the motor power.
+    MotorPairBase& _motorPair; //<! The MotorMixer has a reference to the motors for output, ie setting the motor power.
     uint32_t _motorSwitchOffTickCount {0};
     float _powerLeft {0.0};
     float _powerRight {0.0};

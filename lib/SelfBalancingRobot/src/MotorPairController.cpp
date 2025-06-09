@@ -38,7 +38,7 @@ std::string MotorPairController::getBalanceAngleName() const
 
 void MotorPairController::motorsResetEncodersToZero()
 {
-    _motors.resetEncodersToZero();
+    _motorPair.resetEncodersToZero();
 }
 
 /*!
@@ -67,8 +67,8 @@ void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& te
     telemetry.positionOutput = _outputs[POSITION_DEGREES];
     telemetry.yawRateOutput = _outputs[YAW_RATE_DPS];
 
-    telemetry.powerLeft = _mixer.getPowerLeft();
-    telemetry.powerRight = _mixer.getPowerRight();
+    telemetry.powerLeft = _motorPairMixer.getPowerLeft();
+    telemetry.powerRight = _motorPairMixer.getPowerRight();
 
     telemetry.encoderLeft = _encoderLeft;
     telemetry.encoderRight = _encoderRight;
@@ -84,7 +84,7 @@ void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& te
 
 void MotorPairController::motorsSwitchOff()
 {
-    _mixer.motorsSwitchOff();
+    _motorPairMixer.motorsSwitchOff();
 }
 
 void MotorPairController::motorsSwitchOn()
@@ -95,7 +95,7 @@ void MotorPairController::motorsSwitchOn()
     }
     // don't allow motors to be switched on if the sensor fusion has not initialized
     if (!_ahrs.sensorFusionFilterIsInitializing()) {
-        _mixer.motorsSwitchOn();
+        _motorPairMixer.motorsSwitchOn();
     }
 }
 
@@ -125,7 +125,7 @@ void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
             .pitch  = _outputs[PITCH_ANGLE_DEGREES],
             .yaw    = _outputs[YAW_RATE_DPS]
         };
-    _mixer.outputToMotors(commands, deltaT, tickCount);
+    _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
 }
 
 /*!
@@ -207,18 +207,18 @@ If new stick values are available then update the setpoint using the stick value
 void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 {
 #if defined(MOTORS_HAVE_ENCODERS)
-    _motors.readEncoder();
-    _encoderLeft = _motors.getLeftEncoder();
-    _encoderRight = _motors.getRightEncoder();
+    _motorPair.readEncoder();
+    _encoderLeft = _motorPair.getLeftEncoder();
+    _encoderRight = _motorPair.getRightEncoder();
 
     _encoderLeftDelta = _encoderLeft - _encoderLeftPrevious;
     _encoderLeftPrevious = _encoderLeft;
     _encoderRightDelta = _encoderRight - _encoderRightPrevious;
     _encoderRightPrevious = _encoderRight;
 
-    if (_motors.canAccuratelyEstimateSpeed()) {
-        _speedLeftDPS = _motors.getLeftSpeed();
-        _speedRightDPS = _motors.getRightSpeed();
+    if (_motorPair.canAccuratelyEstimateSpeed()) {
+        _speedLeftDPS = _motorPair.getLeftSpeed();
+        _speedRightDPS = _motorPair.getRightSpeed();
         _speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
     } else {
         // For reference, at 420 steps per revolution, with a 100Hz (10ms) update rate, 1 step per update gives a speed of (360 * 1/420) * 100 = 85 dps
@@ -247,17 +247,16 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 #else
     // no encoders, so estimate speed from power output
     (void)deltaT; // so LINT doesn't report an unused parameter.
-    _speedDPS = MotorPairBase::clip((_mixer.getPowerLeft() + _mixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
+    _speedDPS = MotorPairBase::clip((_motorPairMixer.getPowerLeft() + _motorPairMixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
 #endif
 }
 
 
 void MotorPairController::updateOutputsUsingPIDs(float deltaT)
 {
-    [[maybe_unused]] bool orientationUpdated;
-    const Quaternion orientation = _ahrs.getOrientationUsingLock(orientationUpdated);
-    [[maybe_unused]] bool ahrsDataUpdated;
-    const AHRS::data_t data = _ahrs.getAhrsDataUsingLock(ahrsDataUpdated);
+    const Quaternion orientation = _ahrs.getOrientationUsingLock();
+    const AHRS::data_t data = _ahrs.getAhrsDataUsingLock();
+
     updateOutputsUsingPIDs(data.gyroRPS, data.acc, orientation, deltaT);
 }
 
@@ -275,7 +274,7 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 {
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
     _pitchAngleDegreesRaw = -orientation.calculateRollDegrees();
-    _mixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
+    _motorPairMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
 #define CALCULATE_ROLL
 #define CALCULATE_YAW
 #if defined(CALCULATE_ROLL)
@@ -336,7 +335,7 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     const float distanceDegrees = _positionDegrees - _positionDegreesPrevious;
     _positionDegreesPrevious = _positionDegrees;
     constexpr float alpha = 0.9F;
-    const float speedEstimate = MotorPairBase::clip((_mixer.getPowerLeft() + _mixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
+    const float speedEstimate = MotorPairBase::clip((_motorPairMixer.getPowerLeft() + _motorPairMixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
     _positionDegrees += alpha*distanceDegrees + (1.0F - alpha)*speedEstimate*deltaT;
 #endif
 #else

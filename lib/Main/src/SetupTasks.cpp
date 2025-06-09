@@ -1,15 +1,14 @@
 #include "Main.h"
 
-#include "TelemetryScaleFactors.h"
-
 #include <AHRS_Task.h>
+#include <BackchannelTask.h>
 
 #if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
 #endif
 
-#include <MotorPairControllerTask.h>
 #include <ReceiverTask.h>
+#include <VehicleControllerTask.h>
 
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
@@ -38,107 +37,164 @@ Updating the screen takes approximately 50 ticks, so packets will be dropped if 
 */
 
 
-void Main::setupTasks(tasks_t& tasks, AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher)
-{
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
-    tasks.mainTask = &mainTask;
-    static AHRS_Task ahrsTask(AHRS_TASK_INTERVAL_MICROSECONDS, ahrs);
-    tasks.ahrsTask = &ahrsTask;
-    static MotorPairControllerTask mpcTask(MPC_TASK_INTERVAL_MICROSECONDS, motorPairController);
-    tasks.mpcTask = &mpcTask;
-    static ReceiverTask receiverTask(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, receiverWatcher);
-    tasks.receiverTask = &receiverTask;
+enum {
+    AHRS_TASK_PRIORITY = 6,
+    MPC_TASK_PRIORITY = 5,
+    RECEIVER_TASK_PRIORITY = MPC_TASK_PRIORITY,
+    BACKCHANNEL_TASK_PRIORITY = 3,
+    MSP_TASK_PRIORITY = 2
+};
 
 #if defined(USE_FREERTOS)
-    enum { AHRS_TASK_PRIORITY = 5, MPC_TASK_PRIORITY = 4, RECEIVER_TASK_PRIORITY = 3, MSP_TASK_PRIORITY = 2 };
-
-enum { MPC_TASK_CORE = PRO_CPU_NUM };
-enum { RECEIVER_TASK_CORE = PRO_CPU_NUM };
+enum {
 #if defined(APP_CPU_NUM) // The processor has two cores
-    enum { AHRS_TASK_CORE = APP_CPU_NUM }; // AHRS should be the only task running on the second core
+    AHRS_TASK_CORE = APP_CPU_NUM, // AHRS should be the only task running on the second core
 #else // single core processor
-    enum { AHRS_TASK_CORE = PRO_CPU_NUM };
+    AHRS_TASK_CORE = PRO_CPU_NUM,
 #endif
+    MPC_TASK_CORE = PRO_CPU_NUM,
+    RECEIVER_TASK_CORE = PRO_CPU_NUM,
+    BACKCHANNEL_TASK_CORE = PRO_CPU_NUM,
+    MSP_TASK_CORE = PRO_CPU_NUM,
+};
+#endif // USE_FREERTOS
 
-#if !defined(FRAMEWORK_ESPIDF)
-    std::array<char, 128> buf;
-#endif
-
+MainTask* Main::setupMainTask()
+{
+    static MainTask task(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
 #if defined(USE_ARDUINO_ESP32)
     // The main task is set up by the framework, so just print its details.
     // It has name "loopTask" and priority 1.
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
     const char* taskName = pcTaskGetName(taskHandle);
+    std::array<char, 128> buf;
     sprintf(&buf[0], "\r\n\r\n**** Main loop task, name:'%s' priority:%d, tickRate:%dHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
     Serial.print(&buf[0]);
 #endif
+    return &task;
+}
 
+AHRS_Task* Main::setupTask(AHRS& ahrs)
+{
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static TaskBase::parameters_t ahrsTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &ahrsTask,
+    static AHRS_Task task(AHRS_TASK_INTERVAL_MICROSECONDS, ahrs);
+
+#if defined(USE_FREERTOS)
+    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &task,
     };
-    enum { AHRS_TASK_STACK_DEPTH = 4096 };
-    static StaticTask_t ahrsTaskBuffer;
-    static std::array <StackType_t, AHRS_TASK_STACK_DEPTH> ahrsStack;
-    const TaskHandle_t ahrsTaskHandle = xTaskCreateStaticPinnedToCore(
+    enum { TASK_STACK_DEPTH = 4096 };
+    static StaticTask_t taskBuffer;
+    static std::array <StackType_t, TASK_STACK_DEPTH> stack;
+    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
         AHRS_Task::Task,
         "AHRS_Task",
-        AHRS_TASK_STACK_DEPTH,
-        &ahrsTaskParameters,
+        TASK_STACK_DEPTH,
+        &taskParameters,
         AHRS_TASK_PRIORITY,
-        &ahrsStack[0],
-        &ahrsTaskBuffer,
+        &stack[0],
+        &taskBuffer,
         AHRS_TASK_CORE
     );
-    assert(ahrsTaskHandle != nullptr && "Unable to create AHRS task.");
+    assert(taskHandle != nullptr && "Unable to create AHRS task.");
 #if !defined(FRAMEWORK_ESPIDF)
+    std::array<char, 128> buf;
     sprintf(&buf[0], "**** AHRS_Task,      core:%d, priority:%d, task interval:%dms\r\n", AHRS_TASK_CORE, AHRS_TASK_PRIORITY, AHRS_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
 #endif
+#endif // USE_FREERTOS
+    return &task;
+}
 
-    static TaskBase::parameters_t mpcTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &mpcTask,
+VehicleControllerTask* Main::setupTask(VehicleControllerBase& vehicleController)
+{
+    static VehicleControllerTask task(MPC_TASK_INTERVAL_MICROSECONDS, vehicleController);
+    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &task,
     };
-    enum { MPC_TASK_STACK_DEPTH = 4096 };
-    static StaticTask_t mpcTaskBuffer;
-    static std::array<StackType_t, MPC_TASK_STACK_DEPTH> mpcStack;
-    const TaskHandle_t mpcTaskHandle = xTaskCreateStaticPinnedToCore(MotorPairControllerTask::Task,
+
+#if defined(USE_FREERTOS)
+    enum { TASK_STACK_DEPTH = 4096 };
+    static StaticTask_t taskBuffer;
+    static std::array<StackType_t, TASK_STACK_DEPTH> stack;
+    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(VehicleControllerTask::Task,
         "MPC_Task",
-        MPC_TASK_STACK_DEPTH,
-        &mpcTaskParameters,
+        TASK_STACK_DEPTH,
+        &taskParameters,
         MPC_TASK_PRIORITY,
-        &mpcStack[0],
-        &mpcTaskBuffer,
+        &stack[0],
+        &taskBuffer,
         MPC_TASK_CORE
     );
-    assert(mpcTaskHandle != nullptr && "Unable to create MotorPairController task.");
+    assert(taskHandle != nullptr && "Unable to create MotorPairController task.");
 #if !defined(FRAMEWORK_ESPIDF)
+    std::array<char, 128> buf;
     sprintf(&buf[0], "**** MPC_Task,       core:%d, priority:%d, task interval:%dms\r\n", MPC_TASK_CORE, MPC_TASK_PRIORITY, MPC_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
 #endif
+#endif // USE_FREERTOS
+    return &task;
+}
 
+ReceiverTask* Main::setupTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher)
+{
+    static ReceiverTask task(RECEIVER_TASK_INTERVAL_MICROSECONDS, receiver, receiverWatcher);
+
+#if defined(USE_FREERTOS)
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static TaskBase::parameters_t receiverTaskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &receiverTask,
+    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &task,
     };
-    enum { RECEIVER_TASK_STACK_DEPTH = 4096 };
-    static std::array<StackType_t, RECEIVER_TASK_STACK_DEPTH> receiverStack;
-    static StaticTask_t receiverTaskBuffer;
-    const TaskHandle_t receiverTaskHandle = xTaskCreateStaticPinnedToCore(
+    enum { TASK_STACK_DEPTH = 4096 };
+    static std::array<StackType_t, TASK_STACK_DEPTH> stack;
+    static StaticTask_t taskBuffer;
+    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
         ReceiverTask::Task,
         "Receiver_Task",
-        RECEIVER_TASK_STACK_DEPTH,
-        &receiverTaskParameters,
+        TASK_STACK_DEPTH,
+        &taskParameters,
         RECEIVER_TASK_PRIORITY,
-        &receiverStack[0],
-        &receiverTaskBuffer,
+        &stack[0],
+        &taskBuffer,
         RECEIVER_TASK_CORE
     );
-    assert(receiverTaskHandle != nullptr && "Unable to create ReceiverTask task.");
+    assert(taskHandle != nullptr && "Unable to create ReceiverTask task.");
+    std::array<char, 128> buf;
     sprintf(&buf[0], "**** RECEIVER_Task,  core:%d, priority:%d, task interval:%dms\r\n\r\n", RECEIVER_TASK_CORE, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_INTERVAL_MICROSECONDS / 1000);
     Serial.print(&buf[0]);
-
 #endif // USE_FREERTOS
+    return &task;
+}
+
+BackchannelTask* Main::setupTask(BackchannelBase& backchannel)
+{
+    static BackchannelTask task(backchannel);
+
+#if defined(USE_FREERTOS)
+    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &task,
+    };
+    enum { TASK_STACK_DEPTH = 4096 };
+    static std::array<StackType_t, TASK_STACK_DEPTH> stack;
+    static StaticTask_t taskBuffer;
+    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
+        BackchannelTask::Task,
+        "Backchannel_Task",
+        TASK_STACK_DEPTH,
+        &taskParameters,
+        BACKCHANNEL_TASK_PRIORITY,
+        &stack[0],
+        &taskBuffer,
+        BACKCHANNEL_TASK_CORE
+    );
+    assert(taskHandle != nullptr && "Unable to create ReceiverTask task.");
+    std::array<char, 128> buf;
+    Serial.printf(&buf[0], "**** BACKCHANNEL_Task,core:%d, priority:%d, task is interrupt driven\r\n", BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_PRIORITY);
+
+    Serial.print(&buf[0]);
+#endif // USE_FREERTOS
+    return &task;
 }

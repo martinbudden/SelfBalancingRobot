@@ -3,9 +3,9 @@
 
 #include <MotorPairController.h>
 
-class MotorsTest final : public MotorPairBase {
+class MotorPairTest final : public MotorPairBase {
 public:
-    MotorsTest();
+    MotorPairTest();
 // NOLINTBEGIN(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
     virtual void setPower(float leftPower, float rightPower) override;
 private:
@@ -13,15 +13,15 @@ private:
 // NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
-MotorsTest::MotorsTest() : // NOLINT(hicpp-use-equals-default, modernize-use-equals-default)
+MotorPairTest::MotorPairTest() : // NOLINT(hicpp-use-equals-default, modernize-use-equals-default)
     MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED)
     {}
 
-void MotorsTest::readEncoder()
+void MotorPairTest::readEncoder()
 {
 }
 
-void MotorsTest::setPower([[maybe_unused]] float leftPower,[[maybe_unused]] float rightPower)
+void MotorPairTest::setPower([[maybe_unused]] float leftPower,[[maybe_unused]] float rightPower)
 {
 }
 
@@ -43,8 +43,8 @@ constexpr float encoderStepsPerRevolution   {1000.0F};
 MotorPairBase& MotorPairController::allocateMotors()
 {
     // Statically allocate the MotorPair object
-    static MotorsTest motors; // NOLINT(misc-const-correctness) false positive
-    return motors;
+    static MotorPairTest motorPair; // NOLINT(misc-const-correctness) false positive
+    return motorPair;
 }
 
 /*!
@@ -53,20 +53,20 @@ Constructor. Sets member data.
 MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
     _ahrs(ahrs),
     _receiver(receiver),
-    _motors(allocateMotors()),
-    _mixer(_motors),
+    _motorPair(allocateMotors()),
+    _motorPairMixer(_motorPair),
     _controlMode(CONTROL_MODE_SERIAL_PIDS),
     _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
-    _motorStepsPerRevolution(_motors.getStepsPerRevolution()),
+    _motorStepsPerRevolution(_motorPair.getStepsPerRevolution()),
     _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
 {
 #if defined(I2C_MUTEX_REQUIRED)
-    _motors.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
+    _motorPair.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #endif
 
     setControlMode(_controlMode);
-    _mixer.setMotorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees);
+    _motorPairMixer.setMotorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees);
 
     _PIDS[PITCH_ANGLE_DEGREES].setPID(pitchPID_Default);
     _PIDS[PITCH_ANGLE_DEGREES].setIntegralMax(1.0F);

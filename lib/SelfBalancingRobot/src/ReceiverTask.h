@@ -7,7 +7,6 @@ class ReceiverWatcher;
 
 class ReceiverTask : public TaskBase {
 public:
-public:
     ReceiverTask(uint32_t taskIntervalMicroSeconds, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher);
 private:
     // class is not copyable or moveable

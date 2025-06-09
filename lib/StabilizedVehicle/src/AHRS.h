@@ -30,7 +30,9 @@ public:
         xyz_t acc;
     };
     static constexpr int TIME_CHECKS_COUNT = 4;
+    enum { SENSOR_FUSION_REQUIRES_INITIALIZATION = true, SENSOR_FUSION_DOES_NOT_REQUIRE_INITIALIZATION = false };
 public:
+    AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, bool sensorFusionRequiresInitializing);
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
     void setVehicleController(VehicleControllerBase* vehicleController) { _vehicleController = vehicleController; }
@@ -60,13 +62,15 @@ public:
     int32_t getAccOneG_Raw() const;
 
     data_t getAhrsDataUsingLock(bool& updatedSinceLastRead) const;
+    data_t getAhrsDataUsingLock() const;
     data_t getAhrsDataForInstrumentationUsingLock() const;
     Quaternion getOrientationUsingLock(bool& updatedSinceLastRead) const;
+    Quaternion getOrientationUsingLock() const;
     Quaternion getOrientationForInstrumentationUsingLock() const;
 
     void checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orientation);
-    inline bool sensorFusionFilterIsInitializing() const { return _sensorFusionFilterInitializing; }
-    inline void setSensorFusionFilterInitializing(bool sensorFusionFilterInitializing) { _sensorFusionFilterInitializing = sensorFusionFilterInitializing; }
+    inline bool sensorFusionFilterIsInitializing() const { return  _sensorFusionRequiresInitializing && _sensorFusionInitializing; }
+    inline void setSensorFusionInitializing(bool sensorFusionInitializing) { _sensorFusionInitializing = sensorFusionInitializing; }
 
     const IMU_FiltersBase::filters_t& getFilters() const { return _imuFilters.getFilters(); }
     void setFilters(const IMU_FiltersBase::filters_t& filters);
@@ -85,7 +89,8 @@ private:
     IMU_Base::accGyroRPS_t _accGyroRPS_Locked {};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
 
-    uint32_t _sensorFusionFilterInitializing {true};
+    uint32_t _sensorFusionInitializing {true};
+    uint32_t _sensorFusionRequiresInitializing;
     Quaternion _orientation {};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
     uint32_t _taskIntervalMicroSeconds;
@@ -99,16 +104,18 @@ private:
 #if defined(USE_FREERTOS)
     inline void YIELD_TASK() { taskYIELD(); }
 #if defined(USE_AHRS_DATA_MUTEX)
+    // option to use mutex rather than critical section
     StaticSemaphore_t _ahrsDataMutexBuffer {}; // _ahrsDataMutexBuffer must be declared before _ahrsDataMutex
     mutable SemaphoreHandle_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { xSemaphoreTake(_ahrsDataMutex, portMAX_DELAY); }
     inline void UNLOCK_AHRS_DATA() const { xSemaphoreGive(_ahrsDataMutex); }
-#elif defined(USE_AHRS_DATA_CRITICAL_SECTION)
+#else // defaults to use critical section
     mutable portMUX_TYPE _ahrsDataSpinlock = portMUX_INITIALIZER_UNLOCKED;
     inline void LOCK_AHRS_DATA() const { taskENTER_CRITICAL(&_ahrsDataSpinlock); }
     inline void UNLOCK_AHRS_DATA() const { taskEXIT_CRITICAL(&_ahrsDataSpinlock); }
 #endif
 #elif defined(FRAMEWORK_RPI_PICO)
+    inline void YIELD_TASK() {}
     mutable mutex_t _ahrsDataMutex {};
     inline void LOCK_AHRS_DATA() const { mutex_enter_blocking(&_ahrsDataMutex); }
     inline void UNLOCK_AHRS_DATA() const { mutex_exit(&_ahrsDataMutex); }

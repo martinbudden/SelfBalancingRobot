@@ -30,7 +30,13 @@ AHRS& Main::setupAHRS(void* i2cMutex)
     const BUS_I2C::pins_t pins = IMU_I2C_PINS;
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, pins);
 #else
-    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, BUS_I2C::pins_t{.sda=static_cast<uint8_t>(M5.In_I2C.getSDA()), .scl=static_cast<uint8_t>(M5.In_I2C.getSCL()), .irq=BUS_I2C::IRQ_NOT_SET, .irqLevel=0});
+    const BUS_I2C::pins_t pins = BUS_I2C::pins_t {
+        .sda=static_cast<uint8_t>(M5.In_I2C.getSDA()),
+        .scl=static_cast<uint8_t>(M5.In_I2C.getSCL()),
+        .irq=BUS_I2C::IRQ_NOT_SET,
+        .irqLevel=0
+    };
+    static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, pins);
 #endif
 #elif defined(USE_IMU_MPU6886_SPI)
     const BUS_SPI::pins_t pins = IMU_SPI_PINS;
@@ -90,4 +96,3 @@ AHRS& Main::setupAHRS(void* i2cMutex)
     static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imuSensor, imuFilters);
     return ahrs;
 }
-

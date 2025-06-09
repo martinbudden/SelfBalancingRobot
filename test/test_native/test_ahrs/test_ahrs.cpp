@@ -25,11 +25,11 @@ void test_ahrs()
     AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imu, imuFilters);
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing()); // initializing should be set on construction
-    ahrs.setSensorFusionFilterInitializing(true);
+    ahrs.setSensorFusionInitializing(true);
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
-    ahrs.setSensorFusionFilterInitializing(false);
+    ahrs.setSensorFusionInitializing(false);
     TEST_ASSERT_FALSE(ahrs.sensorFusionFilterIsInitializing());
-    ahrs.setSensorFusionFilterInitializing(true);
+    ahrs.setSensorFusionInitializing(true);
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
 }
 
