@@ -22,12 +22,6 @@ static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN);
 static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN);
 
 
-BackchannelBase::BackchannelBase(AHRS& ahrs, SV_Preferences& preferences) :
-    _ahrs(ahrs),
-    _preferences(preferences)
-{
-}
-
 Backchannel::Backchannel(ESPNOW_Transceiver& transceiver, const uint8_t* backchannelMacAddress, // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) false positive
         VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
@@ -223,11 +217,12 @@ void Backchannel ::packetRequestData(const CommandPacketRequestData& packet) {
     //Serial.printf("TransmitRequest packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
 
     _requestType = packet.requestType;
-    sendTelemetryPacket();
+    sendTelemetryPacket(packet.valueType);
 }
 
-bool Backchannel::sendTelemetryPacket()
+bool Backchannel::sendTelemetryPacket(uint8_t valueType)
 {
+
     switch (_requestType) {
     case CommandPacketRequestData::NO_REQUEST: {
         return false;
@@ -285,6 +280,14 @@ bool Backchannel::sendTelemetryPacket()
         const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _sequenceNumber, _vehicleControllerTask, _motorPairController);
         //Serial.printf("mpcLen:%d\r\n", len);
         sendData(_transmitDataBuffer, len);
+        break;
+    }
+    case CommandPacketRequestData::REQUEST_MSP_DATA: {
+        (void)valueType;
+        //const size_t len = packTelemetryData_MSP(_transmitDataBuffer, _telemetryID, _sequenceNumber, _msp, valueType);
+        //if (len <= ESP_NOW_MAX_DATA_LEN) {
+        //    sendData(_transmitDataBuffer, len);
+        //}
         break;
     }
     default:

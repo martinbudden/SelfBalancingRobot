@@ -33,7 +33,7 @@ private:
 public:
     virtual void WAIT_FOR_DATA_RECEIVED() override;
     virtual bool update() override;
-    virtual bool sendTelemetryPacket() override;
+    virtual bool sendTelemetryPacket(uint8_t valueType) override;
 private:
     inline esp_err_t addToTransceiverAsSecondaryPeer(const uint8_t* macAddress = nullptr) { return _transceiver.addSecondaryPeer(_received_data, macAddress); }
     esp_err_t sendData(const uint8_t* data, size_t len) const;

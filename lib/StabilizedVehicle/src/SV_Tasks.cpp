@@ -30,7 +30,7 @@ Updating the screen takes approximately 50 ticks.
 */
 
 
-void Tasks::reportMainTask()
+void SV_Tasks::reportMainTask()
 {
 #if defined(USE_ARDUINO_ESP32)
     // The main task is set up by the framework, so just print its details.
@@ -44,7 +44,7 @@ void Tasks::reportMainTask()
 #endif
 }
 
-AHRS_Task* Tasks::setupTask(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+AHRS_Task* SV_Tasks::setupTask(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS_Task task(taskIntervalMicroSeconds, ahrs);
@@ -80,7 +80,7 @@ AHRS_Task* Tasks::setupTask(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32
     return &task;
 }
 
-VehicleControllerTask* Tasks::setupTask(VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+VehicleControllerTask* SV_Tasks::setupTask(VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     static VehicleControllerTask task(taskIntervalMicroSeconds, vehicleController);
 
@@ -113,7 +113,7 @@ VehicleControllerTask* Tasks::setupTask(VehicleControllerBase& vehicleController
     return &task;
 }
 
-ReceiverTask* Tasks::setupTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+ReceiverTask* SV_Tasks::setupTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     static ReceiverTask task(taskIntervalMicroSeconds, receiver, receiverWatcher);
 
@@ -146,7 +146,7 @@ ReceiverTask* Tasks::setupTask(ReceiverBase& receiver, ReceiverWatcher* receiver
     return &task;
 }
 
-BackchannelTask* Tasks::setupTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+BackchannelTask* SV_Tasks::setupTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     (void)taskIntervalMicroSeconds;
     static BackchannelTask task(backchannel);
