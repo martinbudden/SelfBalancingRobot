@@ -17,7 +17,7 @@ Backchannel::Backchannel(
         TelemetryScaleFactors& telemetryScaleFactors,
         SV_Preferences& preferences
     ) :
-    BackchannelSV(
+    BackchannelStabilizedVehicle(
         backChannelMacAddress,
         _transceiver,
         vehicleControllerTask,
@@ -143,7 +143,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
 
 bool Backchannel::sendTelemetryPacket(uint8_t subCommand)
 {
-    if (BackchannelSV::sendTelemetryPacket(subCommand)) {
+    if (BackchannelStabilizedVehicle::sendTelemetryPacket(subCommand)) {
         // if the base class has sent the packet then we have nothing to do
         return true;
     }

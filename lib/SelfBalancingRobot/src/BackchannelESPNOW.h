@@ -1,13 +1,13 @@
 #pragma once
 
-#include <BackchannelSV.h>
+#include <BackchannelStabilizedVehicle.h>
 #include <BackchannelTransceiverESPNOW.h>
 
 class MotorPairController;
 class TelemetryScaleFactors;
 
 
-class Backchannel : public BackchannelSV {
+class Backchannel : public BackchannelStabilizedVehicle {
 public:
     Backchannel(
         const uint8_t* backChannelMacAddress,

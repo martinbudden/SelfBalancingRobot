@@ -12,9 +12,9 @@ class VehicleControllerTask;
 /*!
 Backchannel that sends and receives packets that contain data for a stabilized vehicle.
 */
-class BackchannelSV : public BackchannelBase {
+class BackchannelStabilizedVehicle : public BackchannelBase {
 public:
-    BackchannelSV(
+    BackchannelStabilizedVehicle(
         const uint8_t* backChannelMacAddress,
         BackchannelTransceiverBase& transceiver,
         VehicleControllerTask& vehicleControllerTask,

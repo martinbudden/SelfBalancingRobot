@@ -1,4 +1,4 @@
-#include "BackchannelSV.h"
+#include "BackchannelStabilizedVehicle.h"
 
 #include <AHRS.h>
 #include <AHRS_Task.h>
@@ -11,7 +11,7 @@
 #include <VehicleControllerTask.h>
 
 
-BackchannelSV::BackchannelSV(
+BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(
         const uint8_t* backChannelMacAddress,
         BackchannelTransceiverBase& transceiver,
         VehicleControllerTask& vehicleControllerTask,
@@ -48,14 +48,14 @@ BackchannelSV::BackchannelSV(
     _backchannelID = (*(pB + 2U) << 24U) | (*(pB + 3U) << 16U) | (*(pB + 4U) << 8U) | *(pB + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
 }
 
-void BackchannelSV::setTelemetryID(const uint8_t* macAddress)
+void BackchannelStabilizedVehicle::setTelemetryID(const uint8_t* macAddress)
 {
     // use the last 4 bytes of myMacAddress as the telemetryID
     const uint8_t* pM = macAddress;
     _telemetryID = (*(pM + 2U) << 24U) | (*(pM + 3U) << 16U) | (*(pM + 4U) << 8U) | *(pM + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
 }
 
-void BackchannelSV::packetSetOffset(const CommandPacketSetOffset& packet) {
+void BackchannelStabilizedVehicle::packetSetOffset(const CommandPacketSetOffset& packet) {
     IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffsetMapped();
     IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffsetMapped();
 
@@ -114,14 +114,14 @@ void BackchannelSV::packetSetOffset(const CommandPacketSetOffset& packet) {
     }
 }
 
-void BackchannelSV::packetRequestData(const CommandPacketRequestData& packet) {
+void BackchannelStabilizedVehicle::packetRequestData(const CommandPacketRequestData& packet) {
     //Serial.printf("TransmitRequest packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
 
     _requestType = packet.requestType;
     sendTelemetryPacket(packet.valueType);
 }
 
-bool BackchannelSV::sendTelemetryPacket(uint8_t subCommand)
+bool BackchannelStabilizedVehicle::sendTelemetryPacket(uint8_t subCommand)
 {
     (void)subCommand;
 
@@ -174,7 +174,7 @@ Four types of packets may be received:
 3. A request to set a PID value. In this case set the PID value and then send back a TD_SBR_PIDS packet for display.
 4. A request to set an IMU offset value. In this case set the offset value and send back an TD_AHRS packet for display.
 */
-bool BackchannelSV::update()
+bool BackchannelStabilizedVehicle::update()
 {
     const size_t receivedDataLength = _transceiver.getReceivedDataLength();
     if (receivedDataLength != 0) {
