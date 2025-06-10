@@ -11,22 +11,41 @@
 #include <VehicleControllerTask.h>
 
 
-
 BackchannelSV::BackchannelSV(
+        const uint8_t* backChannelMacAddress,
+        BackchannelTransceiverBase& transceiver,
         VehicleControllerTask& vehicleControllerTask,
         VehicleControllerBase& vehicleController,
         AHRS_Task& ahrsTask,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences
+        SV_Preferences& preferences,
+        uint8_t* transmitDataBufferPtr,
+        size_t transmitDataBufferSize,
+        uint8_t* receivedDataBufferPtr,
+        size_t receivedDataBufferSize
     ) :
-    BackchannelBase(ahrsTask.getAHRS(), preferences),
+    BackchannelBase(transceiver, ahrsTask.getAHRS(), preferences),
     _vehicleControllerTask(vehicleControllerTask),
     _vehicleController(vehicleController),
     _ahrsTask(ahrsTask),
     _mainTask(mainTask),
-    _receiver(receiver)
+    _receiver(receiver),
+    _transmitDataBufferPtr(transmitDataBufferPtr),
+    _transmitDataBufferSize(transmitDataBufferSize),
+    _receivedDataBufferPtr(receivedDataBufferPtr),
+    _receivedDataBufferSize(receivedDataBufferSize)
 {
+    assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= transmitDataBufferSize); // 12
+    assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= transmitDataBufferSize); // 28
+    assert(sizeof(TD_AHRS) <= transmitDataBufferSize); // 60
+    assert(sizeof(TD_RECEIVER) <= transmitDataBufferSize); // 40
+    assert(sizeof(TD_MPC) <= transmitDataBufferSize); // 100
+    assert(sizeof(TD_SBR_PIDS) <= transmitDataBufferSize); // 192
+
+    // use the last 4 bytes of backchannelMacAddress as the backchannelID
+    const uint8_t* pB = backChannelMacAddress;
+    _backchannelID = (*(pB + 2U) << 24U) | (*(pB + 3U) << 16U) | (*(pB + 4U) << 8U) | *(pB + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
 }
 
 void BackchannelSV::packetSetOffset(const CommandPacketSetOffset& packet) {
@@ -83,8 +102,8 @@ void BackchannelSV::packetSetOffset(const CommandPacketSetOffset& packet) {
 
     if (transmit) {
         // send back the new data for display
-        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _sequenceNumber, _ahrs, _vehicleController);
-        sendData(_transmitDataBuffer, len);
+        const size_t len = packTelemetryData_AHRS(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _ahrs, _vehicleController);
+        sendData(_transmitDataBufferPtr, len);
     }
 }
 
@@ -105,26 +124,26 @@ bool BackchannelSV::sendTelemetryPacket(uint8_t subCommand)
     }
     case CommandPacketRequestData::REQUEST_STOP_SENDING_DATA: {
         // send a minimal packet so the client can reset its screen
-        const size_t len = packTelemetryData_Minimal(_transmitDataBuffer, _telemetryID, _sequenceNumber);
-        sendData(_transmitDataBuffer, len);
+        const size_t len = packTelemetryData_Minimal(_transmitDataBufferPtr, _telemetryID, _sequenceNumber);
+        sendData(_transmitDataBufferPtr, len);
         // set _requestType to NO_REQUEST so no further data sent
         _requestType = CommandPacketRequestData::NO_REQUEST;
         break;
     }
     case CommandPacketRequestData::REQUEST_TASK_INTERVAL_DATA: {
-        const size_t len = packTelemetryData_TaskIntervals(_transmitDataBuffer, _telemetryID, _sequenceNumber,
+        const size_t len = packTelemetryData_TaskIntervals(_transmitDataBufferPtr, _telemetryID, _sequenceNumber,
             _ahrsTask,
             _vehicleControllerTask,
             _mainTask.getTickCountDelta(),
             _receiver.getTickCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);
-        sendData(_transmitDataBuffer, len);
+        sendData(_transmitDataBufferPtr, len);
         break;
     }
     case CommandPacketRequestData::REQUEST_RECEIVER_DATA: {
-        const size_t len = packTelemetryData_Receiver(_transmitDataBuffer, _telemetryID, _sequenceNumber, _receiver);
+        const size_t len = packTelemetryData_Receiver(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _receiver);
         //Serial.printf("receiverLen:%d\r\n", len);
-        sendData(_transmitDataBuffer, len);
+        sendData(_transmitDataBufferPtr, len);
         break;
     }
     default:
@@ -142,31 +161,33 @@ Four types of packets may be received:
 3. A request to set a PID value. In this case set the PID value and then send back a TD_SBR_PIDS packet for display.
 4. A request to set an IMU offset value. In this case set the offset value and send back an TD_AHRS packet for display.
 */
-bool BackchannelSV::update(size_t receivedDataLength, uint8_t* receivedDataBuffer)
+bool BackchannelSV::update()
 {
+    const size_t receivedDataLength = _transceiver.getReceivedDataLength();
     if (receivedDataLength != 0) {
+        _transceiver.setReceivedDataLengthToZero();
         // We have a packet, so process it
 
-        const auto controlPacket = reinterpret_cast<const CommandPacketControl*>(receivedDataBuffer);
+        const auto controlPacket = reinterpret_cast<const CommandPacketControl*>(_receivedDataBufferPtr);
         if (controlPacket->id == _backchannelID) {
             // it's our packet, so process it
 
             //Serial.printf("Backchannel::update id:%x, type:%d, len:%d value:%d\r\n", packetControl->id, packetControl->type, packetControl->len, packetControl->value);
             switch (controlPacket->type) {
             case CommandPacketControl::TYPE: // NOLINT(bugprone-branch-clone) false positive
-                packetControl(*reinterpret_cast<const CommandPacketControl*>(receivedDataBuffer));
+                packetControl(*reinterpret_cast<const CommandPacketControl*>(_receivedDataBufferPtr));
                 return true;
                 break;
             case CommandPacketRequestData::TYPE: // NOLINT(bugprone-branch-clone) false positive
-                packetRequestData(*reinterpret_cast<const CommandPacketRequestData*>(receivedDataBuffer));
+                packetRequestData(*reinterpret_cast<const CommandPacketRequestData*>(_receivedDataBufferPtr));
                 return true;
                 break;
             case CommandPacketSetPID::TYPE: // NOLINT(bugprone-branch-clone) false positive
-                packetSetPID(*reinterpret_cast<const CommandPacketSetPID*>(receivedDataBuffer));
+                packetSetPID(*reinterpret_cast<const CommandPacketSetPID*>(_receivedDataBufferPtr));
                 return true;
                 break;
             case CommandPacketSetOffset::TYPE: // NOLINT(bugprone-branch-clone) false positive
-                packetSetOffset(*reinterpret_cast<const CommandPacketSetOffset*>(receivedDataBuffer));
+                packetSetOffset(*reinterpret_cast<const CommandPacketSetOffset*>(_receivedDataBufferPtr));
                 return true;
                 break;
             default:

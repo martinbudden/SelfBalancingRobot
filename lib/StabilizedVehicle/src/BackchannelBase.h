@@ -1,22 +1,41 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 class AHRS;
 class SV_Preferences;
 
+/*!
+Virtual base class for the backchannel transceiver.
+Can be subclassed to provide transceivers over ESPNOW or UDP (for example).
+*/
+class BackchannelTransceiverBase {
+public:
+    virtual int sendData(const uint8_t* data, size_t len) const = 0;
+    virtual void WAIT_FOR_DATA_RECEIVED() = 0;
+    virtual const uint8_t* getMacAddress() const = 0;
+    virtual size_t getReceivedDataLength() const = 0;
+    virtual void setReceivedDataLengthToZero() = 0;
+    virtual uint32_t getTickCountDeltaAndReset() = 0;
+};
+
 class BackchannelBase {
 protected:
-    BackchannelBase(AHRS& ahrs, SV_Preferences& preferences) :
+    BackchannelBase(BackchannelTransceiverBase& transceiver, AHRS& ahrs, SV_Preferences& preferences) :
+        _transceiver(transceiver),
         _ahrs(ahrs),
         _preferences(preferences)
     {}
 public:
-    virtual void WAIT_FOR_DATA_RECEIVED() = 0;
+    void WAIT_FOR_DATA_RECEIVED() { _transceiver.WAIT_FOR_DATA_RECEIVED(); }
+    int sendData(const uint8_t* data, size_t len) const { return _transceiver.sendData(data, len); }
+
     virtual bool update() = 0;
     virtual bool sendTelemetryPacket(uint8_t subCommand) = 0;
     bool sendTelemetryPacket() { return sendTelemetryPacket(0); }
 protected:
+    BackchannelTransceiverBase& _transceiver;
     AHRS& _ahrs;
     SV_Preferences& _preferences;
 };

@@ -174,8 +174,7 @@ void Main::setup()
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
     static Backchannel backchannel(
-        receiver.getESPNOW_Transceiver(),
-        backchannelMacAddress,
+        &backchannelMacAddress[0],
         *_tasks.vehicleControllerTask,
         *_motorPairController,
         *_tasks.ahrsTask,

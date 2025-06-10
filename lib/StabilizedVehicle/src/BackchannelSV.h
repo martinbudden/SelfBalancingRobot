@@ -2,7 +2,6 @@
 
 #include <BackchannelBase.h>
 #include <CommandPacket.h>
-#include <ESPNOW_Transceiver.h>
 
 class AHRS_Task;
 class ReceiverBase;
@@ -10,21 +9,29 @@ class TaskBase;
 class VehicleControllerBase;
 class VehicleControllerTask;
 
+/*!
+Backchannel that sends and receives packets that contain data for a stabilized vehicle.
+*/
 class BackchannelSV : public BackchannelBase {
 public:
     BackchannelSV(
+        const uint8_t* backChannelMacAddress,
+        BackchannelTransceiverBase& transceiver,
         VehicleControllerTask& vehicleControllerTask,
         VehicleControllerBase& vehicleController,
         AHRS_Task& ahrsTask,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences
+        SV_Preferences& preferences,
+        uint8_t* transmitDataBufferPtr,
+        size_t transmitDataBufferSize,
+        uint8_t* receivedDataBufferPtr,
+        size_t receivedDataBufferSize
     );
 public:
     virtual bool sendTelemetryPacket(uint8_t subCommand) override;
 protected:
-    bool update(size_t receivedDataLength, uint8_t* receivedDataBuffer);
-    virtual int sendData(const uint8_t* data, size_t len) const = 0;
+    virtual bool update() override;
     virtual void packetRequestData(const CommandPacketRequestData& packet);
     virtual void packetSetOffset(const CommandPacketSetOffset& packet);
     virtual void packetControl(const CommandPacketControl& packet) = 0;
@@ -39,5 +46,8 @@ protected:
     uint32_t _backchannelID {0};
     uint32_t _requestType { CommandPacketRequestData::REQUEST_STOP_SENDING_DATA }; // So on startup a reset screen packet is sent
     uint32_t _sequenceNumber {0};
-    uint8_t _transmitDataBuffer[256] {}; // ESP_NOW_MAX_DATA_LEN = 250
+    uint8_t* _transmitDataBufferPtr;
+    size_t _transmitDataBufferSize;
+    uint8_t* _receivedDataBufferPtr;
+    size_t _receivedDataBufferSize;
 };
