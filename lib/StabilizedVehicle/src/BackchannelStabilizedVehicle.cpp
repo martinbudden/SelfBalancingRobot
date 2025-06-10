@@ -17,31 +17,36 @@ BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(
         VehicleControllerTask& vehicleControllerTask,
         VehicleControllerBase& vehicleController,
         AHRS_Task& ahrsTask,
+        AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        uint8_t* transmitDataBufferPtr,
-        size_t transmitDataBufferSize,
-        uint8_t* receivedDataBufferPtr,
-        size_t receivedDataBufferSize
+        SV_Preferences& preferences
     ) :
-    BackchannelBase(ahrsTask.getAHRS(), preferences),
     _vehicleControllerTask(vehicleControllerTask),
     _vehicleController(vehicleController),
     _ahrsTask(ahrsTask),
+    _ahrs(ahrs),
     _mainTask(mainTask),
     _receiver(receiver),
-    _transmitDataBufferPtr(transmitDataBufferPtr),
-    _transmitDataBufferSize(transmitDataBufferSize),
-    _receivedDataBufferPtr(receivedDataBufferPtr),
-    _receivedDataBufferSize(receivedDataBufferSize)
+    _preferences(preferences)
 {
-    assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= transmitDataBufferSize); // 12
-    assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= transmitDataBufferSize); // 28
-    assert(sizeof(TD_AHRS) <= transmitDataBufferSize); // 60
-    assert(sizeof(TD_RECEIVER) <= transmitDataBufferSize); // 40
-    assert(sizeof(TD_MPC) <= transmitDataBufferSize); // 100
-    assert(sizeof(TD_SBR_PIDS) <= transmitDataBufferSize); // 192
+#if !defined(ESP_NOW_MAX_DATA_LEN)
+#define ESP_NOW_MAX_DATA_LEN (250)
+#endif
+    // NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
+    static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= ESP_NOW_MAX_DATA_LEN); // 12
+    static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= ESP_NOW_MAX_DATA_LEN); // 28
+    static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN); // 60
+    //static_assert(sizeof(TD_RECEIVER) <= ESP_NOW_MAX_DATA_LEN); // 40
+}
+
+uint32_t BackchannelStabilizedVehicle::idFromMacAddress(const uint8_t* macAddress)
+{
+    // use the last 4 bytes of th MacAddress as ID
+    const uint8_t* pM = macAddress;
+    const uint32_t ret =  (*(pM + 2U) << 24U) | (*(pM + 3U) << 16U) | (*(pM + 4U) << 8U) | *(pM + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
+
+    return ret;
 }
 
 bool BackchannelStabilizedVehicle::packetSetOffset(const CommandPacketSetOffset& packet)

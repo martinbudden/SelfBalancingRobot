@@ -11,26 +11,20 @@ BackchannelSBR::BackchannelSBR(
         VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
         AHRS_Task& ahrsTask,
+        AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
         SV_Preferences& preferences,
-        TelemetryScaleFactors& telemetryScaleFactors,
-        uint8_t* transmitDataBufferPtr,
-        size_t transmitDataBufferSize,
-        uint8_t* receivedDataBufferPtr,
-        size_t receivedDataBufferSize
+        TelemetryScaleFactors& telemetryScaleFactors
     ) :
     BackchannelStabilizedVehicle(
         vehicleControllerTask,
         motorPairController,
         ahrsTask,
+        ahrs,
         mainTask,
         receiver,
-        preferences,
-        transmitDataBufferPtr,
-        transmitDataBufferSize,
-        receivedDataBufferPtr,
-        receivedDataBufferSize
+        preferences
     ),
     _motorPairController(motorPairController),
     _telemetryScaleFactors(telemetryScaleFactors)
@@ -38,16 +32,8 @@ BackchannelSBR::BackchannelSBR(
 #if !defined(ESP_NOW_MAX_DATA_LEN)
 #define ESP_NOW_MAX_DATA_LEN (250)
 #endif
-    // NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
-    static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= ESP_NOW_MAX_DATA_LEN); // 12
-    static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= ESP_NOW_MAX_DATA_LEN); // 28
-    static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN); // 60
-    //static_assert(sizeof(TD_RECEIVER) <= ESP_NOW_MAX_DATA_LEN); // 40
     static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN); // 100
     static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN); // 192
-
-    assert(transmitDataBufferSize >= ESP_NOW_MAX_DATA_LEN && "transmit buffer too small");
-    assert(receivedDataBufferSize >= ESP_NOW_MAX_DATA_LEN && "receive buffer too small");
 }
 
 bool BackchannelSBR::packetControl(const CommandPacketControl& packet)

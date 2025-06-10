@@ -18,16 +18,14 @@ public:
         VehicleControllerTask& vehicleControllerTask,
         VehicleControllerBase& vehicleController,
         AHRS_Task& ahrsTask,
+        AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        uint8_t* transmitDataBufferPtr,
-        size_t transmitDataBufferSize,
-        uint8_t* receivedDataBufferPtr,
-        size_t receivedDataBufferSize
+        SV_Preferences& preferences
     );
 public:
     virtual bool sendTelemetryPacket(uint8_t subCommand) override;
+    static uint32_t idFromMacAddress(const uint8_t* macAddress);
 protected:
     virtual bool update() override;
     virtual bool packetRequestData(const CommandPacketRequestData& packet);
@@ -38,14 +36,12 @@ protected:
     const VehicleControllerTask& _vehicleControllerTask;
     VehicleControllerBase& _vehicleController;
     const AHRS_Task& _ahrsTask;
+    AHRS& _ahrs;
     const TaskBase& _mainTask;
     const ReceiverBase& _receiver;
+    SV_Preferences& _preferences;
     uint32_t _telemetryID {0};
     uint32_t _backchannelID {0};
     uint32_t _requestType { CommandPacketRequestData::REQUEST_STOP_SENDING_DATA }; // So on startup a reset screen packet is sent
     uint32_t _sequenceNumber {0};
-    uint8_t * const _transmitDataBufferPtr;
-    const size_t _transmitDataBufferSize;
-    uint8_t * const _receivedDataBufferPtr;
-    const size_t _receivedDataBufferSize;
 };

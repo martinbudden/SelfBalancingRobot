@@ -1,22 +1,21 @@
 #pragma once
 
-#include <BackchannelSBR.h>
+#include <BackchannelStabilizedVehicle.h>
 #include <BackchannelTransceiverESPNOW.h>
 
 
-class BackchannelESPNOW : public BackchannelSBR {
+class BackchannelStabilizedVehicleESPNOW : public BackchannelStabilizedVehicle {
 public:
-    BackchannelESPNOW(
+    BackchannelStabilizedVehicleESPNOW(
         ESPNOW_Transceiver& espnowTransceiver,
         const uint8_t* backchannelMacAddress,
         VehicleControllerTask& vehicleControllerTask,
-        MotorPairController& motorPairController,
+        VehicleControllerBase& vehicleController,
         AHRS_Task& ahrsTask,
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        TelemetryScaleFactors& telemetryScaleFactors
+        SV_Preferences& preferences
     );
 protected:
     BackchannelTransceiverESPNOW _backchannelTransceiver;

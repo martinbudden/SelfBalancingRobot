@@ -22,10 +22,7 @@ public:
 
 class BackchannelBase {
 protected:
-    BackchannelBase(AHRS& ahrs, SV_Preferences& preferences) :
-        _ahrs(ahrs),
-        _preferences(preferences)
-    {}
+    BackchannelBase() = default;
 public:
     void WAIT_FOR_DATA_RECEIVED() { _backchannelTransceiverPtr->WAIT_FOR_DATA_RECEIVED(); }
     int sendData(const uint8_t* data, size_t len) const { return _backchannelTransceiverPtr->sendData(data, len); }
@@ -35,6 +32,8 @@ public:
     bool sendTelemetryPacket() { return sendTelemetryPacket(0); }
 protected:
     BackchannelTransceiverBase* _backchannelTransceiverPtr {};
-    AHRS& _ahrs;
-    SV_Preferences& _preferences;
+    uint8_t* _transmitDataBufferPtr;
+    size_t _transmitDataBufferSize;
+    uint8_t* _receivedDataBufferPtr;
+    size_t _receivedDataBufferSize;
 };

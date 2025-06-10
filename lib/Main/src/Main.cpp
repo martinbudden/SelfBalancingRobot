@@ -179,6 +179,7 @@ void Main::setup()
         *_tasks.vehicleControllerTask,
         *_motorPairController,
         *_tasks.ahrsTask,
+        *_ahrs,
         *_tasks.mainTask,
         *_receiver,
         preferences,

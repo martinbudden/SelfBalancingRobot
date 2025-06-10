@@ -14,14 +14,11 @@ public:
         VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
         AHRS_Task& ahrsTask,
+        AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
         SV_Preferences& preferences,
-        TelemetryScaleFactors& telemetryScaleFactors,
-        uint8_t* transmitDataBufferPtr,
-        size_t transmitDataBufferSize,
-        uint8_t* receivedDataBufferPtr,
-        size_t receivedDataBufferSize
+        TelemetryScaleFactors& telemetryScaleFactors
     );
 public:
     virtual bool sendTelemetryPacket(uint8_t subCommand) override;

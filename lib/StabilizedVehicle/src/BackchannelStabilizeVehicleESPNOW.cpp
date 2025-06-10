@@ -1,27 +1,25 @@
-#include "BackchannelESPNOW.h"
+#include "BackchannelStabilizedVehicleESPNOW.h"
 
 
-BackchannelESPNOW::BackchannelESPNOW(
+BackchannelStabilizedVehicleESPNOW::BackchannelStabilizedVehicleESPNOW(
         ESPNOW_Transceiver& espnowTransceiver,
         const uint8_t* backchannelMacAddress,
         VehicleControllerTask& vehicleControllerTask,
-        MotorPairController& motorPairController,
+        VehicleControllerBase& vehicleController,
         AHRS_Task& ahrsTask,
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        TelemetryScaleFactors& telemetryScaleFactors
+        SV_Preferences& preferences
     ) :
-    BackchannelSBR(
+    BackchannelStabilizedVehicle(
         vehicleControllerTask,
-        motorPairController,
+        vehicleController,
         ahrsTask,
         ahrs,
         mainTask,
         receiver,
-        preferences,
-        telemetryScaleFactors
+        preferences
     ),
     _backchannelTransceiver(espnowTransceiver, backchannelMacAddress, _receivedDataBuffer, sizeof(_receivedDataBuffer))
 {
@@ -38,4 +36,3 @@ BackchannelESPNOW::BackchannelESPNOW(
     _backchannelID = idFromMacAddress(backchannelMacAddress);
     _telemetryID = idFromMacAddress(_backchannelTransceiver.getMacAddress());
 }
-
