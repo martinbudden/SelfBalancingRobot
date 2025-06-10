@@ -14,7 +14,7 @@ protected:
 public:
     virtual void WAIT_FOR_DATA_RECEIVED() = 0;
     virtual bool update() = 0;
-    virtual bool sendTelemetryPacket(uint8_t valueType) = 0;
+    virtual bool sendTelemetryPacket(uint8_t subCommand) = 0;
     bool sendTelemetryPacket() { return sendTelemetryPacket(0); }
 protected:
     AHRS& _ahrs;
