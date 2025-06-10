@@ -1,73 +1,11 @@
 #include "BackchannelESPNOW.h"
 
 #include "SBR_Telemetry.h"
-#include "TelemetryScaleFactors.h"
 
-#include <MotorPairController.h>
 #include <ReceiverBase.h>
-#include <ReceiverTelemetryData.h>
 #include <SV_Preferences.h>
 #include <SV_Telemetry.h>
-#include <SV_TelemetryData.h>
-#include <VehicleControllerTask.h>
 
-
-#if defined(USE_ESPNOW)
-
-// NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
-static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= ESP_NOW_MAX_DATA_LEN); // 12
-static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= ESP_NOW_MAX_DATA_LEN); // 28
-static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN); // 60
-static_assert(sizeof(TD_RECEIVER) <= ESP_NOW_MAX_DATA_LEN); // 40
-static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN); // 100
-static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN); // 192
-
-void BackchannelTransceiverESPNOW::WAIT_FOR_DATA_RECEIVED()
-{
-    _transceiver.WAIT_FOR_SECONDARY_DATA_RECEIVED();
-}
-
-int BackchannelTransceiverESPNOW::sendData(const uint8_t* data, size_t len) const
-{
-    return _transceiver.sendDataSecondary(data, len);
-}
-
-const uint8_t* BackchannelTransceiverESPNOW::getMacAddress() const
-{
-    return _transceiver.myMacAddress();
-}
-
-size_t BackchannelTransceiverESPNOW::getReceivedDataLength() const
-{
-    return _received_data.len;
-}
-
-void BackchannelTransceiverESPNOW::setReceivedDataLengthToZero()
-{
-    _received_data.len = 0;
-}
-
-BackchannelTransceiverESPNOW::BackchannelTransceiverESPNOW(
-        uint8_t* receivedDataBuffer,
-        size_t receivedDataBufferSize,
-        const uint8_t* macAddress
-    ) :
-    _transceiver(macAddress),
-    _received_data(receivedDataBuffer, receivedDataBufferSize)
-{
-    assert(receivedDataBufferSize >= ESP_NOW_MAX_DATA_LEN);
-
-    _peer_data.receivedDataPtr = &_received_data;
-    // add the backchannel as a secondary peer so data may be received from the backchannel
-    _transceiver.addSecondaryPeer(_received_data, macAddress); // this stores the value of the MAC address
-}
-
-uint32_t BackchannelTransceiverESPNOW::getTickCountDeltaAndReset()
-{
-    return _transceiver.getTickCountDeltaAndReset();
-}
-
-#endif // USE_ESPNOW
 
 Backchannel::Backchannel(
         const uint8_t* backChannelMacAddress,
@@ -98,12 +36,17 @@ Backchannel::Backchannel(
     _telemetryScaleFactors(telemetryScaleFactors)
 {
 #if defined(USE_ESPNOW)
+    // NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
+    static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= ESP_NOW_MAX_DATA_LEN); // 12
+    static_assert(sizeof(TD_TASK_INTERVALS_EXTENDED) <= ESP_NOW_MAX_DATA_LEN); // 28
+    static_assert(sizeof(TD_AHRS) <= ESP_NOW_MAX_DATA_LEN); // 60
+    //static_assert(sizeof(TD_RECEIVER) <= ESP_NOW_MAX_DATA_LEN); // 40
+    static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN); // 100
+    static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN); // 192
     static_assert(sizeof(_transmitDataBuffer) >= ESP_NOW_MAX_DATA_LEN);
     static_assert(sizeof(_receivedDataBuffer) >= ESP_NOW_MAX_DATA_LEN);
 #endif
-    // use the last 4 bytes of myMacAddress as the telemetryID
-    const uint8_t* pM = _transceiver.getMacAddress();
-    _telemetryID = (*(pM + 2U) << 24U) | (*(pM + 3U) << 16U) | (*(pM + 4U) << 8U) | *(pM + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
+    setTelemetryID(_transceiver.getMacAddress());
 }
 
 void Backchannel::packetControl(const CommandPacketControl& packet) {
@@ -193,8 +136,8 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
 
     if (transmit) {
         // send back the new data for display
-        const size_t len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
-        sendData(_transmitDataBuffer, len);
+        const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
+        sendData(_transmitDataBufferPtr, len);
     }
 }
 
@@ -207,7 +150,7 @@ bool Backchannel::sendTelemetryPacket(uint8_t subCommand)
 
     switch (_requestType) {
     case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA: {
-        const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBuffer, _telemetryID, _sequenceNumber,
+        const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBufferPtr, _telemetryID, _sequenceNumber,
             _ahrsTask,
             _vehicleControllerTask,
             _motorPairController.getOutputPowerTimeMicroSeconds(),
@@ -215,33 +158,27 @@ bool Backchannel::sendTelemetryPacket(uint8_t subCommand)
             _transceiver.getTickCountDeltaAndReset(),
             _receiver.getTickCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);
-        sendData(_transmitDataBuffer, len);
-        break;
-    }
-    case CommandPacketRequestData::REQUEST_AHRS_DATA: {
-        const size_t len = packTelemetryData_AHRS(_transmitDataBuffer, _telemetryID, _sequenceNumber, _ahrs, _motorPairController);
-        //Serial.printf("ahrsLen:%d\r\n", len);
-        sendData(_transmitDataBuffer, len);
+        sendData(_transmitDataBufferPtr, len);
         break;
     }
     case CommandPacketRequestData::REQUEST_PID_DATA: {
-        const size_t len = packTelemetryData_PID(_transmitDataBuffer, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
+        const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
         //Serial.printf("pidLen:%d\r\n", len);
-        sendData(_transmitDataBuffer, len);
+        sendData(_transmitDataBufferPtr, len);
         _requestType = CommandPacketRequestData::NO_REQUEST; // reset _sendType to NO_REQUEST, since SEND_PID_DATA is a one shot, as response to keypress
         break;
     }
     case CommandPacketRequestData::REQUEST_VEHICLE_CONTROLLER_DATA: {
-        const size_t len = packTelemetryData_MPC(_transmitDataBuffer, _telemetryID, _sequenceNumber, _vehicleControllerTask, _motorPairController);
+        const size_t len = packTelemetryData_MPC(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _vehicleControllerTask, _motorPairController);
         //Serial.printf("mpcLen:%d\r\n", len);
-        sendData(_transmitDataBuffer, len);
+        sendData(_transmitDataBufferPtr, len);
         break;
     }
     case CommandPacketRequestData::REQUEST_MSP_DATA: {
         (void)subCommand;
-        //const size_t len = packTelemetryData_MSP(_transmitDataBuffer, _telemetryID, _sequenceNumber, _msp, subCommand);
+        //const size_t len = packTelemetryData_MSP(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _msp, subCommand);
         //if (len <= ESP_NOW_MAX_DATA_LEN) {
-        //    sendData(_transmitDataBuffer, len);
+        //    sendData(_transmitDataBufferPtr, len);
         //}
         break;
     }

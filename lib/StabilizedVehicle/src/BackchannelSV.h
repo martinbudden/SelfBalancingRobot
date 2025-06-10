@@ -31,6 +31,7 @@ public:
 public:
     virtual bool sendTelemetryPacket(uint8_t subCommand) override;
 protected:
+    void setTelemetryID(const uint8_t* macAddress);
     virtual bool update() override;
     virtual void packetRequestData(const CommandPacketRequestData& packet);
     virtual void packetSetOffset(const CommandPacketSetOffset& packet);

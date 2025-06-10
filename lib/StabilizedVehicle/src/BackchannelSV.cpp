@@ -48,6 +48,13 @@ BackchannelSV::BackchannelSV(
     _backchannelID = (*(pB + 2U) << 24U) | (*(pB + 3U) << 16U) | (*(pB + 4U) << 8U) | *(pB + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
 }
 
+void BackchannelSV::setTelemetryID(const uint8_t* macAddress)
+{
+    // use the last 4 bytes of myMacAddress as the telemetryID
+    const uint8_t* pM = macAddress;
+    _telemetryID = (*(pM + 2U) << 24U) | (*(pM + 3U) << 16U) | (*(pM + 4U) << 8U) | *(pM + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
+}
+
 void BackchannelSV::packetSetOffset(const CommandPacketSetOffset& packet) {
     IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffsetMapped();
     IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffsetMapped();
@@ -137,6 +144,12 @@ bool BackchannelSV::sendTelemetryPacket(uint8_t subCommand)
             _mainTask.getTickCountDelta(),
             _receiver.getTickCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);
+        sendData(_transmitDataBufferPtr, len);
+        break;
+    }
+    case CommandPacketRequestData::REQUEST_AHRS_DATA: {
+        const size_t len = packTelemetryData_AHRS(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _ahrs, _vehicleController);
+        //Serial.printf("ahrsLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);
         break;
     }

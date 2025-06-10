@@ -1,8 +1,4 @@
-#include "MotorPairController.h"
 #include "SBR_Telemetry.h"
-#include "TelemetryScaleFactors.h"
-#include <SV_TelemetryData.h>
-#include <VehicleControllerTask.h>
 
 #include <cstring>
 
@@ -55,4 +51,3 @@ size_t packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
 
     return td->len;
 };
-
