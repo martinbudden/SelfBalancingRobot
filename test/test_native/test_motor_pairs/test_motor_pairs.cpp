@@ -3,13 +3,16 @@
 
 #include <unity.h>
 
-void setUp() {
+void setUp()
+{
 }
 
-void tearDown() {
+void tearDown()
+{
 }
 
-void test_motor_construction() {
+void test_motor_construction()
+{
     enum {STEPS_PER_REVOLUTION = 123};
 
     const Motors4EncoderMotor motors(0, 0, STEPS_PER_REVOLUTION);
@@ -18,7 +21,8 @@ void test_motor_construction() {
     TEST_ASSERT_EQUAL_INT32(0, motors.getRightEncoder());
 }
 
-void test_BalaC_motors_clipping() {
+void test_BalaC_motors_clipping()
+{
     const MotorsBalaC motors(0, 0);
 
     TEST_ASSERT_EQUAL_FLOAT(0.0F, motors.getStepsPerRevolution());
@@ -41,7 +45,8 @@ void test_BalaC_motors_clipping() {
     TEST_ASSERT_EQUAL_FLOAT(-1.0F, power);
 }
 
-void test_BalaC_motors_deadband() {
+void test_BalaC_motors_deadband()
+{
     MotorsBalaC motors(0, 0); // NOLINT(misc-const-correctness) false positive
     motors.setDeadbandPower(0.2F);
 

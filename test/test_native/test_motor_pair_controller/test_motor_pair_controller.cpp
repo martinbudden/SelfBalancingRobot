@@ -14,10 +14,12 @@ enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
 
-void setUp() {
+void setUp()
+{
 }
 
-void tearDown() {
+void tearDown()
+{
 }
 
 void test_motor_pair_controller()
