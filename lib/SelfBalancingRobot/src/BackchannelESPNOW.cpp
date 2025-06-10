@@ -17,7 +17,7 @@ Backchannel::Backchannel(
         TelemetryScaleFactors& telemetryScaleFactors,
         SV_Preferences& preferences
     ) :
-    BackchannelStabilizedVehicle(
+    BackchannelSBR(
         backChannelMacAddress,
         _transceiver,
         vehicleControllerTask,
@@ -25,15 +25,14 @@ Backchannel::Backchannel(
         ahrsTask,
         mainTask,
         receiver,
+        telemetryScaleFactors,
         preferences,
         &_transmitDataBuffer[0],
         sizeof(_transmitDataBuffer),
         &_receivedDataBuffer[0],
         sizeof(_receivedDataBuffer)
     ),
-    _transceiver(_receivedDataBuffer, sizeof(_receivedDataBuffer), backChannelMacAddress),
-    _motorPairController(motorPairController),
-    _telemetryScaleFactors(telemetryScaleFactors)
+    _transceiver(_receivedDataBuffer, sizeof(_receivedDataBuffer), backChannelMacAddress)
 {
 #if defined(USE_ESPNOW)
     // NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
@@ -49,7 +48,42 @@ Backchannel::Backchannel(
     setTelemetryID(_transceiver.getMacAddress());
 }
 
-void Backchannel::packetControl(const CommandPacketControl& packet) {
+BackchannelSBR::BackchannelSBR(
+        const uint8_t* backChannelMacAddress,
+        BackchannelTransceiverBase& transceiver,
+        VehicleControllerTask& vehicleControllerTask,
+        MotorPairController& motorPairController,
+        AHRS_Task& ahrsTask,
+        const TaskBase& mainTask,
+        const ReceiverBase& receiver,
+        TelemetryScaleFactors& telemetryScaleFactors,
+        SV_Preferences& preferences,
+        uint8_t* transmitDataBufferPtr,
+        size_t transmitDataBufferSize,
+        uint8_t* receivedDataBufferPtr,
+        size_t receivedDataBufferSize
+    ) :
+    BackchannelStabilizedVehicle(
+        backChannelMacAddress,
+        transceiver,
+        vehicleControllerTask,
+        motorPairController,
+        ahrsTask,
+        mainTask,
+        receiver,
+        preferences,
+        transmitDataBufferPtr,
+        transmitDataBufferSize,
+        receivedDataBufferPtr,
+        receivedDataBufferSize
+    ),
+    _motorPairController(motorPairController),
+    _telemetryScaleFactors(telemetryScaleFactors)
+{
+}
+
+void BackchannelSBR::packetControl(const CommandPacketControl& packet)
+{
     //Serial.printf("Control packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
     switch (packet.value) {
     case CommandPacketControl::MOTORS_SWITCH_OFF:
@@ -75,7 +109,8 @@ void Backchannel::packetControl(const CommandPacketControl& packet) {
     } // end switch
 }
 
-void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
+void BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
+{
     //Serial.printf("SetPID packet type:%d, len:%d, pidIndex:%d setType:%d value:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value);
     const MotorPairController::pid_index_e pidIndex = static_cast<MotorPairController::pid_index_e>(packet.pidIndex); // NOLINT(hicpp-use-auto,modernize-use-auto)
 
@@ -141,7 +176,7 @@ void Backchannel::packetSetPID(const CommandPacketSetPID& packet) {
     }
 }
 
-bool Backchannel::sendTelemetryPacket(uint8_t subCommand)
+bool BackchannelSBR::sendTelemetryPacket(uint8_t subCommand)
 {
     if (BackchannelStabilizedVehicle::sendTelemetryPacket(subCommand)) {
         // if the base class has sent the packet then we have nothing to do
