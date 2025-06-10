@@ -173,7 +173,7 @@ void Main::setup()
     static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static Backchannel backchannel(
+    static BackchannelESPNOW backchannel(
         &backchannelMacAddress[0],
         *_tasks.vehicleControllerTask,
         *_motorPairController,

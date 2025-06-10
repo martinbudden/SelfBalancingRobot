@@ -33,10 +33,10 @@ public:
 protected:
     void setTelemetryID(const uint8_t* macAddress);
     virtual bool update() override;
-    virtual void packetRequestData(const CommandPacketRequestData& packet);
-    virtual void packetSetOffset(const CommandPacketSetOffset& packet);
-    virtual void packetControl(const CommandPacketControl& packet) = 0;
-    virtual void packetSetPID(const CommandPacketSetPID& packet) = 0;
+    virtual bool packetRequestData(const CommandPacketRequestData& packet);
+    virtual bool packetSetOffset(const CommandPacketSetOffset& packet);
+    virtual bool packetControl(const CommandPacketControl& packet);
+    virtual bool packetSetPID(const CommandPacketSetPID& packet);
 protected:
     const VehicleControllerTask& _vehicleControllerTask;
     VehicleControllerBase& _vehicleController;

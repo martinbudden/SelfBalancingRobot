@@ -55,7 +55,8 @@ void BackchannelStabilizedVehicle::setTelemetryID(const uint8_t* macAddress)
     _telemetryID = (*(pM + 2U) << 24U) | (*(pM + 3U) << 16U) | (*(pM + 4U) << 8U) | *(pM + 5U); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
 }
 
-void BackchannelStabilizedVehicle::packetSetOffset(const CommandPacketSetOffset& packet) {
+bool BackchannelStabilizedVehicle::packetSetOffset(const CommandPacketSetOffset& packet)
+{
     IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffsetMapped();
     IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffsetMapped();
 
@@ -95,10 +96,12 @@ void BackchannelStabilizedVehicle::packetSetOffset(const CommandPacketSetOffset&
     case CommandPacketSetOffset::SAVE_GYRO_OFFSET: // NOLINT(bugprone-branch-clone) false positive
         gyroOffset = _ahrs.getGyroOffset();
         _preferences.putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
+        return true;
         break;
     case CommandPacketSetOffset::SAVE_ACC_OFFSET: // NOLINT(bugprone-branch-clone) false positive
         accOffset = _ahrs.getAccOffset();
         _preferences.putAccOffset(accOffset.x, accOffset.y, accOffset.z);
+        return true;
         break;
     default:
 #if defined(USE_ESPNOW)
@@ -111,14 +114,30 @@ void BackchannelStabilizedVehicle::packetSetOffset(const CommandPacketSetOffset&
         // send back the new data for display
         const size_t len = packTelemetryData_AHRS(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _ahrs, _vehicleController);
         sendData(_transmitDataBufferPtr, len);
+        return true;
     }
+    return false;
 }
 
-void BackchannelStabilizedVehicle::packetRequestData(const CommandPacketRequestData& packet) {
+bool BackchannelStabilizedVehicle::packetControl(const CommandPacketControl& packet)
+{
+    (void)packet;
+    return false;
+}
+
+bool BackchannelStabilizedVehicle::packetSetPID(const CommandPacketSetPID& packet)
+{
+    (void)packet;
+    return false;
+}
+
+bool BackchannelStabilizedVehicle::packetRequestData(const CommandPacketRequestData& packet)
+{
     //Serial.printf("TransmitRequest packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
 
     _requestType = packet.requestType;
     sendTelemetryPacket(packet.valueType);
+    return true;
 }
 
 bool BackchannelStabilizedVehicle::sendTelemetryPacket(uint8_t subCommand)
