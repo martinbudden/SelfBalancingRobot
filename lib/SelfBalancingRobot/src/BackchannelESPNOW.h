@@ -7,23 +7,18 @@
 class BackchannelESPNOW : public BackchannelSBR {
 public:
     BackchannelESPNOW(
+        ESPNOW_Transceiver& espnowTransceiver,
         const uint8_t* backChannelMacAddress,
         VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
         AHRS_Task& ahrsTask,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        TelemetryScaleFactors& telemetryScaleFactors,
-        SV_Preferences& preferences
+        SV_Preferences& preferences,
+        TelemetryScaleFactors& telemetryScaleFactors
     );
-private:
-    // BackchannelESPNOW is not copyable or moveable
-    BackchannelESPNOW(const BackchannelESPNOW&) = delete;
-    BackchannelESPNOW& operator=(const BackchannelESPNOW&) = delete;
-    BackchannelESPNOW(BackchannelESPNOW&&) = delete;
-    BackchannelESPNOW& operator=(BackchannelESPNOW&&) = delete;
 protected:
-    BackchannelTransceiverESPNOW _transceiverESPNOW;
+    BackchannelTransceiverESPNOW _backchannelTransceiver;
     // If using MSP, then the MSP packets are packed into _transmitDataBuffer by MSP::processOutCommand,
     // so _transmitDataBuffer must be large enough to hold the larges MSP packet.
     // If the packet length exceeds ESP_NOW_MAX_DATA_LEN, then it is not sent,

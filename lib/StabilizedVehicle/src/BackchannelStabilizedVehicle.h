@@ -15,8 +15,6 @@ Backchannel that sends and receives packets that contain data for a stabilized v
 class BackchannelStabilizedVehicle : public BackchannelBase {
 public:
     BackchannelStabilizedVehicle(
-        const uint8_t* backChannelMacAddress,
-        BackchannelTransceiverBase& backchannelTransceiver,
         VehicleControllerTask& vehicleControllerTask,
         VehicleControllerBase& vehicleController,
         AHRS_Task& ahrsTask,
@@ -31,7 +29,6 @@ public:
 public:
     virtual bool sendTelemetryPacket(uint8_t subCommand) override;
 protected:
-    void setTelemetryID(const uint8_t* macAddress);
     virtual bool update() override;
     virtual bool packetRequestData(const CommandPacketRequestData& packet);
     virtual bool packetSetOffset(const CommandPacketSetOffset& packet);
@@ -47,8 +44,8 @@ protected:
     uint32_t _backchannelID {0};
     uint32_t _requestType { CommandPacketRequestData::REQUEST_STOP_SENDING_DATA }; // So on startup a reset screen packet is sent
     uint32_t _sequenceNumber {0};
-    uint8_t* _transmitDataBufferPtr;
-    size_t _transmitDataBufferSize;
-    uint8_t* _receivedDataBufferPtr;
-    size_t _receivedDataBufferSize;
+    uint8_t * const _transmitDataBufferPtr;
+    const size_t _transmitDataBufferSize;
+    uint8_t * const _receivedDataBufferPtr;
+    const size_t _receivedDataBufferSize;
 };

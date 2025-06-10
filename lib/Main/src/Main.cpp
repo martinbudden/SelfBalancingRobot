@@ -112,9 +112,9 @@ void Main::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairControllerStatic(*_ahrs, receiver, i2cMutex);
-    _motorPairController = &motorPairControllerStatic;
-    _ahrs->setVehicleController(_motorPairController);
+    static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
+    _motorPairController = &motorPairController;
+    _ahrs->setVehicleController(&motorPairController);
 
     static SV_Preferences preferences;
 
@@ -126,22 +126,22 @@ void Main::setup()
     checkGyroCalibration(preferences, *_ahrs);
     // Holding BtnC down while switching on resets the preferences.
     if (M5.BtnC.isPressed()) {
-        resetPreferences(preferences, *_motorPairController);
+        resetPreferences(preferences, motorPairController);
     }
 #else
     checkGyroCalibration(preferences, *_ahrs);
 #endif
-    loadPreferences(preferences, *_motorPairController);
+    loadPreferences(preferences, motorPairController);
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
-    static ScreenM5 screen(*_ahrs, *_motorPairController, receiver);
+    static ScreenM5 screen(*_ahrs, motorPairController, receiver);
     ReceiverWatcher* receiverWatcher =  &screen;
     _screen = &screen;
     _screen->updateScreenAndTemplate(); // Update the as soon as we can, to minimize the time the screen is blank
 
     // Statically allocate the buttons.
-    static ButtonsM5 buttons(*_motorPairController, receiver, _screen);
+    static ButtonsM5 buttons(motorPairController, receiver, _screen);
     _buttons = &buttons;
 #if defined(M5_ATOM)
     // The Atom has no BtnB, so it always broadcasts address for binding on startup.
@@ -165,7 +165,7 @@ void Main::setup()
     _tasks.mainTask = &mainTask;
     SV_Tasks::reportMainTask();
     _tasks.ahrsTask = SV_Tasks::setupTask(*_ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
-    _tasks.vehicleControllerTask = SV_Tasks::setupTask(*_motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
+    _tasks.vehicleControllerTask = SV_Tasks::setupTask(motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
     _tasks.receiverTask = SV_Tasks::setupTask(receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE, RECEIVER_TASK_INTERVAL_MICROSECONDS);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
@@ -174,14 +174,15 @@ void Main::setup()
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
     static BackchannelESPNOW backchannel(
+        receiver.getESPNOW_Transceiver(),
         &backchannelMacAddress[0],
         *_tasks.vehicleControllerTask,
         *_motorPairController,
         *_tasks.ahrsTask,
         *_tasks.mainTask,
         *_receiver,
-        telemetryScaleFactors,
-        preferences
+        preferences,
+        telemetryScaleFactors
     );
     _backchannel = &backchannel;
     _tasks.backchannelTask = SV_Tasks::setupTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);

@@ -22,20 +22,19 @@ public:
 
 class BackchannelBase {
 protected:
-    BackchannelBase(BackchannelTransceiverBase& backchannelTransceiver, AHRS& ahrs, SV_Preferences& preferences) :
-        _backchannelTransceiver(backchannelTransceiver),
+    BackchannelBase(AHRS& ahrs, SV_Preferences& preferences) :
         _ahrs(ahrs),
         _preferences(preferences)
     {}
 public:
-    void WAIT_FOR_DATA_RECEIVED() { _backchannelTransceiver.WAIT_FOR_DATA_RECEIVED(); }
-    int sendData(const uint8_t* data, size_t len) const { return _backchannelTransceiver.sendData(data, len); }
+    void WAIT_FOR_DATA_RECEIVED() { _backchannelTransceiverPtr->WAIT_FOR_DATA_RECEIVED(); }
+    int sendData(const uint8_t* data, size_t len) const { return _backchannelTransceiverPtr->sendData(data, len); }
 
     virtual bool update() = 0;
     virtual bool sendTelemetryPacket(uint8_t subCommand) = 0;
     bool sendTelemetryPacket() { return sendTelemetryPacket(0); }
 protected:
-    BackchannelTransceiverBase& _backchannelTransceiver;
+    BackchannelTransceiverBase* _backchannelTransceiverPtr {};
     AHRS& _ahrs;
     SV_Preferences& _preferences;
 };

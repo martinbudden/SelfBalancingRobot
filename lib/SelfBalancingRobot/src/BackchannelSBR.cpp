@@ -8,23 +8,19 @@
 
 
 BackchannelSBR::BackchannelSBR(
-        const uint8_t* backChannelMacAddress,
-        BackchannelTransceiverBase& backchannelTransceiver,
         VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
         AHRS_Task& ahrsTask,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        TelemetryScaleFactors& telemetryScaleFactors,
         SV_Preferences& preferences,
+        TelemetryScaleFactors& telemetryScaleFactors,
         uint8_t* transmitDataBufferPtr,
         size_t transmitDataBufferSize,
         uint8_t* receivedDataBufferPtr,
         size_t receivedDataBufferSize
     ) :
     BackchannelStabilizedVehicle(
-        backChannelMacAddress,
-        backchannelTransceiver,
         vehicleControllerTask,
         motorPairController,
         ahrsTask,
@@ -50,8 +46,8 @@ BackchannelSBR::BackchannelSBR(
     static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN); // 100
     static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN); // 192
 
-    assert(sizeof(transmitDataBufferSize) >= ESP_NOW_MAX_DATA_LEN);
-    assert(sizeof(receivedDataBufferSize) >= ESP_NOW_MAX_DATA_LEN);
+    assert(transmitDataBufferSize >= ESP_NOW_MAX_DATA_LEN && "transmit buffer too small");
+    assert(receivedDataBufferSize >= ESP_NOW_MAX_DATA_LEN && "receive buffer too small");
 }
 
 bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
@@ -173,7 +169,7 @@ bool BackchannelSBR::sendTelemetryPacket(uint8_t subCommand)
             _vehicleControllerTask,
             _motorPairController.getOutputPowerTimeMicroSeconds(),
             _mainTask.getTickCountDelta(),
-            _backchannelTransceiver.getTickCountDeltaAndReset(),
+            _backchannelTransceiverPtr->getTickCountDeltaAndReset(),
             _receiver.getTickCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);

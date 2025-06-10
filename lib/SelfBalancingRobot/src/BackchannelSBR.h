@@ -11,15 +11,13 @@ Backchannel for Self Balancing Robot.
 class BackchannelSBR : public BackchannelStabilizedVehicle {
 public:
     BackchannelSBR(
-        const uint8_t* backChannelMacAddress,
-        BackchannelTransceiverBase& backchannelTransceiver,
         VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
         AHRS_Task& ahrsTask,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        TelemetryScaleFactors& telemetryScaleFactors,
         SV_Preferences& preferences,
+        TelemetryScaleFactors& telemetryScaleFactors,
         uint8_t* transmitDataBufferPtr,
         size_t transmitDataBufferSize,
         uint8_t* receivedDataBufferPtr,
