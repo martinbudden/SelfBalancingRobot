@@ -176,9 +176,9 @@ Four types of packets may be received:
 */
 bool BackchannelStabilizedVehicle::update()
 {
-    const size_t receivedDataLength = _transceiver.getReceivedDataLength();
+    const size_t receivedDataLength = _backchannelTransceiver.getReceivedDataLength();
     if (receivedDataLength != 0) {
-        _transceiver.setReceivedDataLengthToZero();
+        _backchannelTransceiver.setReceivedDataLengthToZero();
         // We have a packet, so process it
 
         const auto controlPacket = reinterpret_cast<const CommandPacketControl*>(_receivedDataBufferPtr);

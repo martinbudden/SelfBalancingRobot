@@ -16,7 +16,7 @@ class BackchannelStabilizedVehicle : public BackchannelBase {
 public:
     BackchannelStabilizedVehicle(
         const uint8_t* backChannelMacAddress,
-        BackchannelTransceiverBase& transceiver,
+        BackchannelTransceiverBase& backchannelTransceiver,
         VehicleControllerTask& vehicleControllerTask,
         VehicleControllerBase& vehicleController,
         AHRS_Task& ahrsTask,

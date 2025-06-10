@@ -19,7 +19,7 @@ Backchannel::Backchannel(
     ) :
     BackchannelSBR(
         backChannelMacAddress,
-        _transceiver,
+        _transceiverESPNOW,
         vehicleControllerTask,
         motorPairController,
         ahrsTask,
@@ -32,7 +32,7 @@ Backchannel::Backchannel(
         &_receivedDataBuffer[0],
         sizeof(_receivedDataBuffer)
     ),
-    _transceiver(_receivedDataBuffer, sizeof(_receivedDataBuffer), backChannelMacAddress)
+    _transceiverESPNOW(_receivedDataBuffer, sizeof(_receivedDataBuffer), backChannelMacAddress)
 {
 #if defined(USE_ESPNOW)
     // NOTE: esp_now_send runs at a high priority, so shorter packets mean less blocking of the other tasks.
@@ -45,12 +45,12 @@ Backchannel::Backchannel(
     static_assert(sizeof(_transmitDataBuffer) >= ESP_NOW_MAX_DATA_LEN);
     static_assert(sizeof(_receivedDataBuffer) >= ESP_NOW_MAX_DATA_LEN);
 #endif
-    setTelemetryID(_transceiver.getMacAddress());
+    setTelemetryID(_backchannelTransceiver.getMacAddress());
 }
 
 BackchannelSBR::BackchannelSBR(
         const uint8_t* backChannelMacAddress,
-        BackchannelTransceiverBase& transceiver,
+        BackchannelTransceiverBase& backchannelTransceiver,
         VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
         AHRS_Task& ahrsTask,
@@ -65,7 +65,7 @@ BackchannelSBR::BackchannelSBR(
     ) :
     BackchannelStabilizedVehicle(
         backChannelMacAddress,
-        transceiver,
+        backchannelTransceiver,
         vehicleControllerTask,
         motorPairController,
         ahrsTask,
@@ -190,7 +190,7 @@ bool BackchannelSBR::sendTelemetryPacket(uint8_t subCommand)
             _vehicleControllerTask,
             _motorPairController.getOutputPowerTimeMicroSeconds(),
             _mainTask.getTickCountDelta(),
-            _transceiver.getTickCountDeltaAndReset(),
+            _backchannelTransceiver.getTickCountDeltaAndReset(),
             _receiver.getTickCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);
