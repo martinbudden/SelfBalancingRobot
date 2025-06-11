@@ -5,6 +5,7 @@
 
 class AHRS;
 class SV_Preferences;
+class TaskBase;
 
 /*!
 Virtual base class for the backchannel transceiver.
@@ -14,7 +15,6 @@ class BackchannelTransceiverBase {
 public:
     virtual int sendData(const uint8_t* data, size_t len) const = 0;
     virtual void WAIT_FOR_DATA_RECEIVED() = 0;
-    virtual const uint8_t* getMacAddress() const = 0;
     virtual size_t getReceivedDataLength() const = 0;
     virtual void setReceivedDataLengthToZero() = 0;
     virtual uint32_t getTickCountDeltaAndReset() = 0;
@@ -30,10 +30,14 @@ public:
     virtual bool update() = 0;
     virtual bool sendTelemetryPacket(uint8_t subCommand) = 0;
     bool sendTelemetryPacket() { return sendTelemetryPacket(0); }
+
+    inline const TaskBase* getTask() const { return _task; }
+    inline void setTask(const TaskBase* task) { _task = task; }
 protected:
     BackchannelTransceiverBase* _backchannelTransceiverPtr {};
-    uint8_t* _transmitDataBufferPtr;
-    size_t _transmitDataBufferSize;
-    uint8_t* _receivedDataBufferPtr;
-    size_t _receivedDataBufferSize;
+    uint8_t* _transmitDataBufferPtr {};
+    size_t _transmitDataBufferSize {};
+    uint8_t* _receivedDataBufferPtr {};
+    size_t _receivedDataBufferSize {};
+    const TaskBase* _task {nullptr};
 };

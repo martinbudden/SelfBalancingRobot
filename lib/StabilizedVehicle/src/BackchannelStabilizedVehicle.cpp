@@ -10,21 +10,18 @@
 #include <SV_Preferences.h>
 #include <SV_Telemetry.h>
 #include <SV_TelemetryData.h>
+#include <VehicleControllerBase.h>
 #include <VehicleControllerTask.h>
 
 
 BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(
-        VehicleControllerTask& vehicleControllerTask,
         VehicleControllerBase& vehicleController,
-        AHRS_Task& ahrsTask,
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
         SV_Preferences& preferences
     ) :
-    _vehicleControllerTask(vehicleControllerTask),
     _vehicleController(vehicleController),
-    _ahrsTask(ahrsTask),
     _ahrs(ahrs),
     _mainTask(mainTask),
     _receiver(receiver),
@@ -152,9 +149,9 @@ bool BackchannelStabilizedVehicle::sendTelemetryPacket(uint8_t subCommand)
     }
     case CommandPacketRequestData::REQUEST_TASK_INTERVAL_DATA: {
         const size_t len = packTelemetryData_TaskIntervals(_transmitDataBufferPtr, _telemetryID, _sequenceNumber,
-            _ahrsTask,
-            _vehicleControllerTask,
-            0, //_mainTask.getTickCountDelta(),
+            *_ahrs.getTask(),
+            *_vehicleController.getTask(),
+            _mainTask.getTickCountDelta(),
             _receiver.getTickCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);
@@ -191,10 +188,11 @@ bool BackchannelStabilizedVehicle::update()
 {
     //Serial.printf("update\r\n");
     const size_t receivedDataLength = _backchannelTransceiverPtr->getReceivedDataLength();
-    if (receivedDataLength != 0) {
+    if (receivedDataLength > 0) {
+        // We have a packet, so process it
+
         //Serial.printf("rdLen:%d\r\n", receivedDataLength);
         _backchannelTransceiverPtr->setReceivedDataLengthToZero();
-        // We have a packet, so process it
 
         const auto* const controlPacket = reinterpret_cast<const CommandPacketControl*>(_receivedDataBufferPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
         if (controlPacket->id == _backchannelID) {

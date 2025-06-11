@@ -4,9 +4,8 @@
 BackchannelESPNOW::BackchannelESPNOW(
         ESPNOW_Transceiver& espnowTransceiver,
         const uint8_t* backchannelMacAddress,
-        VehicleControllerTask& vehicleControllerTask,
+        const uint8_t* myMacAddress,
         MotorPairController& motorPairController,
-        AHRS_Task& ahrsTask,
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
@@ -14,9 +13,7 @@ BackchannelESPNOW::BackchannelESPNOW(
         TelemetryScaleFactors& telemetryScaleFactors
     ) :
     BackchannelSBR(
-        vehicleControllerTask,
         motorPairController,
-        ahrsTask,
         ahrs,
         mainTask,
         receiver,
@@ -36,6 +33,6 @@ BackchannelESPNOW::BackchannelESPNOW(
     _receivedDataBufferSize = sizeof(_receivedDataBuffer);
 
     _backchannelID = idFromMacAddress(backchannelMacAddress);
-    _telemetryID = idFromMacAddress(_backchannelTransceiver.getMacAddress());
+    _telemetryID = idFromMacAddress(myMacAddress);
 }
 

@@ -31,14 +31,15 @@ size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
 /*!
 Packs the MotorPairController telemetry data into a TD_MPC packet. Returns the length of the packet.
 */
-size_t packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber, const VehicleControllerTask& vehicleControllerTask, const MotorPairController& motorPairController)
+size_t packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber, const MotorPairController& motorPairController)
 {
     TD_MPC* td = reinterpret_cast<TD_MPC*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
     td->type = TD_MPC::TYPE;
     td->len = sizeof(TD_MPC);
-    td->taskIntervalTicks = static_cast<uint8_t>(vehicleControllerTask.getTickCountDelta());
+    const TaskBase* motorPairControllerTask = motorPairController.getTask();
+    td->taskIntervalTicks = static_cast<uint8_t>(motorPairControllerTask->getTickCountDelta());
     td->subType = 0;
     td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
 

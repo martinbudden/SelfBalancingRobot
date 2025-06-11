@@ -28,11 +28,6 @@ int BackchannelTransceiverESPNOW::sendData(const uint8_t* data, size_t len) cons
     return _espnowTransceiver.sendDataSecondary(data, len);
 }
 
-const uint8_t* BackchannelTransceiverESPNOW::getMacAddress() const
-{
-    return _espnowTransceiver.myMacAddress();
-}
-
 size_t BackchannelTransceiverESPNOW::getReceivedDataLength() const
 {
     return _received_data.len;

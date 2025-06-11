@@ -18,6 +18,7 @@
 
 class VehicleControllerBase;
 class SensorFusionFilterBase;
+class TaskBase;
 
 /*!
 The AHRS uses the ENU (East North Up) coordinate frame.
@@ -77,6 +78,8 @@ public:
     inline uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
+    inline const TaskBase* getTask() const { return _task; }
+    inline void setTask(const TaskBase* task) { _task = task; }
 public:
     bool readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta);
 private:
@@ -84,6 +87,7 @@ private:
     IMU_Base& _IMU;
     IMU_FiltersBase& _imuFilters;
     VehicleControllerBase* _vehicleController {nullptr};
+    const TaskBase* _task {nullptr};
 
     IMU_Base::accGyroRPS_t _accGyroRPS {};
     IMU_Base::accGyroRPS_t _accGyroRPS_Locked {};

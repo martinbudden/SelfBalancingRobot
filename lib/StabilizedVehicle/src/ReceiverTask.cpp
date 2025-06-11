@@ -41,6 +41,7 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
 [[noreturn]] void ReceiverTask::task()
 {
 #if defined(USE_FREERTOS)
+
 #if defined(RECEIVER_TASK_IS_INTERRUPT_DRIVEN)
     while (true) {
         _receiver.WAIT_FOR_DATA_RECEIVED();
@@ -55,6 +56,7 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
     while (true) {
         // delay until the end of the next taskIntervalTicks
         vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
+
         loop();
     }
 #endif // RECEIVER_TASK_IS_INTERRUPT_DRIVEN

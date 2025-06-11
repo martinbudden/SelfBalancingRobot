@@ -17,9 +17,8 @@ size_t packTelemetryData_TaskIntervals(uint8_t* telemetryDataPtr, uint32_t id, u
         uint32_t transceiverTickCountDelta); // NOLINT(readability-avoid-const-params-in-decls) false positive
 
 size_t packTelemetryData_TaskIntervalsExtended(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber,
-        const AHRS_Task& ahrsTask, // NOLINT(readability-avoid-const-params-in-decls) false positive
-        const TaskBase& vehicleControllerTask,
-        uint32_t vcOutputPowerTimeMicroSeconds,
+        const AHRS& ahrs, // NOLINT(readability-avoid-const-params-in-decls) false positive
+        const VehicleControllerBase& vehicleController,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
         uint32_t receiverDroppedPacketCount); // NOLINT(readability-avoid-const-params-in-decls) false positive

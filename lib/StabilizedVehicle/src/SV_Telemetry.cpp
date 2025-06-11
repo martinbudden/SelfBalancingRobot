@@ -51,9 +51,8 @@ size_t packTelemetryData_TaskIntervals(uint8_t* telemetryDataPtr, uint32_t id, u
 Packs the tick interval telemetry data into a TD_TASK_INTERVALS_EXTENDED packet. Returns the length of the packet.
 */
 size_t packTelemetryData_TaskIntervalsExtended(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber,
-        const AHRS_Task& ahrsTask,
-        const TaskBase& vehicleControllerTask,
-        uint32_t vcOutputPowerTimeMicroSeconds,
+        const AHRS& ahrs,
+        const VehicleControllerBase& vehicleController,
         uint32_t mainTaskTickCountDelta,
         uint32_t transceiverTickCountDelta,
         uint32_t receiverDroppedPacketCount)
@@ -67,19 +66,19 @@ size_t packTelemetryData_TaskIntervalsExtended(uint8_t* telemetryDataPtr, uint32
     td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
 
     td->mainTaskIntervalTicks = static_cast<uint8_t>(mainTaskTickCountDelta);
-    td->ahrsTaskIntervalTicks = static_cast<uint8_t>(ahrsTask.getTickCountDelta());
-    td->vcTaskIntervalTicks = vehicleControllerTask.getTickCountDelta();
+    td->ahrsTaskIntervalTicks = static_cast<uint8_t>(ahrs.getTask()->getTickCountDelta());
+    td->vcTaskIntervalTicks = vehicleController.getTask()->getTickCountDelta();
     td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
 
-    td->ahrsTaskIntervalMicroSeconds = static_cast<uint16_t>(ahrsTask.getTimeMicroSecondDelta());
+    td->ahrsTaskIntervalMicroSeconds = static_cast<uint16_t>(ahrs.getTask()->getTimeMicroSecondDelta());
 
     static_assert(TD_TASK_INTERVALS_EXTENDED::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
     for (size_t ii = 0; ii < TD_TASK_INTERVALS_EXTENDED::TIME_CHECKS_COUNT; ++ii) {
-        td->ahrsTimeChecksMicroSeconds[ii] = ahrsTask.getAHRS().getTimeChecksMicroSeconds(ii);
+        td->ahrsTimeChecksMicroSeconds[ii] = ahrs.getTimeChecksMicroSeconds(ii);
     }
 
     //!!td->vcTaskIntervalMicroSeconds = vehicleController.getTimeMicroSecondDelta();
-    td->vcOutputPowerTimeMicroSeconds = vcOutputPowerTimeMicroSeconds;
+    //!!!td->vcOutputPowerTimeMicroSeconds = vcOutputPowerTimeMicroSeconds;
 
     td->receiverDroppedPacketCount = static_cast<uint8_t>(receiverDroppedPacketCount);
 

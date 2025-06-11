@@ -11,9 +11,7 @@ Backchannel for Self Balancing Robot.
 class BackchannelSBR : public BackchannelStabilizedVehicle {
 public:
     BackchannelSBR(
-        VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
-        AHRS_Task& ahrsTask,
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,

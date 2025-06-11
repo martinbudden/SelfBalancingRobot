@@ -1,4 +1,8 @@
+#include "AHRS.h"
+#include "BackchannelBase.h"
 #include "SV_Tasks.h"
+#include "TaskBase.h"
+#include "VehicleControllerBase.h"
 
 #if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
@@ -48,6 +52,7 @@ AHRS_Task* SV_Tasks::setupTask(AHRS& ahrs, uint8_t priority, uint8_t coreID, uin
 {
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS_Task task(taskIntervalMicroSeconds, ahrs);
+    ahrs.setTask(&task);
 
 #if defined(USE_FREERTOS)
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
@@ -83,6 +88,7 @@ AHRS_Task* SV_Tasks::setupTask(AHRS& ahrs, uint8_t priority, uint8_t coreID, uin
 VehicleControllerTask* SV_Tasks::setupTask(VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     static VehicleControllerTask task(taskIntervalMicroSeconds, vehicleController);
+    vehicleController.setTask(&task);
 
 #if defined(USE_FREERTOS)
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
@@ -150,6 +156,7 @@ BackchannelTask* SV_Tasks::setupTask(BackchannelBase& backchannel, uint8_t prior
 {
     (void)taskIntervalMicroSeconds;
     static BackchannelTask task(backchannel);
+    backchannel.setTask(&task);
 
 #if defined(USE_FREERTOS)
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.

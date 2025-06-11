@@ -24,17 +24,9 @@ Task function for the AHRS. Sets up and runs the task loop() function.
 [[noreturn]] void AHRS_Task::task()
 {
 #if defined(USE_FREERTOS)
-    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-#if !defined(AHRS_IS_INTERRUPT_DRIVEN)
-    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
-    assert(taskIntervalTicks > 0 && "AHRS taskIntervalTicks is zero.");
-    //Serial.print("AHRS us:");
-    //Serial.println(taskIntervalTicks);
-#endif
-    _previousWakeTimeTicks = xTaskGetTickCount();
 
-    while (true) {
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
+    while (true) {
         _IMU.WAIT_IMU_DATA_READY(); // wait until there is IMU data.
 
         const uint32_t timeMicroSeconds = timeUs();
@@ -43,7 +35,16 @@ Task function for the AHRS. Sets up and runs the task loop() function.
         if (timeMicroSecondsDelta > 0) {
             readIMUandUpdateOrientation(static_cast<float>(timeMicroSecondsDelta)* 0.000001F, timeMicroSecondsDelta / 1000);
         }
+    }
 #else
+    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
+    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
+    assert(taskIntervalTicks > 0 && "AHRS taskIntervalTicks is zero.");
+    //Serial.print("AHRS us:");
+    //Serial.println(taskIntervalTicks);
+    _previousWakeTimeTicks = xTaskGetTickCount();
+
+    while (true) {
         // delay until the end of the next taskIntervalTicks
         vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
 
@@ -59,8 +60,8 @@ Task function for the AHRS. Sets up and runs the task loop() function.
             const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
             _ahrs.readIMUandUpdateOrientation(deltaT, _tickCountDelta);
         }
-#endif // AHRS_IS_INTERRUPT_DRIVEN
     }
+#endif // AHRS_IS_INTERRUPT_DRIVEN
 #else
     while (true) {}
 #endif // USE_FREERTOS
@@ -73,6 +74,5 @@ Wrapper function for AHRS::Task with the correct signature to be used in xTaskCr
 {
     const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
-    auto* ahrsTask = static_cast<AHRS_Task*>(parameters->task); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
-    ahrsTask->task();
+    static_cast<AHRS_Task*>(parameters->task)->task(); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 }

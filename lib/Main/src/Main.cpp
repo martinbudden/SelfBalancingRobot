@@ -176,9 +176,8 @@ void Main::setup()
     static BackchannelESPNOW backchannel(
         receiver.getESPNOW_Transceiver(),
         &backchannelMacAddress[0],
-        *_tasks.vehicleControllerTask,
+        &myMacAddress[0],
         *_motorPairController,
-        *_tasks.ahrsTask,
         *_ahrs,
         *_tasks.mainTask,
         *_receiver,

@@ -15,9 +15,7 @@ Backchannel that sends and receives packets that contain data for a stabilized v
 class BackchannelStabilizedVehicle : public BackchannelBase {
 public:
     BackchannelStabilizedVehicle(
-        VehicleControllerTask& vehicleControllerTask,
         VehicleControllerBase& vehicleController,
-        AHRS_Task& ahrsTask,
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
@@ -33,9 +31,7 @@ protected:
     virtual bool packetControl(const CommandPacketControl& packet);
     virtual bool packetSetPID(const CommandPacketSetPID& packet);
 protected:
-    const VehicleControllerTask& _vehicleControllerTask;
     VehicleControllerBase& _vehicleController;
-    const AHRS_Task& _ahrsTask;
     AHRS& _ahrs;
     const TaskBase& _mainTask;
     const ReceiverBase& _receiver;

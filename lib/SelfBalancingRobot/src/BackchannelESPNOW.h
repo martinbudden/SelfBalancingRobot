@@ -9,9 +9,8 @@ public:
     BackchannelESPNOW(
         ESPNOW_Transceiver& espnowTransceiver,
         const uint8_t* backchannelMacAddress,
-        VehicleControllerTask& vehicleControllerTask,
+        const uint8_t* myMacAddress,
         MotorPairController& motorPairController,
-        AHRS_Task& ahrsTask,
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,

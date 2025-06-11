@@ -10,7 +10,6 @@ public:
         TaskBase(taskIntervalMicroSeconds),
         _ahrs(ahrs) {}
 
-    AHRS& getAHRS() const { return _ahrs; }
 public:
     [[noreturn]] static void Task(void* arg);
     void loop();

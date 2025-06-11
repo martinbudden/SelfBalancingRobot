@@ -8,9 +8,7 @@
 
 
 BackchannelSBR::BackchannelSBR(
-        VehicleControllerTask& vehicleControllerTask,
         MotorPairController& motorPairController,
-        AHRS_Task& ahrsTask,
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
@@ -18,9 +16,7 @@ BackchannelSBR::BackchannelSBR(
         TelemetryScaleFactors& telemetryScaleFactors
     ) :
     BackchannelStabilizedVehicle(
-        vehicleControllerTask,
         motorPairController,
-        ahrsTask,
         ahrs,
         mainTask,
         receiver,
@@ -151,9 +147,8 @@ bool BackchannelSBR::sendTelemetryPacket(uint8_t subCommand)
     switch (_requestType) {
     case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA: {
         const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBufferPtr, _telemetryID, _sequenceNumber,
-            _ahrsTask,
-            _vehicleControllerTask,
-            _motorPairController.getOutputPowerTimeMicroSeconds(),
+            _ahrs,
+            _motorPairController,
             _mainTask.getTickCountDelta(),
             _backchannelTransceiverPtr->getTickCountDeltaAndReset(),
             _receiver.getTickCountDelta());
@@ -169,7 +164,7 @@ bool BackchannelSBR::sendTelemetryPacket(uint8_t subCommand)
         break;
     }
     case CommandPacketRequestData::REQUEST_VEHICLE_CONTROLLER_DATA: {
-        const size_t len = packTelemetryData_MPC(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _vehicleControllerTask, _motorPairController);
+        const size_t len = packTelemetryData_MPC(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController);
         //Serial.printf("mpcLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);
         break;

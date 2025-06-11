@@ -38,7 +38,7 @@ Task function for the BackchannelTask. Sets up and runs the task loop() function
 #if defined(USE_FREERTOS)
     while (true) {
         _backchannel.WAIT_FOR_DATA_RECEIVED();
-        loop();
+        _backchannel.update();
     }
 #else
     while (true) {}
