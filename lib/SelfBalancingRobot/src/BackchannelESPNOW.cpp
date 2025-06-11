@@ -9,16 +9,14 @@ BackchannelESPNOW::BackchannelESPNOW(
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        TelemetryScaleFactors& telemetryScaleFactors
+        SV_Preferences& preferences
     ) :
     BackchannelSBR(
         motorPairController,
         ahrs,
         mainTask,
         receiver,
-        preferences,
-        telemetryScaleFactors
+        preferences
     ),
     _backchannelTransceiver(espnowTransceiver, backchannelMacAddress, _receivedDataBuffer, sizeof(_receivedDataBuffer))
 {
@@ -27,7 +25,8 @@ BackchannelESPNOW::BackchannelESPNOW(
     static_assert(sizeof(_receivedDataBuffer) >= ESP_NOW_MAX_DATA_LEN && "receive buffer too small");
 #endif
     _backchannelTransceiverPtr = &_backchannelTransceiver;
-    _transmitDataBufferPtr = &_transmitDataBuffer[0]; 
+
+    _transmitDataBufferPtr = &_transmitDataBuffer[0];
     _transmitDataBufferSize = sizeof(_transmitDataBuffer);
     _receivedDataBufferPtr = &_receivedDataBuffer[0];
     _receivedDataBufferSize = sizeof(_receivedDataBuffer);

@@ -32,8 +32,10 @@ MotorPairBase& MotorPairController::allocateMotors()
     // Statically allocate the MotorPair object as defined by the build flags.
 #if defined(MOTORS_BALA_2)
     static MotorsBala2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
+    setScaleFactors(scaleFactorsBala2);
 #elif defined(MOTORS_BALA_C)
     static MotorsBalaC motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
+    setScaleFactors(scaleFactorsBalaC);
 #elif defined(MOTORS_4_ENCODER_MOTOR)
     static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_GO_PLUS_2)
@@ -66,8 +68,7 @@ Sets the control mode and adjusts the _PIDS[SPEED_DPS] constants accordingly.
 void MotorPairController::setControlMode(control_mode_e controlMode)
 {
     _controlMode = controlMode;
-    _PIDS[SPEED_DPS].setPID((controlMode == CONTROL_MODE_SERIAL_PIDS) ? speedPID_DefaultSerial : speedPID_DefaultParallel);
-    _PIDS[SPEED_DPS].resetIntegral();
+    resetIntegrals();
 }
 
 /*!
@@ -78,11 +79,11 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     _receiver(receiver),
     _motorPair(allocateMotors()),
     _motorPairMixer(_motorPair),
-    _controlMode(controlModeDefault),
-    _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),
+    _controlMode(controlMode),
+    _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorStepsPerRevolution(_motorPair.getStepsPerRevolution()),
-    _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
+    _pitchBalanceAngleDegrees(vehicle.pitchBalanceAngleDegrees)
 {
     _rollAngleDegreesRaw = NOT_SET;
     _yawAngleDegreesRaw = NOT_SET;
@@ -92,20 +93,20 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
 #endif
 
     setControlMode(_controlMode);
-    _motorPairMixer.setMotorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees);
+    _motorPairMixer.setMotorSwitchOffAngleDegrees(vehicle.motorSwitchOffAngleDegrees);
 
-    _PIDS[PITCH_ANGLE_DEGREES].setPID(pitchPID_Default);
+    _PIDS[PITCH_ANGLE_DEGREES].setPID(defaultPIDs[PITCH_ANGLE_DEGREES]);
     _PIDS[PITCH_ANGLE_DEGREES].setIntegralMax(1.0F);
     _PIDS[PITCH_ANGLE_DEGREES].setOutputSaturationValue(1.0F);
 
     _speedFilter.setAlpha(0.8F);
     //_PIDS[SPEED_DPS].setIntegralMax(1.0F);
 
-    _PIDS[POSITION_DEGREES].setPID(positionPID_Default);
+    _PIDS[POSITION_DEGREES].setPID(defaultPIDs[POSITION_DEGREES]);
 
-    _PIDS[YAW_RATE_DPS].setPID(yawRatePID_Default);
+    _PIDS[YAW_RATE_DPS].setPID(defaultPIDs[YAW_RATE_DPS]);
 
-    const float yawRateDPS_AtMaxPower = _motorMaxSpeedDPS * wheelDiameterMM / wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
+    const float yawRateDPS_AtMaxPower = _motorMaxSpeedDPS * vehicle.wheelDiameterMM / vehicle.wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
     static constexpr float maxDesiredYawRateDPS {720.0};
     _yawStickMultiplier = maxDesiredYawRateDPS / yawRateDPS_AtMaxPower;
 }

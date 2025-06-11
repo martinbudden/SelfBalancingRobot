@@ -16,7 +16,6 @@
 #include "Calibration.h"
 #include "Main.h"
 #include "ScreenM5.h"
-#include "TelemetryScaleFactors.h"
 
 #include <AHRS.h>
 #include <AHRS_Task.h>
@@ -169,8 +168,6 @@ void Main::setup()
     _tasks.receiverTask = SV_Tasks::setupTask(receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE, RECEIVER_TASK_INTERVAL_MICROSECONDS);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
-    // Statically allocate the telemetry scale factors
-    static TelemetryScaleFactors telemetryScaleFactors(_motorPairController->getControlMode());
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
     static BackchannelESPNOW backchannel(
@@ -181,8 +178,7 @@ void Main::setup()
         *_ahrs,
         *_tasks.mainTask,
         *_receiver,
-        preferences,
-        telemetryScaleFactors
+        preferences
     );
     _backchannel = &backchannel;
     _tasks.backchannelTask = SV_Tasks::setupTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);

@@ -12,8 +12,7 @@ BackchannelSBR::BackchannelSBR(
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        TelemetryScaleFactors& telemetryScaleFactors
+        SV_Preferences& preferences
     ) :
     BackchannelStabilizedVehicle(
         motorPairController,
@@ -22,8 +21,7 @@ BackchannelSBR::BackchannelSBR(
         receiver,
         preferences
     ),
-    _motorPairController(motorPairController),
-    _telemetryScaleFactors(telemetryScaleFactors)
+    _motorPairController(motorPairController)
 {
 #if !defined(ESP_NOW_MAX_DATA_LEN)
 #define ESP_NOW_MAX_DATA_LEN (250)
@@ -35,7 +33,7 @@ BackchannelSBR::BackchannelSBR(
 bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
 {
     //Serial.printf("Control packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
-    switch (packet.value) {
+    switch (packet.control) {
     case CommandPacketControl::MOTORS_SWITCH_OFF:
         _motorPairController.motorsSwitchOff();
         return true;
@@ -48,15 +46,14 @@ bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
         _motorPairController.motorsResetEncodersToZero();
         return true;
         break;
-    case CommandPacketControl::CONTROL_MODE_0:
-        _motorPairController.setControlMode(MotorPairController::CONTROL_MODE_SERIAL_PIDS);
-        _telemetryScaleFactors.setControlMode(MotorPairController::CONTROL_MODE_SERIAL_PIDS);
+    case CommandPacketControl::SET_MODE:
+        _motorPairController.setControlMode(static_cast<MotorPairController::control_mode_e>(packet.value));
         return true;
         break;
-    case CommandPacketControl::CONTROL_MODE_1:
-        _motorPairController.setControlMode(MotorPairController::CONTROL_MODE_PARALLEL_PIDS);
-        _telemetryScaleFactors.setControlMode(MotorPairController::CONTROL_MODE_PARALLEL_PIDS);
-        return true;
+    case CommandPacketControl::SET_PID_PROFILE:
+        return false; // not implemented
+    case CommandPacketControl::SET_RATES_PROFILE:
+        return false; // not implemented
         break;
     default:
         // do nothing
@@ -78,19 +75,19 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
     bool transmit = false;
     switch (packet.setType) {
     case CommandPacketSetPID::SET_P:
-        _motorPairController.setPID_P(pidIndex, packet.value);
+        _motorPairController.setPID_P_MSP(pidIndex, packet.value);
         transmit = true;
         break;
     case CommandPacketSetPID::SET_I:
-        _motorPairController.setPID_I(pidIndex, packet.value);
+        _motorPairController.setPID_I_MSP(pidIndex, packet.value);
         transmit = true;
         break;
     case CommandPacketSetPID::SET_D:
-        _motorPairController.setPID_D(pidIndex, packet.value);
+        _motorPairController.setPID_D_MSP(pidIndex, packet.value);
         transmit = true;
         break;
     case CommandPacketSetPID::SET_F:
-        _motorPairController.setPID_F(pidIndex, packet.value);
+        _motorPairController.setPID_F_MSP(pidIndex, packet.value);
         transmit = true;
         break;
     case CommandPacketSetPID::SET_SETPOINT:
@@ -130,7 +127,7 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
 
     if (transmit) {
         // send back the new data for display
-        const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
+        const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController);
         sendData(_transmitDataBufferPtr, len);
         return true;
     }
@@ -157,10 +154,10 @@ bool BackchannelSBR::sendTelemetryPacket(uint8_t subCommand)
         break;
     }
     case CommandPacketRequestData::REQUEST_PID_DATA: {
-        const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController, _telemetryScaleFactors);
+        const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController);
         //Serial.printf("pidLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);
-        _requestType = CommandPacketRequestData::NO_REQUEST; // reset _sendType to NO_REQUEST, since SEND_PID_DATA is a one shot, as response to keypress
+        _requestType = CommandPacketRequestData::NO_REQUEST; // reset _requestType to NO_REQUEST, since REQUEST_PID_DATA is a one shot, as response to keypress
         break;
     }
     case CommandPacketRequestData::REQUEST_VEHICLE_CONTROLLER_DATA: {

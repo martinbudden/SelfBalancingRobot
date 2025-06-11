@@ -530,7 +530,7 @@ void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
     M5.Lcd.printf("%5.2f ay:%5.2f az:%5.2f", ahrsData.acc.x, ahrsData.acc.y, ahrsData.acc.z);
 
     motor_pair_controller_telemetry_t mpcTelemetry;
-    _motorPairController.getTelemetryData(mpcTelemetry);
+    _motorPairController.getTelemetryData(mpcTelemetry, _motorPairController.getControlMode());
 #if defined(MOTORS_HAVE_ENCODERS)
     yPos = 180;
     M5.Lcd.setCursor(48, yPos);

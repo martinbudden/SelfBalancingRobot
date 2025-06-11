@@ -181,7 +181,7 @@ Four types of packets may be received:
 
 1. A command packet, for example a command to switch off the motors.
 2. A request to transmit telemetry. In this case format the telemetry data and send it.
-3. A request to set a PID value. In this case set the PID value and then send back a TD_SBR_PIDS packet for display.
+3. A request to set a PID value. In this case set the PID value and then send back a TD_PIDS packet for display.
 4. A request to set an IMU offset value. In this case set the offset value and send back an TD_AHRS packet for display.
 */
 bool BackchannelStabilizedVehicle::update()

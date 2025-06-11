@@ -49,10 +49,28 @@ public:
         ROLL_ANGLE_DEGREES=0, // allow possibility of roll control in future implementation
         PITCH_ANGLE_DEGREES=1,
         YAW_RATE_DPS=2,
-        SPEED_DPS=3,
-        POSITION_DEGREES=4,
-        PID_COUNT=5,
+        SPEED_SERIAL_DPS=3,
+        SPEED_PARALLEL_DPS=4,
+        POSITION_DEGREES=5,
+        PID_COUNT=6,
         PID_BEGIN=0
+    };
+    enum output_index_e {
+        OUTPUT_ROLL_ANGLE_DEGREES=0, // allow possibility of roll control in future implementation
+        OUTPUT_PITCH_ANGLE_DEGREES=1,
+        OUTPUT_YAW_RATE_DPS=2,
+        OUTPUT_SPEED_DPS=3,
+        OUTPUT_POSITION_DEGREES=4,
+        OUTPUT_COUNT=5,
+        OUTPUT_BEGIN=0
+    };
+    struct vehicle_t {
+        float maxMotorRPM;
+        float wheelDiameterMM;
+        float wheelTrackMM;
+        float pitchBalanceAngleDegrees;
+        float motorSwitchOffAngleDegrees;
+        float encoderStepsPerRevolution;
     };
     static constexpr float NOT_SET = FLT_MAX;
 public:
@@ -72,19 +90,28 @@ public:
     const std::string& getPID_Name(pid_index_e pidIndex) const;
     inline const PIDF::PIDF_t getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
     inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
-    inline void setPID_P(pid_index_e pidIndex, float kp) { _PIDS[pidIndex].setP(kp); }
-    inline void setPID_I(pid_index_e pidIndex, float ki) { _PIDS[pidIndex].setI(ki); }
-    inline void setPID_D(pid_index_e pidIndex, float kd) { _PIDS[pidIndex].setD(kd); }
-    inline void setPID_F(pid_index_e pidIndex, float kf) { _PIDS[pidIndex].setF(kf); }
+
+    uint8_t getPID_P_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getP() / _scaleFactors[pidIndex].kp); }
+    uint8_t getPID_I_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getI() / _scaleFactors[pidIndex].ki); }
+    uint8_t getPID_D_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getD() / _scaleFactors[pidIndex].kd); }
+    uint8_t getPID_F_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getF() / _scaleFactors[pidIndex].kf); }
+
+    void setPID_P_MSP(pid_index_e pidIndex, uint8_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors[pidIndex].kp); }
+    void setPID_I_MSP(pid_index_e pidIndex, uint8_t ki) { _PIDS[pidIndex].setP(ki * _scaleFactors[pidIndex].ki); }
+    void setPID_D_MSP(pid_index_e pidIndex, uint8_t kd) { _PIDS[pidIndex].setP(kd * _scaleFactors[pidIndex].kd); }
+    void setPID_F_MSP(pid_index_e pidIndex, uint8_t kf) { _PIDS[pidIndex].setP(kf * _scaleFactors[pidIndex].kf); }
+
+    void setScaleFactors(const std::array<PIDF::PIDF_t, PID_COUNT>& scaleFactors) { _scaleFactors = scaleFactors; }
 
     inline float getPID_Setpoint(pid_index_e pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
     void setPID_Setpoint(pid_index_e pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
+    void resetIntegrals() { for (auto& pid : _PIDS) { pid.resetIntegral(); } }
 
     std::string getBalanceAngleName() const;
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }
     inline void setPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees) { _pitchBalanceAngleDegrees = pitchBalanceAngleDegrees; }
 
-    void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const;
+    void getTelemetryData(motor_pair_controller_telemetry_t& telemetry, control_mode_e controlMode) const;
 
     void motorsResetEncodersToZero();
 public:
@@ -145,6 +172,7 @@ private:
     FilterMovingAverage<4> _pitchAngleDTermFilter {};
     float _yawStickMultiplier {1.0};
 
+    std::array<float, OUTPUT_COUNT> _outputs {};
     std::array<PIDF, PID_COUNT> _PIDS {};
-    std::array<float, PID_COUNT> _outputs {}; //<! PID outputs, stored since the output from one PID may be used as the input to another
+    std::array<PIDF::PIDF_t, PID_COUNT> _scaleFactors {};
 };

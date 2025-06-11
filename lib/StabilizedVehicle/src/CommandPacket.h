@@ -22,21 +22,15 @@ struct CommandPacketControl {
         MOTORS_SWITCH_OFF = 1,
         MOTORS_SWITCH_ON = 2,
         RESET = 3,
-        CONTROL_MODE_0 = 20,
-        CONTROL_MODE_1 = 21,
-        CONTROL_MODE_2 = 22,
-        CONTROL_MODE_3 = 23,
-        CONTROL_MODE_4 = 24,
-        CONTROL_MODE_5 = 25,
-        CONTROL_MODE_6 = 26,
-        CONTROL_MODE_7 = 27,
-        CONTROL_MODE_8 = 28,
-        CONTROL_MODE_9 = 29
+        SET_MODE = 4,
+        SET_PID_PROFILE = 5,
+        SET_RATES_PROFILE = 6,
     };
     uint32_t id;
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketControl)
-    uint16_t value;
+    uint8_t control;
+    uint8_t value;
 };
 
 struct CommandPacketRequestData {
@@ -70,14 +64,14 @@ struct CommandPacketSetPID {
         SET_PITCH_BALANCE_ANGLE = 11,
         SAVE_PITCH_BALANCE_ANGLE = 12
     };
-    enum { MPC_ROLL_ANGLE=0, MPC_PITCH_ANGLE=1, MPC_YAW_RATE=2, MPC_SPEED=3, MPC_POSITION=4, MPC_PID_COUNT=5, MPC_PID_BEGIN=0 };
-    enum { FC_ROLL_RATE=0,   FC_PITCH_RATE=1, FC_YAW_RATE=2, FC_ROLL_ANGLE=3, FC_PITCH_ANGLE=4, FC_PID_COUNT=5, FC_PID_BEGIN=0 };
+    enum { MPC_ROLL_ANGLE=0, MPC_PITCH_ANGLE=1, MPC_YAW_RATE=2, MPC_SPEED_SERIAL=3, MPC_SPEED_PARALLEL=4, MPC_POSITION=5, MPC_PID_COUNT=6, MPC_PID_BEGIN=0 };
+    enum { FC_ROLL_RATE=0,  FC_PITCH_RATE=1, FC_YAW_RATE=2, FC_ROLL_ANGLE=3, FC_PITCH_ANGLE=4, FC_PID_COUNT=5, FC_PID_BEGIN=0 };
     uint32_t id;
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetPID)
     uint8_t pidIndex;
     uint8_t setType;
-    float value;
+    uint8_t value;
 };
 
 struct CommandPacketSetOffset {
@@ -85,7 +79,7 @@ struct CommandPacketSetOffset {
     enum {
         NO_ACTION = 0,
         SET_GYRO_OFFSET_X = 1, SET_GYRO_OFFSET_Y = 2, SET_GYRO_OFFSET_Z = 3, SAVE_GYRO_OFFSET = 4,
-        SET_ACC_OFFSET_X = 5,  SET_ACC_OFFSET_Y = 6,  SET_ACC_OFFSET_Z = 7,  SAVE_ACC_OFFSET = 8
+        SET_ACC_OFFSET_X  = 5, SET_ACC_OFFSET_Y  = 6, SET_ACC_OFFSET_Z  = 7, SAVE_ACC_OFFSET  = 8
     };
     uint32_t id;
     uint8_t type;

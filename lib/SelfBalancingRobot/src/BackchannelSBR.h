@@ -3,7 +3,6 @@
 #include <BackchannelStabilizedVehicle.h>
 
 class MotorPairController;
-class TelemetryScaleFactors;
 
 /*!
 Backchannel for Self Balancing Robot.
@@ -15,8 +14,7 @@ public:
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        TelemetryScaleFactors& telemetryScaleFactors
+        SV_Preferences& preferences
     );
 public:
     virtual bool sendTelemetryPacket(uint8_t subCommand) override;
@@ -25,5 +23,4 @@ protected:
     virtual bool packetSetPID(const CommandPacketSetPID& packet) override;
 protected:
     MotorPairController& _motorPairController;
-    TelemetryScaleFactors& _telemetryScaleFactors;
 };

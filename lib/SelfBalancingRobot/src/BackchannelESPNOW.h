@@ -14,8 +14,7 @@ public:
         AHRS& ahrs,
         const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        TelemetryScaleFactors& telemetryScaleFactors
+        SV_Preferences& preferences
     );
 protected:
     BackchannelTransceiverESPNOW _backchannelTransceiver;

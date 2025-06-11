@@ -31,6 +31,7 @@ const std::string& MotorPairController::getPID_Name(pid_index_e pidIndex) const
     return PID_NAMES[pidIndex];
 }
 
+
 std::string MotorPairController::getBalanceAngleName() const
 {
     return "BALANCE_ANGLE";
@@ -51,21 +52,21 @@ This is because:
    all the member data are continuous, and so a partially updated object is still meaningful to display.
 3. The overhead of a mutex is thus avoided.
 */
-void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const
+void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& telemetry, control_mode_e controlMode) const
 {
    if (motorsIsOn()) {
         telemetry.pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
-        telemetry.speedError = _PIDS[SPEED_DPS].getError();
+        telemetry.speedError = _PIDS[controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
         telemetry.positionError = _PIDS[POSITION_DEGREES].getError();
    } else {
         telemetry.pitchError = { 0.0F, 0.0F, 0.0F };
         telemetry.speedError = { 0.0F, 0.0F, 0.0F };
         telemetry.positionError = { 0.0F, 0.0F, 0.0F };
    }
-    telemetry.pitchAngleOutput = _outputs[PITCH_ANGLE_DEGREES];
-    telemetry.speedOutput = _outputs[SPEED_DPS];
-    telemetry.positionOutput = _outputs[POSITION_DEGREES];
-    telemetry.yawRateOutput = _outputs[YAW_RATE_DPS];
+    telemetry.pitchAngleOutput = _outputs[OUTPUT_PITCH_ANGLE_DEGREES];
+    telemetry.speedOutput = _outputs[OUTPUT_SPEED_DPS];
+    telemetry.positionOutput = _outputs[OUTPUT_POSITION_DEGREES];
+    telemetry.yawRateOutput = _outputs[OUTPUT_YAW_RATE_DPS];
 
     telemetry.powerLeft = _motorPairMixer.getPowerLeft();
     telemetry.powerRight = _motorPairMixer.getPowerRight();
@@ -90,9 +91,7 @@ void MotorPairController::motorsSwitchOff()
 void MotorPairController::motorsSwitchOn()
 {
     // reset the PID integrals when we switch the motors on, so they don't start with residual I-term windup
-    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        _PIDS[ii].resetIntegral();
-    }
+    resetIntegrals();
     // don't allow motors to be switched on if the sensor fusion has not initialized
     if (!_ahrs.sensorFusionFilterIsInitializing()) {
         _motorPairMixer.motorsSwitchOn();
@@ -120,7 +119,7 @@ void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
         }
     :
         MotorMixerBase::commands_t {
-            .speed  = _outputs[SPEED_DPS],
+            .speed  = _outputs[OUTPUT_SPEED_DPS],
             .roll   = _outputs[ROLL_ANGLE_DEGREES],
             .pitch  = _outputs[PITCH_ANGLE_DEGREES],
             .yaw    = _outputs[YAW_RATE_DPS]
@@ -159,7 +158,8 @@ void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_
         _receiver.getStickValues(_throttleStick, _rollStick, _pitchStick, _yawStick);
         _yawStick = mapYawStick(_yawStick);
 
-        _PIDS[SPEED_DPS].setSetpoint(_throttleStick);
+        _PIDS[SPEED_SERIAL_DPS].setSetpoint(_throttleStick);
+        _PIDS[SPEED_PARALLEL_DPS].setSetpoint(_throttleStick);
 
         // MotorPairController uses ENU coordinate convention
 
@@ -288,24 +288,22 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 #endif
 
     if (!motorsIsOn() || motorsIsDisabled()) { // [[unlikely]]
-        for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-            _outputs[ii] = 0.0F;
-            _PIDS[ii].resetIntegral();
-        }
+        resetIntegrals();
+        _outputs.fill(0.0F);
 #if !defined(AHRS_RECORD_UPDATE_TIMES)
         YIELD_TASK();
         return;
 #endif
     }
 
-    // calculate _outputs[SPEED_DPS] according to the control mode.
+    // calculate _outputs[OUTPUT_SPEED_DPS] and setpoints according to the control mode.
     if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-        _outputs[SPEED_DPS] = -_PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
+        _outputs[OUTPUT_SPEED_DPS] = -_PIDS[SPEED_PARALLEL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     } else if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
-        const float speedOutput = _PIDS[SPEED_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
-        // feed the speed update back into the pitchAngle PID and set _outputs[SPEED_DPS] to zero
+        const float speedOutput = _PIDS[SPEED_SERIAL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
+        // feed the speed update back into the pitchAngle PID and set _outputs[OUTPUT_SPEED_DPS] to zero
         _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(speedOutput);
-        _outputs[SPEED_DPS] = 0.0F;
+        _outputs[OUTPUT_SPEED_DPS] = 0.0F;
     } else if (_controlMode == CONTROL_MODE_POSITION) {
         updatePositionOutputs(deltaT);
     }
@@ -345,9 +343,9 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     const float desiredSpeedDPS = _throttleStick * _motorMaxSpeedDPS;
     _positionSetpointDegrees += desiredSpeedDPS * deltaT;
     _PIDS[POSITION_DEGREES].setSetpoint(_positionSetpointDegrees);
-    const float updatePositionDegreesPrevious = _outputs[POSITION_DEGREES];
-    _outputs[POSITION_DEGREES] = _PIDS[POSITION_DEGREES].update(_positionDegrees, deltaT);
-    _outputs[SPEED_DPS] = (_outputs[POSITION_DEGREES] - updatePositionDegreesPrevious) / deltaT;
+    const float updatePositionDegreesPrevious = _outputs[OUTPUT_POSITION_DEGREES];
+    _outputs[OUTPUT_POSITION_DEGREES] = _PIDS[POSITION_DEGREES].update(_positionDegrees, deltaT);
+    _outputs[OUTPUT_SPEED_DPS] = (_outputs[OUTPUT_POSITION_DEGREES] - updatePositionDegreesPrevious) / deltaT;
 }
 
 /*!

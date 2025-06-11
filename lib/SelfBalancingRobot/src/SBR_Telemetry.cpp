@@ -4,26 +4,34 @@
 
 
 /*!
-Packs the MotorPairController PID telemetry data into a TD_SBR_PIDS packet. Returns the length of the packet.
+Packs the MotorPairController PID telemetry data into a TD_PIDS packet. Returns the length of the packet.
 */
-size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber, const MotorPairController& motorPairController, const TelemetryScaleFactors& scaleFactors)
+size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber, const MotorPairController& motorPairController)
 {
-    static_assert(static_cast<int>(TD_SBR_PIDS::PID_COUNT) == static_cast<int>(MotorPairController::PID_COUNT));
-    TD_SBR_PIDS* td = reinterpret_cast<TD_SBR_PIDS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
+    //static_assert(static_cast<int>(TD_SBR_PIDS::PID_COUNT) == static_cast<int>(MotorPairController::PID_COUNT));
+    TD_PIDS* td = reinterpret_cast<TD_PIDS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
-    td->type = TD_SBR_PIDS::TYPE;
-    td->len = sizeof(TD_SBR_PIDS);
+    td->type = TD_PIDS::TYPE;
+    td->len = sizeof(TD_PIDS);
     td->subType = 0;
     td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
 
-    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        td->data.spids[ii].setpoint = motorPairController.getPID_Setpoint(static_cast<MotorPairController::pid_index_e>(ii));
-        td->data.spids[ii].pid = motorPairController.getPID_Constants(static_cast<MotorPairController::pid_index_e>(ii));
-        td->data.spids[ii].scale = scaleFactors.getTelemetryScaleFactor(static_cast<MotorPairController::pid_index_e>(ii));
-    }
+    td->data.vehicleType = TD_PIDS::SELF_BALANCING_ROBOT;
 
-    td->data.pitchBalanceAngleDegrees = motorPairController.getPitchBalanceAngleDegrees();
+    td->data.pidCount = MotorPairController::PID_COUNT;
+
+    td->data.f0 = motorPairController.getPitchBalanceAngleDegrees(); // use general purpose value f0 for pitchBalanceAngleDegrees
+
+    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
+        const auto pidIndex = static_cast<MotorPairController::pid_index_e>(ii);
+
+        td->data.spids[ii].setpoint = motorPairController.getPID_Setpoint(pidIndex);
+        td->data.spids[ii].pid.kp = motorPairController.getPID_P_MSP(pidIndex);
+        td->data.spids[ii].pid.ki = motorPairController.getPID_I_MSP(pidIndex);
+        td->data.spids[ii].pid.kd = motorPairController.getPID_D_MSP(pidIndex);
+        td->data.spids[ii].pid.kf = motorPairController.getPID_F_MSP(pidIndex);
+    }
 
     return td->len;
 }
@@ -43,11 +51,11 @@ size_t packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
     td->subType = 0;
     td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
 
-    td->flags = motorPairController.motorsIsOn() ? TD_MPC::MOTORS_ON_FLAG : 0x00;
-    td->flags |= static_cast<uint8_t>(TD_MPC::CONTROL_MODE_MASK) & static_cast<uint8_t>(motorPairController.getControlMode()); // NOLINT(hicpp-signed-bitwise)
+    td->motors = motorPairController.motorsIsOn();
+    td->controlMode = static_cast<uint8_t>(motorPairController.getControlMode());
 
     motor_pair_controller_telemetry_t telemetryData;
-    motorPairController.getTelemetryData(telemetryData);
+    motorPairController.getTelemetryData(telemetryData, motorPairController.getControlMode());
     memcpy(&td->data, &telemetryData, sizeof(motor_pair_controller_telemetry_t));
 
     return td->len;

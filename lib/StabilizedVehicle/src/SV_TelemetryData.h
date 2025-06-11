@@ -114,6 +114,47 @@ struct TD_AHRS {
 };
 
 /*!
+Packet for the the transmission of PID constants, setpoints, and some general-purpose parameters, to enable remote tuning.
+*/
+struct TD_PIDS {
+    enum { TYPE = 5 };
+    uint32_t id {0};
+
+    uint8_t type {TYPE};
+    uint8_t len {sizeof(TD_PIDS)}; //!< length of whole packet, ie sizeof(TD_SBR_PIDS)
+    uint8_t subType {0};
+    uint8_t sequenceNumber {0};
+
+    enum vehicle_type_e { SELF_BALANCING_ROBOT = 0, AIRCRAFT = 1 };
+
+    struct PIDF_t {
+        uint8_t kp;
+        uint8_t ki;
+        uint8_t kd;
+        uint8_t kf;
+    };
+    struct SPID_t {
+        float setpoint;
+        PIDF_t pid;
+    };
+    struct data_t {
+        uint8_t pidCount;
+        uint8_t pidProfile;
+        uint8_t vehicleType;
+        // general use parameters
+        uint8_t p0;
+        float f0; // typically used for pitchBalanceAngleDegrees
+        float f1;
+        float f2;
+        float f3;
+        std::array<SPID_t, 20> spids; // allow up to 20 PIDs
+    };
+    data_t data;
+};
+
+
+
+/*!
 TYPE RANGE of 30-40 reserved for MultiWii Serial Protocol (MSP)
 
 MSP V1 packet is of the form:
@@ -286,11 +327,16 @@ struct TD_SBR_PIDS {
     uint8_t subType {0};
     uint8_t sequenceNumber {0};
 
-    enum { ROLL_ANGLE=0, PITCH_ANGLE=1, YAW_RATE=2, SPEED=3, POSITION=4, PID_COUNT=5, PID_BEGIN=0 };
+    enum { ROLL_ANGLE=0, PITCH_ANGLE=1, YAW_RATE=2, SPEED_SERIAL=3, SPEED_PARALLEL=4, POSITION=5, PID_COUNT=6, PID_BEGIN=0 };
+    struct PIDF_t {
+        uint8_t kp;
+        uint8_t ki;
+        uint8_t kd;
+        uint8_t kf;
+    };
     struct SPID_t {
         float setpoint;
-        PIDF::PIDF_t pid;
-        PIDF::PIDF_t scale; //!< factor to scale value to range ~ [0, 100], for consistent display
+        PIDF_t pid;
     };
     struct data_t {
         std::array<SPID_t, PID_COUNT> spids;
@@ -298,6 +344,7 @@ struct TD_SBR_PIDS {
     };
     data_t data;
 };
+
 
 struct motor_pair_controller_telemetry_t {
     int32_t encoderLeft {0}; //!< value read from left motor encoder, raw
@@ -336,10 +383,9 @@ struct TD_MPC {
     uint8_t sequenceNumber {0};
 
     uint8_t taskIntervalTicks {0}; //!< interval of the MPC task, in ticks
-    enum : uint8_t { MOTORS_ON_FLAG = 0x04, CONTROL_MODE_MASK = 0x03 };
-    uint8_t flags {0};
-    uint8_t filler1 {0};
-    uint8_t filler2 {0};
+    uint8_t motors {0};
+    uint8_t controlMode {0};
+    uint8_t filler {0};
     motor_pair_controller_telemetry_t data;
 };
 
