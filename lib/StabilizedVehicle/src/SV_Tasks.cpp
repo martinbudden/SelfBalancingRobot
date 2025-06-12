@@ -48,7 +48,7 @@ void SV_Tasks::reportMainTask()
 #endif
 }
 
-AHRS_Task* SV_Tasks::setupTask(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+AHRS_Task* SV_Tasks::setupAHRS_Task(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS_Task task(taskIntervalMicroSeconds, ahrs);
@@ -85,7 +85,7 @@ AHRS_Task* SV_Tasks::setupTask(AHRS& ahrs, uint8_t priority, uint8_t coreID, uin
     return &task;
 }
 
-VehicleControllerTask* SV_Tasks::setupTask(VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+VehicleControllerTask* SV_Tasks::setupVehicleControllerTask(VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     static VehicleControllerTask task(taskIntervalMicroSeconds, vehicleController);
     vehicleController.setTask(&task);
@@ -119,7 +119,15 @@ VehicleControllerTask* SV_Tasks::setupTask(VehicleControllerBase& vehicleControl
     return &task;
 }
 
-ReceiverTask* SV_Tasks::setupTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+ReceiverTask* SV_Tasks::setupReceiverTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID)
+{
+#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
+    assert(false && "Task interval not specified for Receiver_Task");
+#endif
+    return setupReceiverTask(receiver, receiverWatcher, priority, coreID, 0);
+}
+
+ReceiverTask* SV_Tasks::setupReceiverTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     static ReceiverTask task(taskIntervalMicroSeconds, receiver, receiverWatcher);
 
@@ -156,10 +164,10 @@ ReceiverTask* SV_Tasks::setupTask(ReceiverBase& receiver, ReceiverWatcher* recei
     return &task;
 }
 
-BackchannelTask* SV_Tasks::setupTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+BackchannelReceiveTask* SV_Tasks::setupBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     (void)taskIntervalMicroSeconds;
-    static BackchannelTask task(backchannel);
+    static BackchannelReceiveTask task(backchannel);
     backchannel.setTask(&task);
 
 #if defined(USE_FREERTOS)
@@ -171,8 +179,8 @@ BackchannelTask* SV_Tasks::setupTask(BackchannelBase& backchannel, uint8_t prior
     static std::array<StackType_t, TASK_STACK_DEPTH> stack;
     static StaticTask_t taskBuffer;
     const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
-        BackchannelTask::Task,
-        "BackchannelTask",
+        BackchannelReceiveTask::Task,
+        "BackchannelReceiveTask",
         TASK_STACK_DEPTH,
         &taskParameters,
         priority,

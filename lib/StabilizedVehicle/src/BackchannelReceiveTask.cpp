@@ -1,8 +1,8 @@
-#include "BackchannelTask.h"
+#include "BackchannelReceiveTask.h"
 #include "BackchannelBase.h"
 #include "TimeMicroSeconds.h"
 
-BackchannelTask::BackchannelTask(BackchannelBase& backchannel) :
+BackchannelReceiveTask::BackchannelReceiveTask(BackchannelBase& backchannel) :
     TaskBase(0),
     _backchannel(backchannel)
 {
@@ -11,7 +11,7 @@ BackchannelTask::BackchannelTask(BackchannelBase& backchannel) :
 /*!
 loop() function for when not using FREERTOS
 */
-void BackchannelTask::loop()
+void BackchannelReceiveTask::loop()
 {
     // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
 #if defined(USE_FREERTOS)
@@ -31,9 +31,9 @@ void BackchannelTask::loop()
 }
 
 /*!
-Task function for the BackchannelTask. Sets up and runs the task loop() function.
+Task function for the BackchannelReceiveTask.
 */
-[[noreturn]] void BackchannelTask::task()
+[[noreturn]] void BackchannelReceiveTask::task()
 {
 #if defined(USE_FREERTOS)
     while (true) {
@@ -46,11 +46,11 @@ Task function for the BackchannelTask. Sets up and runs the task loop() function
 }
 
 /*!
-Wrapper function for BackchannelTask::Task with the correct signature to be used in xTaskCreate.
+Wrapper function for BackchannelReceiveTask::Task with the correct signature to be used in xTaskCreate.
 */
-[[noreturn]] void BackchannelTask::Task(void* arg)
+[[noreturn]] void BackchannelReceiveTask::Task(void* arg)
 {
     const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
-    static_cast<BackchannelTask*>(parameters->task)->task(); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast}
+    static_cast<BackchannelReceiveTask*>(parameters->task)->task(); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast}
 }

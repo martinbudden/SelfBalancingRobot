@@ -95,7 +95,6 @@ void Main::setup()
 
     // Statically allocate and setup the receiver.
     static ReceiverAtomJoyStick receiver(&myMacAddress[0]);
-    _receiver = &receiver;
 #if !defined(RECEIVER_CHANNEL)
     constexpr uint8_t RECEIVER_CHANNEL {3};
 #endif
@@ -112,7 +111,6 @@ void Main::setup()
 
     // Statically allocate the motorPairController.
     static MotorPairController motorPairController(ahrs, receiver, i2cMutex);
-    _motorPairController = &motorPairController;
     ahrs.setVehicleController(&motorPairController);
 
     static SV_Preferences preferences;
@@ -163,9 +161,9 @@ void Main::setup()
     static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
     _tasks.mainTask = &mainTask;
     SV_Tasks::reportMainTask();
-    _tasks.ahrsTask = SV_Tasks::setupTask(ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
-    _tasks.vehicleControllerTask = SV_Tasks::setupTask(motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
-    _tasks.receiverTask = SV_Tasks::setupTask(receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE, RECEIVER_TASK_INTERVAL_MICROSECONDS);
+    _tasks.ahrsTask = SV_Tasks::setupAHRS_Task(ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
+    _tasks.vehicleControllerTask = SV_Tasks::setupVehicleControllerTask(motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
+    _tasks.receiverTask = SV_Tasks::setupReceiverTask(receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW) && false
     // Statically allocate the backchannel.
@@ -181,7 +179,8 @@ void Main::setup()
         _tasks.mainTask
     );
     _backchannel = &backchannel;
-    _tasks.backchannelTask = SV_Tasks::setupTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelReceiveTask = SV_Tasks::setupBackchannelReceiveTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelSendTask = SV_Tasks::setupBackchannelSendTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
 #endif
 }
 
