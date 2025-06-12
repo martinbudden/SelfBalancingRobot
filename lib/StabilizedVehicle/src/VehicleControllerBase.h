@@ -10,6 +10,13 @@ Abstract base class defining a controller for a stabilized vehicle.
 */
 class VehicleControllerBase {
 public:
+    struct PIDF_uint8_t {
+        uint8_t kp;
+        uint8_t ki;
+        uint8_t kd;
+        uint8_t kf;
+    };
+public:
     inline const TaskBase* getTask() const { return _task; }
     inline void setTask(const TaskBase* task) { _task = task; }
     inline float getPitchAngleDegreesRaw() const { return _pitchAngleDegreesRaw; }

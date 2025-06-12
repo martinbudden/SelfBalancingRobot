@@ -72,7 +72,8 @@ public:
         float motorSwitchOffAngleDegrees;
         float encoderStepsPerRevolution;
     };
-    typedef std::array<PIDF::PIDF_t, PID_COUNT> scale_factors_t;
+    typedef std::array<PIDF::PIDF_t, PID_COUNT> pidf_array_t;
+    typedef std::array<PIDF_uint8_t, PID_COUNT> pidf_uint8_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 public:
     inline bool motorsIsOn() const { return _motorPairMixer.motorsIsOn(); }
@@ -91,6 +92,7 @@ public:
     const std::string& getPID_Name(pid_index_e pidIndex) const;
     inline const PIDF::PIDF_t getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
     inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
+    void setPID_Constants(const pidf_uint8_array_t& pids);
 
     uint8_t getPID_P_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getP() / _scaleFactors[pidIndex].kp); }
     uint8_t getPID_I_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getI() / _scaleFactors[pidIndex].ki); }

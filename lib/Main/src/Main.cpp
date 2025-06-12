@@ -82,7 +82,7 @@ void Main::setup()
     void* i2cMutex = nullptr;
 #endif
 
-    AHRS& ahrs = setupAHRS(i2cMutex);
+    AHRS& ahrs = setupAHRS(i2cMutex); // NOLINT(misc-const-correctness) false positive
 
 #if defined(USE_ESPNOW)
     // Set WiFi to station mode

@@ -37,7 +37,7 @@ MotorPairBase& MotorPairController::allocateMotors()
     static MotorsBalaC motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
     setScaleFactors(scaleFactorsBalaC);
 #elif defined(MOTORS_4_ENCODER_MOTOR)
-    static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
+    static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, vehicle.encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_GO_PLUS_2)
     static MotorsGoPlus2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_ATOMIC_MOTION_BASE)
@@ -45,10 +45,10 @@ MotorPairBase& MotorPairController::allocateMotors()
 #elif defined(MOTORS_PWR_CAN)
     static MotorsPwrCAN motors;// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_O_DRIVE_CAN)
-    static Motors_ODriveCAN motors(encoderStepsPerRevolution);
+    static Motors_ODriveCAN motors(vehicle.encoderStepsPerRevolution);
     motors.setup();
 #elif defined(MOTORS_O_DRIVE_TWAI)
-    static Motors_ODriveTWAI motors(encoderStepsPerRevolution);
+    static Motors_ODriveTWAI motors(vehicle.encoderStepsPerRevolution);
     motors.setup();
 #elif defined(MOTORS_ROLLER_CAN)
 #elif defined(MOTORS_GPIO)

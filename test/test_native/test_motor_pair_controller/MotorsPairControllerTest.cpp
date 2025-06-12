@@ -58,7 +58,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     _controlMode(CONTROL_MODE_SERIAL_PIDS),
     _motorMaxSpeedDPS(maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
-    _motorStepsPerRevolution(_motorPair.getStepsPerRevolution()),
+    _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),
     _pitchBalanceAngleDegrees(pitchBalanceAngleDegrees)
 {
 #if defined(I2C_MUTEX_REQUIRED)

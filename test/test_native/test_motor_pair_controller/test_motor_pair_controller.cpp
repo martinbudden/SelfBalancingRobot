@@ -59,8 +59,11 @@ void test_motor_pair_controller()
     static const std::string pidNameYaw = mpc.getPID_Name(MotorPairController::YAW_RATE_DPS);
     TEST_ASSERT_TRUE(pidNameYaw.compare("YAW_RATE") == 0);
 
-    static const std::string pidNameSpeed = mpc.getPID_Name(MotorPairController::SPEED_DPS);
-    TEST_ASSERT_TRUE(pidNameSpeed.compare("SPEED") == 0);
+    static const std::string pidNameSpeedSerial = mpc.getPID_Name(MotorPairController::SPEED_SERIAL_DPS);
+    TEST_ASSERT_TRUE(pidNameSpeedSerial.compare("SPEED_SERIAL") == 0);
+
+    static const std::string pidNameSpeedParallel = mpc.getPID_Name(MotorPairController::SPEED_PARALLEL_DPS);
+    TEST_ASSERT_TRUE(pidNameSpeedParallel.compare("SPEED_PARALLEL") == 0);
 
     static const std::string pidNamePosition = mpc.getPID_Name(MotorPairController::POSITION_DEGREES);
     TEST_ASSERT_TRUE(pidNamePosition.compare("POSITION") == 0);
@@ -71,7 +74,8 @@ void test_motor_pair_controller_pid_indexes()
     TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::ROLL_ANGLE_DEGREES) == static_cast<int>(TD_SBR_PIDS::ROLL_ANGLE));
     TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::PITCH_ANGLE_DEGREES) == static_cast<int>(TD_SBR_PIDS::PITCH_ANGLE));
     TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::YAW_RATE_DPS) == static_cast<int>(TD_SBR_PIDS::YAW_RATE));
-    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::SPEED_DPS) == static_cast<int>(TD_SBR_PIDS::SPEED));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::SPEED_SERIAL_DPS) == static_cast<int>(TD_SBR_PIDS::SPEED_SERIAL));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::SPEED_PARALLEL_DPS) == static_cast<int>(TD_SBR_PIDS::SPEED_PARALLEL));
     TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::POSITION_DEGREES) == static_cast<int>(TD_SBR_PIDS::POSITION));
 }
 

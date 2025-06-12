@@ -43,6 +43,17 @@ void MotorPairController::motorsResetEncodersToZero()
     _motorPair.resetEncodersToZero();
 }
 
+void MotorPairController::setPID_Constants(const pidf_uint8_array_t& pids)
+{
+    for (size_t ii = PID_BEGIN; ii < PID_COUNT; ++ii) {
+        const auto pidIndex = static_cast<pid_index_e>(ii);
+        setPID_P_MSP(pidIndex, pids[pidIndex].kp);
+        setPID_I_MSP(pidIndex, pids[pidIndex].ki);
+        setPID_D_MSP(pidIndex, pids[pidIndex].kd);
+        setPID_F_MSP(pidIndex, pids[pidIndex].kf);
+    }
+}
+
 /*!
 Return he MPC telemetry data.
 
@@ -224,7 +235,7 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
     } else {
         // For reference, at 420 steps per revolution, with a 100Hz (10ms) update rate, 1 step per update gives a speed of (360 * 1/420) * 100 = 85 dps
         // With a 200Hz (5ms) update rate that is 170 DPS.
-        const float speedMultiplier = 360.0F / (_motorStepsPerRevolution * deltaT);
+        const float speedMultiplier = 360.0F / (_motorPairStepsPerRevolution * deltaT);
         _speedLeftDPS = static_cast<float>(_encoderLeftDelta) * speedMultiplier;
         _speedRightDPS = static_cast<float>(_encoderRightDelta) * speedMultiplier;
 
@@ -328,7 +339,7 @@ void MotorPairController::updatePositionOutputs(float deltaT)
 {
     // NOTE: THIS IS EXPERIMENTAL AND NOT YET FULLY IMPLEMENTED
 #if defined(MOTORS_HAVE_ENCODERS)
-    _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorStepsPerRevolution);
+    _positionDegrees = static_cast<float>(_encoderLeft + _encoderRight) * 360.0F / (2.0F * _motorPairStepsPerRevolution);
 #if false
     // experimental calculation of position using complementary filter of position from encoders and position estimated from integrating power output
     const float distanceDegrees = _positionDegrees - _positionDegreesPrevious;
