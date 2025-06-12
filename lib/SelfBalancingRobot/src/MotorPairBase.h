@@ -16,6 +16,8 @@ Allows the Motor Controller to work with different kinds of motors.
 */
 class MotorPairBase {
 public:
+    enum { I2C_FREQUENCY = 400000 }; // 400 kHz
+public:
     enum can_accurately_estimate_speed_e { CANNOT_ACCURATELY_ESTIMATE_SPEED = 0,  CAN_ACCURATELY_ESTIMATE_SPEED = 1};
 public:
     virtual ~MotorPairBase() = default;

@@ -257,19 +257,10 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
         //_speedDPS = motorSpeed;
     }
 #else
+    (void)deltaT;
     // no encoders, so estimate speed from power output
-    (void)deltaT; // so LINT doesn't report an unused parameter.
-    _speedDPS = MotorPairBase::clip((_motorPairMixer.getPowerLeft() + _motorPairMixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
+    _speedDPS =  _motorMaxSpeedDPS * MotorPairBase::clip((_motorPairMixer.getPowerLeft() + _motorPairMixer.getPowerRight()) * 0.5F, -1.0F, 1.0F);
 #endif
-}
-
-
-void MotorPairController::updateOutputsUsingPIDs(float deltaT)
-{
-    const Quaternion orientation = _ahrs.getOrientationUsingLock();
-    const AHRS::data_t data = _ahrs.getAhrsDataUsingLock();
-
-    updateOutputsUsingPIDs(data.gyroRPS, data.acc, orientation, deltaT);
 }
 
 /*!
@@ -373,7 +364,10 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
     updateMotorSpeedEstimates(deltaT);
     // If the AHRS is configured to run updateOutputsUsingPIDs, then we don't need to
     if (!_ahrs.configuredToUpdateOutputs()) {
-        updateOutputsUsingPIDs(deltaT);
+        const Quaternion orientation = _ahrs.getOrientationUsingLock();
+        const AHRS::data_t data = _ahrs.getAhrsDataUsingLock();
+
+        updateOutputsUsingPIDs(data.gyroRPS, data.acc, orientation, deltaT);
     }
     outputToMotors(deltaT, tickCount);
 }

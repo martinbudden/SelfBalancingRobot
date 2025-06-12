@@ -2,6 +2,7 @@
 
 #include "AHRS_Task.h"
 #include "BackchannelTask.h"
+#include "BackchannelSendTask.h"
 #include "ReceiverTask.h"
 #include "VehicleControllerTask.h"
 
@@ -15,4 +16,5 @@ namespace SV_Tasks {
     ReceiverTask* setupTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
 
     BackchannelTask* setupTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
+    BackchannelSendTask* setupBackchannelSendTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
 } // end namespace

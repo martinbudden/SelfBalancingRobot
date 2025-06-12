@@ -16,7 +16,7 @@
 /*!
 The ESP32S3 is dual core containing a Protocol CPU (known as CPU 0 or PRO_CPU) and an Application CPU (known as CPU 1 or APP_CPU).
 
-The core affinities, priorities, and tick intervals and priorities for the 3 application tasks (AHRS_TASK, VEHICLE_CONTROLLER_TASK, and MAIN_LOOP_TASK).
+The core affinities, priorities, and tick intervals for the 3 application tasks (AHRS_TASK, VEHICLE_CONTROLLER_TASK, and MAIN_LOOP_TASK):
 1. The AHRS_TASK must have a higher priority than the MAIN_LOOP_TASK.
 2. The VEHICLE_CONTROLLER_TASK must have a higher priority than the MAIN_LOOP_TASK
 3. For single-processors the AHRS_TASK and the VEHICLE_CONTROLLER_TASK must have the same priority.
@@ -143,7 +143,11 @@ ReceiverTask* SV_Tasks::setupTask(ReceiverBase& receiver, ReceiverWatcher* recei
     );
     assert(taskHandle != nullptr && "Unable to create ReceiverTask task.");
     std::array<char, 128> buf;
+#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
     sprintf(&buf[0], "**** RECEIVER_Task,  core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
+#else
+    sprintf(&buf[0], "**** RECEIVER_Task,  core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
+#endif
     Serial.print(&buf[0]);
 #else
     (void)priority;
@@ -168,7 +172,7 @@ BackchannelTask* SV_Tasks::setupTask(BackchannelBase& backchannel, uint8_t prior
     static StaticTask_t taskBuffer;
     const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
         BackchannelTask::Task,
-        "Backchannel_Task",
+        "BackchannelTask",
         TASK_STACK_DEPTH,
         &taskParameters,
         priority,
@@ -178,8 +182,41 @@ BackchannelTask* SV_Tasks::setupTask(BackchannelBase& backchannel, uint8_t prior
     );
     assert(taskHandle != nullptr && "Unable to create ReceiverTask task.");
     std::array<char, 128> buf;
-    Serial.printf(&buf[0], "**** BACKCHANNEL_Task,core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
+    sprintf(&buf[0], "**** BACKCHANNEL_Task,core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
+    Serial.print(&buf[0]);
+#else
+    (void)priority;
+    (void)coreID;
+#endif // USE_FREERTOS
+    return &task;
+}
 
+BackchannelSendTask* SV_Tasks::setupBackchannelSendTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+{
+    (void)taskIntervalMicroSeconds;
+    static BackchannelSendTask task(backchannel);
+
+#if defined(USE_FREERTOS)
+    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &task,
+    };
+    enum { TASK_STACK_DEPTH = 4096 };
+    static std::array<StackType_t, TASK_STACK_DEPTH> stack;
+    static StaticTask_t taskBuffer;
+    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
+        BackchannelSendTask::Task,
+        "BackchannelSendTask",
+        TASK_STACK_DEPTH,
+        &taskParameters,
+        priority,
+        &stack[0],
+        &taskBuffer,
+        coreID
+    );
+    assert(taskHandle != nullptr && "Unable to create ReceiverTask task.");
+    std::array<char, 128> buf;
+    sprintf(&buf[0], "**** BACKCHANNEL_Task,core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
     Serial.print(&buf[0]);
 #else
     (void)priority;

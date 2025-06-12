@@ -84,7 +84,7 @@ public:
     inline uint32_t getOutputPowerTimeMicroSeconds() const { return _motorPairMixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
 
     inline control_mode_e getControlMode() const { return _controlMode; }
-    void setControlMode(control_mode_e controlMode);
+    void setControlMode(control_mode_e controlMode) { _controlMode = controlMode; resetIntegrals(); }
 
     inline void setFailSafeTickCountThreshold(uint32_t failSafeTickCountThreshold) { _failSafeTickCountThreshold = failSafeTickCountThreshold; }
     inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failSafeTickCountSwitchOffThreshold) { _failSafeTickCountSwitchOffThreshold = failSafeTickCountSwitchOffThreshold; }
@@ -124,10 +124,9 @@ public:
     static float mapYawStick(float yawStick);
     void updateSetpoints(float deltaT, uint32_t tickCount);
     void updateMotorSpeedEstimates(float deltaT);
-    void updateOutputsUsingPIDs(float deltaT);
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
-    void outputToMotors(float deltaT, uint32_t tickCount);
 private:
+    void outputToMotors(float deltaT, uint32_t tickCount);
     void updatePositionOutputs(float deltaT);
     MotorPairBase& allocateMotors();
 private:

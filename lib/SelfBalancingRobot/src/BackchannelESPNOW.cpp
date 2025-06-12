@@ -18,7 +18,7 @@ BackchannelESPNOW::BackchannelESPNOW(
         preferences,
         mainTask
     ),
-    _backchannelTransceiver(espnowTransceiver, backchannelMacAddress, _receivedDataBuffer, sizeof(_receivedDataBuffer))
+    _backchannelTransceiver(espnowTransceiver, backchannelMacAddress, &_receivedDataBuffer[0], sizeof(_receivedDataBuffer))
 {
 #if defined(USE_ESPNOW)
     static_assert(sizeof(_transmitDataBuffer) >= ESP_NOW_MAX_DATA_LEN && "transmit buffer too small");
@@ -34,4 +34,3 @@ BackchannelESPNOW::BackchannelESPNOW(
     _backchannelID = idFromMacAddress(backchannelMacAddress);
     _telemetryID = idFromMacAddress(myMacAddress);
 }
-

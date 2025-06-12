@@ -5,7 +5,7 @@
 
 class MotorsBalaC final : public MotorPairBase {
 public:
-    MotorsBalaC(uint8_t SDA_pin, uint8_t SCL_pin);
+    MotorsBalaC();
 public:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
 public:
@@ -18,7 +18,5 @@ private:
 
     // map left and right motors to MOTOR_1 and MOTOR_0
     enum : uint8_t { MOTOR_LEFT = REGISTER_MOTOR_1, MOTOR_RIGHT = REGISTER_MOTOR_0 };
-private:
-    BUS_I2C _I2C;
 };
 

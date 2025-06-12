@@ -34,7 +34,8 @@ MotorPairBase& MotorPairController::allocateMotors()
     static MotorsBala2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
     setScaleFactors(scaleFactorsBala2);
 #elif defined(MOTORS_BALA_C)
-    static MotorsBalaC motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
+    //static MotorsBalaC motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
+    static MotorsBalaC motors;// NOLINT(misc-const-correctness) false positive
     setScaleFactors(scaleFactorsBalaC);
 #elif defined(MOTORS_4_ENCODER_MOTOR)
     static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, vehicle.encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
@@ -63,15 +64,6 @@ MotorPairBase& MotorPairController::allocateMotors()
 }
 
 /*!
-Sets the control mode and adjusts the _PIDS[SPEED_DPS] constants accordingly.
-*/
-void MotorPairController::setControlMode(control_mode_e controlMode)
-{
-    _controlMode = controlMode;
-    resetIntegrals();
-}
-
-/*!
 Constructor. Sets member data.
 */
 MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
@@ -92,7 +84,6 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     _motorPair.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #endif
 
-    setControlMode(_controlMode);
     _motorPairMixer.setMotorSwitchOffAngleDegrees(vehicle.motorSwitchOffAngleDegrees);
 
     _PIDS[PITCH_ANGLE_DEGREES].setPID(defaultPIDs[PITCH_ANGLE_DEGREES]);

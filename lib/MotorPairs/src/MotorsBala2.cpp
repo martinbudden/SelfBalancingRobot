@@ -1,7 +1,11 @@
 #if defined(MOTORS_BALA_2)
 
 #include "MotorsBala2.h"
+#if defined(M5_UNIFIED)
+#include <M5Unified.h>
+#elif defined(M5_STACK)
 #include <M5Stack.h>
+#endif
 #include <array>
 
 
@@ -14,7 +18,11 @@ void MotorsBala2::readEncoder()
     std::array<uint8_t, 8> data;
 
     i2cSemaphoreTake();
+#if defined(M5_UNIFIED)
+    M5.Ex_I2C.readRegister(I2C_ADDRESS, REGISTER_ENCODER, &data[0], sizeof(data), I2C_FREQUENCY);
+#elif defined(M5_STACK)
     M5.I2C.readBytes(I2C_ADDRESS, REGISTER_ENCODER, 8, &data[0]);
+#endif
     i2cSemaphoreGive();
 
     _leftEncoder = (data[0] << 24U) | (data[1] << 16U) | (data[2] << 8U) | data[3];
@@ -38,7 +46,11 @@ void MotorsBala2::setPower(float leftPower, float rightPower)
     // NOLINTEND(hicpp-signed-bitwise)
 
     i2cSemaphoreTake();
+#if defined(M5_UNIFIED)
+    M5.Ex_I2C.writeRegister(I2C_ADDRESS, REGISTER_SPEED, &data[0], sizeof(data), I2C_FREQUENCY);
+#elif defined(M5_STACK)
     M5.I2C.writeBytes(I2C_ADDRESS, REGISTER_SPEED, &data[0], 4);
+#endif
     i2cSemaphoreGive();
 }
 

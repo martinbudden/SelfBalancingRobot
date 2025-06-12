@@ -111,30 +111,30 @@ void Main::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(*_ahrs, receiver, i2cMutex);
+    static MotorPairController motorPairController(ahrs, receiver, i2cMutex);
     _motorPairController = &motorPairController;
-    _ahrs->setVehicleController(&motorPairController);
+    ahrs.setVehicleController(&motorPairController);
 
     static SV_Preferences preferences;
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
-        calibrateGyro(*_ahrs, preferences, CALIBRATE_ACC_AND_GYRO);
+        calibrateGyro(ahrs, preferences, CALIBRATE_ACC_AND_GYRO);
     }
-    checkGyroCalibration(preferences, *_ahrs);
+    checkGyroCalibration(preferences, ahrs);
     // Holding BtnC down while switching on resets the preferences.
     if (M5.BtnC.isPressed()) {
         resetPreferences(preferences, motorPairController);
     }
 #else
-    checkGyroCalibration(preferences, *_ahrs);
+    checkGyroCalibration(preferences, ahrs);
 #endif
     loadPreferences(preferences, motorPairController);
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
-    static ScreenM5 screen(*_ahrs, motorPairController, receiver);
+    static ScreenM5 screen(ahrs, motorPairController, receiver);
     ReceiverWatcher* receiverWatcher =  &screen;
     _screen = &screen;
     _screen->updateScreenAndTemplate(); // Update the as soon as we can, to minimize the time the screen is blank
@@ -163,11 +163,11 @@ void Main::setup()
     static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
     _tasks.mainTask = &mainTask;
     SV_Tasks::reportMainTask();
-    _tasks.ahrsTask = SV_Tasks::setupTask(*_ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
+    _tasks.ahrsTask = SV_Tasks::setupTask(ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
     _tasks.vehicleControllerTask = SV_Tasks::setupTask(motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
     _tasks.receiverTask = SV_Tasks::setupTask(receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE, RECEIVER_TASK_INTERVAL_MICROSECONDS);
 
-#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
+#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW) && false
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
     static BackchannelESPNOW backchannel(
@@ -305,7 +305,9 @@ void Main::loop() // NOLINT(readability-make-member-function-const)
 
 #if defined(BACKCHANNEL_MAC_ADDRESS)
     //_backchannel->update();
-    _backchannel->sendTelemetryPacket();
+    if (_backchannel) {
+        _backchannel->sendTelemetryPacket();
+    }
 #endif
 
 #if defined(USE_SCREEN)

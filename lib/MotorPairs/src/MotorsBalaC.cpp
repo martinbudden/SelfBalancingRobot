@@ -1,12 +1,14 @@
 #if defined(MOTORS_BALA_C)
 
 #include "MotorsBalaC.h"
+#if defined(M5_UNIFIED)
+#include <M5Unified.h>
+#endif
 #include <cmath>
 
 
-MotorsBalaC::MotorsBalaC(uint8_t SDA_pin, uint8_t SCL_pin) :
-    MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED),
-    _I2C(I2C_ADDRESS, BUS_I2C::pins_t{.sda=SDA_pin, .scl=SCL_pin, .irq=BUS_I2C::IRQ_NOT_SET, .irqLevel=0})
+MotorsBalaC::MotorsBalaC() :
+    MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED)
 {
 }
 
@@ -16,6 +18,8 @@ void MotorsBalaC::readEncoder()
 
 void MotorsBalaC::setPower(float leftPower, float rightPower)
 {
+    enum { I2C_FREQUENCY = 400000 }; // 400 kHz
+
     leftPower = scalePower(leftPower) * MAX_POWER;
     rightPower = scalePower(rightPower) * MAX_POWER;
 
@@ -25,8 +29,13 @@ void MotorsBalaC::setPower(float leftPower, float rightPower)
 
     i2cSemaphoreTake();
 
-    _I2C.writeRegister(MOTOR_LEFT, leftOutput);
-    _I2C.writeRegister(MOTOR_RIGHT, rightOutput);
+#if defined(M5_UNIFIED)
+    M5.Ex_I2C.writeRegister8(I2C_ADDRESS, MOTOR_LEFT, leftOutput, I2C_FREQUENCY);
+    M5.Ex_I2C.writeRegister8(I2C_ADDRESS, MOTOR_RIGHT, rightOutput, I2C_FREQUENCY);
+#else
+    (void)leftOutput;
+    (void)rightOutput;
+#endif
 
     i2cSemaphoreGive();
 }
