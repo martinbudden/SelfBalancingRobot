@@ -164,9 +164,8 @@ ReceiverTask* SV_Tasks::setupReceiverTask(ReceiverBase& receiver, ReceiverWatche
     return &task;
 }
 
-BackchannelReceiveTask* SV_Tasks::setupBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+BackchannelReceiveTask* SV_Tasks::setupBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID)
 {
-    (void)taskIntervalMicroSeconds;
     static BackchannelReceiveTask task(backchannel);
     backchannel.setTask(&task);
 
@@ -201,8 +200,7 @@ BackchannelReceiveTask* SV_Tasks::setupBackchannelReceiveTask(BackchannelBase& b
 
 BackchannelSendTask* SV_Tasks::setupBackchannelSendTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
-    (void)taskIntervalMicroSeconds;
-    static BackchannelSendTask task(backchannel);
+    static BackchannelSendTask task(taskIntervalMicroSeconds, backchannel);
 
 #if defined(USE_FREERTOS)
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.

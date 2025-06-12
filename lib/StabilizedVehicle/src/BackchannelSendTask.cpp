@@ -2,12 +2,6 @@
 #include "BackchannelBase.h"
 #include "TimeMicroSeconds.h"
 
-BackchannelSendTask::BackchannelSendTask(BackchannelBase& backchannel) :
-    TaskBase(0),
-    _backchannel(backchannel)
-{
-}
-
 /*!
 loop() function for when not using FREERTOS
 */

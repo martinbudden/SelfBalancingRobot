@@ -165,7 +165,7 @@ void Main::setup()
     _tasks.vehicleControllerTask = SV_Tasks::setupVehicleControllerTask(motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
     _tasks.receiverTask = SV_Tasks::setupReceiverTask(receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 
-#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW) && false
+#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
     static BackchannelESPNOW backchannel(
@@ -178,8 +178,7 @@ void Main::setup()
         preferences,
         _tasks.mainTask
     );
-    _backchannel = &backchannel;
-    _tasks.backchannelReceiveTask = SV_Tasks::setupBackchannelReceiveTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelReceiveTask = SV_Tasks::setupBackchannelReceiveTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE);
     _tasks.backchannelSendTask = SV_Tasks::setupBackchannelSendTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
 #endif
 }
@@ -294,19 +293,12 @@ void Main::loop() // NOLINT(readability-make-member-function-const)
     vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000));
     [[maybe_unused]] const TickType_t tickCount = xTaskGetTickCount();
 #else
+    [[maybe_unused]] const uint32_t tickCount = timeUs() / 1000;
     // simple round-robbin scheduling
     _tasks.mainTask->loop();
     _tasks.ahrsTask->loop();
     _tasks.vehicleControllerTask->loop();
     _tasks.receiverTask->loop();
-    [[maybe_unused]] const uint32_t tickCount = timeUs() / 1000;
-#endif
-
-#if defined(BACKCHANNEL_MAC_ADDRESS)
-    //_backchannel->update();
-    if (_backchannel) {
-        _backchannel->sendTelemetryPacket();
-    }
 #endif
 
 #if defined(USE_SCREEN)

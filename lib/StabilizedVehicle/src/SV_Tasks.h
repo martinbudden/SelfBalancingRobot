@@ -16,6 +16,6 @@ namespace SV_Tasks {
     ReceiverTask* setupReceiverTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
     ReceiverTask* setupReceiverTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID);
 
-    BackchannelReceiveTask* setupBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
+    BackchannelReceiveTask* setupBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID);
     BackchannelSendTask* setupBackchannelSendTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
 } // end namespace

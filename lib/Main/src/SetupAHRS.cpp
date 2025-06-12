@@ -63,7 +63,7 @@ AHRS& Main::setupAHRS(void* i2cMutex)
 #elif defined(USE_IMU_M5_UNIFIED)
     static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER);
 #else
-    static_assert(false);
+    static_assert(false && "IMU type not specified");
 #endif
 
     //static_cast<IMU_Base&>(imuSensor).init(1000000 / AHRS_TASK_INTERVAL_MICROSECONDS, i2cMutex);

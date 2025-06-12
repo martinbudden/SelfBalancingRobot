@@ -95,7 +95,6 @@ private:
     };
 private:
     tasks_t _tasks {};
-    BackchannelBase* _backchannel {nullptr};
 
     uint32_t _screenTickCount {0};
     ScreenBase* _screen {nullptr};
