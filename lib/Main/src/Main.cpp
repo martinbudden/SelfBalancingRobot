@@ -82,7 +82,7 @@ void Main::setup()
     void* i2cMutex = nullptr;
 #endif
 
-    _ahrs = &setupAHRS(i2cMutex);
+    AHRS& ahrs = setupAHRS(i2cMutex);
 
 #if defined(USE_ESPNOW)
     // Set WiFi to station mode
@@ -174,11 +174,11 @@ void Main::setup()
         receiver.getESPNOW_Transceiver(),
         &backchannelMacAddress[0],
         &myMacAddress[0],
-        *_motorPairController,
-        *_ahrs,
-        *_tasks.mainTask,
-        *_receiver,
-        preferences
+        motorPairController,
+        ahrs,
+        receiver,
+        preferences,
+        _tasks.mainTask
     );
     _backchannel = &backchannel;
     _tasks.backchannelTask = SV_Tasks::setupTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);

@@ -72,7 +72,8 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     _PIDS[PITCH_ANGLE_DEGREES].setIntegralMax(1.0F);
     _PIDS[PITCH_ANGLE_DEGREES].setOutputSaturationValue(1.0F);
 
-    _PIDS[SPEED_DPS].setIntegralMax(1.0F);
+    _PIDS[SPEED_SERIAL_DPS].setIntegralMax(1.0F);
+    _PIDS[SPEED_PARALLEL_DPS].setIntegralMax(1.0F);
 
     _PIDS[YAW_RATE_DPS].setPID(yawRatePID_Default);
 
@@ -84,16 +85,11 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
 }
 
 /*!
-Sets the control mode and adjusts the _PIDS[SPEED_DPS] constants accordingly.
+Sets the control mode and resets the pid integrals.
 */
 void MotorPairController::setControlMode(control_mode_e controlMode)
 {
-    _PIDS[SPEED_DPS].resetIntegral();
     _controlMode = controlMode;
-    if (controlMode == CONTROL_MODE_SERIAL_PIDS) { // NOLINT(bugprone-branch-clone) false positive
-        _PIDS[SPEED_DPS].setPID(speedPID_DefaultSerial);
-    } else {
-        _PIDS[SPEED_DPS].setPID(speedPID_DefaultParallel);
-    }
+    resetIntegrals();
 }
 

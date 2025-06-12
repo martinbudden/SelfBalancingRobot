@@ -13,19 +13,23 @@
 #include <VehicleControllerBase.h>
 #include <VehicleControllerTask.h>
 
+BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(VehicleControllerBase& vehicleController, AHRS& ahrs, const ReceiverBase& receiver, SV_Preferences& preferences)
+    : BackchannelStabilizedVehicle(vehicleController, ahrs, receiver, preferences, nullptr)
+{
+}
 
 BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(
         VehicleControllerBase& vehicleController,
         AHRS& ahrs,
-        const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences
+        SV_Preferences& preferences,
+        const TaskBase* mainTask
     ) :
     _vehicleController(vehicleController),
     _ahrs(ahrs),
-    _mainTask(mainTask),
     _receiver(receiver),
-    _preferences(preferences)
+    _preferences(preferences),
+    _mainTask(mainTask)
 {
 #if !defined(ESP_NOW_MAX_DATA_LEN)
 #define ESP_NOW_MAX_DATA_LEN (250)
@@ -151,7 +155,7 @@ bool BackchannelStabilizedVehicle::sendTelemetryPacket(uint8_t subCommand)
         const size_t len = packTelemetryData_TaskIntervals(_transmitDataBufferPtr, _telemetryID, _sequenceNumber,
             *_ahrs.getTask(),
             *_vehicleController.getTask(),
-            _mainTask.getTickCountDelta(),
+            _mainTask ?  _mainTask->getTickCountDelta() : 0,
             _receiver.getTickCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);

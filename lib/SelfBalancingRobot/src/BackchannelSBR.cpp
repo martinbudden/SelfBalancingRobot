@@ -10,16 +10,16 @@
 BackchannelSBR::BackchannelSBR(
         MotorPairController& motorPairController,
         AHRS& ahrs,
-        const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences
+        SV_Preferences& preferences,
+        const TaskBase* mainTask
     ) :
     BackchannelStabilizedVehicle(
         motorPairController,
         ahrs,
-        mainTask,
         receiver,
-        preferences
+        preferences,
+        mainTask
     ),
     _motorPairController(motorPairController)
 {
@@ -146,7 +146,7 @@ bool BackchannelSBR::sendTelemetryPacket(uint8_t subCommand)
         const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBufferPtr, _telemetryID, _sequenceNumber,
             _ahrs,
             _motorPairController,
-            _mainTask.getTickCountDelta(),
+            _mainTask ? _mainTask->getTickCountDelta() : 0,
             _backchannelTransceiverPtr->getTickCountDeltaAndReset(),
             _receiver.getTickCountDelta());
         //Serial.printf("tiLen:%d\r\n", len);

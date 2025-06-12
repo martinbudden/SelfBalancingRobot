@@ -82,7 +82,7 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     _controlMode(controlMode),
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
-    _motorStepsPerRevolution(_motorPair.getStepsPerRevolution()),
+    _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),
     _pitchBalanceAngleDegrees(vehicle.pitchBalanceAngleDegrees)
 {
     _rollAngleDegreesRaw = NOT_SET;

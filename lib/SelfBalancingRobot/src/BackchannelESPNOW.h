@@ -12,9 +12,9 @@ public:
         const uint8_t* myMacAddress,
         MotorPairController& motorPairController,
         AHRS& ahrs,
-        const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences
+        SV_Preferences& preferences,
+        const TaskBase* mainTask
     );
 protected:
     BackchannelTransceiverESPNOW _backchannelTransceiver;

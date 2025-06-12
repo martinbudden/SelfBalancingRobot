@@ -7,16 +7,16 @@ BackchannelESPNOW::BackchannelESPNOW(
         const uint8_t* myMacAddress,
         MotorPairController& motorPairController,
         AHRS& ahrs,
-        const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences
+        SV_Preferences& preferences,
+        const TaskBase* mainTask
     ) :
     BackchannelSBR(
         motorPairController,
         ahrs,
-        mainTask,
         receiver,
-        preferences
+        preferences,
+        mainTask
     ),
     _backchannelTransceiver(espnowTransceiver, backchannelMacAddress, _receivedDataBuffer, sizeof(_receivedDataBuffer))
 {

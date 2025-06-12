@@ -22,7 +22,8 @@ static const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES =
     "ROLL_ANGLE",
     "PITCH_ANGLE",
     "YAW_RATE",
-    "SPEED",
+    "SPEED_SERIAL",
+    "SPEED_PARALLEL",
     "POSITION"
 };
 

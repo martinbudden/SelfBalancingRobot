@@ -72,6 +72,7 @@ public:
         float motorSwitchOffAngleDegrees;
         float encoderStepsPerRevolution;
     };
+    typedef std::array<PIDF::PIDF_t, PID_COUNT> scale_factors_t;
     static constexpr float NOT_SET = FLT_MAX;
 public:
     inline bool motorsIsOn() const { return _motorPairMixer.motorsIsOn(); }
@@ -112,6 +113,7 @@ public:
     inline void setPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees) { _pitchBalanceAngleDegrees = pitchBalanceAngleDegrees; }
 
     void getTelemetryData(motor_pair_controller_telemetry_t& telemetry, control_mode_e controlMode) const;
+    void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const { getTelemetryData(telemetry, _controlMode); }
 
     void motorsResetEncodersToZero();
 public:
@@ -160,7 +162,7 @@ private:
 
     const float _motorMaxSpeedDPS;
     const float _motorMaxSpeedDPS_reciprocal;
-    const float _motorStepsPerRevolution; //!< Local copy of the value of _motors->getStepsPerRevolution().
+    const float _motorPairStepsPerRevolution; //!< Local copy of the value of _motors->getStepsPerRevolution().
 
     float _positionSetpointDegrees {0.0}; //!< Position setpoint for CONTROL_MODE_POSITION
     float _positionDegrees {0.0}; //!< Position for CONTROL_MODE_POSITION

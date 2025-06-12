@@ -12,9 +12,9 @@ public:
     BackchannelSBR(
         MotorPairController& motorPairController,
         AHRS& ahrs,
-        const TaskBase& mainTask,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences
+        SV_Preferences& preferences,
+        const TaskBase* mainTask
     );
 public:
     virtual bool sendTelemetryPacket(uint8_t subCommand) override;
