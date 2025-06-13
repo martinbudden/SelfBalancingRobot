@@ -161,9 +161,9 @@ void Main::setup()
     static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
     _tasks.mainTask = &mainTask;
     SV_Tasks::reportMainTask();
-    _tasks.ahrsTask = SV_Tasks::setupAHRS_Task(ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
-    _tasks.vehicleControllerTask = SV_Tasks::setupVehicleControllerTask(motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
-    _tasks.receiverTask = SV_Tasks::setupReceiverTask(receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
+    _tasks.ahrsTask = SV_Tasks::setupAHRS_Task(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
+    _tasks.vehicleControllerTask = SV_Tasks::setupVehicleControllerTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
+    _tasks.receiverTask = SV_Tasks::setupReceiverTask(_tasks.receiverTaskInfo, receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the backchannel.
@@ -176,10 +176,10 @@ void Main::setup()
         ahrs,
         receiver,
         preferences,
-        _tasks.mainTask
+        &mainTask
     );
-    _tasks.backchannelReceiveTask = SV_Tasks::setupBackchannelReceiveTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE);
-    _tasks.backchannelSendTask = SV_Tasks::setupBackchannelSendTask(backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelReceiveTask = SV_Tasks::setupBackchannelReceiveTask(_tasks.backchannelReceiveTaskInfo, backchannel, BACKCHANNEL_RECEIVE_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_RECEIVE_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelSendTask = SV_Tasks::setupBackchannelSendTask(_tasks.backchannelSendTaskInfo, backchannel, BACKCHANNEL_SEND_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_SEND_TASK_INTERVAL_MICROSECONDS);
 #endif
 }
 
@@ -290,8 +290,11 @@ The receiver (joystick) values are obtained in the Receiver task.
 void Main::loop() // NOLINT(readability-make-member-function-const)
 {
 #if defined(USE_FREERTOS)
+
     vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000));
     [[maybe_unused]] const TickType_t tickCount = xTaskGetTickCount();
+    //checkStackUsage();
+
 #else
     [[maybe_unused]] const uint32_t tickCount = timeUs() / 1000;
     // simple round-robbin scheduling
@@ -299,6 +302,7 @@ void Main::loop() // NOLINT(readability-make-member-function-const)
     _tasks.ahrsTask->loop();
     _tasks.vehicleControllerTask->loop();
     _tasks.receiverTask->loop();
+
 #endif
 
 #if defined(USE_SCREEN)
@@ -314,6 +318,44 @@ void Main::loop() // NOLINT(readability-make-member-function-const)
     if (_buttonsTickCount - tickCount > 149) {
         _buttonsTickCount = tickCount;
         _buttons->update();
+    }
+#endif
+}
+
+void Main::checkStackUsage()
+{
+#if defined(INCLUDE_uxTaskGetStackHighWaterMark)
+    static uint32_t ahrsStackUsedMax = 0;
+    const UBaseType_t ahrsStackUsed =  _tasks.ahrsTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.ahrsTaskInfo.taskHandle);
+    if (ahrsStackUsed > ahrsStackUsedMax) {
+        ahrsStackUsedMax = ahrsStackUsed;
+        Serial.printf("AHRS,                stack used:%d\r\n", ahrsStackUsed);
+    }
+
+    static uint32_t mpcStackUsedMax = 0;
+    const UBaseType_t mpcStackUsed =  _tasks.vehicleControllerTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.vehicleControllerTaskInfo.taskHandle);
+    if (mpcStackUsed > mpcStackUsedMax) {
+        mpcStackUsedMax = mpcStackUsed;
+        Serial.printf("MotorPairController, stack used:%d\r\n", mpcStackUsed);
+    }
+
+    static uint32_t receiverStackUsedMax = 0;
+    const UBaseType_t receiverStackUsed =  _tasks.receiverTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.receiverTaskInfo.taskHandle);
+    if (receiverStackUsed > receiverStackUsedMax) {
+        receiverStackUsedMax = receiverStackUsed;
+        Serial.printf("Receiver             stack used:%d\r\n", receiverStackUsed);
+    }
+    static uint32_t backchannelReceiveStackUsedMax = 0;
+    const UBaseType_t backchannelReceiveStackUsed =  _tasks.backchannelReceiveTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.backchannelReceiveTaskInfo.taskHandle);
+    if (backchannelReceiveStackUsed > backchannelReceiveStackUsedMax) {
+        backchannelReceiveStackUsedMax = backchannelReceiveStackUsed;
+        Serial.printf("BackchannelReceive, stack used:%d\r\n", backchannelReceiveStackUsed);
+    }
+    static uint32_t backchannelSendStackUsedMax = 0;
+    const UBaseType_t backchannelSendStackUsed =  _tasks.backchannelSendTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.backchannelSendTaskInfo.taskHandle);
+    if (backchannelSendStackUsed > backchannelSendStackUsedMax) {
+        backchannelSendStackUsedMax = backchannelSendStackUsed;
+        Serial.printf("BackchannelSend,     stack used:%d\r\n", backchannelSendStackUsed);
     }
 #endif
 }

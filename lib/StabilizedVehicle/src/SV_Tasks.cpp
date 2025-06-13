@@ -10,8 +10,18 @@
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <freertos/FreeRTOSConfig.h>
 #endif
 
+#if defined(USE_FREERTOS)
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    assert(false && "stack overflow");
+    Serial.printf("\r\n\r\n*********\r\n");
+    Serial.printf("********Task '%s' stack overflow ********\r\n", pcTaskName);
+    Serial.printf("*********\r\n\r\n");
+}
+#endif
 
 /*!
 The ESP32S3 is dual core containing a Protocol CPU (known as CPU 0 or PRO_CPU) and an Application CPU (known as CPU 1 or APP_CPU).
@@ -42,42 +52,100 @@ void SV_Tasks::reportMainTask()
     const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
     const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
     const char* taskName = pcTaskGetName(taskHandle);
-    std::array<char, 128> buf;
-    sprintf(&buf[0], "\r\n\r\n**** Main loop task, name:'%s' priority:%u, tickRate:%uHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
-    Serial.print(&buf[0]);
+    Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%u, tickRate:%uHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
 #endif
 }
 
-AHRS_Task* SV_Tasks::setupAHRS_Task(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+AHRS_Task* SV_Tasks::setupAHRS_Task(task_info_t& taskInfo, AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static AHRS_Task task(taskIntervalMicroSeconds, ahrs);
     ahrs.setTask(&task);
 
 #if defined(USE_FREERTOS)
+    Serial.printf("**** AHRS_Task,              core:%u, priority:%u, task interval:%ums\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &task,
     };
-    enum { TASK_STACK_DEPTH = 4096 };
+    enum { TASK_STACK_DEPTH = 2048 };
     static StaticTask_t taskBuffer;
     static std::array <StackType_t, TASK_STACK_DEPTH> stack;
+#if !defined(configCHECK_FOR_STACK_OVERFLOW)
+    // fill the stack so we can do our own stack overflow detection
+    stack.fill(a5);
+#endif
+    taskInfo = {
+        .taskHandle = nullptr,
+        .name = "AHRS_Task",
+        .stackDepth = TASK_STACK_DEPTH,
+        .stackBuffer = &stack[0],
+        .priority = priority,
+        .coreID = coreID,
+    };
+    assert(strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "AHRS_Task: taskname too long");
+    assert(taskInfo.priority < configMAX_PRIORITIES && "AHRS_Task: priority too high");
+
     const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
         AHRS_Task::Task,
-        "AHRS_Task",
-        TASK_STACK_DEPTH,
+        taskInfo.name,
+        taskInfo.stackDepth,
         &taskParameters,
-        priority,
-        &stack[0],
+        taskInfo.priority,
+        taskInfo.stackBuffer,
         &taskBuffer,
-        coreID
+        taskInfo.coreID
     );
+    taskInfo.taskHandle = taskHandle;
     assert(taskHandle != nullptr && "Unable to create AHRS task.");
-#if !defined(FRAMEWORK_ESPIDF)
-    std::array<char, 128> buf;
-    sprintf(&buf[0], "**** AHRS_Task,      core:%u, priority:%u, task interval:%ums\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
-    Serial.print(&buf[0]);
-#endif
+#else
+    (void)priority;
+    (void)coreID;
+#endif // USE_FREERTOS
+    return &task;
+}
+
+AHRS_Task* SV_Tasks::setupAHRS_Task(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+{
+    static task_info_t taskInfo;
+    return setupAHRS_Task(taskInfo, ahrs, priority, coreID, taskIntervalMicroSeconds);
+}
+
+VehicleControllerTask* SV_Tasks::setupVehicleControllerTask(task_info_t& taskInfo, VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+{
+    static VehicleControllerTask task(taskIntervalMicroSeconds, vehicleController);
+    vehicleController.setTask(&task);
+
+#if defined(USE_FREERTOS)
+    Serial.printf("**** MPC_Task,               core:%u, priority:%u, task interval:%ums\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
+    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &task,
+    };
+    enum { TASK_STACK_DEPTH = 2048 };
+    static std::array<StackType_t, TASK_STACK_DEPTH> stack;
+    static StaticTask_t taskBuffer;
+    taskInfo = {
+        .taskHandle = nullptr,
+        .name = "MPC_Task", // max length 16, including zero terminator
+        .stackDepth = TASK_STACK_DEPTH,
+        .stackBuffer = &stack[0],
+        .priority = priority,
+        .coreID = coreID,
+    };
+    assert(strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "MPC_Task: taskname too long");
+    assert(taskInfo.priority < configMAX_PRIORITIES && "MPC_Task: priority too high");
+
+    taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
+        VehicleControllerTask::Task,
+        taskInfo.name,
+        taskInfo.stackDepth,
+        &taskParameters,
+        taskInfo.priority,
+        taskInfo.stackBuffer,
+        &taskBuffer,
+        taskInfo.coreID
+    );
+    assert(taskInfo.taskHandle != nullptr && "Unable to create MPC_Task.");
 #else
     (void)priority;
     (void)coreID;
@@ -87,76 +155,71 @@ AHRS_Task* SV_Tasks::setupAHRS_Task(AHRS& ahrs, uint8_t priority, uint8_t coreID
 
 VehicleControllerTask* SV_Tasks::setupVehicleControllerTask(VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
-    static VehicleControllerTask task(taskIntervalMicroSeconds, vehicleController);
-    vehicleController.setTask(&task);
-
-#if defined(USE_FREERTOS)
-    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &task,
-    };
-    enum { TASK_STACK_DEPTH = 4096 };
-    static StaticTask_t taskBuffer;
-    static std::array<StackType_t, TASK_STACK_DEPTH> stack;
-    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(VehicleControllerTask::Task,
-        "MPC_Task",
-        TASK_STACK_DEPTH,
-        &taskParameters,
-        priority,
-        &stack[0],
-        &taskBuffer,
-        coreID
-    );
-    assert(taskHandle != nullptr && "Unable to create MotorPairController task.");
-#if !defined(FRAMEWORK_ESPIDF)
-    std::array<char, 128> buf;
-    sprintf(&buf[0], "**** MPC_Task,       core:%u, priority:%u, task interval:%ums\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
-    Serial.print(&buf[0]);
-#endif
-#else
-    (void)priority;
-    (void)coreID;
-#endif // USE_FREERTOS
-    return &task;
+    static task_info_t taskInfo;
+    return setupVehicleControllerTask(taskInfo, vehicleController, priority, coreID, taskIntervalMicroSeconds);
 }
 
 ReceiverTask* SV_Tasks::setupReceiverTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID)
 {
 #if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
-    assert(false && "Task interval not specified for Receiver_Task");
+    assert(false && "Task interval not specified for ReceiverTask");
 #endif
     return setupReceiverTask(receiver, receiverWatcher, priority, coreID, 0);
 }
 
+ReceiverTask* SV_Tasks::setupReceiverTask(task_info_t& taskInfo, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID)
+{
+#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
+    assert(false && "Task interval not specified for ReceiverTask");
+#endif
+    return setupReceiverTask(taskInfo, receiver, receiverWatcher, priority, coreID, 0);
+}
+
 ReceiverTask* SV_Tasks::setupReceiverTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+{
+    task_info_t taskInfo;
+    return setupReceiverTask(taskInfo, receiver, receiverWatcher, priority, coreID, taskIntervalMicroSeconds);
+}
+
+ReceiverTask* SV_Tasks::setupReceiverTask(task_info_t& taskInfo, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     static ReceiverTask task(taskIntervalMicroSeconds, receiver, receiverWatcher);
 
 #if defined(USE_FREERTOS)
+#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
+    Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
+#else
+    Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
+#endif
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &task,
     };
-    enum { TASK_STACK_DEPTH = 4096 };
+    enum { TASK_STACK_DEPTH = 1024 };
     static std::array<StackType_t, TASK_STACK_DEPTH> stack;
     static StaticTask_t taskBuffer;
-    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
+    taskInfo = {
+        .taskHandle = nullptr,
+        .name = "ReceiverTask", // max length 16, including zero terminator
+        .stackDepth = TASK_STACK_DEPTH,
+        .stackBuffer = &stack[0],
+        .priority = priority,
+        .coreID = coreID,
+    };
+    assert(strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "ReceiverTask: taskname too long");
+    assert(taskInfo.priority < configMAX_PRIORITIES && "ReceiverTask: priority too high");
+
+    taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
         ReceiverTask::Task,
-        "Receiver_Task",
-        TASK_STACK_DEPTH,
+        taskInfo.name,
+        taskInfo.stackDepth,
         &taskParameters,
-        priority,
-        &stack[0],
+        taskInfo.priority,
+        taskInfo.stackBuffer,
         &taskBuffer,
-        coreID
+        taskInfo.coreID
     );
-    assert(taskHandle != nullptr && "Unable to create ReceiverTask task.");
-    std::array<char, 128> buf;
-#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
-    sprintf(&buf[0], "**** RECEIVER_Task,  core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
-#else
-    sprintf(&buf[0], "**** RECEIVER_Task,  core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
-#endif
-    Serial.print(&buf[0]);
+    assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask.");
 #else
     (void)priority;
     (void)coreID;
@@ -164,33 +227,96 @@ ReceiverTask* SV_Tasks::setupReceiverTask(ReceiverBase& receiver, ReceiverWatche
     return &task;
 }
 
-BackchannelReceiveTask* SV_Tasks::setupBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID)
+BackchannelReceiveTask* SV_Tasks::setupBackchannelReceiveTask(task_info_t& taskInfo, BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
-    static BackchannelReceiveTask task(backchannel);
+    static BackchannelReceiveTask task(taskIntervalMicroSeconds, backchannel);
     backchannel.setTask(&task);
 
 #if defined(USE_FREERTOS)
+    Serial.printf("**** BackchannelReceiveTask, core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &task,
     };
-    enum { TASK_STACK_DEPTH = 4096 };
+
+    enum { TASK_STACK_DEPTH = 1536 };
     static std::array<StackType_t, TASK_STACK_DEPTH> stack;
     static StaticTask_t taskBuffer;
-    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
+    taskInfo = {
+        .taskHandle = nullptr,
+        .name = "BkchnlReceive", // max length 16, including zero terminator
+        .stackDepth = TASK_STACK_DEPTH,
+        .stackBuffer = &stack[0],
+        .priority = priority,
+        .coreID = coreID,
+    };
+    assert(strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "BkchnlReceive: taskname too long");
+    assert(taskInfo.priority < configMAX_PRIORITIES && "BkchnlReceive: priority too high");
+
+    taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
         BackchannelReceiveTask::Task,
-        "BackchannelReceiveTask",
-        TASK_STACK_DEPTH,
+        taskInfo.name,
+        taskInfo.stackDepth,
         &taskParameters,
-        priority,
-        &stack[0],
+        taskInfo.priority,
+        taskInfo.stackBuffer,
         &taskBuffer,
-        coreID
+        taskInfo.coreID
     );
-    assert(taskHandle != nullptr && "Unable to create ReceiverTask task.");
-    std::array<char, 128> buf;
-    sprintf(&buf[0], "**** BACKCHANNEL_Task,core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
-    Serial.print(&buf[0]);
+    assert(taskInfo.taskHandle != nullptr && "Unable to create BackchannelReceiveTask.");
+#else
+    (void)priority;
+    (void)coreID;
+#endif // USE_FREERTOS
+    return &task;
+}
+
+BackchannelReceiveTask* SV_Tasks::setupBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+{
+    task_info_t taskInfo;
+    return setupBackchannelReceiveTask(taskInfo, backchannel, priority, coreID, taskIntervalMicroSeconds);
+}
+
+BackchannelSendTask* SV_Tasks::setupBackchannelSendTask(task_info_t& taskInfo, BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+{
+    static BackchannelSendTask task(taskIntervalMicroSeconds, backchannel);
+
+#if defined(USE_FREERTOS)
+    Serial.printf("**** BackchannelSendTask,    core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
+
+    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
+    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
+        .task = &task,
+    };
+    enum { TASK_STACK_DEPTH = 1536 };
+    static StaticTask_t taskBuffer;
+    static std::array <StackType_t, TASK_STACK_DEPTH> stack;
+    taskInfo = {
+        .taskHandle = nullptr,
+        .name = "BkchnlSend", // max length 16, including zero terminator
+        .stackDepth = TASK_STACK_DEPTH,
+        .stackBuffer = &stack[0],
+        .priority = priority,
+        .coreID = coreID,
+    };
+    assert(strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "BkchnlSend: taskname too long");
+    assert(taskInfo.priority < configMAX_PRIORITIES && "BkchnlSend: priority too high");
+
+    taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
+        BackchannelSendTask::Task,
+        taskInfo.name,
+        taskInfo.stackDepth,
+        &taskParameters,
+        taskInfo.priority,
+        taskInfo.stackBuffer,
+        &taskBuffer,
+        taskInfo.coreID
+    );
+    assert(taskInfo.taskHandle != nullptr && "Unable to create BackchannelSendTask.");
+#if !defined(configCHECK_FOR_STACK_OVERFLOW)
+    // fill the stack so we can do our own stack overflow detection
+    stack.fill(a5);
+#endif
 #else
     (void)priority;
     (void)coreID;
@@ -200,33 +326,6 @@ BackchannelReceiveTask* SV_Tasks::setupBackchannelReceiveTask(BackchannelBase& b
 
 BackchannelSendTask* SV_Tasks::setupBackchannelSendTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
-    static BackchannelSendTask task(taskIntervalMicroSeconds, backchannel);
-
-#if defined(USE_FREERTOS)
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &task,
-    };
-    enum { TASK_STACK_DEPTH = 4096 };
-    static std::array<StackType_t, TASK_STACK_DEPTH> stack;
-    static StaticTask_t taskBuffer;
-    const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(
-        BackchannelSendTask::Task,
-        "BackchannelSendTask",
-        TASK_STACK_DEPTH,
-        &taskParameters,
-        priority,
-        &stack[0],
-        &taskBuffer,
-        coreID
-    );
-    assert(taskHandle != nullptr && "Unable to create ReceiverTask task.");
-    std::array<char, 128> buf;
-    sprintf(&buf[0], "**** BACKCHANNEL_Task,core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
-    Serial.print(&buf[0]);
-#else
-    (void)priority;
-    (void)coreID;
-#endif // USE_FREERTOS
-    return &task;
+    static task_info_t taskInfo;
+    return setupBackchannelSendTask(taskInfo, backchannel, priority, coreID, taskIntervalMicroSeconds);
 }

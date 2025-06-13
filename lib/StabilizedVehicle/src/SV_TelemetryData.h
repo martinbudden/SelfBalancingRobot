@@ -141,8 +141,8 @@ struct TD_PIDS {
         uint8_t pidCount;
         uint8_t pidProfile;
         uint8_t vehicleType;
+        uint8_t controlMode;
         // general use parameters
-        uint8_t p0;
         float f0; // typically used for pitchBalanceAngleDegrees
         float f1;
         float f2;

@@ -31,10 +31,23 @@ Task function for the BackchannelReceiveTask.
 [[noreturn]] void BackchannelReceiveTask::task()
 {
 #if defined(USE_FREERTOS)
+#if defined(BACKCHANNEL_RECEIVE_TASK_INTERRUPT_DRIVEN)
     while (true) {
         _backchannel.WAIT_FOR_DATA_RECEIVED();
         _backchannel.update();
     }
+#else
+    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
+    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
+    assert(taskIntervalTicks > 0 && "BackchannelReceiveTask taskIntervalTicks is zero.");
+    _previousWakeTimeTicks = xTaskGetTickCount();
+
+    while (true) {
+        // delay until the end of the next taskIntervalTicks
+        vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
+        _backchannel.update();
+    }
+#endif
 #else
     while (true) {}
 #endif // USE_FREERTOS

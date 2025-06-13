@@ -29,8 +29,8 @@ struct CommandPacketControl {
     uint32_t id;
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketControl)
-    uint8_t control;
     uint8_t value;
+    uint8_t control;
 };
 
 struct CommandPacketRequestData {
@@ -67,10 +67,13 @@ struct CommandPacketSetPID {
     enum { MPC_ROLL_ANGLE=0, MPC_PITCH_ANGLE=1, MPC_YAW_RATE=2, MPC_SPEED_SERIAL=3, MPC_SPEED_PARALLEL=4, MPC_POSITION=5, MPC_PID_COUNT=6, MPC_PID_BEGIN=0 };
     enum { FC_ROLL_RATE=0,  FC_PITCH_RATE=1, FC_YAW_RATE=2, FC_ROLL_ANGLE=3, FC_PITCH_ANGLE=4, FC_PID_COUNT=5, FC_PID_BEGIN=0 };
     uint32_t id;
+
     uint8_t type;
     uint8_t len; // length of whole packet, ie sizeof(CommandPacketSetPID)
     uint8_t pidIndex;
     uint8_t setType;
+
+    float f0;
     uint8_t value;
 };
 

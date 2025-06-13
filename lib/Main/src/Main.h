@@ -1,6 +1,7 @@
 #pragma once
 
 #include <TaskBase.h>
+#include <SV_Tasks.h>
 
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
@@ -39,15 +40,21 @@ enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
 #if !defined(RECEIVER_TASK_INTERVAL_MICROSECONDS)
 enum { RECEIVER_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
-#if !defined(BACKCHANNEL_TASK_INTERVAL_MICROSECONDS)
-enum { BACKCHANNEL_TASK_INTERVAL_MICROSECONDS = 5000 };
+
+#if !defined(BACKCHANNEL_SEND_TASK_INTERVAL_MICROSECONDS)
+enum { BACKCHANNEL_SEND_TASK_INTERVAL_MICROSECONDS = 5000 };
+#endif
+
+#if !defined(BACKCHANNEL_RECEIVE_TASK_INTERVAL_MICROSECONDS)
+enum { BACKCHANNEL_RECEIVE_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
 enum {
     AHRS_TASK_PRIORITY = 6,
     MPC_TASK_PRIORITY = 5,
     RECEIVER_TASK_PRIORITY = MPC_TASK_PRIORITY,
-    BACKCHANNEL_TASK_PRIORITY = 3,
+    BACKCHANNEL_SEND_TASK_PRIORITY = 3,
+    BACKCHANNEL_RECEIVE_TASK_PRIORITY = 4,
     MSP_TASK_PRIORITY = 2
 };
 
@@ -81,17 +88,28 @@ public:
     void setup();
     void loop();
 private:
+    void checkStackUsage();
     AHRS& setupAHRS(void* i2cMutex);
     static void checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs);
     static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     struct tasks_t {
         MainTask* mainTask;
+
         AHRS_Task* ahrsTask;
+        SV_Tasks::task_info_t ahrsTaskInfo;
+
         VehicleControllerTask* vehicleControllerTask;
+        SV_Tasks::task_info_t vehicleControllerTaskInfo;
+
         ReceiverTask* receiverTask;
+        SV_Tasks::task_info_t receiverTaskInfo;
+
         BackchannelReceiveTask* backchannelReceiveTask;
+        SV_Tasks::task_info_t backchannelReceiveTaskInfo;
+
         BackchannelSendTask* backchannelSendTask;
+        SV_Tasks::task_info_t backchannelSendTaskInfo;
     };
 private:
     tasks_t _tasks {};

@@ -17,9 +17,10 @@ size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
     td->subType = 0;
     td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
 
-    td->data.vehicleType = TD_PIDS::SELF_BALANCING_ROBOT;
-
     td->data.pidCount = MotorPairController::PID_COUNT;
+    td->data.pidProfile = 0;
+    td->data.vehicleType = TD_PIDS::SELF_BALANCING_ROBOT;
+    td->data.controlMode = motorPairController.getControlMode();
 
     td->data.f0 = motorPairController.getPitchBalanceAngleDegrees(); // use general purpose value f0 for pitchBalanceAngleDegrees
 

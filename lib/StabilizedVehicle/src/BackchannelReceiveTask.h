@@ -6,7 +6,7 @@ class BackchannelBase;
 
 class BackchannelReceiveTask : public TaskBase {
 public:
-    explicit BackchannelReceiveTask(BackchannelBase& backchannel) : TaskBase(0), _backchannel(backchannel) {}
+    BackchannelReceiveTask(uint32_t taskIntervalMicroSeconds, BackchannelBase& backchannel) : TaskBase(taskIntervalMicroSeconds), _backchannel(backchannel) {}
 private:
     // class is not copyable or moveable
     BackchannelReceiveTask(const BackchannelReceiveTask&) = delete;
