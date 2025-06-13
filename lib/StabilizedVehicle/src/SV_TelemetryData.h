@@ -312,39 +312,8 @@ struct TD_BLACKBOX_S {
 
 
 /*!
-TYPE RANGE of 100-109 reserved for self balancing robots
+TYPE RANGE of 100-109 reserved for Self Balancing Robots
 */
-
-/*!
-Packet for the the transmission of PID constants, setpoints, and the balance angle, for self-balancing robots, to enable remote tuning.
-*/
-struct TD_SBR_PIDS {
-    enum { TYPE = 100 };
-    uint32_t id {0};
-
-    uint8_t type {TYPE};
-    uint8_t len {sizeof(TD_SBR_PIDS)}; //!< length of whole packet, ie sizeof(TD_SBR_PIDS)
-    uint8_t subType {0};
-    uint8_t sequenceNumber {0};
-
-    enum { ROLL_ANGLE=0, PITCH_ANGLE=1, YAW_RATE=2, SPEED_SERIAL=3, SPEED_PARALLEL=4, POSITION=5, PID_COUNT=6, PID_BEGIN=0 };
-    struct PIDF_t {
-        uint8_t kp;
-        uint8_t ki;
-        uint8_t kd;
-        uint8_t kf;
-    };
-    struct SPID_t {
-        float setpoint;
-        PIDF_t pid;
-    };
-    struct data_t {
-        std::array<SPID_t, PID_COUNT> spids;
-        float pitchBalanceAngleDegrees;
-    };
-    data_t data;
-};
-
 
 struct motor_pair_controller_telemetry_t {
     int32_t encoderLeft {0}; //!< value read from left motor encoder, raw
@@ -374,7 +343,7 @@ struct motor_pair_controller_telemetry_t {
 Packet for the transmission of MotorPairController telemetry data.
 */
 struct TD_MPC {
-    enum { TYPE = 101 };
+    enum { TYPE = 100 };
     uint32_t id {0};
 
     uint8_t type {TYPE};
@@ -388,5 +357,36 @@ struct TD_MPC {
     uint8_t filler {0};
     motor_pair_controller_telemetry_t data;
 };
+
+/*!
+Packet for the the transmission of PID constants, setpoints, and the balance angle, for self-balancing robots, to enable remote tuning.
+*/
+struct TD_SBR_PIDS {
+    enum { TYPE = 101 };
+    uint32_t id {0};
+
+    uint8_t type {TYPE};
+    uint8_t len {sizeof(TD_SBR_PIDS)}; //!< length of whole packet, ie sizeof(TD_SBR_PIDS)
+    uint8_t subType {0};
+    uint8_t sequenceNumber {0};
+
+    enum { ROLL_ANGLE=0, PITCH_ANGLE=1, YAW_RATE=2, SPEED_SERIAL=3, SPEED_PARALLEL=4, POSITION=5, PID_COUNT=6, PID_BEGIN=0 };
+    struct PIDF_t {
+        uint8_t kp;
+        uint8_t ki;
+        uint8_t kd;
+        uint8_t kf;
+    };
+    struct SPID_t {
+        float setpoint;
+        PIDF_t pid;
+    };
+    struct data_t {
+        std::array<SPID_t, PID_COUNT> spids;
+        float pitchBalanceAngleDegrees;
+    };
+    data_t data;
+};
+
 
 #pragma pack(pop)
