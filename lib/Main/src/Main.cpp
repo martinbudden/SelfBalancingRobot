@@ -157,13 +157,13 @@ void Main::setup()
     ReceiverWatcher* receiverWatcher =  nullptr; // no screen available
 #endif // M5_STACK || M5_UNIFIED
 
-    // Set up the AHRS and MotorPairController and Receiver tasks.
+    // Create the tasks
     static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
     _tasks.mainTask = &mainTask;
     SV_Tasks::reportMainTask();
-    _tasks.ahrsTask = SV_Tasks::setupAHRS_Task(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
-    _tasks.vehicleControllerTask = SV_Tasks::setupVehicleControllerTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
-    _tasks.receiverTask = SV_Tasks::setupReceiverTask(_tasks.receiverTaskInfo, receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
+    _tasks.ahrsTask = SV_Tasks::createAHRS_Task(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
+    _tasks.vehicleControllerTask = SV_Tasks::createVehicleControllerTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
+    _tasks.receiverTask = SV_Tasks::createReceiverTask(_tasks.receiverTaskInfo, receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the backchannel.
@@ -178,8 +178,8 @@ void Main::setup()
         preferences,
         &mainTask
     );
-    _tasks.backchannelReceiveTask = SV_Tasks::setupBackchannelReceiveTask(_tasks.backchannelReceiveTaskInfo, backchannel, BACKCHANNEL_RECEIVE_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_RECEIVE_TASK_INTERVAL_MICROSECONDS);
-    _tasks.backchannelSendTask = SV_Tasks::setupBackchannelSendTask(_tasks.backchannelSendTaskInfo, backchannel, BACKCHANNEL_SEND_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_SEND_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelReceiveTask = SV_Tasks::createBackchannelReceiveTask(_tasks.backchannelReceiveTaskInfo, backchannel, BACKCHANNEL_RECEIVE_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_RECEIVE_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelSendTask = SV_Tasks::createBackchannelSendTask(_tasks.backchannelSendTaskInfo, backchannel, BACKCHANNEL_SEND_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_SEND_TASK_INTERVAL_MICROSECONDS);
 #endif
 }
 
