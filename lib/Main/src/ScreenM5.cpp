@@ -43,6 +43,7 @@ ScreenM5::ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairControl
 {
     M5.Lcd.setRotation(_screenMode + _screenRotationOffset);
     M5.Lcd.setTextSize(_screenSize == ScreenM5::SIZE_128x128 || _screenSize == ScreenM5::SIZE_80x160 || _screenSize == ScreenM5::SIZE_135x240 ? 1 : 2);
+    M5.Lcd.fillScreen(TFT_BLACK);
 }
 
 ScreenM5::screen_size_e ScreenM5::screenSize()
@@ -501,10 +502,10 @@ void ScreenM5::updateReceivedData320x240() const
     const uint32_t flipButton =_receiver.getSwitch(ReceiverAtomJoyStick::MOTOR_ON_OFF_SWITCH);
     const uint32_t mode = _receiver.getSwitch(ReceiverAtomJoyStick::MODE_SWITCH);
     const uint32_t altMode = _receiver.getSwitch(ReceiverAtomJoyStick::ALT_MODE_SWITCH);
-    M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == ReceiverAtomJoyStick::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
+    M5.Lcd.printf("M%1d %s A%1d F%1d ", mode, mode == ReceiverAtomJoyStick::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 
     M5.Lcd.setCursor(255, yPos);
-    M5.Lcd.printf("%3d", _receiver.getTickCountDelta());
+    M5.Lcd.printf("%4d", _receiver.getTickCountDelta());
 }
 
 void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
