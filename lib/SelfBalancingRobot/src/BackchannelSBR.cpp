@@ -64,9 +64,9 @@ bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
 
 bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
 {
-    //Serial.printf("SetPID packet type:%d, len:%d, pidIndex:%d setType:%d value:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value);
-    const MotorPairController::pid_index_e pidIndex = static_cast<MotorPairController::pid_index_e>(packet.pidIndex); // NOLINT(hicpp-use-auto,modernize-use-auto)
+    Serial.printf("SetPID packet type:%d, len:%d, pidIndex:%d setType:%d value:%3d f0:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value, packet.f0);
 
+    const auto pidIndex = static_cast<MotorPairController::pid_index_e>(packet.pidIndex);
     if (pidIndex >= MotorPairController::PID_COUNT) {
         //Serial.printf("Backchannel::packetSetPID invalid pidIndex:%d\r\n", packet.pidIndex);
         return false;
@@ -91,12 +91,12 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
         transmit = true;
         break;
     case CommandPacketSetPID::SET_SETPOINT:
-        _motorPairController.setPID_Setpoint(pidIndex, packet.value);
+        _motorPairController.setPID_Setpoint(pidIndex, packet.f0);
         transmit = true;
         break;
     case CommandPacketSetPID::SET_PITCH_BALANCE_ANGLE:
         // Set the balance angle, the value of packet.pidIndex is ignored.
-        _motorPairController.setPitchBalanceAngleDegrees(packet.value);
+        _motorPairController.setPitchBalanceAngleDegrees(packet.f0);
         transmit = true;
         break;
     case CommandPacketSetPID::SAVE_P: // NOLINT(bugprone-branch-clone) false positive
@@ -134,9 +134,9 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
     return false;
 }
 
-bool BackchannelSBR::sendTelemetryPacket(uint8_t subCommand)
+bool BackchannelSBR::sendPacket(uint8_t subCommand)
 {
-    if (BackchannelStabilizedVehicle::sendTelemetryPacket(subCommand)) {
+    if (BackchannelStabilizedVehicle::sendPacket(subCommand)) {
         // if the base class has sent the packet then we have nothing to do
         return true;
     }

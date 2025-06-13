@@ -23,10 +23,10 @@ public:
     );
     BackchannelStabilizedVehicle(VehicleControllerBase& vehicleController, AHRS& ahrs, const ReceiverBase& receiver, SV_Preferences& preferences);
 public:
-    virtual bool sendTelemetryPacket(uint8_t subCommand) override;
+    virtual bool sendPacket(uint8_t subCommand) override;
     static uint32_t idFromMacAddress(const uint8_t* macAddress);
 protected:
-    virtual bool update() override;
+    virtual bool processedReceivedPacket() override;
     virtual bool packetRequestData(const CommandPacketRequestData& packet);
     virtual bool packetSetOffset(const CommandPacketSetOffset& packet);
     virtual bool packetControl(const CommandPacketControl& packet);

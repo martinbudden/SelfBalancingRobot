@@ -227,83 +227,33 @@ ReceiverTask* SV_Tasks::createReceiverTask(task_info_t& taskInfo, ReceiverBase& 
     return &task;
 }
 
-BackchannelReceiveTask* SV_Tasks::createBackchannelReceiveTask(task_info_t& taskInfo, BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+BackchannelTask* SV_Tasks::createBackchannelTask(task_info_t& taskInfo, BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
-    static BackchannelReceiveTask task(taskIntervalMicroSeconds, backchannel);
-    backchannel.setTask(&task);
+    static BackchannelTask task(taskIntervalMicroSeconds, backchannel);
 
 #if defined(USE_FREERTOS)
-    Serial.printf("**** BackchannelReceiveTask, core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
-    // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &task,
-    };
-
-    enum { TASK_STACK_DEPTH = 4096 };
-    static std::array<StackType_t, TASK_STACK_DEPTH> stack;
-    static StaticTask_t taskBuffer;
-    taskInfo = {
-        .taskHandle = nullptr,
-        .name = "BkchnlReceive", // max length 16, including zero terminator
-        .stackDepth = TASK_STACK_DEPTH,
-        .stackBuffer = &stack[0],
-        .priority = priority,
-        .coreID = coreID,
-    };
-    assert(strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "BkchnlReceive: taskname too long");
-    assert(taskInfo.priority < configMAX_PRIORITIES && "BkchnlReceive: priority too high");
-
-    taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
-        BackchannelReceiveTask::Task,
-        taskInfo.name,
-        taskInfo.stackDepth,
-        &taskParameters,
-        taskInfo.priority,
-        taskInfo.stackBuffer,
-        &taskBuffer,
-        taskInfo.coreID
-    );
-    assert(taskInfo.taskHandle != nullptr && "Unable to create BackchannelReceiveTask.");
-#else
-    (void)priority;
-    (void)coreID;
-#endif // USE_FREERTOS
-    return &task;
-}
-
-BackchannelReceiveTask* SV_Tasks::createBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
-{
-    task_info_t taskInfo;
-    return createBackchannelReceiveTask(taskInfo, backchannel, priority, coreID, taskIntervalMicroSeconds);
-}
-
-BackchannelSendTask* SV_Tasks::createBackchannelSendTask(task_info_t& taskInfo, BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
-{
-    static BackchannelSendTask task(taskIntervalMicroSeconds, backchannel);
-
-#if defined(USE_FREERTOS)
-    Serial.printf("**** BackchannelSendTask,    core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
+    Serial.printf("**** BackchannelTask,        core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &task,
     };
-    enum { TASK_STACK_DEPTH = 2048 };
+    enum { TASK_STACK_DEPTH = 4096 }; // 2048 probably sufficient when not using Serial.printf statements
     static StaticTask_t taskBuffer;
     static std::array <StackType_t, TASK_STACK_DEPTH> stack;
     taskInfo = {
         .taskHandle = nullptr,
-        .name = "BkchnlSend", // max length 16, including zero terminator
+        .name = "Backchannel", // max length 16, including zero terminator
         .stackDepth = TASK_STACK_DEPTH,
         .stackBuffer = &stack[0],
         .priority = priority,
         .coreID = coreID,
     };
-    assert(strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "BkchnlSend: taskname too long");
-    assert(taskInfo.priority < configMAX_PRIORITIES && "BkchnlSend: priority too high");
+    assert(strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "Backchannel: taskname too long");
+    assert(taskInfo.priority < configMAX_PRIORITIES && "Backchannel: priority too high");
 
     taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
-        BackchannelSendTask::Task,
+        BackchannelTask::Task,
         taskInfo.name,
         taskInfo.stackDepth,
         &taskParameters,
@@ -312,7 +262,7 @@ BackchannelSendTask* SV_Tasks::createBackchannelSendTask(task_info_t& taskInfo, 
         &taskBuffer,
         taskInfo.coreID
     );
-    assert(taskInfo.taskHandle != nullptr && "Unable to create BackchannelSendTask.");
+    assert(taskInfo.taskHandle != nullptr && "Unable to create BackchannelTask.");
 #if !defined(configCHECK_FOR_STACK_OVERFLOW)
     // fill the stack so we can do our own stack overflow detection
     stack.fill(a5);
@@ -324,8 +274,8 @@ BackchannelSendTask* SV_Tasks::createBackchannelSendTask(task_info_t& taskInfo, 
     return &task;
 }
 
-BackchannelSendTask* SV_Tasks::createBackchannelSendTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+BackchannelTask* SV_Tasks::createBackchannelTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     static task_info_t taskInfo;
-    return createBackchannelSendTask(taskInfo, backchannel, priority, coreID, taskIntervalMicroSeconds);
+    return createBackchannelTask(taskInfo, backchannel, priority, coreID, taskIntervalMicroSeconds);
 }

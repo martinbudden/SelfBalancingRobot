@@ -1,8 +1,7 @@
 #pragma once
 
 #include "AHRS_Task.h"
-#include "BackchannelReceiveTask.h"
-#include "BackchannelSendTask.h"
+#include "BackchannelTask.h"
 #include "ReceiverTask.h"
 #include "VehicleControllerTask.h"
 
@@ -28,9 +27,6 @@ namespace SV_Tasks {
     ReceiverTask* createReceiverTask(task_info_t& taskInfo, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID);
     ReceiverTask* createReceiverTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID);
 
-    BackchannelReceiveTask* createBackchannelReceiveTask(task_info_t& taskInfo, BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
-    BackchannelReceiveTask* createBackchannelReceiveTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
-
-    BackchannelSendTask* createBackchannelSendTask(task_info_t& taskInfo, BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
-    BackchannelSendTask* createBackchannelSendTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
+    BackchannelTask* createBackchannelTask(task_info_t& taskInfo, BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
+    BackchannelTask* createBackchannelTask(BackchannelBase& backchannel, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
 } // end namespace

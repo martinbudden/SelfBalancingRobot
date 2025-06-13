@@ -3,9 +3,6 @@
 #include <MotorPairController.h>
 #include <PIDF.h>
 
-// use anonymous namespace to make items local to this translation unit
-namespace {// NOLINT(clang-diagnostic-implicit-int) false positive
-
 // MOTORS_BALA_2
 constexpr MotorPairController::control_mode_e controlModeBala2 = MotorPairController::CONTROL_MODE_PARALLEL_PIDS;
 
@@ -19,8 +16,8 @@ const MotorPairController::vehicle_t vehicleBala2 = {
 };
 
 constexpr MotorPairController::pidf_array_t scaleFactorsBala2 {{
-    { 0.0001F,  0.001F, 0.00001F,   0.01F },    // ROLL_ANGLE_DEGREES=0,
-    { 0.0002F,  0.001F, 0.000002F,   0.01F },    // PITCH_ANGLE_DEGREES
+    { 0.0001F,  0.001F, 0.000002F,  0.01F },    // ROLL_ANGLE_DEGREES=0,
+    { 0.0002F,  0.001F, 0.000002F,  0.01F },    // PITCH_ANGLE_DEGREES
     { 0.01F,    0.01F,  0.01F,      0.01F },    // YAW_RATE_DPS
     { 0.01F,    0.01F,  0.00001F,   0.01F },    // SPEED_SERIAL_DPS
     { 0.001F,   0.01F,  0.0001F,    0.01F },    // SPEED_PARALLEL_DPS
@@ -132,39 +129,37 @@ const MotorPairController::pidf_array_t& defaultPIDsOther = defaultPIDsBala2;
 
 #if defined(MOTORS_BALA_2)
 
-const MotorPairController::control_mode_e controlMode = controlModeBala2;
-const MotorPairController::vehicle_t& vehicle = vehicleBala2;
-const MotorPairController::pidf_array_t& scaleFactors = scaleFactorsBala2;
-const MotorPairController::pidf_array_t& defaultPIDs = defaultPIDsBala2;
+const MotorPairController::control_mode_e gControlMode = controlModeBala2;
+const MotorPairController::vehicle_t& gVehicle = vehicleBala2;
+const MotorPairController::pidf_array_t& gScaleFactors = scaleFactorsBala2;
+const MotorPairController::pidf_array_t& gDefaultPIDs = defaultPIDsBala2;
 
 #elif defined(MOTORS_BALA_C)
 
-const MotorPairController::control_mode_e controlMode = controlModeBalaC;
-const MotorPairController::vehicle_t& vehicle = vehicleBalaC;
-const MotorPairController::pidf_array_t& scaleFactors = scaleFactorsBalaC;
-const MotorPairController::pidf_array_t& defaultPIDs = defaultPIDsBala2;
+const MotorPairController::control_mode_e gControlMode = controlModeBalaC;
+const MotorPairController::vehicle_t& gVehicle = vehicleBalaC;
+const MotorPairController::pidf_array_t& gScaleFactors = scaleFactorsBalaC;
+const MotorPairController::pidf_array_t& gDefaultPIDs = defaultPIDsBala2;
 
 #elif defined(MOTORS_4_ENCODER_MOTOR)
 
-const MotorPairController::control_mode_e controlMode = controlMode4EncoderMotor;
-const MotorPairController::vehicle_t& vehicle = vehicle4EncoderMotor;
-const MotorPairController::pidf_array_t& scaleFactors = scaleFactors4EncoderMotor;
-const MotorPairController::pidf_array_t& defaultPIDs = defaultPIDs4EncoderMotor;
+const MotorPairController::control_mode_e gControlMode = controlMode4EncoderMotor;
+const MotorPairController::vehicle_t& gVehicle = vehicle4EncoderMotor;
+const MotorPairController::pidf_array_t& gScaleFactors = scaleFactors4EncoderMotor;
+const MotorPairController::pidf_array_t& gDefaultPIDs = defaultPIDs4EncoderMotor;
 
 #elif defined(MOTORS_GO_PLUS_2) || defined(MOTORS_ATOMIC_MOTION_BASE)
 
-const MotorPairController::control_mode_e controlMode = controlModeGoPlus2;
-const MotorPairController::vehicle_t& vehicle = vehicleGoPlus2;
-const MotorPairController::pidf_array_t& scaleFactors = scaleFactorsGoPlus2;
-const MotorPairController::pidf_array_t& defaultPIDs = defaultPIDsGoPlus2;
+const MotorPairController::control_mode_e gControlMode = controlModeGoPlus2;
+const MotorPairController::vehicle_t& gVehicle = vehicleGoPlus2;
+const MotorPairController::pidf_array_t& gScaleFactors = scaleFactorsGoPlus2;
+const MotorPairController::pidf_array_t& gDefaultPIDs = defaultPIDsGoPlus2;
 
 #elif defined(MOTORS_ROLLER_CAN) || defined(MOTORS_PWR_CAN) || defined(MOTORS_O_DRIVE_CAN) || defined(MOTORS_O_DRIVE_TWAI) || defined(MOTORS_GPIO)
 
-const MotorPairController::control_mode_e controlMode = controlModeOther;
-const MotorPairController::vehicle_t& vehicle = vehicleOther;
-const MotorPairController::pidf_array_t& scaleFactors = scaleFactorsOther;
-const MotorPairController::pidf_array_t& defaultPIDs = defaultPIDsOther;
+const MotorPairController::control_mode_e gControlMode = controlModeOther;
+const MotorPairController::vehicle_t& gVehicle = vehicleOther;
+const MotorPairController::pidf_array_t& gScaleFactors = scaleFactorsOther;
+const MotorPairController::pidf_array_t& gDefaultPIDs = defaultPIDsOther;
 
 #endif
-
-} // end namespace

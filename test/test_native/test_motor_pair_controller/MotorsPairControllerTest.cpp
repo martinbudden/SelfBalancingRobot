@@ -2,6 +2,7 @@
 #include "MotorPairBase.h"
 
 #include <MotorPairController.h>
+#include <MotorPairControllerDefaults.h>
 
 class MotorPairTest final : public MotorPairBase {
 public:
@@ -64,6 +65,8 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
 #if defined(I2C_MUTEX_REQUIRED)
     _motorPair.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #endif
+
+    setScaleFactors(scaleFactorsBala2);
 
     setControlMode(_controlMode);
     _motorPairMixer.setMotorSwitchOffAngleDegrees(motorSwitchOffAngleDegrees);

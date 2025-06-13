@@ -1,7 +1,8 @@
 #include "SBR_Telemetry.h"
 
-#include <cstring>
+#include <HardwareSerial.h>
 
+#include <cstring>
 
 /*!
 Packs the MotorPairController PID telemetry data into a TD_PIDS packet. Returns the length of the packet.
@@ -29,6 +30,12 @@ size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
 
         td->data.spids[ii].setpoint = motorPairController.getPID_Setpoint(pidIndex);
         td->data.spids[ii].pid.kp = motorPairController.getPID_P_MSP(pidIndex);
+        if (ii == MotorPairController::PITCH_ANGLE_DEGREES) {
+            Serial.printf("KP: %d, %f, sc:%f\r\n",
+                td->data.spids[ii].pid.kp, 
+                motorPairController.getPID_Constants(pidIndex).kp,
+                motorPairController.getScaleFactors()[pidIndex].kp);
+        }
         td->data.spids[ii].pid.ki = motorPairController.getPID_I_MSP(pidIndex);
         td->data.spids[ii].pid.kd = motorPairController.getPID_D_MSP(pidIndex);
         td->data.spids[ii].pid.kf = motorPairController.getPID_F_MSP(pidIndex);

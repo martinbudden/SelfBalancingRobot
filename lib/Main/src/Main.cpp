@@ -178,8 +178,7 @@ void Main::setup()
         preferences,
         &mainTask
     );
-    _tasks.backchannelReceiveTask = SV_Tasks::createBackchannelReceiveTask(_tasks.backchannelReceiveTaskInfo, backchannel, BACKCHANNEL_RECEIVE_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_RECEIVE_TASK_INTERVAL_MICROSECONDS);
-    _tasks.backchannelSendTask = SV_Tasks::createBackchannelSendTask(_tasks.backchannelSendTaskInfo, backchannel, BACKCHANNEL_SEND_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_SEND_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelTask = SV_Tasks::createBackchannelTask(_tasks.backchannelTaskInfo, backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
 #endif
 }
 
@@ -345,17 +344,11 @@ void Main::checkStackUsage()
         receiverStackUsedMax = receiverStackUsed;
         Serial.printf("Receiver             stack used:%d\r\n", receiverStackUsed);
     }
-    static uint32_t backchannelReceiveStackUsedMax = 0;
-    const UBaseType_t backchannelReceiveStackUsed =  _tasks.backchannelReceiveTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.backchannelReceiveTaskInfo.taskHandle);
-    if (backchannelReceiveStackUsed > backchannelReceiveStackUsedMax) {
-        backchannelReceiveStackUsedMax = backchannelReceiveStackUsed;
-        Serial.printf("BackchannelReceive, stack used:%d\r\n", backchannelReceiveStackUsed);
-    }
-    static uint32_t backchannelSendStackUsedMax = 0;
-    const UBaseType_t backchannelSendStackUsed =  _tasks.backchannelSendTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.backchannelSendTaskInfo.taskHandle);
-    if (backchannelSendStackUsed > backchannelSendStackUsedMax) {
-        backchannelSendStackUsedMax = backchannelSendStackUsed;
-        Serial.printf("BackchannelSend,     stack used:%d\r\n", backchannelSendStackUsed);
+    static uint32_t backchannelStackUsedMax = 0;
+    const UBaseType_t backchannelStackUsed =  _tasks.backchannelTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.backchannelTaskInfo.taskHandle);
+    if (backchannelStackUsed > backchannelStackUsedMax) {
+        backchannelStackUsedMax = backchannelStackUsed;
+        Serial.printf("backchannel,     stack used:%d\r\n", backchannelStackUsed);
     }
 #endif
 }

@@ -10,8 +10,7 @@
 class AHRS;
 class AHRS_Task;
 class BackchannelBase;
-class BackchannelReceiveTask;
-class BackchannelSendTask;
+class BackchannelTask;
 class MotorPairController;
 class ReceiverTask;
 class SV_Preferences;
@@ -41,20 +40,15 @@ enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
 enum { RECEIVER_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
-#if !defined(BACKCHANNEL_SEND_TASK_INTERVAL_MICROSECONDS)
-enum { BACKCHANNEL_SEND_TASK_INTERVAL_MICROSECONDS = 5000 };
-#endif
-
-#if !defined(BACKCHANNEL_RECEIVE_TASK_INTERVAL_MICROSECONDS)
-enum { BACKCHANNEL_RECEIVE_TASK_INTERVAL_MICROSECONDS = 5000 };
+#if !defined(BACKCHANNEL_TASK_INTERVAL_MICROSECONDS)
+enum { BACKCHANNEL_TASK_INTERVAL_MICROSECONDS = 10000 };
 #endif
 
 enum {
     AHRS_TASK_PRIORITY = 6,
     MPC_TASK_PRIORITY = 5,
     RECEIVER_TASK_PRIORITY = MPC_TASK_PRIORITY,
-    BACKCHANNEL_SEND_TASK_PRIORITY = 3,
-    BACKCHANNEL_RECEIVE_TASK_PRIORITY = 4,
+    BACKCHANNEL_TASK_PRIORITY = 5,
     MSP_TASK_PRIORITY = 2
 };
 
@@ -105,11 +99,8 @@ private:
         ReceiverTask* receiverTask;
         SV_Tasks::task_info_t receiverTaskInfo;
 
-        BackchannelReceiveTask* backchannelReceiveTask;
-        SV_Tasks::task_info_t backchannelReceiveTaskInfo;
-
-        BackchannelSendTask* backchannelSendTask;
-        SV_Tasks::task_info_t backchannelSendTaskInfo;
+        BackchannelTask* backchannelTask;
+        SV_Tasks::task_info_t backchannelTaskInfo;
     };
 private:
     tasks_t _tasks {};

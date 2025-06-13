@@ -17,7 +17,7 @@ public:
         const TaskBase* mainTask
     );
 public:
-    virtual bool sendTelemetryPacket(uint8_t subCommand) override;
+    virtual bool sendPacket(uint8_t subCommand) override;
 protected:
     virtual bool packetControl(const CommandPacketControl& packet) override;
     virtual bool packetSetPID(const CommandPacketSetPID& packet) override;

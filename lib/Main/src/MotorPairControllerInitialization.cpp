@@ -32,11 +32,9 @@ MotorPairBase& MotorPairController::allocateMotors()
     // Statically allocate the MotorPair object as defined by the build flags.
 #if defined(MOTORS_BALA_2)
     static MotorsBala2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
-    setScaleFactors(scaleFactorsBala2);
 #elif defined(MOTORS_BALA_C)
     //static MotorsBalaC motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
     static MotorsBalaC motors;// NOLINT(misc-const-correctness) false positive
-    setScaleFactors(scaleFactorsBalaC);
 #elif defined(MOTORS_4_ENCODER_MOTOR)
     static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, vehicle.encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_GO_PLUS_2)
@@ -71,11 +69,12 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     _receiver(receiver),
     _motorPair(allocateMotors()),
     _motorPairMixer(_motorPair),
-    _controlMode(controlMode),
-    _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
+    _controlMode(gControlMode),
+    _motorMaxSpeedDPS(gVehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),
-    _pitchBalanceAngleDegrees(vehicle.pitchBalanceAngleDegrees)
+    _pitchBalanceAngleDegrees(gVehicle.pitchBalanceAngleDegrees),
+    _scaleFactors(gScaleFactors)
 {
     _rollAngleDegreesRaw = NOT_SET;
     _yawAngleDegreesRaw = NOT_SET;
@@ -84,20 +83,20 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     _motorPair.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #endif
 
-    _motorPairMixer.setMotorSwitchOffAngleDegrees(vehicle.motorSwitchOffAngleDegrees);
+    _motorPairMixer.setMotorSwitchOffAngleDegrees(gVehicle.motorSwitchOffAngleDegrees);
 
-    _PIDS[PITCH_ANGLE_DEGREES].setPID(defaultPIDs[PITCH_ANGLE_DEGREES]);
+    _PIDS[PITCH_ANGLE_DEGREES].setPID(gDefaultPIDs[PITCH_ANGLE_DEGREES]);
     _PIDS[PITCH_ANGLE_DEGREES].setIntegralMax(1.0F);
     _PIDS[PITCH_ANGLE_DEGREES].setOutputSaturationValue(1.0F);
 
     _speedFilter.setAlpha(0.8F);
     //_PIDS[SPEED_DPS].setIntegralMax(1.0F);
 
-    _PIDS[POSITION_DEGREES].setPID(defaultPIDs[POSITION_DEGREES]);
+    _PIDS[POSITION_DEGREES].setPID(gDefaultPIDs[POSITION_DEGREES]);
 
-    _PIDS[YAW_RATE_DPS].setPID(defaultPIDs[YAW_RATE_DPS]);
+    _PIDS[YAW_RATE_DPS].setPID(gDefaultPIDs[YAW_RATE_DPS]);
 
-    const float yawRateDPS_AtMaxPower = _motorMaxSpeedDPS * vehicle.wheelDiameterMM / vehicle.wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
+    const float yawRateDPS_AtMaxPower = _motorMaxSpeedDPS * gVehicle.wheelDiameterMM / gVehicle.wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
     static constexpr float maxDesiredYawRateDPS {720.0};
     _yawStickMultiplier = maxDesiredYawRateDPS / yawRateDPS_AtMaxPower;
 }

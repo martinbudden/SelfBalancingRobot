@@ -55,63 +55,48 @@ bool BackchannelStabilizedVehicle::packetSetOffset(const CommandPacketSetOffset&
     IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffsetMapped();
     IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffsetMapped();
 
-    bool transmit = false;
-
+    //Serial.printf("    packetSetOffset itype:%d, len:%d value:%d, type:%d\r\n", packet.type, packet.len, packet.value, packet.type);
     switch (packet.setType) {
     case CommandPacketSetOffset::SET_GYRO_OFFSET_X:
         gyroOffset.x = packet.value;
         _ahrs.setGyroOffsetMapped(gyroOffset);
-        transmit = true;
         break;
     case CommandPacketSetOffset::SET_GYRO_OFFSET_Y:
         gyroOffset.y = packet.value;
         _ahrs.setGyroOffsetMapped(gyroOffset);
-        transmit = true;
         break;
     case CommandPacketSetOffset::SET_GYRO_OFFSET_Z:
         gyroOffset.z = packet.value;
         _ahrs.setGyroOffsetMapped(gyroOffset);
-        transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_X:
         accOffset.x = packet.value;
         _ahrs.setAccOffsetMapped(accOffset);
-        transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_Y:
         accOffset.y = packet.value;
         _ahrs.setAccOffsetMapped(accOffset);
-        transmit = true;
         break;
     case CommandPacketSetOffset::SET_ACC_OFFSET_Z:
         accOffset.z = packet.value;
         _ahrs.setAccOffsetMapped(accOffset);
-        transmit = true;
         break;
     case CommandPacketSetOffset::SAVE_GYRO_OFFSET: // NOLINT(bugprone-branch-clone) false positive
         gyroOffset = _ahrs.getGyroOffset();
         _preferences.putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
-        return true;
         break;
     case CommandPacketSetOffset::SAVE_ACC_OFFSET: // NOLINT(bugprone-branch-clone) false positive
         accOffset = _ahrs.getAccOffset();
         _preferences.putAccOffset(accOffset.x, accOffset.y, accOffset.z);
-        return true;
         break;
     default:
 #if defined(USE_ESPNOW)
         Serial.printf("Backchannel::packetSetOffset invalid itemIndex:%d\r\n", packet.setType);
 #endif
-        break;
+        return false;
     }
 
-    if (transmit) {
-        // send back the new data for display
-        const size_t len = packTelemetryData_AHRS(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _ahrs, _vehicleController);
-        sendData(_transmitDataBufferPtr, len);
-        return true;
-    }
-    return false;
+    return true;
 }
 
 bool BackchannelStabilizedVehicle::packetControl(const CommandPacketControl& packet)
@@ -131,11 +116,11 @@ bool BackchannelStabilizedVehicle::packetRequestData(const CommandPacketRequestD
     //Serial.printf("TransmitRequest packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
 
     _requestType = packet.requestType;
-    sendTelemetryPacket(packet.valueType);
+    sendPacket(packet.valueType);
     return true;
 }
 
-bool BackchannelStabilizedVehicle::sendTelemetryPacket(uint8_t subCommand)
+bool BackchannelStabilizedVehicle::sendPacket(uint8_t subCommand)
 {
     (void)subCommand;
 
@@ -186,9 +171,10 @@ Four types of packets may be received:
 1. A command packet, for example a command to switch off the motors.
 2. A request to transmit telemetry. In this case format the telemetry data and send it.
 3. A request to set a PID value. In this case set the PID value and then send back a TD_PIDS packet for display.
-4. A request to set an IMU offset value. In this case set the offset value and send back an TD_AHRS packet for display.
+4. A request to set an IMU offset value. In this case set the offset value, but don't send back an TD_AHRS packet for display,
+   since the request will have come from within 
 */
-bool BackchannelStabilizedVehicle::update()
+bool BackchannelStabilizedVehicle::processedReceivedPacket()
 {
     //Serial.printf("update\r\n");
     const size_t receivedDataLength = _backchannelTransceiverPtr->getReceivedDataLength();

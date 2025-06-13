@@ -27,9 +27,9 @@ public:
     void WAIT_FOR_DATA_RECEIVED() { _backchannelTransceiverPtr->WAIT_FOR_DATA_RECEIVED(); }
     int sendData(const uint8_t* data, size_t len) const { return _backchannelTransceiverPtr->sendData(data, len); }
 
-    virtual bool update() = 0;
-    virtual bool sendTelemetryPacket(uint8_t subCommand) = 0;
-    bool sendTelemetryPacket() { return sendTelemetryPacket(0); }
+    virtual bool processedReceivedPacket() = 0;
+    virtual bool sendPacket(uint8_t subCommand) = 0;
+    bool sendPacket() { return sendPacket(0); }
 
     inline const TaskBase* getTask() const { return _task; }
     inline void setTask(const TaskBase* task) { _task = task; }
