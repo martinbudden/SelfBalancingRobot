@@ -19,12 +19,12 @@ const MotorPairController::vehicle_t vehicleBala2 = {
 };
 
 constexpr MotorPairController::pidf_array_t scaleFactorsBala2 {{
-    { 0.0001F,  0.001F, 0.00001F,   0.1F },     // ROLL_ANGLE_DEGREES=0,
-    { 0.0001F,  0.001F, 0.00001F,   0.1F },     // PITCH_ANGLE_DEGREES
+    { 0.0001F,  0.001F, 0.00001F,   0.01F },    // ROLL_ANGLE_DEGREES=0,
+    { 0.0002F,  0.001F, 0.000002F,   0.01F },    // PITCH_ANGLE_DEGREES
     { 0.01F,    0.01F,  0.01F,      0.01F },    // YAW_RATE_DPS
-    { 0.01F,    0.01F,  0.00001F,   0.1F },     // SPEED_SERIAL_DPS
+    { 0.01F,    0.01F,  0.00001F,   0.01F },    // SPEED_SERIAL_DPS
     { 0.001F,   0.01F,  0.0001F,    0.01F },    // SPEED_PARALLEL_DPS
-    { 0.10F,    0.01F,  0.001F,     0.1F }      // POSITION_DEGREES
+    { 0.10F,    0.01F,  0.001F,     0.01F }     // POSITION_DEGREES
 }};
 
 constexpr MotorPairController::pidf_array_t defaultPIDsBala2 {{
