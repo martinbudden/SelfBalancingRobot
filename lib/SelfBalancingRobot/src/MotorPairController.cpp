@@ -59,6 +59,20 @@ uint32_t MotorPairController::getOutputPowerTimeMicroSeconds() const
     return _motorPairMixer.getOutputPowerTimeMicroSeconds(); 
 }
 
+VehicleControllerBase::PIDF_uint8_t MotorPairController::getPID_MSP(size_t index) const
+{
+    assert(index < PID_COUNT);
+
+    const auto pidIndex = static_cast<pid_index_e>(index);
+    const PIDF_uint8_t ret = {
+        .kp = static_cast<uint8_t>(_PIDS[pidIndex].getP() / _scaleFactors[pidIndex].kp),
+        .ki = static_cast<uint8_t>(_PIDS[pidIndex].getI() / _scaleFactors[pidIndex].ki),
+        .kd = static_cast<uint8_t>(_PIDS[pidIndex].getD() / _scaleFactors[pidIndex].kd),
+        .kf = static_cast<uint8_t>(_PIDS[pidIndex].getF() / _scaleFactors[pidIndex].kf),
+    };
+    return ret;
+}
+
 /*!
 Return he MPC telemetry data.
 

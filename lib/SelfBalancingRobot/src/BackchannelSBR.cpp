@@ -5,6 +5,7 @@
 #include <ReceiverBase.h>
 #include <SV_Preferences.h>
 #include <SV_Telemetry.h>
+#include <SV_TelemetryData.h>
 
 
 BackchannelSBR::BackchannelSBR(
@@ -127,7 +128,15 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
 
     if (transmit) {
         // send back the new data for display
-        const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController);
+        const size_t len = packTelemetryData_PID(
+            _transmitDataBufferPtr,
+            _telemetryID,
+            _sequenceNumber,
+            _motorPairController, 
+            _motorPairController.getControlMode(),
+            _motorPairController.getPitchBalanceAngleDegrees(),
+            0.0F
+        );
         sendData(_transmitDataBufferPtr, len);
         return true;
     }
@@ -143,7 +152,15 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
 
     switch (_requestType) {
     case CommandPacketRequestData::REQUEST_PID_DATA: {
-        const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController);
+        const size_t len = packTelemetryData_PID(
+            _transmitDataBufferPtr,
+            _telemetryID,
+            _sequenceNumber,
+            _motorPairController, 
+            _motorPairController.getControlMode(),
+            _motorPairController.getPitchBalanceAngleDegrees(),
+            0.0F
+        );
         //Serial.printf("pidLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);
         _requestType = CommandPacketRequestData::NO_REQUEST; // reset _requestType to NO_REQUEST, since REQUEST_PID_DATA is a one shot, as response to keypress

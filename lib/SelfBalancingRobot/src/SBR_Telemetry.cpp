@@ -1,46 +1,11 @@
 #include "SBR_Telemetry.h"
+#include <SV_TelemetryData.h>
 
 #if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
 #endif
 
 #include <cstring>
-
-/*!
-Packs the MotorPairController PID telemetry data into a TD_PIDS packet. Returns the length of the packet.
-*/
-size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber, const MotorPairController& motorPairController)
-{
-    //static_assert(static_cast<int>(TD_SBR_PIDS::PID_COUNT) == static_cast<int>(MotorPairController::PID_COUNT));
-    TD_PIDS* td = reinterpret_cast<TD_PIDS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
-
-    td->id = id;
-    td->type = TD_PIDS::TYPE;
-    td->len = sizeof(TD_PIDS);
-    td->subType = 0;
-    td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
-
-    td->data.pidCount = MotorPairController::PID_COUNT;
-    td->data.pidProfile = 0;
-    td->data.vehicleType = TD_PIDS::SELF_BALANCING_ROBOT;
-    td->data.controlMode = motorPairController.getControlMode();
-
-    td->data.f0 = motorPairController.getPitchBalanceAngleDegrees(); // use general purpose value f0 for pitchBalanceAngleDegrees
-
-    for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
-        const auto pidIndex = static_cast<MotorPairController::pid_index_e>(ii);
-
-        td->data.pids[ii].kp = motorPairController.getPID_P_MSP(pidIndex);
-        //if (ii == MotorPairController::PITCH_ANGLE_DEGREES) {
-        //    Serial.printf("KP: %d, %f, sc:%f\r\n", td->data.pids[ii].kp, motorPairController.getPID_Constants(pidIndex).kp, motorPairController.getScaleFactors()[pidIndex].kp);
-        //}
-        td->data.pids[ii].ki = motorPairController.getPID_I_MSP(pidIndex);
-        td->data.pids[ii].kd = motorPairController.getPID_D_MSP(pidIndex);
-        td->data.pids[ii].kf = motorPairController.getPID_F_MSP(pidIndex);
-    }
-
-    return td->len;
-}
 
 /*!
 Packs the MotorPairController telemetry data into a TD_MPC packet. Returns the length of the packet.

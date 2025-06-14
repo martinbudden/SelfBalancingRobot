@@ -129,3 +129,40 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, uint32_t s
 
     return td->len;
 }
+
+/*!
+Packs the VehicleController PID telemetry data into a TD_PIDS packet. Returns the length of the packet.
+*/
+size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber, const VehicleControllerBase& vehicleController, uint8_t controlMode, float f0, float f1)
+{
+    //static_assert(static_cast<int>(TD_SBR_PIDS::PID_COUNT) == static_cast<int>(MotorPairController::PID_COUNT));
+    TD_PIDS* td = reinterpret_cast<TD_PIDS*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
+
+    td->id = id;
+    td->type = TD_PIDS::TYPE;
+    td->len = sizeof(TD_PIDS);
+    td->subType = 0;
+    td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
+
+    td->data.pidCount = vehicleController.getPID_Count();
+    td->data.pidProfile = 0;
+    td->data.vehicleType = vehicleController.getType();
+    td->data.controlMode = controlMode;
+
+    td->data.f0 = f0; // general purpose value f0 used for pitchBalanceAngleDegrees in self balancing robots
+    td->data.f1 = f1;
+
+    const size_t pidCount = vehicleController.getPID_Count();
+    for (int ii = 0; ii < pidCount; ++ii) {
+        const auto pid = vehicleController.getPID_MSP(ii);
+        td->data.pids[ii].kp = pid.kp;
+        td->data.pids[ii].ki = pid.ki;
+        td->data.pids[ii].kd = pid.kd;
+        td->data.pids[ii].kf = pid.kf;
+        //if (ii == MotorPairController::PITCH_ANGLE_DEGREES) {
+        //    Serial.printf("KP: %d, %f, sc:%f\r\n", td->data.pids[ii].kp, motorPairController.getPID_Constants(pidIndex).kp, motorPairController.getScaleFactors()[pidIndex].kp);
+        //}
+    }
+
+    return td->len;
+}

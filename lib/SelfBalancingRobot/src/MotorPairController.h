@@ -82,6 +82,7 @@ public:
     void motorsToggleOnOff();
     inline bool motorsIsDisabled() const { return _motorPairMixer.motorsIsDisabled(); }
     virtual uint32_t getOutputPowerTimeMicroSeconds() const override;
+    virtual PIDF_uint8_t getPID_MSP(size_t index) const override;
 
     inline control_mode_e getControlMode() const { return _controlMode; }
     void setControlMode(control_mode_e controlMode) { _controlMode = controlMode; resetIntegrals(); }
@@ -94,15 +95,10 @@ public:
     inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
     void setPID_Constants(const pidf_uint8_array_t& pids);
 
-    uint8_t getPID_P_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getP() / _scaleFactors[pidIndex].kp); }
-    uint8_t getPID_I_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getI() / _scaleFactors[pidIndex].ki); }
-    uint8_t getPID_D_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getD() / _scaleFactors[pidIndex].kd); }
-    uint8_t getPID_F_MSP(pid_index_e pidIndex) const { return static_cast<uint8_t>(_PIDS[pidIndex].getF() / _scaleFactors[pidIndex].kf); }
-
     void setPID_P_MSP(pid_index_e pidIndex, uint8_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors[pidIndex].kp); }
-    void setPID_I_MSP(pid_index_e pidIndex, uint8_t ki) { _PIDS[pidIndex].setP(ki * _scaleFactors[pidIndex].ki); }
-    void setPID_D_MSP(pid_index_e pidIndex, uint8_t kd) { _PIDS[pidIndex].setP(kd * _scaleFactors[pidIndex].kd); }
-    void setPID_F_MSP(pid_index_e pidIndex, uint8_t kf) { _PIDS[pidIndex].setP(kf * _scaleFactors[pidIndex].kf); }
+    void setPID_I_MSP(pid_index_e pidIndex, uint8_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors[pidIndex].ki); }
+    void setPID_D_MSP(pid_index_e pidIndex, uint8_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors[pidIndex].kd); }
+    void setPID_F_MSP(pid_index_e pidIndex, uint8_t kf) { _PIDS[pidIndex].setF(kf * _scaleFactors[pidIndex].kf); }
 
     const std::array<PIDF::PIDF_t, PID_COUNT>&  getScaleFactors() const { return _scaleFactors; }
 

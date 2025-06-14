@@ -65,6 +65,7 @@ MotorPairBase& MotorPairController::allocateMotors()
 Constructor. Sets member data.
 */
 MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
+    VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT),
     _ahrs(ahrs),
     _receiver(receiver),
     _motorPair(allocateMotors()),

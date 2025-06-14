@@ -125,14 +125,14 @@ struct TD_PIDS {
     uint8_t subType {0};
     uint8_t sequenceNumber {0};
 
-    enum vehicle_type_e { SELF_BALANCING_ROBOT = 0, AIRCRAFT = 1 };
-
     struct PIDF_t {
         uint8_t kp;
         uint8_t ki;
         uint8_t kd;
         uint8_t kf;
     };
+    enum { TYPE_NOT_SET= 0, SELF_BALANCING_ROBOT = 1, AIRCRAFT = 2 };
+    enum { MAX_PID_COUNT = 12 };  // allow up to 12 PIDs
     struct data_t {
         uint8_t pidCount;
         uint8_t pidProfile;
@@ -141,7 +141,7 @@ struct TD_PIDS {
         // general use parameters
         float f0; // typically used for pitchBalanceAngleDegrees
         float f1;
-        std::array<PIDF_t, 12> pids; // allow up to 12 PIDs
+        std::array<PIDF_t, MAX_PID_COUNT> pids;
     };
     data_t data;
 };
