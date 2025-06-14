@@ -54,6 +54,11 @@ void MotorPairController::setPID_Constants(const pidf_uint8_array_t& pids)
     }
 }
 
+uint32_t MotorPairController::getOutputPowerTimeMicroSeconds() const
+{
+    return _motorPairMixer.getOutputPowerTimeMicroSeconds(); 
+}
+
 /*!
 Return he MPC telemetry data.
 

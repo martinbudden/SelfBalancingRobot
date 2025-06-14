@@ -70,8 +70,6 @@ void test_motor_pair_controller()
 
     const MotorPairController::pidf_array_t& scaleFactors = mpc.getScaleFactors();
     TEST_ASSERT_EQUAL_FLOAT(0.0002F, scaleFactors[MotorPairController::PITCH_ANGLE_DEGREES].kp);
-
-
 }
 
 void test_motor_pair_controller_pid_indexes()

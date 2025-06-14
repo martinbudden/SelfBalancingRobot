@@ -6,13 +6,9 @@ class BackchannelBase;
 
 class BackchannelTask : public TaskBase {
 public:
-    BackchannelTask(uint32_t taskIntervalMicroSeconds, BackchannelBase& backchannel) : TaskBase(taskIntervalMicroSeconds), _backchannel(backchannel) {}
-private:
-    // class is not copyable or moveable
-    BackchannelTask(const BackchannelTask&) = delete;
-    BackchannelTask& operator=(const BackchannelTask&) = delete;
-    BackchannelTask(BackchannelTask&&) = delete;
-    BackchannelTask& operator=(BackchannelTask&&) = delete;
+    BackchannelTask(uint32_t taskIntervalMicroSeconds, BackchannelBase& backchannel) :
+        TaskBase(taskIntervalMicroSeconds),
+        _backchannel(backchannel) {}
 public:
     [[noreturn]] static void Task(void* arg);
     void loop();

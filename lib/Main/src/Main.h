@@ -1,7 +1,7 @@
 #pragma once
 
-#include <TaskBase.h>
 #include <SV_Tasks.h>
+#include <TaskBase.h>
 
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>

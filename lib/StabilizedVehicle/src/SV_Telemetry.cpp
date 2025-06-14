@@ -65,20 +65,23 @@ size_t packTelemetryData_TaskIntervalsExtended(uint8_t* telemetryDataPtr, uint32
     td->subType = 0;
     td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
 
+    const TaskBase* vehicleControllerTask = vehicleController.getTask();
+    const TaskBase* ahrsTask = vehicleController.getTask();
+
     td->mainTaskIntervalTicks = static_cast<uint8_t>(mainTaskTickCountDelta);
-    td->ahrsTaskIntervalTicks = static_cast<uint8_t>(ahrs.getTask()->getTickCountDelta());
-    td->vcTaskIntervalTicks = vehicleController.getTask()->getTickCountDelta();
+    td->ahrsTaskIntervalTicks = static_cast<uint8_t>(ahrsTask->getTickCountDelta());
+    td->vcTaskIntervalTicks = vehicleControllerTask->getTickCountDelta();
     td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
 
-    td->ahrsTaskIntervalMicroSeconds = static_cast<uint16_t>(ahrs.getTask()->getTimeMicroSecondDelta());
+    td->ahrsTaskIntervalMicroSeconds = static_cast<uint16_t>(ahrsTask->getTimeMicroSecondDelta());
 
     static_assert(TD_TASK_INTERVALS_EXTENDED::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
     for (size_t ii = 0; ii < TD_TASK_INTERVALS_EXTENDED::TIME_CHECKS_COUNT; ++ii) {
         td->ahrsTimeChecksMicroSeconds[ii] = ahrs.getTimeChecksMicroSeconds(ii);
     }
 
-    //!!td->vcTaskIntervalMicroSeconds = vehicleController.getTimeMicroSecondDelta();
-    //!!!td->vcOutputPowerTimeMicroSeconds = vcOutputPowerTimeMicroSeconds;
+    td->vcTaskIntervalMicroSeconds = vehicleControllerTask->getTimeMicroSecondDelta();
+    td->vcOutputPowerTimeMicroSeconds = vehicleController.getOutputPowerTimeMicroSeconds();
 
     td->receiverDroppedPacketCount = static_cast<uint8_t>(receiverDroppedPacketCount);
 

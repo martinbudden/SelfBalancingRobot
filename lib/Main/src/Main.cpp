@@ -106,7 +106,6 @@ void Main::setup()
     assert(espErr == ESP_OK && "Unable to setup receiver.");
 #else
     static ReceiverNull receiver;
-    _receiver = &receiver;
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
@@ -158,7 +157,7 @@ void Main::setup()
 #endif // M5_STACK || M5_UNIFIED
 
     // Create the tasks
-    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS);
+    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS); // NOLINT(misc-const-correctness) false positive
     _tasks.mainTask = &mainTask;
     SV_Tasks::reportMainTask();
     _tasks.ahrsTask = SV_Tasks::createAHRS_Task(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);

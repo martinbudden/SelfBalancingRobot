@@ -9,8 +9,8 @@
 #endif
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 #include <freertos/FreeRTOSConfig.h>
+#include <freertos/task.h>
 #endif
 
 #if defined(USE_FREERTOS)
@@ -99,6 +99,7 @@ AHRS_Task* SV_Tasks::createAHRS_Task(task_info_t& taskInfo, AHRS& ahrs, uint8_t 
     taskInfo.taskHandle = taskHandle;
     assert(taskHandle != nullptr && "Unable to create AHRS task.");
 #else
+    (void)taskInfo;
     (void)priority;
     (void)coreID;
 #endif // USE_FREERTOS
@@ -147,6 +148,7 @@ VehicleControllerTask* SV_Tasks::createVehicleControllerTask(task_info_t& taskIn
     );
     assert(taskInfo.taskHandle != nullptr && "Unable to create MPC_Task.");
 #else
+    (void)taskInfo;
     (void)priority;
     (void)coreID;
 #endif // USE_FREERTOS
@@ -177,7 +179,7 @@ ReceiverTask* SV_Tasks::createReceiverTask(task_info_t& taskInfo, ReceiverBase& 
 
 ReceiverTask* SV_Tasks::createReceiverTask(ReceiverBase& receiver, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
-    task_info_t taskInfo;
+    task_info_t taskInfo {};
     return createReceiverTask(taskInfo, receiver, receiverWatcher, priority, coreID, taskIntervalMicroSeconds);
 }
 
@@ -221,6 +223,7 @@ ReceiverTask* SV_Tasks::createReceiverTask(task_info_t& taskInfo, ReceiverBase& 
     );
     assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask.");
 #else
+    (void)taskInfo;
     (void)priority;
     (void)coreID;
 #endif // USE_FREERTOS
@@ -268,6 +271,7 @@ BackchannelTask* SV_Tasks::createBackchannelTask(task_info_t& taskInfo, Backchan
     stack.fill(a5);
 #endif
 #else
+    (void)taskInfo;
     (void)priority;
     (void)coreID;
 #endif // USE_FREERTOS

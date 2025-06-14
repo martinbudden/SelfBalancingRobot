@@ -81,7 +81,7 @@ public:
     void motorsSwitchOn();
     void motorsToggleOnOff();
     inline bool motorsIsDisabled() const { return _motorPairMixer.motorsIsDisabled(); }
-    inline uint32_t getOutputPowerTimeMicroSeconds() const { return _motorPairMixer.getOutputPowerTimeMicroSeconds(); } //<! time taken to write output power to the motors, for instrumentation
+    virtual uint32_t getOutputPowerTimeMicroSeconds() const override;
 
     inline control_mode_e getControlMode() const { return _controlMode; }
     void setControlMode(control_mode_e controlMode) { _controlMode = controlMode; resetIntegrals(); }

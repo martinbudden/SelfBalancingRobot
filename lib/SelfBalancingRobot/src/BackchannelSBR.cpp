@@ -64,7 +64,7 @@ bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
 
 bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
 {
-    Serial.printf("SetPID packet type:%d, len:%d, pidIndex:%d setType:%d value:%3d f0:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value, packet.f0);
+    //Serial.printf("SetPID packet type:%d, len:%d, pidIndex:%d setType:%d value:%3d f0:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value, packet.f0);
 
     const auto pidIndex = static_cast<MotorPairController::pid_index_e>(packet.pidIndex);
     if (pidIndex >= MotorPairController::PID_COUNT) {
@@ -142,17 +142,6 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
     }
 
     switch (_requestType) {
-    case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA: {
-        const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBufferPtr, _telemetryID, _sequenceNumber,
-            _ahrs,
-            _motorPairController,
-            _mainTask ? _mainTask->getTickCountDelta() : 0,
-            _backchannelTransceiverPtr->getTickCountDeltaAndReset(),
-            _receiver.getTickCountDelta());
-        //Serial.printf("tiLen:%d\r\n", len);
-        sendData(_transmitDataBufferPtr, len);
-        break;
-    }
     case CommandPacketRequestData::REQUEST_PID_DATA: {
         const size_t len = packTelemetryData_PID(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _motorPairController);
         //Serial.printf("pidLen:%d\r\n", len);

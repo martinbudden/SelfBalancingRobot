@@ -1,6 +1,8 @@
 #include "SBR_Telemetry.h"
 
+#if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
+#endif
 
 #include <cstring>
 
@@ -28,17 +30,13 @@ size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         const auto pidIndex = static_cast<MotorPairController::pid_index_e>(ii);
 
-        td->data.spids[ii].setpoint = motorPairController.getPID_Setpoint(pidIndex);
-        td->data.spids[ii].pid.kp = motorPairController.getPID_P_MSP(pidIndex);
-        if (ii == MotorPairController::PITCH_ANGLE_DEGREES) {
-            Serial.printf("KP: %d, %f, sc:%f\r\n",
-                td->data.spids[ii].pid.kp, 
-                motorPairController.getPID_Constants(pidIndex).kp,
-                motorPairController.getScaleFactors()[pidIndex].kp);
-        }
-        td->data.spids[ii].pid.ki = motorPairController.getPID_I_MSP(pidIndex);
-        td->data.spids[ii].pid.kd = motorPairController.getPID_D_MSP(pidIndex);
-        td->data.spids[ii].pid.kf = motorPairController.getPID_F_MSP(pidIndex);
+        td->data.pids[ii].kp = motorPairController.getPID_P_MSP(pidIndex);
+        //if (ii == MotorPairController::PITCH_ANGLE_DEGREES) {
+        //    Serial.printf("KP: %d, %f, sc:%f\r\n", td->data.pids[ii].kp, motorPairController.getPID_Constants(pidIndex).kp, motorPairController.getScaleFactors()[pidIndex].kp);
+        //}
+        td->data.pids[ii].ki = motorPairController.getPID_I_MSP(pidIndex);
+        td->data.pids[ii].kd = motorPairController.getPID_D_MSP(pidIndex);
+        td->data.pids[ii].kf = motorPairController.getPID_F_MSP(pidIndex);
     }
 
     return td->len;

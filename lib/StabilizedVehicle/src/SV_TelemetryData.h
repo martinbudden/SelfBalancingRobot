@@ -69,7 +69,7 @@ struct TD_TASK_INTERVALS_EXTENDED {
     uint8_t vcTaskIntervalTicks {0}; //!< tick interval of the Vehicle Controller task
     uint8_t transceiverTickCountDelta {0}; //<<! tick interval of the ESP_NOW transceiver
 
-    static constexpr int TIME_CHECKS_COUNT = 4;
+    enum { TIME_CHECKS_COUNT = 4 };
     std::array<uint16_t, TIME_CHECKS_COUNT> ahrsTimeChecksMicroSeconds {};
 
     uint16_t ahrsTaskIntervalMicroSeconds {0}; //!< execution interval of AHRS_TASK in microseconds
@@ -122,6 +122,37 @@ struct TD_PIDS {
 
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_PIDS)}; //!< length of whole packet, ie sizeof(TD_SBR_PIDS)
+    uint8_t subType {0};
+    uint8_t sequenceNumber {0};
+
+    enum vehicle_type_e { SELF_BALANCING_ROBOT = 0, AIRCRAFT = 1 };
+
+    struct PIDF_t {
+        uint8_t kp;
+        uint8_t ki;
+        uint8_t kd;
+        uint8_t kf;
+    };
+    struct data_t {
+        uint8_t pidCount;
+        uint8_t pidProfile;
+        uint8_t vehicleType;
+        uint8_t controlMode;
+        // general use parameters
+        float f0; // typically used for pitchBalanceAngleDegrees
+        float f1;
+        std::array<PIDF_t, 12> pids; // allow up to 12 PIDs
+    };
+    data_t data;
+};
+
+
+struct TD_PIDS_EXTENDED {
+    enum { TYPE = 6 };
+    uint32_t id {0};
+
+    uint8_t type {TYPE};
+    uint8_t len {sizeof(TD_PIDS_EXTENDED)}; //!< length of whole packet, ie sizeof(TD_SBR_PIDS)
     uint8_t subType {0};
     uint8_t sequenceNumber {0};
 

@@ -62,12 +62,14 @@ AHRS& Main::setupAHRS(void* i2cMutex)
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER);
 #elif defined(USE_IMU_M5_UNIFIED)
     static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER);
-#else
+#elif !defined(FRAMEWORK_TEST)
     static_assert(false && "IMU type not specified");
 #endif
 
+#if !defined(FRAMEWORK_TEST)
     //static_cast<IMU_Base&>(imuSensor).init(1000000 / AHRS_TASK_INTERVAL_MICROSECONDS, i2cMutex);
     static_cast<IMU_Base&>(imuSensor).init(i2cMutex);
+#endif
 
     // Statically allocate the Sensor Fusion Filter
     // Timings are for 240MHz ESP32-S3

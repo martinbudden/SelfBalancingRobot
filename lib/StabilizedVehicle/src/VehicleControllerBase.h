@@ -25,6 +25,7 @@ public:
 
     virtual void loop(float deltaT, uint32_t tickCount) = 0;
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) = 0;
+    virtual uint32_t getOutputPowerTimeMicroSeconds() const = 0; //<! time taken to write output power to the motors, for instrumentation
 protected:
     const TaskBase* _task {nullptr};
     float _pitchAngleDegreesRaw {0.0};

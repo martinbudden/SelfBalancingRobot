@@ -18,8 +18,6 @@ void MotorsBalaC::readEncoder()
 
 void MotorsBalaC::setPower(float leftPower, float rightPower)
 {
-    enum { I2C_FREQUENCY = 400000 }; // 400 kHz
-
     leftPower = scalePower(leftPower) * MAX_POWER;
     rightPower = scalePower(rightPower) * MAX_POWER;
 

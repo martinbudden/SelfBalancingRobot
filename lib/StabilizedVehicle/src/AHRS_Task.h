@@ -15,5 +15,6 @@ public:
     void loop();
 private:
     [[noreturn]] void task();
+private:
     AHRS& _ahrs;
 };

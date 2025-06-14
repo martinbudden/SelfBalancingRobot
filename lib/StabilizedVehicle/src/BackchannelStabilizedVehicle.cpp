@@ -141,7 +141,20 @@ bool BackchannelStabilizedVehicle::sendPacket(uint8_t subCommand)
             *_ahrs.getTask(),
             *_vehicleController.getTask(),
             _mainTask ?  _mainTask->getTickCountDelta() : 0,
-            _receiver.getTickCountDelta());
+            _backchannelTransceiverPtr->getTickCountDeltaAndReset()
+        );
+        //Serial.printf("tiLen:%d\r\n", len);
+        sendData(_transmitDataBufferPtr, len);
+        break;
+    }
+    case CommandPacketRequestData::REQUEST_TASK_INTERVAL_EXTENDED_DATA: {
+        const size_t len = packTelemetryData_TaskIntervalsExtended(_transmitDataBufferPtr, _telemetryID, _sequenceNumber,
+            _ahrs,
+            _vehicleController,
+            _mainTask ? _mainTask->getTickCountDelta() : 0,
+            _backchannelTransceiverPtr->getTickCountDeltaAndReset(),
+            _receiver.getDroppedPacketCountDelta()
+        );
         //Serial.printf("tiLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);
         break;
