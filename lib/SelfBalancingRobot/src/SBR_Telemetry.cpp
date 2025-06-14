@@ -1,12 +1,6 @@
 #include "SBR_Telemetry.h"
 #include <SV_TelemetryData.h>
 
-#if defined(USE_ESPNOW)
-#include <HardwareSerial.h>
-#endif
-
-#include <cstring>
-
 /*!
 Packs the MotorPairController telemetry data into a TD_MPC packet. Returns the length of the packet.
 */
@@ -25,9 +19,7 @@ size_t packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
     td->motors = motorPairController.motorsIsOn();
     td->controlMode = static_cast<uint8_t>(motorPairController.getControlMode());
 
-    motor_pair_controller_telemetry_t telemetryData;
-    motorPairController.getTelemetryData(telemetryData, motorPairController.getControlMode());
-    memcpy(&td->data, &telemetryData, sizeof(motor_pair_controller_telemetry_t));
+    td->data = motorPairController.getTelemetryData(motorPairController.getControlMode());
 
     return td->len;
 };

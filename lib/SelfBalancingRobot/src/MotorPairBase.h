@@ -58,7 +58,7 @@ protected:
     inline void i2cSemaphoreGive() const {}
 #endif
 protected:
-    float _stepsPerRevolution {0.0};
+    const float _stepsPerRevolution;
     int32_t _leftEncoder {0};
     int32_t _rightEncoder {0};
     int32_t _leftEncoderOffset {0};

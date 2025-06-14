@@ -3,9 +3,7 @@
 #include "MotorPairBase.h"
 #include "TimeMicroSeconds.h"
 #include <AHRS.h>
-#include <Filters.h>
 #include <ReceiverBase.h>
-#include <SV_TelemetryData.h>
 
 #include <cmath>
 
@@ -83,17 +81,19 @@ This is because:
    all the member data are continuous, and so a partially updated object is still meaningful to display.
 3. The overhead of a mutex is thus avoided.
 */
-void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& telemetry, control_mode_e controlMode) const
+motor_pair_controller_telemetry_t MotorPairController::getTelemetryData(control_mode_e controlMode) const
 {
-   if (motorsIsOn()) {
+    motor_pair_controller_telemetry_t telemetry;
+
+    if (motorsIsOn()) {
         telemetry.pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
         telemetry.speedError = _PIDS[controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
         telemetry.positionError = _PIDS[POSITION_DEGREES].getError();
-   } else {
+    } else {
         telemetry.pitchError = { 0.0F, 0.0F, 0.0F };
         telemetry.speedError = { 0.0F, 0.0F, 0.0F };
         telemetry.positionError = { 0.0F, 0.0F, 0.0F };
-   }
+    }
     telemetry.pitchAngleOutput = _outputs[OUTPUT_PITCH_ANGLE_DEGREES];
     telemetry.speedOutput = _outputs[OUTPUT_SPEED_DPS];
     telemetry.positionOutput = _outputs[OUTPUT_POSITION_DEGREES];
@@ -112,6 +112,8 @@ void MotorPairController::getTelemetryData(motor_pair_controller_telemetry_t& te
     telemetry.speedDPS_Filtered = _speedDPS;
     // copy of motorMaxSpeedDPS, so telemetry viewer can scale motor speed
     telemetry.motorMaxSpeedDPS = _motorMaxSpeedDPS;
+
+    return telemetry;
 }
 
 void MotorPairController::motorsSwitchOff()

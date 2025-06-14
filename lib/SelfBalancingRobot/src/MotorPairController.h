@@ -3,15 +3,12 @@
 #include "MotorPairMixer.h"
 #include <Filters.h>
 #include <PIDF.h>
+#include <SV_TelemetryData.h>
 #include <VehicleControllerBase.h>
-#include <array>
 #include <cfloat>
 #include <string>
 
-struct motor_pair_controller_telemetry_t;
 class AHRS;
-class MotorPairBase;
-class Quaternion;
 class ReceiverBase;
 
 /*!
@@ -110,8 +107,8 @@ public:
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }
     inline void setPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees) { _pitchBalanceAngleDegrees = pitchBalanceAngleDegrees; }
 
-    void getTelemetryData(motor_pair_controller_telemetry_t& telemetry, control_mode_e controlMode) const;
-    void getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const { getTelemetryData(telemetry, _controlMode); }
+    motor_pair_controller_telemetry_t getTelemetryData(control_mode_e controlMode) const;
+    motor_pair_controller_telemetry_t getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const { return getTelemetryData(_controlMode); }
 
     void motorsResetEncodersToZero();
 public:
