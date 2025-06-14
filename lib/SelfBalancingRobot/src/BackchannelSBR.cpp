@@ -9,6 +9,9 @@
 
 
 BackchannelSBR::BackchannelSBR(
+        const base_init_t& baseInit,
+        uint32_t backchannelID,
+        uint32_t telemetryID,
         MotorPairController& motorPairController,
         AHRS& ahrs,
         const ReceiverBase& receiver,
@@ -16,6 +19,9 @@ BackchannelSBR::BackchannelSBR(
         const TaskBase* mainTask
     ) :
     BackchannelStabilizedVehicle(
+        baseInit,
+        backchannelID,
+        telemetryID,
         motorPairController,
         ahrs,
         receiver,

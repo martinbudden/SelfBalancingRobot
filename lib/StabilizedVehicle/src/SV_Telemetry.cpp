@@ -153,7 +153,7 @@ size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
     td->data.f1 = f1;
 
     const size_t pidCount = vehicleController.getPID_Count();
-    for (int ii = 0; ii < pidCount; ++ii) {
+    for (size_t ii = 0; ii < pidCount; ++ii) {
         const auto pid = vehicleController.getPID_MSP(ii);
         td->data.pids[ii].kp = pid.kp;
         td->data.pids[ii].ki = pid.ki;

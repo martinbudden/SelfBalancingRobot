@@ -12,6 +12,15 @@ BackchannelESPNOW::BackchannelESPNOW(
         const TaskBase* mainTask
     ) :
     BackchannelSBR(
+        base_init_t { 
+            .backchannelTransceiverPtr = &_backchannelTransceiver,
+            .transmitDataBufferPtr = &_transmitDataBuffer[0],
+            .transmitDataBufferSize = sizeof(_transmitDataBuffer),
+            .receivedDataBufferPtr = &_receivedDataBuffer[0],
+            .receivedDataBufferSize = sizeof(_receivedDataBuffer)
+        },
+        idFromMacAddress(backchannelMacAddress), // backchannelID
+        idFromMacAddress(myMacAddress), // telemetryID
         motorPairController,
         ahrs,
         receiver,
@@ -24,13 +33,4 @@ BackchannelESPNOW::BackchannelESPNOW(
     static_assert(sizeof(_transmitDataBuffer) >= ESP_NOW_MAX_DATA_LEN && "transmit buffer too small");
     static_assert(sizeof(_receivedDataBuffer) >= ESP_NOW_MAX_DATA_LEN && "receive buffer too small");
 #endif
-    _backchannelTransceiverPtr = &_backchannelTransceiver;
-
-    _transmitDataBufferPtr = &_transmitDataBuffer[0];
-    _transmitDataBufferSize = sizeof(_transmitDataBuffer);
-    _receivedDataBufferPtr = &_receivedDataBuffer[0];
-    _receivedDataBufferSize = sizeof(_receivedDataBuffer);
-
-    _backchannelID = idFromMacAddress(backchannelMacAddress);
-    _telemetryID = idFromMacAddress(myMacAddress);
 }

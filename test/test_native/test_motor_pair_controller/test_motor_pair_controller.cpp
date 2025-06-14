@@ -70,6 +70,11 @@ void test_motor_pair_controller()
 
     const MotorPairController::pidf_array_t& scaleFactors = mpc.getScaleFactors();
     TEST_ASSERT_EQUAL_FLOAT(0.0002F, scaleFactors[MotorPairController::PITCH_ANGLE_DEGREES].kp);
+
+    TEST_ASSERT_EQUAL(TD_PIDS::SELF_BALANCING_ROBOT, VehicleControllerBase::SELF_BALANCING_ROBOT);
+    TEST_ASSERT_EQUAL(TD_PIDS::AIRCRAFT, VehicleControllerBase::AIRCRAFT);
+
+    TEST_ASSERT_TRUE(static_cast<int>(TD_PIDS::MAX_PID_COUNT) >= static_cast<int>(MotorPairController::PID_COUNT));
 }
 
 void test_motor_pair_controller_pid_indexes()

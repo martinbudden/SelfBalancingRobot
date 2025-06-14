@@ -13,23 +13,37 @@
 #include <VehicleControllerBase.h>
 #include <VehicleControllerTask.h>
 
-BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(VehicleControllerBase& vehicleController, AHRS& ahrs, const ReceiverBase& receiver, SV_Preferences& preferences)
-    : BackchannelStabilizedVehicle(vehicleController, ahrs, receiver, preferences, nullptr)
+BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(
+    const base_init_t& baseInit,
+    uint32_t backchannelID,
+    uint32_t telemetryID,
+    VehicleControllerBase& vehicleController,
+    AHRS& ahrs,
+    const ReceiverBase& receiver, 
+    SV_Preferences& preferences
+    ) :
+    BackchannelStabilizedVehicle(baseInit, telemetryID, backchannelID, vehicleController, ahrs, receiver, preferences, nullptr)
 {
 }
 
 BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(
+        const base_init_t& baseInit,
+        uint32_t backchannelID,
+        uint32_t telemetryID,
         VehicleControllerBase& vehicleController,
         AHRS& ahrs,
         const ReceiverBase& receiver,
         SV_Preferences& preferences,
         const TaskBase* mainTask
     ) :
+    BackchannelBase(baseInit),
     _vehicleController(vehicleController),
     _ahrs(ahrs),
     _receiver(receiver),
     _preferences(preferences),
-    _mainTask(mainTask)
+    _mainTask(mainTask),
+    _backchannelID(backchannelID),
+    _telemetryID(telemetryID)
 {
 #if !defined(ESP_NOW_MAX_DATA_LEN)
 #define ESP_NOW_MAX_DATA_LEN (250)

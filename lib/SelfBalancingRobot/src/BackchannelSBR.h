@@ -10,6 +10,9 @@ Backchannel for Self Balancing Robot.
 class BackchannelSBR : public BackchannelStabilizedVehicle {
 public:
     BackchannelSBR(
+        const base_init_t& baseInit,
+        uint32_t backchannelID,
+        uint32_t telemetryID,
         MotorPairController& motorPairController,
         AHRS& ahrs,
         const ReceiverBase& receiver,
