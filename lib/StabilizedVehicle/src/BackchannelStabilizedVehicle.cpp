@@ -22,7 +22,7 @@ BackchannelStabilizedVehicle::BackchannelStabilizedVehicle(
     const ReceiverBase& receiver, 
     SV_Preferences& preferences
     ) :
-    BackchannelStabilizedVehicle(baseInit, telemetryID, backchannelID, vehicleController, ahrs, receiver, preferences, nullptr)
+    BackchannelStabilizedVehicle(baseInit, backchannelID, telemetryID, vehicleController, ahrs, receiver, preferences, nullptr)
 {
 }
 
