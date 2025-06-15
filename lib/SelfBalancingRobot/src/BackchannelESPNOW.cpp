@@ -1,6 +1,22 @@
 #include "BackchannelESPNOW.h"
 
 
+/*!
+Setup the backchannel for the SBR using the ESPNOW protocol.
+
+Specifically:
+ 
+The BackchannelESPNOW class is derived from the BackchannelSBR class
+which handles packing and unpacking the packets.
+
+The BackchannelESPNOW object owns a BackchannelTransceiverESPNOW object
+which implements the ESPNOW protocol using the ESPNOW_Transceiver.
+
+The BackchannelESPNOW and BackchannelTransceiverESPNOW classes are implemented in
+the StabilizedVehicle library.a64l
+
+The ESPNOW_Transceiver class is implemented in the Receiver library.
+*/
 BackchannelESPNOW::BackchannelESPNOW(
         ESPNOW_Transceiver& espnowTransceiver,
         const uint8_t* backchannelMacAddress,

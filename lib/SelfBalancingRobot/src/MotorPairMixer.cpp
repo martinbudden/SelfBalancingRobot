@@ -43,7 +43,7 @@ void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, ui
         _outputPowerTimeMicroSeconds = timeUs() - timeMicroSeconds0; // for instrumentation
     } else {
         if (_motorSwitchOffTickCount == 0) { // the motors haven't already been switched off
-            // Record the current tickCount so we can stop the motors turning back on if the robot bounces when it falls over.
+            // Record the current tickCount so we can stop the motors turning back on if the robot bounces back up after it falls over.
             _motorSwitchOffTickCount = tickCount;
         }
         // Motors switched off, so set everything to zero, ready for motors to be switched on again.

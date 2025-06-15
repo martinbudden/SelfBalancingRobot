@@ -12,7 +12,7 @@
 /*!
 Motor pair virtual base class.
 
-Allows the Motor Controller to work with different kinds of motors.
+Allows the Motor Pair Controller to work with different kinds of motor pairs.
 */
 class MotorPairBase {
 public:
