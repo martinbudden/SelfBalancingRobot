@@ -29,6 +29,7 @@ public:
 
     virtual void nextScreenMode() override;
     virtual void update() override;
+    virtual void updateTemplate() override;
 private:
     void setScreenMode(mode_t screenMode);
     inline mode_t getScreenMode() const { return _screenMode; }
@@ -50,7 +51,6 @@ private:
     void updateReceivedData320x240() const;
     void update320x240(const TD_AHRS::data_t& ahrsData) const; // MCore
 
-    void updateTemplate();
     void updateReceivedData();
     void updateAHRS_Data() const;
 

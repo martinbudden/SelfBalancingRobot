@@ -134,7 +134,7 @@ void Main::setup()
     static ScreenM5 screen(ahrs, motorPairController, receiver);
     ReceiverWatcher* receiverWatcher =  &screen;
     _screen = &screen;
-    _screen->updateScreenAndTemplate(); // Update the as soon as we can, to minimize the time the screen is blank
+    _screen->updateTemplate(); // Update the as soon as we can, to minimize the time the screen is blank
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(motorPairController, receiver, _screen);

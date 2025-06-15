@@ -14,12 +14,13 @@ public:
 public:
     virtual void nextScreenMode() = 0;
     virtual void update() = 0;
-    void updateScreenAndTemplate() { _templateIsUpdated = false; update(); }
+    virtual void updateTemplate() = 0;
     inline int getScreenSizeX() const { return _screenSizeX; }
     inline int getScreenSizeY() const { return _screenSizeY; }
 
     virtual void newReceiverPacketAvailable() override { _newReceiverPacketAvailable = true; }
 protected:
+    void updateScreenAndTemplate() { _templateIsUpdated = false; update(); }
     inline void clearNewReceiverPacketAvailable() { _newReceiverPacketAvailable = false; }
     inline bool isNewReceiverPacketAvailable() const { return _newReceiverPacketAvailable; }
 protected:
