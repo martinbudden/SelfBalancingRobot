@@ -54,7 +54,7 @@ void MotorPairController::setPID_Constants(const pidf_uint8_array_t& pids)
 
 uint32_t MotorPairController::getOutputPowerTimeMicroSeconds() const
 {
-    return _motorPairMixer.getOutputPowerTimeMicroSeconds(); 
+    return _motorPairMixer.getOutputPowerTimeMicroSeconds();
 }
 
 VehicleControllerBase::PIDF_uint8_t MotorPairController::getPID_MSP(size_t index) const
@@ -85,15 +85,9 @@ motor_pair_controller_telemetry_t MotorPairController::getTelemetryData(control_
 {
     motor_pair_controller_telemetry_t telemetry;
 
-    if (motorsIsOn()) {
-        telemetry.pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
-        telemetry.speedError = _PIDS[controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
-        telemetry.positionError = _PIDS[POSITION_DEGREES].getError();
-    } else {
-        telemetry.pitchError = { 0.0F, 0.0F, 0.0F };
-        telemetry.speedError = { 0.0F, 0.0F, 0.0F };
-        telemetry.positionError = { 0.0F, 0.0F, 0.0F };
-    }
+    telemetry.pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
+    telemetry.speedError = _PIDS[controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
+    telemetry.positionError = _PIDS[POSITION_DEGREES].getError();
     telemetry.pitchAngleOutput = _outputs[OUTPUT_PITCH_ANGLE_DEGREES];
     telemetry.speedOutput = _outputs[OUTPUT_SPEED_DPS];
     telemetry.positionOutput = _outputs[OUTPUT_POSITION_DEGREES];
@@ -119,6 +113,9 @@ motor_pair_controller_telemetry_t MotorPairController::getTelemetryData(control_
 void MotorPairController::motorsSwitchOff()
 {
     _motorPairMixer.motorsSwitchOff();
+    for (auto pid : _PIDS) {
+        pid.switchIntegrationOff();
+    }
 }
 
 void MotorPairController::motorsSwitchOn()
@@ -128,6 +125,9 @@ void MotorPairController::motorsSwitchOn()
     // don't allow motors to be switched on if the sensor fusion has not initialized
     if (!_ahrs.sensorFusionFilterIsInitializing()) {
         _motorPairMixer.motorsSwitchOn();
+        for (auto pid : _PIDS) {
+            pid.switchIntegrationOn();
+        }
     }
 }
 
@@ -143,7 +143,7 @@ void MotorPairController::motorsToggleOnOff()
 void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 {
     const MotorMixerBase::commands_t commands =
-    _failSafeOn ?
+    (_failSafeOn || !motorsIsOn()) ?
         MotorMixerBase::commands_t {
             .speed  = 0.0F,
             .roll   = 0.0F,
@@ -165,11 +165,11 @@ Map the yaw stick non-linearly to give more control for small values of yaw.
 */
 float MotorPairController::mapYawStick(float yawStick)
 {
-    // map the yaw stick to a quadratic curve to give more control for small values of yaw.
-    // higher values of a increase the effect
-    // a=0 gives a linear response, a=1 gives a parabolic (x^2) curve
-    static constexpr float a { 0.2F };
-    const float ret = (1.0F - a) * yawStick + (yawStick < 0.0F ? -a*yawStick*yawStick : a*yawStick*yawStick);
+    // map the yaw stick to a parabolic curve to give more control for small values of yaw.
+    // higher values of alpha increase the effect
+    // alpha=0 gives a linear response, alpha=1 gives a parabolic (x^2) curve
+    static constexpr float alpha { 0.2F };
+    const float ret = yawStick*((1.0F - alpha) + alpha*(yawStick < 0.0F ? - yawStick : yawStick));
     return ret;
 }
 
@@ -212,8 +212,7 @@ void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_
         _yawStick = -_yawStick;
         _PIDS[YAW_RATE_DPS].setSetpoint(_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
 
-        const bool motorOnOff = _receiver.getSwitch(ReceiverBase::MOTOR_ON_OFF_SWITCH);
-        if (motorOnOff) {
+        if (_receiver.getSwitch(ReceiverBase::MOTOR_ON_OFF_SWITCH)) {
             _onOffSwitchPressed = true;
         } else {
             if (_onOffSwitchPressed) {
@@ -254,21 +253,21 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
         _speedRightDPS = _motorPair.getRightSpeed();
         _speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
     } else {
-        // For reference, at 420 steps per revolution, with a 100Hz (10ms) update rate, 1 step per update gives a speed of (360 * 1/420) * 100 = 85 dps
+        // For reference, at 420 steps per revolution, with a 100Hz (10ms) update rate,
+        // 1 step per update gives a speed of (360 * 1/420) * 100 = 85 DPS (degrees per second)
         // With a 200Hz (5ms) update rate that is 170 DPS.
         const float speedMultiplier = 360.0F / (_motorPairStepsPerRevolution * deltaT);
         _speedLeftDPS = static_cast<float>(_encoderLeftDelta) * speedMultiplier;
         _speedRightDPS = static_cast<float>(_encoderRightDelta) * speedMultiplier;
+        float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
 
-        // encoders have discrete output and so are subject to digital noise
+        // Encoders have discrete output and so are subject to digital noise
         // At a speed of 60rpm or 1rps with a 420 steps per revolution we have 420 steps per second,
         // If the MPC task is running at 100Hz, that is four steps per iteration, so an error of 1 step is 25%
         // If the MPC task is running at 200Hz, that is two steps per iteration, so an error of 1 step is 50%
         // So we average over 4 iterations to reduce this digital noise.
-        static FilterMovingAverage<4> speedMovingAverageFilter;
-        float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
-        speedDPS = speedMovingAverageFilter.update(speedDPS);
-        // additionally apply IIR filter.
+        speedDPS = _speedMovingAverageFilter.update(speedDPS);
+        // Additionally apply IIR filter.
         _speedDPS = _speedFilter.update(speedDPS);
 
         //static float motorSpeed {0.0};
@@ -285,12 +284,12 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 }
 
 /*!
-Gimbal lock occurs when the X-axis of an IMU points straight up or straight down.
+Gimbal lock occurs when the X-axis of the IMU points straight up or straight down.
 Gimbal lock effects are significant when the X-axis angle is above +/-85 degrees.
 We want to be able to work with tilt angles in excess of this (eg when recovering from a fall, or when starting up from a lying down position),
 so we cannot point the X-axis in the direction of motion.
 
-So we point the X-axis to the left and the Y axis forward keeping the Z-axis pointing up.
+So we point the X-axis to the left and the Y axis forward, keeping the Z-axis pointing up.
 This means pitch is about the Y-axis and roll about the X-axis (normally pitch is about X-axis and roll is about the Y-axis),
 so we need to convert the values returned by calculatePitchDegrees() and calculateRollDegrees().
 */
@@ -302,23 +301,14 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 #define CALCULATE_ROLL
 #define CALCULATE_YAW
 #if defined(CALCULATE_ROLL)
-    // Roll and yaw are not required for the MotorPairController calculations,
-    // but if they are calculated they will be displayed by the screen and telemetry, which can be useful in debugging.
+    // Roll and yaw are not required for the MotorPairController calculations.
+    // They are calculated to be displayed on the screen and by telemetry, which can be useful in debugging.
     // AHRS orientation assumes (as is conventional) that roll is around the Y-axis, so convert.
     _rollAngleDegreesRaw = orientation.calculatePitchDegrees();
 #if defined(CALCULATE_YAW)
     _yawAngleDegreesRaw = orientation.calculateYawDegrees();
 #endif
 #endif
-
-    if (!motorsIsOn() || motorsIsDisabled()) { // [[unlikely]]
-        resetIntegrals();
-        _outputs.fill(0.0F);
-#if !defined(AHRS_RECORD_UPDATE_TIMES)
-        YIELD_TASK();
-        return;
-#endif
-    }
 
     // calculate _outputs[OUTPUT_SPEED_DPS] and setpoints according to the control mode.
     if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
@@ -337,7 +327,8 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     const float pitchAngleDegreesDelta = pitchAngleDegrees - _PIDS[PITCH_ANGLE_DEGREES].getPreviousMeasurement();
     // Use the filtered value of pitchAngleDegreesDelta as input into the PID update.
     // This is beneficial because the DTerm is especially susceptible to noise (since it is the derivative of a noisy value).
-    _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, _pitchAngleDTermFilter.update(pitchAngleDegreesDelta), deltaT);
+    const float pitchAngleFilteredDTerm = _pitchAngleDTermFilter.update(pitchAngleDegreesDelta);
+    _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleFilteredDTerm, deltaT);
 
     // calculate _outputs[YAW_RATE_DPS]
     const float yawRateDPS = -gyroRPS.z * Quaternion::radiansToDegrees;

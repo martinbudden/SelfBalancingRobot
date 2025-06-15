@@ -152,6 +152,7 @@ private:
     float _speedLeftDPS {0}; //!< rotation speed of left motor, degrees per second
     float _speedRightDPS {0}; //!< rotation speed of right motor, degrees per second
     float _speedDPS {0.0}; //<!< filtered average of left and right motor speeds
+    FilterMovingAverage<4> _speedMovingAverageFilter;
     IIR_filter _speedFilter;
 
     const float _motorMaxSpeedDPS;
