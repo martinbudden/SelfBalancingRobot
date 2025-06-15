@@ -31,9 +31,9 @@ public:
         xyz_t acc;
     };
     static constexpr int TIME_CHECKS_COUNT = 4;
-    enum { SENSOR_FUSION_REQUIRES_INITIALIZATION = true, SENSOR_FUSION_DOES_NOT_REQUIRE_INITIALIZATION = false };
+    enum { IMU_AUTO_CALIBRATES = 0x01, SENSOR_FUSION_REQUIRES_INITIALIZATION = 0x02  };
 public:
-    AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, bool sensorFusionRequiresInitializing);
+    AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, uint32_t flags);
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
     void setVehicleController(VehicleControllerBase* vehicleController) { _vehicleController = vehicleController; }
@@ -70,8 +70,9 @@ public:
     Quaternion getOrientationForInstrumentationUsingLock() const;
 
     void checkFusionFilterConvergence(const xyz_t& acc, const Quaternion& orientation);
-    inline bool sensorFusionFilterIsInitializing() const { return  _sensorFusionRequiresInitializing && _sensorFusionInitializing; }
+    inline bool sensorFusionFilterIsInitializing() const { return  (_flags & SENSOR_FUSION_REQUIRES_INITIALIZATION) && _sensorFusionInitializing; }
     inline void setSensorFusionInitializing(bool sensorFusionInitializing) { _sensorFusionInitializing = sensorFusionInitializing; }
+    inline uint32_t getFlags() const { return _flags; }
 
     const IMU_FiltersBase::filters_t& getFilters() const { return _imuFilters.getFilters(); }
     void setFilters(const IMU_FiltersBase::filters_t& filters);
@@ -93,10 +94,10 @@ private:
     IMU_Base::accGyroRPS_t _accGyroRPS_Locked {};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
 
-    uint32_t _sensorFusionInitializing {true};
-    uint32_t _sensorFusionRequiresInitializing;
     Quaternion _orientation {};
     mutable int32_t _orientationUpdatedSinceLastRead {false};
+    uint32_t _sensorFusionInitializing {true};
+    const uint32_t _flags;
     uint32_t _taskIntervalMicroSeconds;
     float _taskIntervalSeconds;
     uint32_t _tickCountDelta {};

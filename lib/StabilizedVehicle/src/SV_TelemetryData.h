@@ -92,7 +92,7 @@ struct TD_AHRS {
     uint8_t sequenceNumber {0};
 
     uint8_t taskIntervalTicks {0}; //!< interval of the AHRS task, in ticks
-    enum : uint8_t { FILTER_INITIALIZING_FLAG = 0x01 };
+    enum : uint8_t { IMU_AUTO_CALIBRATES = 0x01, SENSOR_FUSION_REQUIRES_INITIALIZATION = 0x02, SENSOR_FUSION_IS_INITIALIZING = 0x04};
     uint8_t flags {0};
     uint16_t fifoCount {0};
 

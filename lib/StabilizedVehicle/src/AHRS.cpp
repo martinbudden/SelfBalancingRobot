@@ -18,23 +18,22 @@ AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusi
 /*!
 Constructor: sets the sensor fusion filter, IMU, and IMU filters
 */
-AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, bool sensorFusionRequiresInitializing) :
+AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, uint32_t flags) :
     _sensorFusionFilter(sensorFusionFilter),
     _IMU(imuSensor),
     _imuFilters(imuFilters),
-    _sensorFusionRequiresInitializing(sensorFusionRequiresInitializing),
+    _flags(flags),
     _taskIntervalMicroSeconds(taskIntervalMicroSeconds),
     _taskIntervalSeconds(static_cast<float>(taskIntervalMicroSeconds)/1000.0F)
 #if defined(USE_AHRS_DATA_MUTEX) && defined(USE_FREERTOS)
     , _ahrsDataMutex(xSemaphoreCreateRecursiveMutexStatic(&_ahrsDataMutexBuffer)) // statically allocate the imuDataMutex
 #endif
-
 {
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
     _IMU.setInterruptDriven();
 #endif
 
-    setSensorFusionInitializing(sensorFusionRequiresInitializing);
+    setSensorFusionInitializing(_flags & SENSOR_FUSION_REQUIRES_INITIALIZATION);
 
 #if defined(USE_FREERTOS)
 
