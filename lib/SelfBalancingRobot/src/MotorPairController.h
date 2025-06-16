@@ -28,8 +28,8 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
-    MotorPairController(const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(ahrs, receiver, nullptr) {}
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(taskIntervalMicroSeconds, ahrs, receiver, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -166,7 +166,8 @@ private:
     const float _rollMaxAngleDegrees {45.0};
     float _pitchBalanceAngleDegrees {0.0};
     const float _pitchMaxAngleDegrees {20.0};
-    FilterMovingAverage<4> _pitchAngleDTermFilter {};
+    //FilterMovingAverage<4> _pitchAngleDTermFilter {};
+    PowerTransferFilter2  _pitchAngleDTermFilter {};
     float _yawStickMultiplier {1.0};
 
     std::array<float, OUTPUT_COUNT> _outputs {};

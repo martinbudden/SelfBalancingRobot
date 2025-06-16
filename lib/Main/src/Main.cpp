@@ -109,7 +109,7 @@ void Main::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(ahrs, receiver, i2cMutex);
+    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, receiver, i2cMutex);
     ahrs.setVehicleController(&motorPairController);
 
     static SV_Preferences preferences;

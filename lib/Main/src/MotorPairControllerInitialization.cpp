@@ -64,7 +64,7 @@ MotorPairBase& MotorPairController::allocateMotors()
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, [[maybe_unused]] void* i2cMutex) :
     VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT),
     _ahrs(ahrs),
     _receiver(receiver),
@@ -84,6 +84,15 @@ MotorPairController::MotorPairController(const AHRS& ahrs, ReceiverBase& receive
     _motorPair.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #endif
 
+    const float deltaT = static_cast<float>(taskIntervalMicroSeconds) / 1000000.0F;
+    _pitchAngleDTermFilter.setCutoffFrequency(50.0F, deltaT);
+/*
+gain20=0.493995
+gain40=0.661307
+gain60=0.745469
+gain70=0.796129
+gain100=0.829970
+*/
     _motorPairMixer.setMotorSwitchOffAngleDegrees(gVehicle.motorSwitchOffAngleDegrees);
 
     _PIDS[PITCH_ANGLE_DEGREES].setPID(gDefaultPIDs[PITCH_ANGLE_DEGREES]);

@@ -259,7 +259,7 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
         const float speedMultiplier = 360.0F / (_motorPairStepsPerRevolution * deltaT);
         _speedLeftDPS = static_cast<float>(_encoderLeftDelta) * speedMultiplier;
         _speedRightDPS = static_cast<float>(_encoderRightDelta) * speedMultiplier;
-        float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
+        float speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F; // NOLINT(misc-const-correctness) false positive
 
         // Encoders have discrete output and so are subject to digital noise
         // At a speed of 60rpm or 1rps with a 420 steps per revolution we have 420 steps per second,
