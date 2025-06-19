@@ -212,6 +212,7 @@
         "Wstrict",
         "Wtrampolines",
         "Wunreachable",
+        "Wunused",
         "WXYZ",
         "xiao",
         "XOUT",

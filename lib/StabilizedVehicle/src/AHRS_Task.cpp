@@ -57,7 +57,7 @@ Task function for the AHRS. Sets up and runs the task loop() function.
         _timeMicroSecondsPrevious = timeMicroSeconds;
 
         if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
-            const float deltaT = pdTICKS_TO_MS(_tickCountDelta) * 0.001F;
+            const float deltaT = static_cast<float>(pdTICKS_TO_MS(_tickCountDelta)) * 0.001F;
             _ahrs.readIMUandUpdateOrientation(deltaT, _tickCountDelta);
         }
     }

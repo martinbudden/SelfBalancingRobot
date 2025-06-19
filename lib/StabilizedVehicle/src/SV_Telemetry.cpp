@@ -41,7 +41,7 @@ size_t packTelemetryData_TaskIntervals(uint8_t* telemetryDataPtr, uint32_t id, u
 
     td->mainTaskIntervalTicks = static_cast<uint8_t>(mainTaskTickCountDelta);
     td->ahrsTaskIntervalTicks = static_cast<uint8_t>(ahrsTask.getTickCountDelta());
-    td->vcTaskIntervalTicks = vehicleControllerTask.getTickCountDelta();
+    td->vcTaskIntervalTicks = static_cast<uint8_t>(vehicleControllerTask.getTickCountDelta());
     td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
 
     return td->len;
@@ -70,18 +70,18 @@ size_t packTelemetryData_TaskIntervalsExtended(uint8_t* telemetryDataPtr, uint32
 
     td->mainTaskIntervalTicks = static_cast<uint8_t>(mainTaskTickCountDelta);
     td->ahrsTaskIntervalTicks = static_cast<uint8_t>(ahrsTask->getTickCountDelta());
-    td->vcTaskIntervalTicks = vehicleControllerTask->getTickCountDelta();
+    td->vcTaskIntervalTicks = static_cast<uint8_t>(vehicleControllerTask->getTickCountDelta());
     td->transceiverTickCountDelta = static_cast<uint8_t>(transceiverTickCountDelta);
 
     td->ahrsTaskIntervalMicroSeconds = static_cast<uint16_t>(ahrsTask->getTimeMicroSecondDelta());
 
     static_assert(TD_TASK_INTERVALS_EXTENDED::TIME_CHECKS_COUNT == AHRS::TIME_CHECKS_COUNT);
     for (size_t ii = 0; ii < TD_TASK_INTERVALS_EXTENDED::TIME_CHECKS_COUNT; ++ii) {
-        td->ahrsTimeChecksMicroSeconds[ii] = ahrs.getTimeChecksMicroSeconds(ii);
+        td->ahrsTimeChecksMicroSeconds[ii] = static_cast<uint16_t>(ahrs.getTimeChecksMicroSeconds(ii));
     }
 
-    td->vcTaskIntervalMicroSeconds = vehicleControllerTask->getTimeMicroSecondDelta();
-    td->vcOutputPowerTimeMicroSeconds = vehicleController.getOutputPowerTimeMicroSeconds();
+    td->vcTaskIntervalMicroSeconds = static_cast<uint16_t>(vehicleControllerTask->getTimeMicroSecondDelta());
+    td->vcOutputPowerTimeMicroSeconds = static_cast<uint16_t>(vehicleController.getOutputPowerTimeMicroSeconds());
 
     td->receiverDroppedPacketCount = static_cast<uint8_t>(receiverDroppedPacketCount);
 
@@ -148,9 +148,9 @@ size_t packTelemetryData_PID(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
     td->subType = 0;
     td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
 
-    td->data.pidCount = vehicleController.getPID_Count();
+    td->data.pidCount = static_cast<uint8_t>(vehicleController.getPID_Count());
     td->data.pidProfile = 0;
-    td->data.vehicleType = vehicleController.getType();
+    td->data.vehicleType = static_cast<uint8_t>(vehicleController.getType());
     td->data.controlMode = controlMode;
 
     td->data.f0 = f0; // general purpose value f0 used for pitchBalanceAngleDegrees in self balancing robots
