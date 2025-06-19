@@ -5,7 +5,7 @@
 
 class MotorsBalaC final : public MotorPairBase {
 public:
-    MotorsBalaC();
+    explicit MotorsBalaC(float deadbandPower);
 public:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
 public:

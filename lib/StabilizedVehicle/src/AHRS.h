@@ -31,7 +31,11 @@ public:
         xyz_t acc;
     };
     static constexpr int TIME_CHECKS_COUNT = 4;
-    enum { IMU_AUTO_CALIBRATES = 0x01, SENSOR_FUSION_REQUIRES_INITIALIZATION = 0x02  };
+    enum : uint32_t {
+        IMU_AUTO_CALIBRATES = 0x01,
+        IMU_PERFORMS_SENSOR_FUSION = 0x02,
+        SENSOR_FUSION_REQUIRES_INITIALIZATION = 0x04
+     };
 public:
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, uint32_t flags);
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
@@ -81,6 +85,8 @@ public:
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
     inline const TaskBase* getTask() const { return _task; }
     inline void setTask(const TaskBase* task) { _task = task; }
+private:
+    static uint32_t flags(const SensorFusionFilterBase& sensorFusionFilter, const IMU_Base& imuSensor);
 public:
     bool readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta);
 private:

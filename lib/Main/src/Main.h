@@ -84,7 +84,9 @@ public:
 private:
     void checkStackUsage();
     AHRS& setupAHRS(void* i2cMutex);
-    static void checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs);
+    static void checkIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs);
+    static void runIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs);
+    static void calibrateIMU(SV_Preferences& preferences, AHRS& ahrs);
     static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     struct tasks_t {

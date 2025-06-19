@@ -72,6 +72,9 @@ public:
     typedef std::array<PIDF::PIDF_t, PID_COUNT> pidf_array_t;
     typedef std::array<PIDF_uint8_t, PID_COUNT> pidf_uint8_array_t;
     static constexpr float NOT_SET = FLT_MAX;
+private:
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors);
+    MotorPairBase& allocateMotors(const vehicle_t& vehicle);
 public:
     inline bool motorsIsOn() const { return _motorPairMixer.motorsIsOn(); }
     void motorsSwitchOff();
@@ -79,7 +82,6 @@ public:
     void motorsToggleOnOff();
     inline bool motorsIsDisabled() const { return _motorPairMixer.motorsIsDisabled(); }
     virtual uint32_t getOutputPowerTimeMicroSeconds() const override;
-    virtual PIDF_uint8_t getPID_MSP(size_t index) const override;
 
     inline control_mode_e getControlMode() const { return _controlMode; }
     void setControlMode(control_mode_e controlMode) { _controlMode = controlMode; resetIntegrals(); }
@@ -88,10 +90,12 @@ public:
     inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failSafeTickCountSwitchOffThreshold) { _failSafeTickCountSwitchOffThreshold = failSafeTickCountSwitchOffThreshold; }
 
     const std::string& getPID_Name(pid_index_e pidIndex) const;
-    inline const PIDF::PIDF_t getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
-    inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
-    void setPID_Constants(const pidf_uint8_array_t& pids);
 
+    inline const PIDF::PIDF_t getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
+    void setPID_Constants(const pidf_uint8_array_t& pids);
+    inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
+
+    virtual PIDF_uint8_t getPID_MSP(size_t index) const override;
     void setPID_P_MSP(pid_index_e pidIndex, uint8_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors[pidIndex].kp); }
     void setPID_I_MSP(pid_index_e pidIndex, uint8_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors[pidIndex].ki); }
     void setPID_D_MSP(pid_index_e pidIndex, uint8_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors[pidIndex].kd); }
@@ -101,14 +105,14 @@ public:
 
     inline float getPID_Setpoint(pid_index_e pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
     void setPID_Setpoint(pid_index_e pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
+
     void resetIntegrals() { for (auto& pid : _PIDS) { pid.resetIntegral(); } }
 
     std::string getBalanceAngleName() const;
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }
     inline void setPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees) { _pitchBalanceAngleDegrees = pitchBalanceAngleDegrees; }
 
-    motor_pair_controller_telemetry_t getTelemetryData(control_mode_e controlMode) const;
-    motor_pair_controller_telemetry_t getTelemetryData(motor_pair_controller_telemetry_t& telemetry) const { return getTelemetryData(_controlMode); }
+    motor_pair_controller_telemetry_t getTelemetryData() const;
 
     void motorsResetEncodersToZero();
 public:
@@ -121,13 +125,12 @@ public:
 private:
     void outputToMotors(float deltaT, uint32_t tickCount);
     void updatePositionOutputs(float deltaT);
-    MotorPairBase& allocateMotors();
 private:
     const AHRS& _ahrs;
     ReceiverBase& _receiver;
     MotorPairBase& _motorPair; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorPairMixer _motorPairMixer;
-    control_mode_e _controlMode;
+    control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
 
     int32_t _onOffSwitchPressed {false};
     int32_t _receiverInUse {false};

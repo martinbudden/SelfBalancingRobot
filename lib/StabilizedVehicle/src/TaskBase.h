@@ -13,7 +13,7 @@ public:
     TaskBase() : TaskBase(0) {}
 public:
     inline void setTaskIntervalMicroSeconds(uint32_t taskIntervalMicroSeconds) { _taskIntervalMicroSeconds = taskIntervalMicroSeconds; }
-    inline uint32_t getTaskIntervalMicroSeconds() { return _taskIntervalMicroSeconds; }
+    inline uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
     inline uint32_t getTickCountDelta() const { return _tickCountDelta; }
     inline uint32_t getTimeMicroSecondDelta() const { return _timeMicroSecondsDelta; }
 protected:

@@ -31,7 +31,8 @@ void test_motor_pair_controller()
     static ReceiverNull receiver; // NOLINT(misc-const-correctness) false positive
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
-    MotorPairController mpc(ahrs, receiver);
+    enum { TASk_INTERVAL_MICROSECONDS = 5000 };
+    MotorPairController mpc(TASk_INTERVAL_MICROSECONDS, ahrs, receiver);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();

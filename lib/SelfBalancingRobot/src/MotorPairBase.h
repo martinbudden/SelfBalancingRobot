@@ -21,9 +21,13 @@ public:
     enum can_accurately_estimate_speed_e { CANNOT_ACCURATELY_ESTIMATE_SPEED = 0,  CAN_ACCURATELY_ESTIMATE_SPEED = 1};
 public:
     virtual ~MotorPairBase() = default;
-    inline MotorPairBase(float stepsPerRevolution, can_accurately_estimate_speed_e canAccuratelyEstimateSpeed) :
+    inline MotorPairBase(float stepsPerRevolution, can_accurately_estimate_speed_e canAccuratelyEstimateSpeed, float deadbandPower) :
         _stepsPerRevolution(stepsPerRevolution),
-        _canAccuratelyEstimateSpeed(canAccuratelyEstimateSpeed)
+        _canAccuratelyEstimateSpeed(canAccuratelyEstimateSpeed),
+        _deadbandPower(deadbandPower)
+        {}
+    inline MotorPairBase(float stepsPerRevolution, can_accurately_estimate_speed_e canAccuratelyEstimateSpeed) :
+        MotorPairBase(stepsPerRevolution, canAccuratelyEstimateSpeed, 0.0F)
         {}
 public:
 #if defined(I2C_MUTEX_REQUIRED)
@@ -59,14 +63,14 @@ protected:
 #endif
 protected:
     const float _stepsPerRevolution;
+    const int _canAccuratelyEstimateSpeed;
+    float _deadbandPower;
     int32_t _leftEncoder {0};
     int32_t _rightEncoder {0};
     int32_t _leftEncoderOffset {0};
     int32_t _rightEncoderOffset {0};
     float _leftSpeed  {0.0}; // revolutions/second
     float _rightSpeed {0.0};
-    float _deadbandPower {0.0};
-    int _canAccuratelyEstimateSpeed {CANNOT_ACCURATELY_ESTIMATE_SPEED};
 };
 
 inline float MotorPairBase::scalePower(float power) const

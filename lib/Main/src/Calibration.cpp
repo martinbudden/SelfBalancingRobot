@@ -1,4 +1,4 @@
-#include "Calibration.h"
+#include "Main.h"
 
 #include <AHRS.h>
 #if defined(FRAMEWORK_ARDUINO)
@@ -12,12 +12,11 @@
 #include <SV_Preferences.h>
 
 
-static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_e calibrationType)
+void Main::runIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs)
 {
 #if defined(USE_IMU_M5_UNIFIED)
     (void)ahrs;
     (void)preferences;
-    (void)calibrationType;
     // Strength of the calibration operation;
     // 0: disables calibration.
     // 1 is weakest and 255 is strongest.
@@ -91,12 +90,10 @@ static void calibrate(AHRS& ahrs, SV_Preferences& preferences, calibrate_e calib
 #endif
 
     preferences.putGyroOffset(gyroOffset_x, gyroOffset_y, gyroOffset_z);
-    if (calibrationType == CALIBRATE_ACC_AND_GYRO) {
-        preferences.putAccOffset(accOffset_x, accOffset_y, accOffset_z);
-    }
+    preferences.putAccOffset(accOffset_x, accOffset_y, accOffset_z);
 }
 
-void calibrateGyro(AHRS& ahrs, SV_Preferences& preferences, calibrate_e calibrationType)
+void Main::calibrateIMU(SV_Preferences& preferences, AHRS& ahrs)
 {
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     if (M5.Lcd.width() > 300) {
@@ -114,7 +111,7 @@ void calibrateGyro(AHRS& ahrs, SV_Preferences& preferences, calibrate_e calibrat
     delay(4000); // delay 4 seconds to allow robot to stabilize after user lets go
 #endif
 
-    calibrate(ahrs, preferences, calibrationType);
+    runIMU_Calibration(preferences, ahrs);
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     M5.Lcd.printf("Finished calibration\r\n");
@@ -127,6 +124,7 @@ void calibrateGyro(AHRS& ahrs, SV_Preferences& preferences, calibrate_e calibrat
 #if defined(M5_STACK)
     M5.Power.reset();
 #elif defined(M5_UNIFIED)
-    M5.Power.powerOff();
+    //M5.Power.powerOff();
+    M5.Power.timerSleep(0); // sleep for zero seconds and reboot
 #endif
 }

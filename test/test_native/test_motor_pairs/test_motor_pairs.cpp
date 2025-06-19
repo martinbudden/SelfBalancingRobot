@@ -23,9 +23,11 @@ void test_motor_construction()
 
 void test_BalaC_motors_clipping()
 {
-    const MotorsBalaC motors;
+    constexpr float deadbandPower = 0.0F;
+    const MotorsBalaC motors(deadbandPower);
 
     TEST_ASSERT_EQUAL_FLOAT(0.0F, motors.getStepsPerRevolution());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, motors.getDeadbandPower());
     TEST_ASSERT_EQUAL_INT32(0, motors.getLeftEncoder());
     TEST_ASSERT_EQUAL_INT32(0, motors.getRightEncoder());
 
@@ -47,8 +49,10 @@ void test_BalaC_motors_clipping()
 
 void test_BalaC_motors_deadband()
 {
-    MotorsBalaC motors; // NOLINT(misc-const-correctness) false positive
-    motors.setDeadbandPower(0.2F);
+    constexpr float deadbandPower = 0.2F;
+    const MotorsBalaC motors(deadbandPower);
+
+    TEST_ASSERT_EQUAL_FLOAT(deadbandPower, motors.getDeadbandPower());
 
     float power = motors.scalePower(0.0F);
     TEST_ASSERT_EQUAL_FLOAT(0.0, power);

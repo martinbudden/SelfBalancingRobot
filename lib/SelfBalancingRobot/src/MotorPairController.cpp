@@ -81,12 +81,12 @@ This is because:
    all the member data are continuous, and so a partially updated object is still meaningful to display.
 3. The overhead of a mutex is thus avoided.
 */
-motor_pair_controller_telemetry_t MotorPairController::getTelemetryData(control_mode_e controlMode) const
+motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
 {
     motor_pair_controller_telemetry_t telemetry;
 
     telemetry.pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
-    telemetry.speedError = _PIDS[controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
+    telemetry.speedError = _PIDS[_controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
     telemetry.positionError = _PIDS[POSITION_DEGREES].getError();
     telemetry.pitchAngleOutput = _outputs[OUTPUT_PITCH_ANGLE_DEGREES];
     telemetry.speedOutput = _outputs[OUTPUT_SPEED_DPS];
@@ -184,13 +184,15 @@ void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_
     // failsafe handling
     if (_receiver.isNewPacketAvailable()) {
         _receiver.clearNewPacketAvailable();
+        // We've received a packet, so reset the FAILSAFE values
         _receiverInUse = true;
         _failSafeOn = false;
         _failSafeTickCount = tickCount;
+
         // Get the new joystick values from the receiver and use them to update the setpoints.
         _receiver.getStickValues(_throttleStick, _rollStick, _pitchStick, _yawStick);
-        _yawStick = mapYawStick(_yawStick);
 
+        // Set the SPEED PIDs from the THROTTLE stick
         _PIDS[SPEED_SERIAL_DPS].setSetpoint(_throttleStick);
         _PIDS[SPEED_PARALLEL_DPS].setSetpoint(_throttleStick);
 
@@ -210,6 +212,7 @@ void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_
         // For ENU nose left is positive yaw, so sign of setpoint is same as sign of yawStick.
         // So sign of _yawStick is negated
         _yawStick = -_yawStick;
+        _yawStick = mapYawStick(_yawStick); // map the YAW stick values to give better control at low stick values
         _PIDS[YAW_RATE_DPS].setSetpoint(_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
 
         if (_receiver.getSwitch(ReceiverBase::MOTOR_ON_OFF_SWITCH)) {
@@ -222,6 +225,7 @@ void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_
             }
         }
     } else if ((tickCount - _failSafeTickCount > _failSafeTickCountThreshold) && _receiverInUse) {
+        // FAILSAFE HANDLING
         // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
         // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
         // so switch off the motors to prevent the vehicle from doing a runaway.

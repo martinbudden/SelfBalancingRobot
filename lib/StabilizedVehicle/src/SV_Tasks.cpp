@@ -14,7 +14,7 @@
 #endif
 
 #if defined(USE_FREERTOS)
-void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+[[noreturn]] void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
     assert(false && "stack overflow");
     Serial.printf("\r\n\r\n*********\r\n");
@@ -68,7 +68,7 @@ AHRS_Task* SV_Tasks::createAHRS_Task(task_info_t& taskInfo, AHRS& ahrs, uint8_t 
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &task,
     };
-    enum { TASK_STACK_DEPTH = 2048 };
+    enum { TASK_STACK_DEPTH = 4096 };
     static StaticTask_t taskBuffer;
     static std::array <StackType_t, TASK_STACK_DEPTH> stack;
 #if !defined(configCHECK_FOR_STACK_OVERFLOW)
@@ -122,7 +122,7 @@ VehicleControllerTask* SV_Tasks::createVehicleControllerTask(task_info_t& taskIn
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &task,
     };
-    enum { TASK_STACK_DEPTH = 2048 };
+    enum { TASK_STACK_DEPTH = 4096 };
     static std::array<StackType_t, TASK_STACK_DEPTH> stack;
     static StaticTask_t taskBuffer;
     taskInfo = {
@@ -197,7 +197,7 @@ ReceiverTask* SV_Tasks::createReceiverTask(task_info_t& taskInfo, ReceiverBase& 
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &task,
     };
-    enum { TASK_STACK_DEPTH = 1024 };
+    enum { TASK_STACK_DEPTH = 4096 };
     static std::array<StackType_t, TASK_STACK_DEPTH> stack;
     static StaticTask_t taskBuffer;
     taskInfo = {

@@ -11,3 +11,5 @@ thesis formed the basis of the Madgwick sensor fusion algorithm.
 [uBit.radio](https://lancaster-university.github.io/microbit-docs/ubit/radio/) - BBC micro:bit radio protocol.
 
 [BBC micro:bit hardware overview](https://tech.microbit.org/hardware/)
+
+[Professor Nitin J. Sanket tutorials](https://nitinjsanket.github.io/tutorials.html)

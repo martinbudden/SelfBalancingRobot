@@ -124,7 +124,7 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, uint32_t s
 
     td->taskIntervalTicks = static_cast<uint8_t>(ahrsData.tickCountDelta);
 
-    uint32_t flags = ahrs.getFlags();
+    const uint32_t flags = ahrs.getFlags();
     td->flags = (flags & AHRS::SENSOR_FUSION_REQUIRES_INITIALIZATION) ? TD_AHRS::SENSOR_FUSION_REQUIRES_INITIALIZATION : 0;
     if (flags & AHRS::IMU_AUTO_CALIBRATES) {
         td->flags |= TD_AHRS::IMU_AUTO_CALIBRATES;

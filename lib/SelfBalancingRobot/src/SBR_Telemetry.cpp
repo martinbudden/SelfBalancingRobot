@@ -19,7 +19,7 @@ size_t packTelemetryData_MPC(uint8_t* telemetryDataPtr, uint32_t id, uint32_t se
     td->motors = motorPairController.motorsIsOn();
     td->controlMode = static_cast<uint8_t>(motorPairController.getControlMode());
 
-    td->data = motorPairController.getTelemetryData(motorPairController.getControlMode());
+    td->data = motorPairController.getTelemetryData();
 
     return td->len;
 };

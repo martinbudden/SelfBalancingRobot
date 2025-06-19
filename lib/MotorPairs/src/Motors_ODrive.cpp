@@ -79,8 +79,8 @@ void Motors_ODrive::readEncoder()
     _feedback1 = _oDrv1_user_data.last_feedback;
     _oDrv1_user_data.received_feedback = false;
 
-    _leftEncoder = round(_feedback0.Pos_Estimate * _stepsPerRevolution); // Pos_Estimate is revolution count
-    _rightEncoder = round(_feedback1.Pos_Estimate * _stepsPerRevolution);
+    _leftEncoder = std::roundf(_feedback0.Pos_Estimate * _stepsPerRevolution); // Pos_Estimate is revolution count
+    _rightEncoder = std::roundf(_feedback1.Pos_Estimate * _stepsPerRevolution);
 
     _leftSpeed = _feedback0.Vel_Estimate; // revolutions/s
     _rightSpeed = _feedback1.Vel_Estimate;

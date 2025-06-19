@@ -209,6 +209,7 @@
         "Wpadded",
         "Wshadow",
         "Wsign",
+        "Wstrict",
         "Wtrampolines",
         "Wunreachable",
         "WXYZ",

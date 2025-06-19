@@ -5,12 +5,11 @@
 
 class MotorsAtomicMotionBase final : public MotorPairBase {
 public:
-    MotorsAtomicMotionBase(uint8_t SDA_pin, uint8_t SCL_pin);
+    MotorsAtomicMotionBase(float deadbandPower, uint8_t SDA_pin, uint8_t SCL_pin);
 public:
     virtual void setPower(float leftPower, float rightPower) override;
 private:
     virtual void readEncoder() override;
-    bool exists();
 private:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
 

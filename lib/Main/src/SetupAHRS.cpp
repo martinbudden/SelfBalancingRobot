@@ -20,12 +20,11 @@
 #include <SensorFusion.h>
 
 
+// NOLINTBEGIN(misc-const-correctness)
 AHRS& Main::setupAHRS(void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
-// NOLINTBEGIN(misc-const-correctness)
     enum { SPI_FREQUENCY_20_MHZ = 20000000 };
-    uint32_t flags = 0;
 #if defined(USE_IMU_MPU6886_I2C)
 #if defined(M5_STACK)
     const BUS_I2C::pins_t pins = IMU_I2C_PINS;
@@ -51,10 +50,8 @@ AHRS& Main::setupAHRS(void* i2cMutex)
 #elif defined(USE_IMU_BNO085_I2C)
     const BUS_I2C::pins_t pins = IMU_I2C_PINS;
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, pins);
-    flags |= AHRS::IMU_AUTO_CALIBRATES;
 #elif defined(USE_IMU_BNO085_SPI)
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, SPI_FREQUENCY_20_MHZ, IMU_SPI_CS_PIN);
-    flags |= AHRS::IMU_AUTO_CALIBRATES;
 #elif defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_LSM6DSOX_I2C)
     const BUS_I2C::pins_t pins = IMU_I2C_PINS;
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, pins);
@@ -63,10 +60,8 @@ AHRS& Main::setupAHRS(void* i2cMutex)
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, SPI_FREQUENCY_20_MHZ, BUS_SPI::SPI_INDEX_0, pins);
 #elif defined(USE_IMU_M5_STACK)
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER);
-    flags |= AHRS::IMU_AUTO_CALIBRATES;
 #elif defined(USE_IMU_M5_UNIFIED)
     static IMU_M5_UNIFIED imuSensor(IMU_AXIS_ORDER);
-    flags |= AHRS::IMU_AUTO_CALIBRATES;
 #elif !defined(FRAMEWORK_TEST)
     static_assert(false && "IMU type not specified");
 #endif
@@ -92,15 +87,15 @@ AHRS& Main::setupAHRS(void* i2cMutex)
 #else
     // approx 16 microseconds per update
     static MadgwickFilter sensorFusionFilter;
-    flags |= AHRS::SENSOR_FUSION_REQUIRES_INITIALIZATION;
 #endif
+
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
     static IMU_FiltersDefault imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
     //static IMU_FiltersDefault imuFilters;
-// NOLINTEND(misc-const-correctness)
 
     // Statically allocate the AHRS object
-    static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imuSensor, imuFilters, flags);
+    static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imuSensor, imuFilters);
     return ahrs;
 }
+// NOLINTEND(misc-const-correctness)

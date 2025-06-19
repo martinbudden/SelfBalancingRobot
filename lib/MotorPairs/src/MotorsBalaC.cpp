@@ -7,9 +7,13 @@
 #include <cmath>
 
 
-MotorsBalaC::MotorsBalaC() :
-    MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED)
+MotorsBalaC::MotorsBalaC(float deadbandPower) :
+    MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED, deadbandPower)
 {
+    enum { SDA_PIN = 0, SCL_PIN = 26 };
+#if !defined(FRAMEWORK_TEST)
+    Wire.begin(SDA_PIN, SCL_PIN);  // SDA,SCL
+#endif
 }
 
 void MotorsBalaC::readEncoder()
@@ -22,17 +26,24 @@ void MotorsBalaC::setPower(float leftPower, float rightPower)
     rightPower = scalePower(rightPower) * MAX_POWER;
 
     // set signs so positive power moves motor in a forward direction
-    const int8_t leftOutput =   static_cast<int8_t>(round(leftPower)); // NOLINT(hicpp-use-auto,modernize-use-auto)
-    const int8_t rightOutput = -static_cast<int8_t>(round(rightPower));
+    const int8_t leftOutput =   static_cast<int8_t>(std::roundf(leftPower)); // NOLINT(hicpp-use-auto,modernize-use-auto)
+    const int8_t rightOutput = -static_cast<int8_t>(std::roundf(rightPower));
 
     i2cSemaphoreTake();
 
-#if defined(M5_UNIFIED)
-    M5.Ex_I2C.writeRegister8(I2C_ADDRESS, MOTOR_LEFT, leftOutput, I2C_FREQUENCY);
-    M5.Ex_I2C.writeRegister8(I2C_ADDRESS, MOTOR_RIGHT, rightOutput, I2C_FREQUENCY);
-#else
+#if defined(FRAMEWORK_TEST)
     (void)leftOutput;
     (void)rightOutput;
+#else
+    Wire.beginTransmission(I2C_ADDRESS);
+    Wire.write(MOTOR_LEFT);
+    Wire.write(leftOutput);
+    Wire.endTransmission();
+
+    Wire.beginTransmission(I2C_ADDRESS);
+    Wire.write(MOTOR_RIGHT);
+    Wire.write(rightOutput);
+    Wire.endTransmission();
 #endif
 
     i2cSemaphoreGive();

@@ -34,8 +34,8 @@ void MotorsBala2::setPower(float leftPower, float rightPower)
     const float leftClipped = clip(leftPower, -1.0, 1.0);
     const float rightClipped = clip(rightPower, -1.0, 1.0);
     // set signs so positive power moves motor in a forward direction
-    const int16_t left = -static_cast<int16_t>(round(leftClipped * MAX_POWER));
-    const int16_t right = -static_cast<int16_t>(round(rightClipped * MAX_POWER));
+    const int16_t left = -static_cast<int16_t>(std::roundf(leftClipped * MAX_POWER));
+    const int16_t right = -static_cast<int16_t>(std::roundf(rightClipped * MAX_POWER));
 
     std::array<uint8_t, 4> data;
     // NOLINTBEGIN(hicpp-signed-bitwise)

@@ -8,21 +8,13 @@
 
 
 /*!
-Construction, with sensorFusionFilterRequiresInitializing set to true by default (as is required by Madgwick filter).
-*/
-AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters) :
-    AHRS(taskIntervalMicroSeconds, sensorFusionFilter, imuSensor, imuFilters, SENSOR_FUSION_REQUIRES_INITIALIZATION)
-{
-}
-
-/*!
 Constructor: sets the sensor fusion filter, IMU, and IMU filters
 */
-AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, uint32_t flags) :
+AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters) :
     _sensorFusionFilter(sensorFusionFilter),
     _IMU(imuSensor),
     _imuFilters(imuFilters),
-    _flags(flags),
+    _flags(flags(sensorFusionFilter, imuSensor)),
     _taskIntervalMicroSeconds(taskIntervalMicroSeconds),
     _taskIntervalSeconds(static_cast<float>(taskIntervalMicroSeconds)/1000.0F)
 #if defined(USE_AHRS_DATA_MUTEX) && defined(USE_FREERTOS)
@@ -50,6 +42,21 @@ AHRS::AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusi
     mutex_init(&_ahrsDataMutex);
 
 #endif
+}
+
+uint32_t AHRS::flags(const SensorFusionFilterBase& sensorFusionFilter, const IMU_Base& imuSensor)
+{
+    uint32_t flags = 0;
+    if (imuSensor.getFlags() & IMU_Base::IMU_AUTO_CALIBRATES) {
+        flags |= IMU_AUTO_CALIBRATES;
+    }
+    if (imuSensor.getFlags() & IMU_Base::IMU_PERFORMS_SENSOR_FUSION) {
+        flags |= IMU_PERFORMS_SENSOR_FUSION;
+    }
+    if (sensorFusionFilter.requiresInitialization()) {
+        flags |= SENSOR_FUSION_REQUIRES_INITIALIZATION;
+    }
+    return flags;
 }
 
 /*!

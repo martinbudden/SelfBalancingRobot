@@ -13,7 +13,6 @@
 #endif
 
 #include "ButtonsM5.h"
-#include "Calibration.h"
 #include "Main.h"
 #include "ScreenM5.h"
 
@@ -117,22 +116,19 @@ void Main::setup()
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
-        calibrateGyro(ahrs, preferences, CALIBRATE_ACC_AND_GYRO);
+        calibrateIMU(preferences, ahrs);
     }
-    checkGyroCalibration(preferences, ahrs);
+    checkIMU_Calibration(preferences, ahrs);
+
     // Holding BtnC down while switching on resets the preferences.
     if (M5.BtnC.isPressed()) {
         resetPreferences(preferences, motorPairController);
     }
-#else
-    checkGyroCalibration(preferences, ahrs);
-#endif
     loadPreferences(preferences, motorPairController);
 
-#if defined(M5_STACK) || defined(M5_UNIFIED)
     // Statically allocate the screen.
     static ScreenM5 screen(ahrs, motorPairController, receiver);
-    ReceiverWatcher* receiverWatcher =  &screen;
+    ReceiverWatcher* const receiverWatcher =  &screen;
     _screen = &screen;
     _screen->updateTemplate(); // Update the as soon as we can, to minimize the time the screen is blank
 
@@ -151,9 +147,12 @@ void Main::setup()
 
 #else
 
+    checkIMU_Calibration(preferences, ahrs);
+    loadPreferences(preferences, motorPairController);
     // no buttons defined, so always broadcast address for binding on startup
     receiver.broadcastMyEUI();
-    ReceiverWatcher* receiverWatcher =  nullptr; // no screen available
+    ReceiverWatcher* const receiverWatcher =  nullptr; // no screen available
+
 #endif // M5_STACK || M5_UNIFIED
 
     // Create the tasks
@@ -181,13 +180,13 @@ void Main::setup()
 #endif
 }
 
-void Main::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
+void Main::checkIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs)
 {
     // Set the gyro offsets from non-volatile storage.
 #if defined(USE_IMU_M5_UNIFIED)
     // M5_UNIFIED directly uses NVS (non-volatile storage) to store the gyro offsets.
     if (!M5.Imu.loadOffsetFromNVS()) {
-        calibrateGyro(ahrs, preferences, CALIBRATE_JUST_GYRO);
+        calibrateIMU(preferences, ahrs);
     }
 #else
     // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.
@@ -207,8 +206,7 @@ void Main::checkGyroCalibration(SV_Preferences& preferences, AHRS& ahrs)
 #endif
         }
     } else {
-        // when calibrateGyro called automatically on startup, just calibrate the gyroscope.
-        calibrateGyro(ahrs, preferences, CALIBRATE_JUST_GYRO);
+        calibrateIMU(preferences, ahrs);
     }
 #endif
 }
