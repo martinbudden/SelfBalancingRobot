@@ -7,14 +7,6 @@
 
 
 namespace SV_Tasks {
-    struct task_info_t {
-        void* taskHandle;
-        const char* name;
-        uint32_t stackDepth;
-        uint8_t* stackBuffer;
-        uint8_t priority;
-        uint8_t coreID;
-    };
     void reportMainTask();
     AHRS_Task* createAHRS_Task(task_info_t& taskInfo, AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);
     AHRS_Task* createAHRS_Task(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds);

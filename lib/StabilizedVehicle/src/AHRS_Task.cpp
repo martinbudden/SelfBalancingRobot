@@ -1,7 +1,7 @@
 #include "AHRS.h"
 #include "AHRS_Task.h"
 
-#include "TimeMicroSeconds.h"
+#include <TimeMicroSeconds.h>
 
 /*!
 loop() function for when not using FREERTOS

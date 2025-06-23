@@ -1,6 +1,6 @@
 #include "AHRS.h"
 #include "IMU_FiltersBase.h"
-#include "TimeMicroSeconds.h"
+#include <TimeMicroSeconds.h>
 #include "VehicleControllerBase.h"
 
 #include <SensorFusion.h>
@@ -57,6 +57,18 @@ uint32_t AHRS::flags(const SensorFusionFilterBase& sensorFusionFilter, const IMU
         flags |= SENSOR_FUSION_REQUIRES_INITIALIZATION;
     }
     return flags;
+}
+
+bool AHRS::isSensorAvailable(sensors_e sensor) const
+{
+    switch (sensor) {
+    case SENSOR_GYROSCOPE:
+        [[fallthrough]];
+    case SENSOR_ACCELEROMETER:
+        return true;
+    default:
+        return false;
+    }
 }
 
 /*!
@@ -145,6 +157,13 @@ void AHRS::readAccRaw(int32_t& x, int32_t& y, int32_t& z) const
     x = acc.x;
     y = acc.y;
     z = acc.z;
+}
+
+void AHRS::readMagRaw(int32_t& x, int32_t& y, int32_t& z) const
+{
+    x = 0;
+    y = 0;
+    z = 0;
 }
 
 int32_t AHRS::getAccOneG_Raw() const

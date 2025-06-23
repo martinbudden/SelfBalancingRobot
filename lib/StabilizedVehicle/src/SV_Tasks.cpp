@@ -1,12 +1,14 @@
 #include "AHRS.h"
 #include "BackchannelBase.h"
 #include "SV_Tasks.h"
-#include "TaskBase.h"
 #include "VehicleControllerBase.h"
 
 #if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
 #endif
+
+#include <TaskBase.h>
+
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/FreeRTOSConfig.h>

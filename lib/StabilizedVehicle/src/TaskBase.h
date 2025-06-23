@@ -2,6 +2,15 @@
 
 #include <cstdint>
 
+struct task_info_t {
+    void* taskHandle;
+    const char* name;
+    uint32_t stackDepth;
+    uint8_t* stackBuffer;
+    uint8_t priority;
+    uint8_t coreID;
+};
+
 class TaskBase {
 public:
     struct parameters_t {

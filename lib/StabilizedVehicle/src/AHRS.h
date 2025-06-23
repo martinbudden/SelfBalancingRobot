@@ -36,6 +36,15 @@ public:
         IMU_PERFORMS_SENSOR_FUSION = 0x02,
         SENSOR_FUSION_REQUIRES_INITIALIZATION = 0x04
      };
+    enum  sensors_e {
+        SENSOR_GYROSCOPE = 0x01,
+        SENSOR_ACCELEROMETER = 0x02,
+        SENSOR_BAROMETER = 0x04,
+        SENSOR_MAGNETOMETER = 0x08,
+        SENSOR_RANGEFINDER = 0x10,
+        SENSOR_GPS = 0x20,
+        SENSOR_GPS_MAGNETOMETER = 0x40
+    };
 public:
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, uint32_t flags);
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
@@ -49,7 +58,17 @@ private:
     AHRS(AHRS&&) = delete;
     AHRS& operator=(AHRS&&) = delete;
 public:
-    const IMU_Base& getIMU() const { return _IMU; };
+    bool isSensorAvailable(sensors_e sensor) const;
+    const IMU_Base& getIMU() const { return _IMU; }
+
+    // MSP compatible sensor IDs
+    enum magnetometer_e { MAGNETOMETER_DEFAULT = 0, MAGNETOMETER_NONE = 1 };
+    enum barometer_e { BAROMETER_DEFAULT = 0, BAROMETER_NONE = 1, BAROMETER_VIRTUAL = 11 };
+    enum rangefinder_e { RANGEFINDER_NONE = 0 };
+    uint8_t getBarometerIdMSP() const { return BAROMETER_NONE; }
+    uint8_t getMagnetometerIdMSP() const {return MAGNETOMETER_NONE; }
+    uint8_t getRangeFinderIdMSP() const { return RANGEFINDER_NONE; }
+
     IMU_Base& getIMU() { return _IMU; };
     IMU_Base::xyz_int32_t getGyroOffset() const;
     void setGyroOffset(const IMU_Base::xyz_int32_t& offset);
@@ -64,6 +83,7 @@ public:
 
     void readGyroRaw(int32_t& x, int32_t& y, int32_t& z) const;
     void readAccRaw(int32_t& x, int32_t& y, int32_t& z) const;
+    void readMagRaw(int32_t& x, int32_t& y, int32_t& z) const;
     int32_t getAccOneG_Raw() const;
 
     data_t getAhrsDataUsingLock(bool& updatedSinceLastRead) const;
@@ -80,6 +100,7 @@ public:
 
     const IMU_FiltersBase::filters_t& getFilters() const { return _imuFilters.getFilters(); }
     void setFilters(const IMU_FiltersBase::filters_t& filters);
+
     inline uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
