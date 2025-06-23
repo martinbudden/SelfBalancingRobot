@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SV_Tasks.h>
 #include <TaskBase.h>
 
 #if defined(USE_FREERTOS)
@@ -19,6 +18,27 @@ class VehicleControllerTask;
 
 class ScreenBase;
 class ButtonsBase;
+
+/*!
+The ESP32S3 is dual core containing a Protocol CPU (known as CPU 0 or PRO_CPU) and an Application CPU (known as CPU 1 or APP_CPU).
+
+The core affinities, priorities, and tick intervals for the 3 application tasks (AHRS_TASK, VEHICLE_CONTROLLER_TASK, and MAIN_LOOP_TASK):
+1. The AHRS_TASK must have a higher priority than the MAIN_LOOP_TASK.
+2. The VEHICLE_CONTROLLER_TASK must have a higher priority than the MAIN_LOOP_TASK
+3. For single-processors the AHRS_TASK and the VEHICLE_CONTROLLER_TASK must have the same priority.
+4. For dual-core processors
+    1. The AHRS_TASK runs on the Application CPU (CPU 1).
+    2. The VEHICLE_CONTROLLER_TASK runs on the Protocol CPU (CPU 0).
+5. The MAIN_LOOP_TASK runs on the Application CPU (CPU 1) with priority 1 (this is set by the ESP32 Arduino framework).
+
+The AHRS_TASK and the VEHICLE_CONTROLLER_TASK are deliberately chosen to run on different cores on ESP32 dual-core processors. This is so
+that a context switch between the AHRS_TASK and the VEHICLE_CONTROLLER_TASK does not require saving the FPU(Floating Point Unit) registers
+(see https://docs.espressif.com/projects/esp-idf/en/v4.4.3/esp32/api-guides/freertos-smp.html#floating-point-usage).
+
+The Atom JoyStick transmits a packet every 10ms.
+Updating the screen takes approximately 50 ticks.
+*/
+
 
 #if !defined(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS)
 enum { MAIN_LOOP_TASK_INTERVAL_MICROSECONDS = 10000 };
@@ -89,6 +109,8 @@ private:
     static void calibrateIMU(SV_Preferences& preferences, AHRS& ahrs);
     static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
     static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
+    static void reportMainTask();
+
     struct tasks_t {
         MainTask* mainTask;
 

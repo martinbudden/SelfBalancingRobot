@@ -21,6 +21,7 @@
 
 #if defined(USE_ESPNOW)
 #include <BackchannelESPNOW.h>
+#include <BackchannelTask.h>
 #include <HardwareSerial.h>
 #endif
 
@@ -32,7 +33,6 @@
 #include <ReceiverNull.h>
 #include <ReceiverTask.h>
 #include <SV_Preferences.h>
-#include <SV_Tasks.h>
 #include <TimeMicroSeconds.h>
 #include <VehicleControllerTask.h>
 
@@ -158,10 +158,10 @@ void Main::setup()
     // Create the tasks
     static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS); // NOLINT(misc-const-correctness) false positive
     _tasks.mainTask = &mainTask;
-    SV_Tasks::reportMainTask();
-    _tasks.ahrsTask = SV_Tasks::createAHRS_Task(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
-    _tasks.vehicleControllerTask = SV_Tasks::createVehicleControllerTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
-    _tasks.receiverTask = SV_Tasks::createReceiverTask(_tasks.receiverTaskInfo, receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
+    reportMainTask();
+    _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
+    _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
+    _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the backchannel.
@@ -176,9 +176,32 @@ void Main::setup()
         preferences,
         &mainTask
     );
-    _tasks.backchannelTask = SV_Tasks::createBackchannelTask(_tasks.backchannelTaskInfo, backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
+    _tasks.backchannelTask = BackchannelTask::createTask(_tasks.backchannelTaskInfo, backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
 #endif
 }
+
+void Main::reportMainTask()
+{
+#if defined(USE_ARDUINO_ESP32)
+    // The main task is set up by the framework, so just print its details.
+    // It has name "loopTask" and priority 1.
+    const TaskHandle_t taskHandle = xTaskGetCurrentTaskHandle();
+    const UBaseType_t taskPriority = uxTaskPriorityGet(taskHandle);
+    const char* taskName = pcTaskGetName(taskHandle);
+    Serial.printf("\r\n\r\n**** Main loop task, name:'%s' priority:%u, tickRate:%uHz\r\n", taskName, taskPriority, configTICK_RATE_HZ);
+#endif
+}
+
+#if defined(USE_FREERTOS)
+[[noreturn]] void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    assert(false && "stack overflow");
+    Serial.printf("\r\n\r\n*********\r\n");
+    Serial.printf("********Task '%s' stack overflow ********\r\n", pcTaskName);
+    Serial.printf("*********\r\n\r\n");
+}
+#endif
+
 
 void Main::checkIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs)
 {
