@@ -115,16 +115,16 @@ private:
         MainTask* mainTask;
 
         AHRS_Task* ahrsTask;
-        task_info_t ahrsTaskInfo;
+        TaskBase::task_info_t ahrsTaskInfo;
 
         VehicleControllerTask* vehicleControllerTask;
-        task_info_t vehicleControllerTaskInfo;
+        TaskBase::task_info_t vehicleControllerTaskInfo;
 
         ReceiverTask* receiverTask;
-        task_info_t receiverTaskInfo;
+        TaskBase::task_info_t receiverTaskInfo;
 
         BackchannelTask* backchannelTask;
-        task_info_t backchannelTaskInfo;
+        TaskBase::task_info_t backchannelTaskInfo;
     };
 private:
     tasks_t _tasks {};
