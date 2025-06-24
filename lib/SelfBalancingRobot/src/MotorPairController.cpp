@@ -1,9 +1,9 @@
 #include "MotorPairController.h"
 
 #include "MotorPairBase.h"
-#include <TimeMicroSeconds.h>
 #include <AHRS.h>
 #include <ReceiverBase.h>
+#include <TimeMicroSeconds.h>
 
 #include <cmath>
 

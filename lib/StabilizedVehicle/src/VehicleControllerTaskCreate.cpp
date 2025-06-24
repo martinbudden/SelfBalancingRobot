@@ -5,8 +5,6 @@
 #include <HardwareSerial.h>
 #endif
 
-#include <TaskBase.h>
-
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/FreeRTOSConfig.h>
@@ -16,13 +14,13 @@
 
 VehicleControllerTask* VehicleControllerTask::createTask(task_info_t& taskInfo, VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
-    static VehicleControllerTask task(taskIntervalMicroSeconds, vehicleController);
-    vehicleController.setTask(&task);
+    static VehicleControllerTask vehicleControllerTask(taskIntervalMicroSeconds, vehicleController);
+    vehicleController.setTask(&vehicleControllerTask);
 
 #if defined(USE_FREERTOS)
     Serial.printf("**** VehicleControllerTask,  core:%u, priority:%u, task interval:%ums\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &task,
+        .task = &vehicleControllerTask
     };
     enum { TASK_STACK_DEPTH = 4096 };
     static std::array<StackType_t, TASK_STACK_DEPTH> stack;
@@ -54,7 +52,7 @@ VehicleControllerTask* VehicleControllerTask::createTask(task_info_t& taskInfo, 
     (void)priority;
     (void)coreID;
 #endif // USE_FREERTOS
-    return &task;
+    return &vehicleControllerTask;
 }
 
 VehicleControllerTask* VehicleControllerTask::createTask(VehicleControllerBase& vehicleController, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)

@@ -5,8 +5,6 @@
 #include <HardwareSerial.h>
 #endif
 
-#include <TaskBase.h>
-
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/FreeRTOSConfig.h>
@@ -17,14 +15,14 @@
 AHRS_Task* AHRS_Task::createTask(task_info_t& taskInfo, AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
-    static AHRS_Task task(taskIntervalMicroSeconds, ahrs);
-    ahrs.setTask(&task);
+    static AHRS_Task ahrsTask(taskIntervalMicroSeconds, ahrs);
+    ahrs.setTask(&ahrsTask);
 
 #if defined(USE_FREERTOS)
     Serial.printf("**** AHRS_Task,              core:%u, priority:%u, task interval:%ums\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
-        .task = &task,
+        .task = &ahrsTask
     };
 #if !defined(AHRS_TASK_STACK_DEPTH)
     enum { AHRS_TASK_STACK_DEPTH = 4096 };
@@ -63,11 +61,11 @@ AHRS_Task* AHRS_Task::createTask(task_info_t& taskInfo, AHRS& ahrs, uint8_t prio
     (void)priority;
     (void)coreID;
 #endif // USE_FREERTOS
-    return &task;
+    return &ahrsTask;
 }
 
 AHRS_Task* AHRS_Task::createTask(AHRS& ahrs, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
 {
-    static task_info_t taskInfo;
+    task_info_t taskInfo{};
     return createTask(taskInfo, ahrs, priority, coreID, taskIntervalMicroSeconds);
 }

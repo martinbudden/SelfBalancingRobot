@@ -63,12 +63,12 @@ None
 
 | Library                | On github | tag   | release | platformio | Arduino |
 | ---------------------- | --------- | ----- | ------- | ---------- | ------- |
-| IMU                    | yes       | 0.8.1 | 0.8.1   | yes        | no      |
+| IMU                    | yes       | 0.8.3 | 0.8.3   | yes        | no      |
 | VectorQuaternionMatrix | yes       | 0.3.0 | 0.3.0   | yes        | no      |
 | Filters                | yes       | 0.5.0 | 0.5.0   | yes        | no      |
-| PIDF                   | yes       | 0.2.0 | 0.2.0   | yes        | no      |
+| PIDF                   | yes       | 0.2.1 | 0.2.1   | yes        | no      |
 | SensorFusion           | yes       | 0.2.0 | 0.2.0   | yes        | no      |
-| Receiver               | yes       | 0.3.2 | 0.3.2   | yes        | no      |
+| Receiver               | yes       | 0.3.3 | 0.3.3   | yes        | no      |
 | StabilizedVehicle      | no        | 0.0.1 | 0.0.1   | no         | no      |
 | StreamBuf              | no        | 0.0.1 | 0.0.1   | yes        | no      |
 | MSP                    | no        | 0.0.1 | 0.0.1   | no         | no      |
@@ -77,18 +77,18 @@ None
 Libraries
 ├── Filters @ 0.5.0
 ├── PIDF @ 0.2.0
-├── Receiver @ 0.3.2
+├── Receiver @ 0.3.3
 ├── VectorQuaternionMatrix @ 0.3.0
-├── IMU @ 0.8.1
+├── IMU @ 0.8.3
 │   └── VectorQuaternionMatrix @ 0.3.0
 ├── SensorFusion @ 0.2.0
 │   └── VectorQuaternionMatrix @ 0.3.0
 ├── StabilizedVehicle @ 0.0.1
 │   ├── Filters @ 0.5.0
-│   ├── PIDF @ 0.2.0
+│   ├── PIDF @ 0.2.1
 │   ├── Receiver @ 0.3.2
 │   ├── VectorQuaternionMatrix @ 0.3.0
-│   ├── IMU @ 0.8.1
+│   ├── IMU @ 0.8.3
 │   │   └── VectorQuaternionMatrix @ 0.3.0
 │   └── SensorFusion @ 0.2.0
 │       └── VectorQuaternionMatrix @ 0.3.0
@@ -98,6 +98,9 @@ Libraries
 ├── MultiWiiSerialProtocol @ 0.0.1
     ├── StreamBuf @ 0.0.1
     └── VectorQuaternionMatrix @ 0.3.0
+
+├── Blackbox @ 0.0.1
+    └── StreamBuf @ 0.0.1
 
 To add a library to the Arduino Library manager, make a pull request [here](https://github.com/arduino/library-registry)
 

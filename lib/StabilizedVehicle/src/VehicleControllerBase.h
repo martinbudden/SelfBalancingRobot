@@ -23,7 +23,7 @@ public:
 public:
     inline uint32_t getType() const { return _type; };
     inline uint32_t getPID_Count() const { return _PID_Count; };
-    inline const TaskBase* getTask() const { return _task; }
+    inline const TaskBase* getTask() const { return _task; } //!< Used to get task data for instrumentation
     inline void setTask(const TaskBase* task) { _task = task; }
     inline float getPitchAngleDegreesRaw() const { return _pitchAngleDegreesRaw; }
     inline float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; }

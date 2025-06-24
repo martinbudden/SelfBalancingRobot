@@ -104,7 +104,7 @@ public:
     inline uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
     inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
-    inline const TaskBase* getTask() const { return _task; }
+    inline const TaskBase* getTask() const { return _task; } //!< Used to get task data for instrumentation
     inline void setTask(const TaskBase* task) { _task = task; }
 private:
     static uint32_t flags(const SensorFusionFilterBase& sensorFusionFilter, const IMU_Base& imuSensor);
