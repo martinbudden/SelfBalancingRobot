@@ -68,22 +68,24 @@ None
 | Filters                | yes       | 0.5.0 | 0.5.0   | yes        | no      |
 | PIDF                   | yes       | 0.2.1 | 0.2.1   | yes        | no      |
 | SensorFusion           | yes       | 0.2.0 | 0.2.0   | yes        | no      |
-| Receiver               | yes       | 0.3.3 | 0.3.3   | yes        | no      |
+| Receiver               | yes       | 0.3.4 | 0.3.4   | yes        | no      |
 | StabilizedVehicle      | no        | 0.0.1 | 0.0.1   | no         | no      |
-| StreamBuf              | no        | 0.0.1 | 0.0.1   | yes        | no      |
+| StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
+| TaskBase               | yes       | 0.0.2 | 0.0.2   | yes        | no      |
 | MSP                    | no        | 0.0.1 | 0.0.1   | no         | no      |
 | AtomJoyStickReceiver   | yes       | 0.0.1 | 0.0.1   | no         | no      |
 
 Libraries
 ├── Filters @ 0.5.0
 ├── PIDF @ 0.2.0
-├── Receiver @ 0.3.3
+├── Receiver @ 0.3.4
 ├── VectorQuaternionMatrix @ 0.3.0
 ├── IMU @ 0.8.3
 │   └── VectorQuaternionMatrix @ 0.3.0
 ├── SensorFusion @ 0.2.0
 │   └── VectorQuaternionMatrix @ 0.3.0
 ├── StabilizedVehicle @ 0.0.1
+│   ├── TaskBase @ 0.0.2
 │   ├── Filters @ 0.5.0
 │   ├── PIDF @ 0.2.1
 │   ├── Receiver @ 0.3.2
