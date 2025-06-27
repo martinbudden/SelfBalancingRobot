@@ -2,6 +2,7 @@
 
 #include "MotorPairBase.h"
 #include <AHRS.h>
+#include <Blackbox.h>
 #include <ReceiverBase.h>
 #include <TimeMicroSeconds.h>
 
@@ -128,6 +129,9 @@ void MotorPairController::motorsSwitchOn()
         for (auto pid : _PIDS) {
             pid.switchIntegrationOn();
         }
+        if (_blackbox) {
+            _blackbox->start();
+        }
     }
 }
 
@@ -143,7 +147,7 @@ void MotorPairController::motorsToggleOnOff()
 void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 {
     const MotorMixerBase::commands_t commands =
-    (_failSafeOn || !motorsIsOn()) ?
+    (_failsafePhase != FAILSAFE_IDLE || !motorsIsOn()) ?
         MotorMixerBase::commands_t {
             .speed  = 0.0F,
             .roll   = 0.0F,
@@ -157,6 +161,7 @@ void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
             .pitch  = _outputs[PITCH_ANGLE_DEGREES],
             .yaw    = _outputs[YAW_RATE_DPS]
         };
+    _mixerThrottle = commands.speed;
     _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
 }
 
@@ -181,13 +186,13 @@ need to save the ESP32 FPU registers on a context switch.
 */
 void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_t tickCount)
 {
-    // failsafe handling
+    // fail-safe handling
     if (_receiver.isNewPacketAvailable()) {
         _receiver.clearNewPacketAvailable();
         // We've received a packet, so reset the FAILSAFE values
         _receiverInUse = true;
-        _failSafeOn = false;
-        _failSafeTickCount = tickCount;
+        _failsafePhase = FAILSAFE_IDLE;
+        _failsafeTickCount = tickCount;
 
         // Get the new joystick values from the receiver and use them to update the setpoints.
         _receiver.getStickValues(_throttleStick, _rollStick, _pitchStick, _yawStick);
@@ -224,13 +229,13 @@ void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_
                 _onOffSwitchPressed = false;
             }
         }
-    } else if ((tickCount - _failSafeTickCount > _failSafeTickCountThreshold) && _receiverInUse) {
+    } else if ((tickCount - _failsafeTickCount > _failsafeTickCountThreshold) && _receiverInUse) {
         // FAILSAFE HANDLING
         // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
         // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
         // so switch off the motors to prevent the vehicle from doing a runaway.
-        _failSafeOn = true;
-        if ((tickCount - _failSafeTickCount > _failSafeTickCountSwitchOffThreshold)) {
+        _failsafePhase = FAILSAFE_RX_LOSS_DETECTED;
+        if ((tickCount - _failsafeTickCount > _failsafeTickCountSwitchOffThreshold)) {
             motorsSwitchOff();
             _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
         }

@@ -15,11 +15,11 @@ public:
         SIZE_200x200,
         SIZE_540x960
     };
-    enum mode_t { MODE_NORMAL = 1, MODE_INVERTED = 3, MODE_QRCODE = 5 };
+    enum mode_e { MODE_NORMAL = 1, MODE_INVERTED = 3, MODE_QRCODE = 5 };
 public:
     ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver);
 private:
-    // Screen is not copyable or moveable
+    // ScreenM5 is not copyable or moveable
     ScreenM5(const ScreenM5&) = delete;
     ScreenM5& operator=(const ScreenM5&) = delete;
     ScreenM5(ScreenM5&&) = delete;
@@ -31,8 +31,8 @@ public:
     virtual void update() override;
     virtual void updateTemplate() override;
 private:
-    void setScreenMode(mode_t screenMode);
-    inline mode_t getScreenMode() const { return _screenMode; }
+    void setScreenMode(mode_e screenMode);
+    inline mode_e getScreenMode() const { return _screenMode; }
     screen_size_e screenSize();
 
     void updateTemplate128x128() const;
@@ -58,6 +58,6 @@ private:
     static void displayEUI_Compact(const char* prompt, const ReceiverBase::EUI_48_t& eui);
 private:
     screen_size_e _screenSize {SIZE_320x240};
-    mode_t _screenMode {MODE_NORMAL};
+    mode_e _screenMode {MODE_NORMAL};
     int _screenRotationOffset {0};
 };

@@ -8,13 +8,12 @@ loop() function for when not using FREERTOS
 */
 void AHRS_Task::loop()
 {
-    const uint32_t timeMicroSeconds = timeUs();
+    const timeUs32_t timeMicroSeconds = timeUs();
     _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
 
     if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update
         _timeMicroSecondsPrevious = timeMicroSeconds;
-        const float deltaT = static_cast<float>(_timeMicroSecondsDelta) * 0.000001F;
-        _ahrs.readIMUandUpdateOrientation(deltaT, _timeMicroSecondsDelta / 1000);
+        _ahrs.readIMUandUpdateOrientation(timeMicroSeconds, _timeMicroSecondsDelta);
     }
 }
 
@@ -29,11 +28,11 @@ Task function for the AHRS. Sets up and runs the task loop() function.
     while (true) {
         _IMU.WAIT_IMU_DATA_READY(); // wait until there is IMU data.
 
-        const uint32_t timeMicroSeconds = timeUs();
-        const uint32_t timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
+        const timeUs32_t timeMicroSeconds = timeUs();
+        const timeUs32_t timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
         _timeMicroSecondsPrevious = timeMicroSeconds;
         if (timeMicroSecondsDelta > 0) {
-            readIMUandUpdateOrientation(static_cast<float>(timeMicroSecondsDelta)* 0.000001F, timeMicroSecondsDelta / 1000);
+            _ahrs.readIMUandUpdateOrientation(timeMicroSeconds, _timeMicroSecondsDelta);
         }
     }
 #else
@@ -52,13 +51,12 @@ Task function for the AHRS. Sets up and runs the task loop() function.
         const TickType_t tickCount = xTaskGetTickCount();
         _tickCountDelta = tickCount - _tickCountPrevious;
         _tickCountPrevious = tickCount;
-        const uint32_t timeMicroSeconds = timeUs();
+        const timeUs32_t timeMicroSeconds = timeUs();
         _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
         _timeMicroSecondsPrevious = timeMicroSeconds;
 
         if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
-            const float deltaT = static_cast<float>(pdTICKS_TO_MS(_tickCountDelta)) * 0.001F;
-            _ahrs.readIMUandUpdateOrientation(deltaT, _tickCountDelta);
+            _ahrs.readIMUandUpdateOrientation(timeMicroSeconds, _timeMicroSecondsDelta);
         }
     }
 #endif // AHRS_IS_INTERRUPT_DRIVEN

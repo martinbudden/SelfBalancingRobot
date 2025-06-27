@@ -10,6 +10,7 @@ class AHRS;
 class AHRS_Task;
 class BackchannelBase;
 class BackchannelTask;
+class BlackboxTask;
 class MotorPairController;
 class ReceiverTask;
 class SV_Preferences;
@@ -64,12 +65,19 @@ enum { RECEIVER_TASK_INTERVAL_MICROSECONDS = 5000 };
 enum { BACKCHANNEL_TASK_INTERVAL_MICROSECONDS = 10000 };
 #endif
 
+#if !defined(BLACKBOX_TASK_INTERVAL_MICROSECONDS)
+enum { BLACKBOX_TASK_INTERVAL_MICROSECONDS = 2000 };
+#endif
+
+
+
 enum {
     AHRS_TASK_PRIORITY = 6,
     MPC_TASK_PRIORITY = 5,
     RECEIVER_TASK_PRIORITY = MPC_TASK_PRIORITY,
     BACKCHANNEL_TASK_PRIORITY = 3,
-    MSP_TASK_PRIORITY = 2
+    MSP_TASK_PRIORITY = 2,
+    BLACKBOX_TASK_PRIORITY = 3,
 };
 
 #if !defined(PRO_CPU_NUM)
@@ -86,6 +94,7 @@ enum {
     RECEIVER_TASK_CORE = PRO_CPU_NUM,
     BACKCHANNEL_TASK_CORE = PRO_CPU_NUM,
     MSP_TASK_CORE = PRO_CPU_NUM,
+    BLACKBOX_TASK_CORE = PRO_CPU_NUM,
 };
 
 
@@ -125,6 +134,9 @@ private:
 
         BackchannelTask* backchannelTask;
         TaskBase::task_info_t backchannelTaskInfo;
+
+        BlackboxTask* blackboxTask;
+        TaskBase::task_info_t blackboxTaskInfo;
     };
 private:
     tasks_t _tasks {};

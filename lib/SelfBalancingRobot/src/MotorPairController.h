@@ -9,6 +9,7 @@
 #include <string>
 
 class AHRS;
+class Blackbox;
 class ReceiverBase;
 
 /*!
@@ -76,21 +77,27 @@ private:
     MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors);
     MotorPairBase& allocateMotors(const vehicle_t& vehicle);
 public:
+    uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
+    float getMixerThrottle() const { return _mixerThrottle; }
+
     inline bool motorsIsOn() const { return _motorPairMixer.motorsIsOn(); }
     void motorsSwitchOff();
     void motorsSwitchOn();
     void motorsToggleOnOff();
     inline bool motorsIsDisabled() const { return _motorPairMixer.motorsIsDisabled(); }
+    void setBlackbox(Blackbox& blackbox) { _blackbox = &blackbox; }
+
     virtual uint32_t getOutputPowerTimeMicroSeconds() const override;
 
     inline control_mode_e getControlMode() const { return _controlMode; }
     void setControlMode(control_mode_e controlMode) { _controlMode = controlMode; resetIntegrals(); }
 
-    inline void setFailSafeTickCountThreshold(uint32_t failSafeTickCountThreshold) { _failSafeTickCountThreshold = failSafeTickCountThreshold; }
-    inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failSafeTickCountSwitchOffThreshold) { _failSafeTickCountSwitchOffThreshold = failSafeTickCountSwitchOffThreshold; }
+    inline void setFailSafeTickCountThreshold(uint32_t failsafeTickCountThreshold) { _failsafeTickCountThreshold = failsafeTickCountThreshold; }
+    inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failsafeTickCountSwitchOffThreshold) { _failsafeTickCountSwitchOffThreshold = failsafeTickCountSwitchOffThreshold; }
 
     const std::string& getPID_Name(pid_index_e pidIndex) const;
 
+    inline const PIDF& getPID(pid_index_e pidIndex) const { return _PIDS[pidIndex]; }
     inline const PIDF::PIDF_t getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
     void setPID_Constants(const pidf_uint8_array_t& pids);
     inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
@@ -130,14 +137,17 @@ private:
     ReceiverBase& _receiver;
     MotorPairBase& _motorPair; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorPairMixer _motorPairMixer;
+    Blackbox* _blackbox {nullptr};
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
+
+    uint32_t _taskIntervalMicroSeconds;
+    float _mixerThrottle;
 
     int32_t _onOffSwitchPressed {false};
     int32_t _receiverInUse {false};
-    int32_t _failSafeOn {false};
-    uint32_t _failSafeTickCount {0}; //<! failsafe counter, so the vehicle doesn't run away if it looses contact with the transmitter (for example by going out of range)
-    uint32_t _failSafeTickCountThreshold {1500};
-    uint32_t _failSafeTickCountSwitchOffThreshold {5000};
+    uint32_t _failsafeTickCount {0}; //<! failsafe counter, so the vehicle doesn't run away if it looses contact with the transmitter (for example by going out of range)
+    uint32_t _failsafeTickCountThreshold {1500};
+    uint32_t _failsafeTickCountSwitchOffThreshold {5000};
 
     // stick values scaled to the range [-1,0, 1.0]
     float _throttleStick {0};

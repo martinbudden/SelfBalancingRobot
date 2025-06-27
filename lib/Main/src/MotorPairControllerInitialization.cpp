@@ -77,6 +77,7 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, cons
     _receiver(receiver),
     _motorPair(allocateMotors(vehicle)),
     _motorPairMixer(_motorPair),
+    _taskIntervalMicroSeconds(taskIntervalMicroSeconds),
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),

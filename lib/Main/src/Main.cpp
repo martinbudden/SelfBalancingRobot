@@ -22,6 +22,15 @@
 #if defined(USE_ESPNOW)
 #include <BackchannelESPNOW.h>
 #include <BackchannelTask.h>
+#endif
+
+#include <Blackbox.h>
+#include <BlackboxCallbacksSelfBalancingRobot.h>
+#include <BlackboxSelfBalancingRobot.h>
+#include <BlackboxSerialDeviceSDCard.h>
+#include <BlackboxTask.h>
+
+#if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
 #endif
 
@@ -111,6 +120,30 @@ void Main::setup()
     static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, receiver, i2cMutex);
     ahrs.setVehicleController(&motorPairController);
 
+#define USE_BLACKBOX
+#if defined(USE_BLACKBOX)
+    static BlackboxCallbacksSelfBalancingRobot blackboxCallbacks(ahrs, motorPairController, receiver);
+    static BlackboxSerialDeviceSDCard blackboxSerialDevice;
+    blackboxSerialDevice.init();
+    static BlackboxSelfBalancingRobot blackbox(blackboxCallbacks, blackboxSerialDevice, motorPairController);
+    motorPairController.setBlackbox(blackbox);
+    blackbox.init({
+        .fields_disabled_mask = FLIGHT_LOG_FIELD_SELECT_BATTERY
+            | FLIGHT_LOG_FIELD_SELECT_MAG
+            | FLIGHT_LOG_FIELD_SELECT_ALTITUDE
+            | FLIGHT_LOG_FIELD_SELECT_RSSI
+            | FLIGHT_LOG_FIELD_SELECT_DEBUG_LOG
+            | FLIGHT_LOG_FIELD_SELECT_GPS
+            | FLIGHT_LOG_FIELD_SELECT_RPM
+            | FLIGHT_LOG_FIELD_SELECT_SERVO,
+        .sample_rate = Blackbox::BLACKBOX_RATE_ONE,
+        .device = Blackbox::BLACKBOX_DEVICE_SDCARD,
+        //.device = Blackbox::BLACKBOX_DEVICE_NONE,
+        .mode = Blackbox::BLACKBOX_MODE_NORMAL, // logging starts on arming, file is saved when disarmed
+        //.mode = Blackbox::BLACKBOX_MODE_ALWAYS_ON,
+        .high_resolution = 0
+    });
+#endif
     static SV_Preferences preferences;
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
@@ -130,7 +163,7 @@ void Main::setup()
     static ScreenM5 screen(ahrs, motorPairController, receiver);
     ReceiverWatcher* const receiverWatcher =  &screen;
     _screen = &screen;
-    _screen->updateTemplate(); // Update the as soon as we can, to minimize the time the screen is blank
+    _screen->updateTemplate(); // Update the template as soon as we can, to minimize the time the screen is blank
 
     // Statically allocate the buttons.
     static ButtonsM5 buttons(motorPairController, receiver, _screen);
@@ -162,6 +195,9 @@ void Main::setup()
     _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
     _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
     _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
+#if defined(USE_BLACKBOX)
+    _tasks.blackboxTask = BlackboxTask::createTask(blackbox, BLACKBOX_TASK_PRIORITY, BLACKBOX_TASK_CORE, BLACKBOX_TASK_INTERVAL_MICROSECONDS);
+#endif
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the backchannel.

@@ -8,7 +8,7 @@ loop() function for when not using FREERTOS
 */
 void VehicleControllerTask::loop()
 {
-    const uint32_t timeMicroSeconds = timeUs();
+    const timeUs32_t timeMicroSeconds = timeUs();
     _timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
 
     if (_timeMicroSecondsDelta >= _taskIntervalMicroSeconds) { // if _taskIntervalMicroSeconds has passed, then run the update

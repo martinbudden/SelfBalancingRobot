@@ -25,11 +25,11 @@
         },
         {
             "name": "martinbudden/PIDF",
-            "version": "^0.2.0"
+            "version": "^0.2.1"
         },
         {
             "name": "martinbudden/IMU",
-            "version": "^0.8.1"
+            "version": "^0.8.3"
         },
         {
             "name": "martinbudden/SensorFusion",
@@ -37,7 +37,7 @@
         },
         {
             "name": "martinbudden/Receiver",
-            "version": "^0.3.2"
+            "version": "^0.3.3"
         }
     ],
     "license": "MIT",

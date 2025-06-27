@@ -15,7 +15,7 @@
 #include <pico/mutex.h>
 #endif
 
-
+class BlackboxInterface;
 class VehicleControllerBase;
 class SensorFusionFilterBase;
 class TaskBase;
@@ -28,9 +28,10 @@ public:
     struct data_t {
         uint32_t tickCountDelta;
         xyz_t gyroRPS;
+        xyz_t gyroRPS_unfiltered;
         xyz_t acc;
     };
-    static constexpr int TIME_CHECKS_COUNT = 4;
+    static constexpr int TIME_CHECKS_COUNT = 6;
     enum : uint32_t {
         IMU_AUTO_CALIBRATES = 0x01,
         IMU_PERFORMS_SENSOR_FUSION = 0x02,
@@ -50,6 +51,7 @@ public:
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
     void setVehicleController(VehicleControllerBase* vehicleController) { _vehicleController = vehicleController; }
+    void setBlackboxInterface(BlackboxInterface* blackboxInterface) { _blackboxInterface = blackboxInterface; }
     bool configuredToUpdateOutputs() const { return (_vehicleController==nullptr) ? false : true; }
 private:
     // class is not copyable or moveable
@@ -110,15 +112,19 @@ private:
     static uint32_t flags(const SensorFusionFilterBase& sensorFusionFilter, const IMU_Base& imuSensor);
 public:
     bool readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta);
+    bool readIMUandUpdateOrientation(uint32_t timeMicroSeconds, uint32_t timeMicroSecondsDelta);
 private:
     SensorFusionFilterBase& _sensorFusionFilter;
     IMU_Base& _IMU;
     IMU_FiltersBase& _imuFilters;
     VehicleControllerBase* _vehicleController {nullptr};
+    BlackboxInterface* _blackboxInterface {nullptr};
     const TaskBase* _task {nullptr};
 
     IMU_Base::accGyroRPS_t _accGyroRPS {};
-    IMU_Base::accGyroRPS_t _accGyroRPS_Locked {};
+    IMU_Base::accGyroRPS_t _accGyroRPS_locked {};
+    IMU_Base::accGyroRPS_t _accGyroRPS_unfiltered {};
+    IMU_Base::accGyroRPS_t _accGyroRPS_unfilteredLocked {};
     mutable int32_t _ahrsDataUpdatedSinceLastRead {false};
 
     Quaternion _orientation {};

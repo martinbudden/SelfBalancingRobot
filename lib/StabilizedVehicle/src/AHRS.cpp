@@ -6,6 +6,11 @@
 #include <TimeMicroSeconds.h>
 #include <cmath>
 
+class BlackboxInterface {
+public:
+    virtual uint32_t update(uint32_t timeMicroSeconds, const xyz_t* gyroRPS, const xyz_t* gyroRPS_unfiltered, const xyz_t* acc) = 0;
+    virtual uint32_t update(uint32_t timeMicroSeconds) = 0;
+};
 
 /*!
 Constructor: sets the sensor fusion filter, IMU, and IMU filters
@@ -77,19 +82,22 @@ Returns false if there was no new data to be read from the IMU.
 
 NOTE: calls to YIELD_TASK have no effect on multi-core implementations, but are useful for single-core variants.
 */
-bool AHRS::readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta)
+//bool AHRS::readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta)
+bool AHRS::readIMUandUpdateOrientation(uint32_t timeMicroSeconds, uint32_t timeMicroSecondsDelta)
 {
-    _tickCountDelta = tickCountDelta;
-    const uint32_t time0 = timeUs();
+    _tickCountDelta = timeMicroSecondsDelta / 1000;
+    const float deltaT = static_cast<float>(timeMicroSecondsDelta) * 0.000001F;
+
+    const timeUs32_t time0 = timeMicroSeconds;
 
 #if defined(IMU_DOES_SENSOR_FUSION)
     // Some IMUs, eg the BNO085, do on-chip sensor fusion
     _accGyroRPS.gyroRPS = _IMU.readGyroRPS();
-    const uint32_t time1 = timeUs();
+    const timeUs32_t time1 = timeUs();
     _timeChecksMicroSeconds[0] = time1 - time0;
     _timeChecksMicroSeconds[1] = 0; // filter time set to zero, since filtering is as part of IMU sensor fusion
     const Quaternion orientation = _IMU.readOrientation();
-    const uint32_t time3 = timeUs();
+    const timeUs32_t time3 = timeUs();
     _timeChecksMicroSeconds[2] = time3 - time1;
 #else
 #if defined(AHRS_IS_INTERRUPT_DRIVEN)
@@ -98,17 +106,18 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta)
 #else
     _accGyroRPS = _IMU.readAccGyroRPS();
 #endif
-    const uint32_t time1 = timeUs();
+    const timeUs32_t time1 = timeUs();
     _timeChecksMicroSeconds[0] = time1 - time0;
 
+    _accGyroRPS_unfiltered = _accGyroRPS;
     _imuFilters.filter(_accGyroRPS.gyroRPS, _accGyroRPS.acc, deltaT); // 15us, 207us
 
-    const uint32_t time2 = timeUs();
+    const timeUs32_t time2 = timeUs();
     _timeChecksMicroSeconds[1] = time2 - time1;
 
     const Quaternion orientation = _sensorFusionFilter.update(_accGyroRPS.gyroRPS, _accGyroRPS.acc, deltaT); // 15us, 140us
 
-    const uint32_t time3 = timeUs();
+    const timeUs32_t time3 = timeUs();
     _timeChecksMicroSeconds[2] = time3 - time2;
 
     if (sensorFusionFilterIsInitializing()) {
@@ -122,8 +131,16 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta)
         _vehicleController->updateOutputsUsingPIDs(_accGyroRPS.gyroRPS, _accGyroRPS.acc, orientation, deltaT); //25us, 900us
     }
 
-    const uint32_t time4 = timeUs();
+    const timeUs32_t time4 = timeUs();
     _timeChecksMicroSeconds[3] = time4 - time3;
+
+    if (_blackboxInterface != nullptr) {
+        _blackboxInterface->update(timeMicroSeconds, &_accGyroRPS.gyroRPS, &_accGyroRPS_unfiltered.gyroRPS, &_accGyroRPS.acc);
+    }
+
+    const timeUs32_t time5 = timeUs();
+    _timeChecksMicroSeconds[4] = time5 - time4;
+
 
     // If _vehicleController != nullptr then the locked data is only used for instrumentation (screen display and telemetry),
     // so it might be possible not to use the lock in this case.
@@ -131,7 +148,8 @@ bool AHRS::readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta)
     _ahrsDataUpdatedSinceLastRead = true;
     _orientationUpdatedSinceLastRead = true;
     _orientation = orientation;
-    _accGyroRPS_Locked = _accGyroRPS;
+    _accGyroRPS_locked = _accGyroRPS;
+    _accGyroRPS_unfilteredLocked = _accGyroRPS_unfiltered;
     UNLOCK_AHRS_DATA();
 
     return true;
@@ -271,8 +289,9 @@ AHRS::data_t AHRS::getAhrsDataUsingLock(bool& updatedSinceLastRead) const
     _ahrsDataUpdatedSinceLastRead = false;
     const data_t ret {
         .tickCountDelta = _tickCountDelta,
-        .gyroRPS = _accGyroRPS_Locked.gyroRPS,
-        .acc = _accGyroRPS_Locked.acc
+        .gyroRPS = _accGyroRPS_locked.gyroRPS,
+        .gyroRPS_unfiltered = _accGyroRPS_unfilteredLocked.gyroRPS,
+        .acc = _accGyroRPS_locked.acc
     };
     UNLOCK_AHRS_DATA();
 
@@ -285,8 +304,9 @@ AHRS::data_t AHRS::getAhrsDataUsingLock() const
     _ahrsDataUpdatedSinceLastRead = false;
     const data_t ret {
         .tickCountDelta = _tickCountDelta,
-        .gyroRPS = _accGyroRPS_Locked.gyroRPS,
-        .acc = _accGyroRPS_Locked.acc
+        .gyroRPS = _accGyroRPS_locked.gyroRPS,
+        .gyroRPS_unfiltered = _accGyroRPS_unfilteredLocked.gyroRPS,
+        .acc = _accGyroRPS_locked.acc
     };
     UNLOCK_AHRS_DATA();
 
@@ -302,6 +322,7 @@ AHRS::data_t AHRS::getAhrsDataForInstrumentationUsingLock() const
     const data_t ret {
         .tickCountDelta = _tickCountDelta,
         .gyroRPS = _accGyroRPS.gyroRPS,
+        .gyroRPS_unfiltered = _accGyroRPS_unfilteredLocked.gyroRPS,
         .acc = _accGyroRPS.acc
     };
     UNLOCK_AHRS_DATA();

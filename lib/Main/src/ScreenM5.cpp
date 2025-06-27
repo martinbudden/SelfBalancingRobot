@@ -62,7 +62,7 @@ ScreenM5::screen_size_e ScreenM5::screenSize()
         _screenSizeX = 80;
         _screenSizeY = 160;
         break;
-    case SCREEN_WIDTH_M5_STICK_C_PLUS: // M5_STICK_C_PLUSE rotated by default
+    case SCREEN_WIDTH_M5_STICK_C_PLUS: // M5_STICK_C_PLUS rotated by default
         screenSize = SIZE_135x240;
         _screenSizeX = 135;
         _screenSizeY = 240;
@@ -91,7 +91,7 @@ ScreenM5::screen_size_e ScreenM5::screenSize()
     return screenSize;
 }
 
-void ScreenM5::setScreenMode(ScreenM5::mode_t screenMode)
+void ScreenM5::setScreenMode(ScreenM5::mode_e screenMode)
 {
     _screenMode = screenMode;
 
@@ -114,7 +114,7 @@ Cycles through the different screen modes.
 */
 void ScreenM5::nextScreenMode()
 {
-    const mode_t screenMode =
+    const mode_e screenMode =
         _screenMode == ScreenM5::MODE_NORMAL ? ScreenM5::MODE_INVERTED :
         _screenMode == ScreenM5::MODE_INVERTED ? ScreenM5::MODE_QRCODE :
         ScreenM5::MODE_NORMAL;
@@ -144,11 +144,7 @@ void ScreenM5::updateTemplate128x128() const
     M5.Lcd.setCursor(0, 10);
     displayEUI("M:", _receiver.getMyEUI());
 
-    int32_t yPos = 35;
-    M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("pi:");
-
-    yPos += 15;
+    int32_t yPos = 50;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("Gyro");
 
@@ -202,8 +198,8 @@ void ScreenM5::update128x128(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 35;
 
-    M5.Lcd.setCursor(22, yPos);
-    M5.Lcd.printf("%5.0f", ahrsData.pitch);
+    M5.Lcd.setCursor(0, yPos);
+    M5.Lcd.printf("pi:%5.0f", ahrsData.pitch);
 
     if (ahrsData.roll != MotorPairController::NOT_SET) {
         M5.Lcd.setCursor(60, yPos);
@@ -230,11 +226,7 @@ void ScreenM5::updateTemplate80x160() const
     M5.Lcd.setCursor(0, 10);
     displayEUI_Compact("", _receiver.getMyEUI());
 
-    int32_t yPos = 30;
-    M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("pi:");
-
-    yPos = 90;
+    int32_t yPos = 90;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("T:");
 
@@ -294,8 +286,8 @@ void ScreenM5::update80x160(const TD_AHRS::data_t& ahrsData) const
     int32_t yPos = 30;
     const bool displayAcc = true;
 
-    M5.Lcd.setCursor(18, yPos);
-    M5.Lcd.printf("%5.0f", ahrsData.pitch);
+    M5.Lcd.setCursor(0, yPos);
+    M5.Lcd.printf("pi:%5.0f", ahrsData.pitch);
 
     yPos += 10;
     if (ahrsData.roll != MotorPairController::NOT_SET) {
@@ -345,11 +337,7 @@ void ScreenM5::updateTemplate135x240() const
     M5.Lcd.setCursor(0, 0);
     displayEUI("M:", _receiver.getMyEUI());
 
-    int32_t yPos = 45;
-    M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("pi:");
-
-    yPos = 105;
+    int32_t yPos = 105;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("ax:");
 
@@ -390,8 +378,8 @@ void ScreenM5::update135x240(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 45;
 
-    M5.Lcd.setCursor(36, yPos);
-    M5.Lcd.printf("%5.0f", ahrsData.pitch);
+    M5.Lcd.setCursor(0, yPos);
+    M5.Lcd.printf("pi:%5.0f", ahrsData.pitch);
     yPos += 20;
     if (ahrsData.roll != MotorPairController::NOT_SET) {
         M5.Lcd.setCursor(0, yPos);
@@ -422,19 +410,7 @@ void ScreenM5::updateTemplate320x240() const
     M5.Lcd.setCursor(0, 0);
     displayEUI("MAC:", _receiver.getMyEUI());
 
-    int32_t yPos = 45;
-    M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("pi:");
-
-    yPos += 20;
-    M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("gx:");
-
-    yPos += 20;
-    M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("ax:");
-
-    yPos = 115;
+    int32_t yPos = 115;
     M5.Lcd.setCursor(0, yPos);
     M5.Lcd.printf("T:");
     M5.Lcd.setCursor(160, yPos);
@@ -511,24 +487,24 @@ void ScreenM5::updateReceivedData320x240() const
 void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 45;
-    M5.Lcd.setCursor(36, yPos);
+    M5.Lcd.setCursor(0, yPos);
     if (ahrsData.roll == MotorPairController::NOT_SET) {
-        M5.Lcd.printf("%5.0f", ahrsData.pitch);
+        M5.Lcd.printf("pi:%5.0f", ahrsData.pitch);
     } else {
         if (ahrsData.yaw == MotorPairController::NOT_SET) {
-            M5.Lcd.printf("%5.0f ro:%5.0f", ahrsData.pitch, ahrsData.roll);
+            M5.Lcd.printf("pi:%5.0f ro:%5.0f", ahrsData.pitch, ahrsData.roll);
         } else {
-            M5.Lcd.printf("%5.0f ro:%5.0f ya:%5.0f", ahrsData.pitch, ahrsData.roll, ahrsData.yaw);
+            M5.Lcd.printf("pi:%5.0f ro:%5.0f ya:%5.0f", ahrsData.pitch, ahrsData.roll, ahrsData.yaw);
         }
     }
 
     yPos += 20;
-    M5.Lcd.setCursor(36, yPos);
-    M5.Lcd.printf("%5.0F gy:%5.0f gz:%5.0f", ahrsData.gyroRPS.x*radiansToDegrees, ahrsData.gyroRPS.y*radiansToDegrees, ahrsData.gyroRPS.z*radiansToDegrees);
+    M5.Lcd.setCursor(0, yPos);
+    M5.Lcd.printf("gx:%5.0F gy:%5.0f gz:%5.0f", ahrsData.gyroRPS.x*radiansToDegrees, ahrsData.gyroRPS.y*radiansToDegrees, ahrsData.gyroRPS.z*radiansToDegrees);
 
     yPos += 20;
-    M5.Lcd.setCursor(36, yPos);
-    M5.Lcd.printf("%5.2f ay:%5.2f az:%5.2f", ahrsData.acc.x, ahrsData.acc.y, ahrsData.acc.z);
+    M5.Lcd.setCursor(0, yPos);
+    M5.Lcd.printf("ax:%5.2f ay:%5.2f az:%5.2f", ahrsData.acc.x, ahrsData.acc.y, ahrsData.acc.z);
 
     const motor_pair_controller_telemetry_t mpcTelemetry = _motorPairController.getTelemetryData();
 #if defined(MOTORS_HAVE_ENCODERS)

@@ -1,16 +1,7 @@
 #include "MotorPairMixer.h"
 
+#include <TimeMicroSeconds.h>
 #include <MotorPairBase.h>
-
-#if defined(USE_FREERTOS) && defined(FRAMEWORK_ARDUINO)
-#include <esp32-hal.h>
-static uint32_t timeUs() { return micros(); }
-#elif defined(USE_FREERTOS) && defined(FRAMEWORK_ESPIDF)
-#include <esp_timer.h>
-static uint32_t timeUs() { return static_cast<uint32_t>(esp_timer_get_time()); }
-#else
-static uint32_t timeUs() { return 0; }
-#endif
 
 #if !defined(UNIT_TEST_BUILD)
 //#define SERIAL_OUTPUT
@@ -38,7 +29,7 @@ void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, ui
         // filter the power input into the motors so they run more smoothly.
         const float powerLeftFiltered = _powerLeftFilter.update(_powerLeft);
         const float powerRightFiltered = _powerRightFilter.update(_powerRight);
-        const uint32_t timeMicroSeconds0 = timeUs();
+        const timeUs32_t timeMicroSeconds0 = timeUs();
         _motorPair.setPower(powerLeftFiltered, powerRightFiltered);
         _outputPowerTimeMicroSeconds = timeUs() - timeMicroSeconds0; // for instrumentation
     } else {
