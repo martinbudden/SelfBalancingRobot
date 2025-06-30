@@ -67,7 +67,7 @@ None
 | VectorQuaternionMatrix | yes       | 0.3.0 | 0.3.0   | yes        | no      |
 | Filters                | yes       | 0.5.0 | 0.5.0   | yes        | no      |
 | PIDF                   | yes       | 0.2.1 | 0.2.1   | yes        | no      |
-| SensorFusion           | yes       | 0.2.0 | 0.2.0   | yes        | no      |
+| SensorFusion           | yes       | 0.2.1 | 0.2.0   | yes        | no      |
 | Receiver               | yes       | 0.3.4 | 0.3.4   | yes        | no      |
 | StabilizedVehicle      | no        | 0.0.1 | 0.0.1   | no         | no      |
 | StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
@@ -77,12 +77,12 @@ None
 
 Libraries
 ├── Filters @ 0.5.0
-├── PIDF @ 0.2.0
+├── PIDF @ 0.2.1
 ├── Receiver @ 0.3.4
 ├── VectorQuaternionMatrix @ 0.3.0
 ├── IMU @ 0.8.3
 │   └── VectorQuaternionMatrix @ 0.3.0
-├── SensorFusion @ 0.2.0
+├── SensorFusion @ 0.2.1
 │   └── VectorQuaternionMatrix @ 0.3.0
 ├── StabilizedVehicle @ 0.0.1
 │   ├── TaskBase @ 0.0.2
@@ -92,7 +92,7 @@ Libraries
 │   ├── VectorQuaternionMatrix @ 0.3.0
 │   ├── IMU @ 0.8.3
 │   │   └── VectorQuaternionMatrix @ 0.3.0
-│   └── SensorFusion @ 0.2.0
+│   └── SensorFusion @ 0.2.1
 │       └── VectorQuaternionMatrix @ 0.3.0
 └── SelfBalancingRobot @ 0.0.1
     └── StabilizedVehicle @ 0.0.1

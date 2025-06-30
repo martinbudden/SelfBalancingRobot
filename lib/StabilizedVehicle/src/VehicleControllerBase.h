@@ -48,7 +48,7 @@ protected:
     const uint32_t _type;
     const uint32_t _PID_Count;
     const TaskBase* _task {nullptr};
-    failsafe_phase_e _failsafePhase;
+    failsafe_phase_e _failsafePhase {FAILSAFE_IDLE};
     float _pitchAngleDegreesRaw {0.0F};
     float _rollAngleDegreesRaw {0.0F};
     float _yawAngleDegreesRaw {0.0F};

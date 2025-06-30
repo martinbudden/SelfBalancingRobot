@@ -8,6 +8,8 @@
 
 class BlackboxInterface {
 public:
+    ~BlackboxInterface() = default;
+public:
     virtual uint32_t update(uint32_t timeMicroSeconds, const xyz_t* gyroRPS, const xyz_t* gyroRPS_unfiltered, const xyz_t* acc) = 0;
     virtual uint32_t update(uint32_t timeMicroSeconds) = 0;
 };

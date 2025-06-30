@@ -19,15 +19,15 @@
 Transmit a portion of the system information headers. Call the first time with xmitState.headerIndex == 0.
 Returns true iff transmission is complete, otherwise call again later to continue transmission.
 */
-bool BlackboxSelfBalancingRobot::blackboxWriteSysinfo()
+Blackbox::write_e BlackboxSelfBalancingRobot::writeSystemInformation()
 {
     // Make sure we have enough room in the buffer for our longest line (as of this writing, the "Firmware date" line)
     if (!headerReserveBufferSpace()) {
-        return false;
+        return WRITE_NOT_COMPLETE;
     }
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
-    switch (xmitState.headerIndex) {
+    switch (_xmitState.headerIndex) {
     BLACKBOX_PRINT_HEADER_LINE("Firmware type", "%s",                   "Cleanflight");
     BLACKBOX_PRINT_HEADER_LINE("Firmware revision", "%s %s (%s) %s",    "BetaFlight", "3.3.1", "611bc70f8", "REVOLT");
     BLACKBOX_PRINT_HEADER_LINE("Firmware date", "%s %s",                "Mar 21 2018", "03:14:05");
@@ -91,10 +91,10 @@ bool BlackboxSelfBalancingRobot::blackboxWriteSysinfo()
     BLACKBOX_PRINT_HEADER_LINE("debug_mode", "%d",                      0);
     BLACKBOX_PRINT_HEADER_LINE("features", "%d",                        541130760); //0x2041'0008
     default:
-        return true;
+        return WRITE_COMPLETE;
     }
 // NOLINTEND(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 
-    ++xmitState.headerIndex;
-    return false;
+    ++_xmitState.headerIndex;
+    return WRITE_NOT_COMPLETE;
 }

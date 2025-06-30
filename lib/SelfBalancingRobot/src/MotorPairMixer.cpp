@@ -1,7 +1,7 @@
 #include "MotorPairMixer.h"
 
-#include <TimeMicroSeconds.h>
 #include <MotorPairBase.h>
+#include <TimeMicroSeconds.h>
 
 #if !defined(UNIT_TEST_BUILD)
 //#define SERIAL_OUTPUT

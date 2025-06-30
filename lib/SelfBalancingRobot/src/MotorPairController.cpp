@@ -130,7 +130,18 @@ void MotorPairController::motorsSwitchOn()
             pid.switchIntegrationOn();
         }
         if (_blackbox) {
-            _blackbox->start();
+            _blackbox->start({
+                .debugMode = 0,
+                .motorCount = 2,
+                .servoCount = 0,
+                .hasVoltageMeter = false,
+                .hasCurrentMeter = false,
+                .isRSSI_configured = false,
+                .useDshotTelemetry = false,
+                .hasBarometer = false,
+                .hasMagnetometer = false,
+                .hasRangefinder = false
+            });
         }
     }
 }

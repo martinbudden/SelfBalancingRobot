@@ -111,7 +111,6 @@ public:
 private:
     static uint32_t flags(const SensorFusionFilterBase& sensorFusionFilter, const IMU_Base& imuSensor);
 public:
-    bool readIMUandUpdateOrientation(float deltaT, uint32_t tickCountDelta);
     bool readIMUandUpdateOrientation(uint32_t timeMicroSeconds, uint32_t timeMicroSecondsDelta);
 private:
     SensorFusionFilterBase& _sensorFusionFilter;

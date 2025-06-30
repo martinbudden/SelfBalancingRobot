@@ -4,7 +4,7 @@
 #include <MotorPairController.h>
 
 /*!
-Class to write out the Blackbox header, written in blackboxWriteSysinfo()
+Class to write out the Blackbox header, written in writeSystemInformation()
 */
 class BlackboxSelfBalancingRobot : public Blackbox {
 public:
@@ -13,7 +13,7 @@ public:
         _motorPairController(motorPairController)
         {}
 public:
-    virtual bool blackboxWriteSysinfo() override;
+    virtual Blackbox::write_e writeSystemInformation() override;
 private:
     MotorPairController& _motorPairController;
 };

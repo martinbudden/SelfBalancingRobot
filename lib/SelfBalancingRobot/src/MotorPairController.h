@@ -141,7 +141,7 @@ private:
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
 
     uint32_t _taskIntervalMicroSeconds;
-    float _mixerThrottle;
+    float _mixerThrottle {0.0F};
 
     int32_t _onOffSwitchPressed {false};
     int32_t _receiverInUse {false};
