@@ -69,10 +69,10 @@ None
 | PIDF                   | yes       | 0.2.1 | 0.2.1   | yes        | no      |
 | SensorFusion           | yes       | 0.2.1 | 0.2.0   | yes        | no      |
 | Receiver               | yes       | 0.3.4 | 0.3.4   | yes        | no      |
-| StabilizedVehicle      | no        | 0.0.1 | 0.0.1   | no         | no      |
+| StabilizedVehicle      | yes       | 0.0.2 | 0.0.2   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
 | TaskBase               | yes       | 0.0.2 | 0.0.2   | yes        | no      |
-| MSP                    | no        | 0.0.1 | 0.0.1   | no         | no      |
+| MultiWiiSerialProtocol | no        | 0.0.1 | 0.0.1   | no         | no      |
 | AtomJoyStickReceiver   | yes       | 0.0.1 | 0.0.1   | no         | no      |
 
 Libraries
@@ -84,7 +84,7 @@ Libraries
 │   └── VectorQuaternionMatrix @ 0.3.0
 ├── SensorFusion @ 0.2.1
 │   └── VectorQuaternionMatrix @ 0.3.0
-├── StabilizedVehicle @ 0.0.1
+├── StabilizedVehicle @ 0.0.2
 │   ├── TaskBase @ 0.0.2
 │   ├── Filters @ 0.5.0
 │   ├── PIDF @ 0.2.1
@@ -95,7 +95,7 @@ Libraries
 │   └── SensorFusion @ 0.2.1
 │       └── VectorQuaternionMatrix @ 0.3.0
 └── SelfBalancingRobot @ 0.0.1
-    └── StabilizedVehicle @ 0.0.1
+    └── StabilizedVehicle @ 0.0.2
 
 ├── MultiWiiSerialProtocol @ 0.0.1
     ├── StreamBuf @ 0.0.1
