@@ -62,7 +62,7 @@ void BlackboxCallbacksSelfBalancingRobot::loadMainStateFromFlightController(blac
 {
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
 
-    constexpr float radiansToDegrees {180.0 / M_PI};
+    constexpr float radiansToDegrees {180.0F / static_cast<float>(M_PI)};
     constexpr float gyroScale {radiansToDegrees * 10.0F};
 
     mainState.gyroADC[0] = lrintf(gyroRPS.x * gyroScale);
