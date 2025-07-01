@@ -128,16 +128,7 @@ void Main::setup()
     static BlackboxSelfBalancingRobot blackbox(blackboxCallbacks, blackboxSerialDevice, motorPairController);
     motorPairController.setBlackbox(blackbox);
     blackbox.init({
-        .logSelectEnabled = 0 // NOLINT(hicpp-signed-bitwise)
-            | Blackbox::LOG_SELECT_PID
-            | Blackbox::LOG_SELECT_RC_COMMANDS
-            | Blackbox::LOG_SELECT_SETPOINT
-            | Blackbox::LOG_SELECT_GYRO
-            | Blackbox::LOG_SELECT_ACC
-            | Blackbox::LOG_SELECT_MOTOR
-            | Blackbox::LOG_SELECT_MOTOR_RPM
-            | Blackbox::LOG_SELECT_GYRO_UNFILTERED
-        ,.sample_rate = Blackbox::RATE_ONE,
+        .sample_rate = Blackbox::RATE_ONE,
         .device = Blackbox::DEVICE_SDCARD,
         //.device = Blackbox::DEVICE_NONE,
         .mode = Blackbox::MODE_NORMAL, // logging starts on arming, file is saved when disarmed

@@ -129,7 +129,6 @@ size_t packTelemetryData_AHRS(uint8_t* telemetryDataPtr, uint32_t id, uint32_t s
     if (flags & AHRS::IMU_AUTO_CALIBRATES) {
         td->flags |= TD_AHRS::IMU_AUTO_CALIBRATES;
     }
-    td->fifoCount = static_cast<uint16_t>(ahrs.getFifoCount());
 
     return td->len;
 }

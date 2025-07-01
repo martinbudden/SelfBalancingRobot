@@ -15,7 +15,6 @@
 #include <pico/mutex.h>
 #endif
 
-class BlackboxInterface;
 class VehicleControllerBase;
 class SensorFusionFilterBase;
 class TaskBase;
@@ -50,9 +49,11 @@ public:
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters, uint32_t flags);
     AHRS(uint32_t taskIntervalMicroSeconds, SensorFusionFilterBase& sensorFusionFilter, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
 public:
-    void setVehicleController(VehicleControllerBase* vehicleController) { _vehicleController = vehicleController; }
-    void setBlackboxInterface(BlackboxInterface* blackboxInterface) { _blackboxInterface = blackboxInterface; }
-    bool configuredToUpdateOutputs() const { return (_vehicleController==nullptr) ? false : true; }
+    void setVehicleController(VehicleControllerBase* vehicleController);
+    enum update_outputs_using_pids_e { UPDATE_OUTPUTS_USING_PIDS, DONT_UPDATE_OUTPUTS_USING_PIDS };
+    void setVehicleController(VehicleControllerBase* vehicleController, update_outputs_using_pids_e updateOutputsUsingPIDs);
+    bool configuredToUpdateOutputs() const { return _updateOutputsUsingPIDs; }
+    void setUpdateBlackbox(bool updateBlackbox);
 private:
     // class is not copyable or moveable
     AHRS(const AHRS&) = delete;
@@ -61,17 +62,18 @@ private:
     AHRS& operator=(AHRS&&) = delete;
 public:
     bool isSensorAvailable(sensors_e sensor) const;
-    const IMU_Base& getIMU() const { return _IMU; }
 
     // MSP compatible sensor IDs
     enum magnetometer_e { MAGNETOMETER_DEFAULT = 0, MAGNETOMETER_NONE = 1 };
     enum barometer_e { BAROMETER_DEFAULT = 0, BAROMETER_NONE = 1, BAROMETER_VIRTUAL = 11 };
     enum rangefinder_e { RANGEFINDER_NONE = 0 };
-    uint8_t getBarometerIdMSP() const { return BAROMETER_NONE; }
-    uint8_t getMagnetometerIdMSP() const {return MAGNETOMETER_NONE; }
-    uint8_t getRangeFinderIdMSP() const { return RANGEFINDER_NONE; }
+    uint8_t getBarometerID_MSP() const { return BAROMETER_NONE; }
+    uint8_t getMagnetometerID_MSP() const {return MAGNETOMETER_NONE; }
+    uint8_t getRangeFinderID_MSP() const { return RANGEFINDER_NONE; }
 
+    const IMU_Base& getIMU() const { return _IMU; }
     IMU_Base& getIMU() { return _IMU; };
+
     IMU_Base::xyz_int32_t getGyroOffset() const;
     void setGyroOffset(const IMU_Base::xyz_int32_t& offset);
     IMU_Base::xyz_int32_t getAccOffset() const;
@@ -104,7 +106,6 @@ public:
     void setFilters(const IMU_FiltersBase::filters_t& filters);
 
     inline uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
-    inline uint32_t getFifoCount() const { return _fifoCount; } // for instrumentation
     inline uint32_t getTimeChecksMicroSeconds(size_t index) const { return _timeChecksMicroSeconds[index]; } //!< Instrumentation time checks
     inline const TaskBase* getTask() const { return _task; } //!< Used to get task data for instrumentation
     inline void setTask(const TaskBase* task) { _task = task; }
@@ -117,7 +118,6 @@ private:
     IMU_Base& _IMU;
     IMU_FiltersBase& _imuFilters;
     VehicleControllerBase* _vehicleController {nullptr};
-    BlackboxInterface* _blackboxInterface {nullptr};
     const TaskBase* _task {nullptr};
 
     IMU_Base::accGyroRPS_t _accGyroRPS {};
@@ -134,8 +134,9 @@ private:
     float _taskIntervalSeconds;
     uint32_t _tickCountDelta {};
 
+    uint32_t _updateOutputsUsingPIDs {false};
+    uint32_t _updateBlackbox {false};
     // instrumentation member data
-    uint32_t _fifoCount {0};
     std::array<uint32_t, TIME_CHECKS_COUNT + 1> _timeChecksMicroSeconds {};
 
 #if defined(USE_FREERTOS)

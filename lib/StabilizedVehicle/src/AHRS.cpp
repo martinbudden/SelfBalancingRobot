@@ -6,14 +6,6 @@
 #include <TimeMicroSeconds.h>
 #include <cmath>
 
-class BlackboxInterface {
-public:
-    ~BlackboxInterface() = default;
-public:
-    virtual uint32_t update(uint32_t timeMicroSeconds, const xyz_t* gyroRPS, const xyz_t* gyroRPS_unfiltered, const xyz_t* acc) = 0;
-    virtual uint32_t update(uint32_t timeMicroSeconds) = 0;
-};
-
 /*!
 Constructor: sets the sensor fusion filter, IMU, and IMU filters
 */
@@ -73,9 +65,36 @@ bool AHRS::isSensorAvailable(sensors_e sensor) const
         [[fallthrough]];
     case SENSOR_ACCELEROMETER:
         return true;
+    case SENSOR_BAROMETER:
+        [[fallthrough]];
+    case SENSOR_MAGNETOMETER:
+        [[fallthrough]];
+    case SENSOR_RANGEFINDER:
+        [[fallthrough]];
+    case SENSOR_GPS:
+        [[fallthrough]];
+    case SENSOR_GPS_MAGNETOMETER:
+        [[fallthrough]];
     default:
         return false;
     }
+}
+void AHRS::setVehicleController(VehicleControllerBase* vehicleController)
+{
+    _vehicleController = vehicleController;
+    _updateOutputsUsingPIDs = false;
+}
+
+void AHRS::setVehicleController(VehicleControllerBase* vehicleController, update_outputs_using_pids_e updateOutputsUsingPIDs)
+{
+    _vehicleController = vehicleController;
+    _updateOutputsUsingPIDs = updateOutputsUsingPIDs == UPDATE_OUTPUTS_USING_PIDS ? true : false;
+}
+
+void AHRS::setUpdateBlackbox(bool updateBlackbox)
+{
+    assert(_vehicleController != nullptr && "Must set vehicleController before setting updateBlackbox");
+    _updateBlackbox = updateBlackbox;
 }
 
 /*!
@@ -127,8 +146,8 @@ bool AHRS::readIMUandUpdateOrientation(uint32_t timeMicroSeconds, uint32_t timeM
     }
 #endif
 
-    if (_vehicleController != nullptr) {
-        // If _vehicleController is not nullptr, then things have been configured so that updateOutputsUsingPIDs
+    if (_updateOutputsUsingPIDs) {
+        // If _updateOutputsUsingPIDs is set, then things have been configured so that updateOutputsUsingPIDs
         // is called by the AHRS (ie here) rather than the motor controller.
         _vehicleController->updateOutputsUsingPIDs(_accGyroRPS.gyroRPS, _accGyroRPS.acc, orientation, deltaT); //25us, 900us
     }
@@ -136,8 +155,8 @@ bool AHRS::readIMUandUpdateOrientation(uint32_t timeMicroSeconds, uint32_t timeM
     const timeUs32_t time4 = timeUs();
     _timeChecksMicroSeconds[3] = time4 - time3;
 
-    if (_blackboxInterface != nullptr) {
-        _blackboxInterface->update(timeMicroSeconds, &_accGyroRPS.gyroRPS, &_accGyroRPS_unfiltered.gyroRPS, &_accGyroRPS.acc);
+    if (_updateBlackbox) {
+        _vehicleController->updateBlackbox(timeMicroSeconds, _accGyroRPS.gyroRPS, _accGyroRPS_unfiltered.gyroRPS, _accGyroRPS.acc);
     }
 
     const timeUs32_t time5 = timeUs();

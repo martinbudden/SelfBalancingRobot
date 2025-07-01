@@ -130,18 +130,7 @@ void MotorPairController::motorsSwitchOn()
             pid.switchIntegrationOn();
         }
         if (_blackbox) {
-            _blackbox->start({
-                .debugMode = 0,
-                .motorCount = 2,
-                .servoCount = 0,
-                .hasVoltageMeter = false,
-                .hasCurrentMeter = false,
-                .isRSSI_configured = false,
-                .useDshotTelemetry = false,
-                .hasBarometer = false,
-                .hasMagnetometer = false,
-                .hasRangefinder = false
-            });
+            _blackbox->start({.debugMode = 0, .motorCount = 2, .servoCount = 0});
         }
     }
 }
@@ -381,6 +370,12 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     const float updatePositionDegreesPrevious = _outputs[OUTPUT_POSITION_DEGREES];
     _outputs[OUTPUT_POSITION_DEGREES] = _PIDS[POSITION_DEGREES].update(_positionDegrees, deltaT);
     _outputs[OUTPUT_SPEED_DPS] = (_outputs[OUTPUT_POSITION_DEGREES] - updatePositionDegreesPrevious) / deltaT;
+}
+
+uint32_t MotorPairController::updateBlackbox(uint32_t timeMicroSeconds, const xyz_t& gyroRPS, const xyz_t& gyroRPS_unfiltered, const xyz_t& acc)
+{
+    assert(_blackbox!=nullptr && "_blackbox not set");
+    return _blackbox->update(timeMicroSeconds, &gyroRPS, &gyroRPS_unfiltered, &acc);
 }
 
 /*!
