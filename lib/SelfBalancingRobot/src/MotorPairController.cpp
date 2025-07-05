@@ -1,9 +1,9 @@
 #include "MotorPairController.h"
-
 #include "MotorPairBase.h"
+#include "RadioController.h"
+
 #include <AHRS.h>
 #include <Blackbox.h>
-#include <ReceiverBase.h>
 #include <TimeMicroSeconds.h>
 
 #include <cmath>
@@ -147,7 +147,7 @@ void MotorPairController::motorsToggleOnOff()
 void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 {
     const MotorMixerBase::commands_t commands =
-    (_failsafePhase != FAILSAFE_IDLE || !motorsIsOn()) ?
+    (_radioController.getFailsafePhase() != RadioController::FAILSAFE_IDLE || !motorsIsOn()) ?
         MotorMixerBase::commands_t {
             .speed  = 0.0F,
             .roll   = 0.0F,
@@ -166,80 +166,44 @@ void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 }
 
 /*!
-Map the yaw stick non-linearly to give more control for small values of yaw.
+Use the new joystick values from the receiver to update the PID setpoints
+using the ENU (East-North-Up) coordinate convention.
+
+NOTE: this function is called form `updateControlValues` in the ReceiverTask loop() function,
+ as a result of receiving new values from the receiver.
+How often it is called depends on the type of transmitter and receiver the user has,
+but is typically at intervals of between 5 milliseconds and 40 milliseconds (ie 200Hz to 25Hz).
+In particular it runs much less frequently than `updateOutputsUsingPIDs` which typically runs at 1000Hz to 8000Hz.
 */
-float MotorPairController::mapYawStick(float yawStick)
+void MotorPairController::updateSetpoints(const RadioControllerBase::controls_t& controls)
 {
-    // map the yaw stick to a parabolic curve to give more control for small values of yaw.
-    // higher values of alpha increase the effect
-    // alpha=0 gives a linear response, alpha=1 gives a parabolic (x^2) curve
-    static constexpr float alpha { 0.2F };
-    const float ret = yawStick*((1.0F - alpha) + alpha*(yawStick < 0.0F ? - yawStick : yawStick));
-    return ret;
-}
+    //!! TODO: put a critical section around this
+    _throttleStick = controls.throttleStick;
+    _rollStick = controls.rollStick;
+    _pitchStick = controls.pitchStick;
+    _yawStick = controls.yawStick;
 
-/*!
-If new stick values are available then update the setpoint using the stick values, using the ENU coordinate convention.
+    // Set the SPEED PIDs from the THROTTLE stick
+    _PIDS[SPEED_SERIAL_DPS].setSetpoint(_throttleStick);
+    _PIDS[SPEED_PARALLEL_DPS].setSetpoint(_throttleStick);
 
-NOTE: this function runs in the context of the VehicleController task, in particular the FPU usage is in that context, so this avoids the
-need to save the ESP32 FPU registers on a context switch.
-*/
-void MotorPairController::updateSetpoints([[maybe_unused]] float deltaT, uint32_t tickCount)
-{
-    // fail-safe handling
-    if (_receiver.isNewPacketAvailable()) {
-        _receiver.clearNewPacketAvailable();
-        // We've received a packet, so reset the FAILSAFE values
-        _receiverInUse = true;
-        _failsafePhase = FAILSAFE_IDLE;
-        _failsafeTickCount = tickCount;
+    // MotorPairController uses ENU coordinate convention
 
-        // Get the new joystick values from the receiver and use them to update the setpoints.
-        _receiver.getStickValues(_throttleStick, _rollStick, _pitchStick, _yawStick);
+    // Pushing the ROLL stick to the right gives a positive value of rollStick and we want this to be left side up.
+    // For ENU left side up is positive roll, so sign of setpoint is same sign as rollStick.
+    // So sign of _rollStick is left unchanged.
+    _PIDS[ROLL_ANGLE_DEGREES].setSetpoint(_rollStick * _rollMaxAngleDegrees);
 
-        // Set the SPEED PIDs from the THROTTLE stick
-        _PIDS[SPEED_SERIAL_DPS].setSetpoint(_throttleStick);
-        _PIDS[SPEED_PARALLEL_DPS].setSetpoint(_throttleStick);
+    // Pushing the PITCH stick forward gives a positive value of pitchStick and we want this to be nose down.
+    // For ENU nose down is positive pitch, so sign of setpoint is same sign as pitchStick.
+    // So sign of _pitchStick is left unchanged.
+    _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(_pitchStick * _pitchMaxAngleDegrees);
 
-        // MotorPairController uses ENU coordinate convention
-
-        // Pushing the ROLL stick to the right gives a positive value of rollStick and we want this to be left side up.
-        // For ENU left side up is positive roll, so sign of setpoint is same sign as rollStick.
-        // So sign of _rollStick is left unchanged.
-        _PIDS[ROLL_ANGLE_DEGREES].setSetpoint(_rollStick * _rollMaxAngleDegrees);
-
-        // Pushing the PITCH stick forward gives a positive value of pitchStick and we want this to be nose down.
-        // For ENU nose down is positive pitch, so sign of setpoint is same sign as pitchStick.
-        // So sign of _pitchStick is left unchanged.
-        _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(_pitchStick * _pitchMaxAngleDegrees);
-
-        // Pushing the YAW stick to the right gives a positive value of yawStick and we want this to be nose right.
-        // For ENU nose left is positive yaw, so sign of setpoint is same as sign of yawStick.
-        // So sign of _yawStick is negated
-        _yawStick = -_yawStick;
-        _yawStick = mapYawStick(_yawStick); // map the YAW stick values to give better control at low stick values
-        _PIDS[YAW_RATE_DPS].setSetpoint(_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
-
-        if (_receiver.getSwitch(ReceiverBase::MOTOR_ON_OFF_SWITCH)) {
-            _onOffSwitchPressed = true;
-        } else {
-            if (_onOffSwitchPressed) {
-                // motorOnOff false and _onOffPressed true means the  on/off button is being released, so toggle the motor state
-                motorsToggleOnOff();
-                _onOffSwitchPressed = false;
-            }
-        }
-    } else if ((tickCount - _failsafeTickCount > _failsafeTickCountThreshold) && _receiverInUse) {
-        // FAILSAFE HANDLING
-        // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
-        // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
-        // so switch off the motors to prevent the vehicle from doing a runaway.
-        _failsafePhase = FAILSAFE_RX_LOSS_DETECTED;
-        if ((tickCount - _failsafeTickCount > _failsafeTickCountSwitchOffThreshold)) {
-            motorsSwitchOff();
-            _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
-        }
-    }
+    // Pushing the YAW stick to the right gives a positive value of yawStick and we want this to be nose right.
+    // For ENU nose left is positive yaw, so sign of setpoint is same as sign of yawStick.
+    // So sign of _yawStick is negated
+    _yawStick = -_yawStick;
+    _PIDS[YAW_RATE_DPS].setSetpoint(_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
 }
 
 /*!
@@ -387,7 +351,6 @@ There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
 */
 void MotorPairController::loop(float deltaT, uint32_t tickCount)
 {
-    updateSetpoints(deltaT, tickCount);
     updateMotorSpeedEstimates(deltaT);
     // If the AHRS is configured to run updateOutputsUsingPIDs, then we don't need to
     if (!_ahrs.configuredToUpdateOutputs()) {

@@ -3,6 +3,7 @@
 #include "MotorPairMixer.h"
 #include <Filters.h>
 #include <PIDF.h>
+#include <RadioControllerBase.h>
 #include <SV_TelemetryData.h>
 #include <VehicleControllerBase.h>
 #include <cfloat>
@@ -10,7 +11,6 @@
 
 class AHRS;
 class Blackbox;
-class ReceiverBase;
 
 /*!
 The MotorPairController uses the ENU (East North Up) coordinate convention, the same as used by ROS (Robot Operating System).
@@ -29,8 +29,8 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex);
-    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver) : MotorPairController(taskIntervalMicroSeconds, ahrs, receiver, nullptr) {}
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex);
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, RadioControllerBase& radioController) : MotorPairController(taskIntervalMicroSeconds, ahrs, radioController, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -74,7 +74,7 @@ public:
     typedef std::array<PIDF_uint8_t, PID_COUNT> pidf_uint8_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 private:
-    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors);
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors);
     MotorPairBase& allocateMotors(const vehicle_t& vehicle);
 public:
     uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
@@ -125,8 +125,7 @@ public:
 public:
     virtual void loop(float deltaT, uint32_t tickCount) override;
 public:
-    static float mapYawStick(float yawStick);
-    void updateSetpoints(float deltaT, uint32_t tickCount);
+    void updateSetpoints(const RadioControllerBase::controls_t& controls);
     void updateMotorSpeedEstimates(float deltaT);
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
     virtual uint32_t updateBlackbox(uint32_t timeMicroSeconds, const xyz_t& gyroRPS, const xyz_t& gyroRPS_unfiltered, const xyz_t& acc) override;
@@ -135,7 +134,7 @@ private:
     void updatePositionOutputs(float deltaT);
 private:
     const AHRS& _ahrs;
-    ReceiverBase& _receiver;
+    RadioControllerBase& _radioController;
     MotorPairBase& _motorPair; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorPairMixer _motorPairMixer;
     Blackbox* _blackbox {nullptr};

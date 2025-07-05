@@ -69,10 +69,10 @@ MotorPairBase& MotorPairController::allocateMotors(const vehicle_t& vehicle)
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, ReceiverBase& receiver, void* i2cMutex) :
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex) :
     VehicleControllerBase(VehicleControllerBase::SELF_BALANCING_ROBOT, PID_COUNT),
     _ahrs(ahrs),
-    _receiver(receiver),
+    _radioController(radioController),
     _motorPair(allocateMotors(gVehicle)),
     _motorPairMixer(_motorPair),
     _taskIntervalMicroSeconds(taskIntervalMicroSeconds),

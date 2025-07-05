@@ -138,7 +138,7 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
             _transmitDataBufferPtr,
             _telemetryID,
             _sequenceNumber,
-            _motorPairController, 
+            _motorPairController,
             _motorPairController.getControlMode(),
             _motorPairController.getPitchBalanceAngleDegrees(),
             0.0F
@@ -162,7 +162,7 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
             _transmitDataBufferPtr,
             _telemetryID,
             _sequenceNumber,
-            _motorPairController, 
+            _motorPairController,
             _motorPairController.getControlMode(),
             _motorPairController.getPitchBalanceAngleDegrees(),
             0.0F

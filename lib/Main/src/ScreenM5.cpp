@@ -588,16 +588,16 @@ void ScreenM5::updateAHRS_Data() const
         .accOffset = {}
     };
     switch (_screenSize) {
-    case SIZE_128x128:
+    case SIZE_128x128: // NOLINT(bugprone-branch-clone) false positive
         update128x128(tdAhrsData);
-        break;
-    case SIZE_135x240:
-        update135x240(tdAhrsData);
         break;
     case SIZE_80x160:
         update80x160(tdAhrsData);
         break;
-    case SIZE_320x240:
+    case SIZE_135x240:
+        update135x240(tdAhrsData);
+        break;
+    case SIZE_320x240: // NOLINT(bugprone-branch-clone) false positive
         [[fallthrough]];
     default:
         update320x240(tdAhrsData);

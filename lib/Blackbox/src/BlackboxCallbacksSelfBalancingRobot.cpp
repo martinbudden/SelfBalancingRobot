@@ -3,12 +3,13 @@
 #include <AHRS.h>
 #include <Blackbox.h>
 #include <MotorPairController.h>
+#include <RadioController.h>
 #include <ReceiverBase.h>
 #include <cmath>
 
 
 bool BlackboxCallbacksSelfBalancingRobot::isArmed() const
-{ 
+{
     // ARMING_FLAG(ARMED)
     return _motorPairController.motorsIsOn();
 }
@@ -21,11 +22,11 @@ bool BlackboxCallbacksSelfBalancingRobot::areMotorsRunning() const
 bool BlackboxCallbacksSelfBalancingRobot::isBlackboxRcModeActive() const
 {
     // IS_RC_MODE_ACTIVE(BOX_BLACKBOX)
-    return true; 
+    return true;
 };
 
 bool BlackboxCallbacksSelfBalancingRobot::isBlackboxModeActivationConditionPresent() const
-{ 
+{
     //isModeActivationConditionPresent(BOX_BLACKBOX);
     return true;
 }
@@ -45,10 +46,10 @@ void BlackboxCallbacksSelfBalancingRobot::loadSlowStateFromFlightController(blac
     //memcpy(&slow->flightModeFlags, &_rcModeActivationMask, sizeof(slow->flightModeFlags)); //was flightModeFlags;
     slowState.flightModeFlags = 0;//!!_motorPairController.getFlightModeFlags();
     slowState.stateFlags = 0; // this is GPS state
-    slowState.failsafePhase = _motorPairController.getFailsafePhase();
+    slowState.failsafePhase = _radioController.getFailsafePhase();
     //slowState.rxSignalReceived = _receiver.isRxReceivingSignal();
-    slowState.rxSignalReceived = true;
-    slowState.rxFlightChannelsValid = true;
+    slowState.rxSignalReceived = (slowState.failsafePhase == RadioController::FAILSAFE_IDLE);
+    slowState.rxFlightChannelsValid = (slowState.failsafePhase == RadioController::FAILSAFE_IDLE);
 }
 
 void BlackboxCallbacksSelfBalancingRobot::loadMainStateFromFlightController(blackboxMainState_t& mainState)
@@ -65,49 +66,52 @@ void BlackboxCallbacksSelfBalancingRobot::loadMainStateFromFlightController(blac
     constexpr float radiansToDegrees {180.0F / static_cast<float>(M_PI)};
     constexpr float gyroScale {radiansToDegrees * 10.0F};
 
-    mainState.gyroADC[0] = lrintf(gyroRPS.x * gyroScale);
-    mainState.gyroADC[1] = lrintf(gyroRPS.y * gyroScale);
-    mainState.gyroADC[2] = lrintf(gyroRPS.z * gyroScale);
-    mainState.gyroUnfiltered[0] = lrintf(gyroRPS_unfiltered.x * gyroScale);
-    mainState.gyroUnfiltered[1] = lrintf(gyroRPS_unfiltered.y * gyroScale);
-    mainState.gyroUnfiltered[2] = lrintf(gyroRPS_unfiltered.z * gyroScale);
-    mainState.accADC[0] = lrintf(acc.x * 4096);
-    mainState.accADC[1] = lrintf(acc.y * 4096);
-    mainState.accADC[2] = lrintf(acc.z * 4096);
+    mainState.gyroADC[0] = static_cast<int16_t>(std::lroundf(gyroRPS.x * gyroScale));
+    mainState.gyroADC[1] = static_cast<int16_t>(std::lroundf(gyroRPS.y * gyroScale));
+    mainState.gyroADC[2] = static_cast<int16_t>(std::lroundf(gyroRPS.z * gyroScale));
+    mainState.gyroUnfiltered[0] = static_cast<int16_t>(std::lroundf(gyroRPS_unfiltered.x * gyroScale));
+    mainState.gyroUnfiltered[1] = static_cast<int16_t>(std::lroundf(gyroRPS_unfiltered.y * gyroScale));
+    mainState.gyroUnfiltered[2] = static_cast<int16_t>(std::lroundf(gyroRPS_unfiltered.z * gyroScale));
+    // just truncate for gyro
+    mainState.accADC[0] = static_cast<int16_t>(acc.x * 4096);
+    mainState.accADC[1] = static_cast<int16_t>(acc.y * 4096);
+    mainState.accADC[2] = static_cast<int16_t>(acc.z * 4096);
+
 
     for (int ii = 0; ii < blackboxMainState_t::XYZ_AXIS_COUNT; ++ii) {
         const auto pidIndex = static_cast<MotorPairController::pid_index_e>(ii);
         const PIDF& pid = _motorPairController.getPID(pidIndex);
         const PIDF::error_t pidError = pid.getError();
-        mainState.axisPID_P[ii] = lrintf(pidError.P);
-        mainState.axisPID_I[ii] = lrintf(pidError.I);
-        mainState.axisPID_D[ii] = lrintf(pidError.D);
-        mainState.axisPID_F[ii] = lrintf(pidError.F);
-        mainState.setpoint[ii] = lrintf(pid.getSetpoint());
+        mainState.axisPID_P[ii] = std::lroundf(pidError.P);
+        mainState.axisPID_I[ii] = std::lroundf(pidError.I);
+        mainState.axisPID_D[ii] = std::lroundf(pidError.D);
+        mainState.axisPID_F[ii] = std::lroundf(pidError.F);
+        mainState.setpoint[ii] = static_cast<int16_t>(std::lroundf(pid.getSetpoint()));
 #if defined(USE_MAG)
-        mainState.magADC[i] = lrintf(mag.magADC.v[i]);
+        mainState.magADC[ii] = static_cast<int16_t>(mag.magADC.v[ii]);
 #endif
     }
 
-    const ReceiverBase::controls_pwm_t controls = _receiver.getControlsPWM(); // returns controls in PWM range, [1000, 2000]
-    mainState.rcCommand[0] = controls.throttleStick;
-    mainState.rcCommand[1] = controls.rollStick - ReceiverBase::CHANNEL_MIDDLE;
-    mainState.rcCommand[2] = controls.pitchStick - ReceiverBase::CHANNEL_MIDDLE;
-    mainState.rcCommand[3] = controls.yawStick - ReceiverBase::CHANNEL_MIDDLE;
+    // interval [1000,2000] for THROTTLE and [-500,+500] for ROLL/PITCH/YAW
+    const ReceiverBase::controls_pwm_t controls = _receiver.getControlsPWM(); // returns controls in range [1000, 2000]
+    mainState.rcCommand[0] = static_cast<int16_t>(controls.rollStick - ReceiverBase::CHANNEL_MIDDLE);
+    mainState.rcCommand[1] = static_cast<int16_t>(controls.pitchStick - ReceiverBase::CHANNEL_MIDDLE);
+    mainState.rcCommand[2] = static_cast<int16_t>(controls.yawStick - ReceiverBase::CHANNEL_MIDDLE);
+    mainState.rcCommand[3] = controls.throttleStick;
 
     // log the final throttle value used in the mixer
-    mainState.setpoint[3] = lrintf(_motorPairController.getMixerThrottle() * 1000.0F);
+    mainState.setpoint[3] = static_cast<int16_t>(_motorPairController.getMixerThrottle() * 1000.0F);
 
     for (int ii = 0; ii < blackboxMainState_t::DEBUG_VALUE_COUNT; ++ii) {
         mainState.debug[ii] = static_cast<uint16_t>(_ahrs.getTimeChecksMicroSeconds(ii));
     }
     const motor_pair_controller_telemetry_t telemetry = _motorPairController.getTelemetryData();
-    mainState.motor[0] = lrintf(telemetry.powerLeft);
-    mainState.motor[1] = lrintf(telemetry.powerRight);
+    mainState.motor[0] = static_cast<int16_t>(std::lroundf(telemetry.powerLeft));
+    mainState.motor[1] = static_cast<int16_t>(telemetry.powerRight);
 
     constexpr float DPS_to_RPM = 60.0F / 360.0F;
-    mainState.erpm[0] = lrintf(telemetry.speedLeftDPS * DPS_to_RPM);
-    mainState.erpm[0] = lrintf(telemetry.speedRightDPS * DPS_to_RPM);
+    mainState.erpm[0] = static_cast<int16_t>(std::lroundf(telemetry.speedLeftDPS * DPS_to_RPM));
+    mainState.erpm[1] = static_cast<int16_t>(std::lroundf(telemetry.speedRightDPS * DPS_to_RPM));
 
     mainState.vbatLatest = 0; //getBatteryVoltageLatest();
     mainState.amperageLatest = 0; //getAmperageLatest();

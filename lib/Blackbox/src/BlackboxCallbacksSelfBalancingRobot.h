@@ -4,14 +4,16 @@
 
 class AHRS;
 class MotorPairController;
+class RadioController;
 class ReceiverBase;
 
 
 class BlackboxCallbacksSelfBalancingRobot : public BlackboxCallbacksBase {
 public:
-    BlackboxCallbacksSelfBalancingRobot(AHRS& ahrs, MotorPairController& motorPairController, ReceiverBase& receiver) :
+    BlackboxCallbacksSelfBalancingRobot(AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController, ReceiverBase& receiver) :
         _ahrs(ahrs),
         _motorPairController(motorPairController),
+        _radioController(radioController),
         _receiver(receiver)
         {}
 public:
@@ -29,5 +31,6 @@ public:
 private:
     AHRS& _ahrs;
     MotorPairController& _motorPairController;
+    RadioController& _radioController;
     ReceiverBase& _receiver;
 };

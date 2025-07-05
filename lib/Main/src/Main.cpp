@@ -35,6 +35,7 @@
 #endif
 
 #include <MotorPairController.h>
+#include <RadioController.h>
 
 #if defined(USE_ESPNOW)
 #include <ReceiverAtomJoyStick.h>
@@ -103,6 +104,7 @@ void Main::setup()
 
     // Statically allocate and setup the receiver.
     static ReceiverAtomJoyStick receiver(&myMacAddress[0]);
+    static RadioController radioController(receiver);
 #if !defined(RECEIVER_CHANNEL)
     constexpr uint8_t RECEIVER_CHANNEL {3};
 #endif
@@ -117,12 +119,13 @@ void Main::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, receiver, i2cMutex);
+    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, radioController, i2cMutex);
     ahrs.setVehicleController(&motorPairController);
+    radioController.setMotorPairController(&motorPairController);
 
 #define USE_BLACKBOX
 #if defined(USE_BLACKBOX)
-    static BlackboxCallbacksSelfBalancingRobot blackboxCallbacks(ahrs, motorPairController, receiver);
+    static BlackboxCallbacksSelfBalancingRobot blackboxCallbacks(ahrs, motorPairController, radioController, receiver);
     static BlackboxSerialDeviceSDCard blackboxSerialDevice;
     blackboxSerialDevice.init();
     static BlackboxSelfBalancingRobot blackbox(blackboxCallbacks, blackboxSerialDevice, motorPairController);
@@ -185,7 +188,7 @@ void Main::setup()
     reportMainTask();
     _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
     _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
-    _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, receiver, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
+    _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, receiver, radioController, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 #if defined(USE_BLACKBOX)
     _tasks.blackboxTask = BlackboxTask::createTask(blackbox, BLACKBOX_TASK_PRIORITY, BLACKBOX_TASK_CORE, BLACKBOX_TASK_INTERVAL_MICROSECONDS);
 #endif

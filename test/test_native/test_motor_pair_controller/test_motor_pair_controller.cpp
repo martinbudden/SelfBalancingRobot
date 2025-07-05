@@ -3,6 +3,7 @@
 #include <AHRS.h>
 #include <IMU_FiltersNull.h>
 #include <IMU_Null.h>
+#include <RadioController.h>
 #include <ReceiverNull.h>
 #include <SV_TelemetryData.h>
 #include <SensorFusion.h>
@@ -29,10 +30,11 @@ void test_motor_pair_controller()
     static IMU_FiltersNull imuFilters; // NOLINT(misc-const-correctness) false positive
     static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imu, imuFilters);
     static ReceiverNull receiver; // NOLINT(misc-const-correctness) false positive
+    static RadioController radioController(receiver);
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
     enum { TASk_INTERVAL_MICROSECONDS = 5000 };
-    MotorPairController mpc(TASk_INTERVAL_MICROSECONDS, ahrs, receiver);
+    MotorPairController mpc(TASk_INTERVAL_MICROSECONDS, ahrs, radioController);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();
