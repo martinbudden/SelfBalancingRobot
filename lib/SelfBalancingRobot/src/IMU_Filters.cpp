@@ -29,12 +29,12 @@ IMU_Filters::IMU_Filters() :
 void IMU_Filters::filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) // cppcheck-suppress constParameterReference; false positive
 {
     (void)deltaT;
-    gyroRPS.x = _gyroX_PT1_LPF1.update(gyroRPS.x);
-    gyroRPS.y = _gyroY_PT1_LPF1.update(gyroRPS.y);
-    gyroRPS.z = _gyroZ_PT1_LPF1.update(gyroRPS.z);
-    acc.x = _accX_PT1_LPF1.update(acc.x);
-    acc.y = _accY_PT1_LPF1.update(acc.y);
-    acc.z = _accZ_PT1_LPF1.update(acc.z);
+    gyroRPS.x = _gyroX_PT1_LPF1.filter(gyroRPS.x);
+    gyroRPS.y = _gyroY_PT1_LPF1.filter(gyroRPS.y);
+    gyroRPS.z = _gyroZ_PT1_LPF1.filter(gyroRPS.z);
+    acc.x = _accX_PT1_LPF1.filter(acc.x);
+    acc.y = _accY_PT1_LPF1.filter(acc.y);
+    acc.z = _accZ_PT1_LPF1.filter(acc.z);
 };
 
 void IMU_Filters::setFilters()

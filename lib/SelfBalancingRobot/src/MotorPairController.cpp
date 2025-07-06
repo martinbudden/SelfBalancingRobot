@@ -239,9 +239,9 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
         // If the MPC task is running at 100Hz, that is four steps per iteration, so an error of 1 step is 25%
         // If the MPC task is running at 200Hz, that is two steps per iteration, so an error of 1 step is 50%
         // So we average over 4 iterations to reduce this digital noise.
-        speedDPS = _speedMovingAverageFilter.update(speedDPS);
+        speedDPS = _speedMovingAverageFilter.filter(speedDPS);
         // Additionally apply IIR filter.
-        _speedDPS = _speedFilter.update(speedDPS);
+        _speedDPS = _speedFilter.filter(speedDPS);
 
         //static float motorSpeed {0.0};
         //static constexpr float motorSpeedWeighting {0.8};
@@ -300,7 +300,7 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     const float pitchAngleDegreesDelta = pitchAngleDegrees - _PIDS[PITCH_ANGLE_DEGREES].getPreviousMeasurement();
     // Use the filtered value of pitchAngleDegreesDelta as input into the PID update.
     // This is beneficial because the DTerm is especially susceptible to noise (since it is the derivative of a noisy value).
-    const float pitchAngleFilteredDTerm = _pitchAngleDTermFilter.update(pitchAngleDegreesDelta);
+    const float pitchAngleFilteredDTerm = _pitchAngleDTermFilter.filter(pitchAngleDegreesDelta);
     _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleFilteredDTerm, deltaT);
 
     // calculate _outputs[YAW_RATE_DPS]

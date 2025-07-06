@@ -27,8 +27,8 @@ void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, ui
         _powerRight = commands.pitch + commands.speed + commands.yaw;
 
         // filter the power input into the motors so they run more smoothly.
-        const float powerLeftFiltered = _powerLeftFilter.update(_powerLeft);
-        const float powerRightFiltered = _powerRightFilter.update(_powerRight);
+        const float powerLeftFiltered = _powerLeftFilter.filter(_powerLeft);
+        const float powerRightFiltered = _powerRightFilter.filter(_powerRight);
         const timeUs32_t timeMicroSeconds0 = timeUs();
         _motorPair.setPower(powerLeftFiltered, powerRightFiltered);
         _outputPowerTimeMicroSeconds = timeUs() - timeMicroSeconds0; // for instrumentation
