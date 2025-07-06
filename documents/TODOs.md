@@ -7,7 +7,6 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 3. Get TWAI versions going.
 4. Add setGain function to Madgwick filter.
 5. Get AtomS3R working in interrupt driven mode
-6. Get SPI bus working
 
 ## Done
 
@@ -20,6 +19,7 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 4. Implement and test single core version.
 5. Implement version for Raspberry Pi Pico.
 6. Investigate using microsecond timer for calculating `deltaT`.
+7. Get SPI bus working
 
 ## Don't Do
 
@@ -68,44 +68,46 @@ None
 | Filters                | yes       | 0.6.0 | 0.6.0   | yes        | no      |
 | PIDF                   | yes       | 0.2.1 | 0.2.1   | yes        | no      |
 | SensorFusion           | yes       | 0.2.1 | 0.2.1   | yes        | no      |
-| Receiver               | yes       | 0.4.0 | 0.4.0   | yes        | no      |
-| StabilizedVehicle      | yes       | 0.1.1 | 0.1.1   | yes        | no      |
+| Receiver               | yes       | 0.4.1 | 0.4.1   | yes        | no      |
+| StabilizedVehicle      | yes       | 0.1.2 | 0.1.2   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
-| TaskBase               | yes       | 0.0.2 | 0.0.2   | yes        | no      |
+| TaskBase               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.2 | 0.0.2   | yes        | no      |
 | Blackbox               | yes       | 0.0.2 | 0.0.2   | yes        | no      |
 | AtomJoyStickReceiver   | yes       | 0.0.1 | 0.0.1   | no         | no      |
 
+```text
 Libraries
 ├── Filters @ 0.6.0
 ├── PIDF @ 0.2.1
-├── Receiver @ 0.4.0
+├── Receiver @ 0.4.1
 ├── VectorQuaternionMatrix @ 0.3.0
 ├── IMU @ 0.8.3
 │   └── VectorQuaternionMatrix @ 0.3.0
 ├── SensorFusion @ 0.2.1
 │   └── VectorQuaternionMatrix @ 0.3.0
-├── StabilizedVehicle @ 0.1.1
-│   ├── TaskBase @ 0.0.2
+├── StabilizedVehicle @ 0.1.2
+│   ├── TaskBase @ 0.0.3
 │   ├── Filters @ 0.6.0
 │   ├── PIDF @ 0.2.1
-│   ├── Receiver @ 0.4.0
+│   ├── Receiver @ 0.4.1
 │   ├── VectorQuaternionMatrix @ 0.3.0
 │   ├── IMU @ 0.8.3
 │   │   └── VectorQuaternionMatrix @ 0.3.0
 │   └── SensorFusion @ 0.2.1
 │       └── VectorQuaternionMatrix @ 0.3.0
 └── SelfBalancingRobot @ 0.0.1
-    └── StabilizedVehicle @ 0.1.0
+    └── StabilizedVehicle @ 0.1.2
 
 ├── MultiWiiSerialProtocol @ 0.0.2
-│   ├── TaskBase @ 0.0.2
+    ├── TaskBase @ 0.0.2
     ├── StreamBuf @ 0.0.1
     └── VectorQuaternionMatrix @ 0.3.0
 
 ├── Blackbox @ 0.0.2
-│   ├── TaskBase @ 0.0.2
+    ├── TaskBase @ 0.0.2
     └── StreamBuf @ 0.0.1
+```
 
 To add a library to the Arduino Library manager, make a pull request [here](https://github.com/arduino/library-registry)
 
