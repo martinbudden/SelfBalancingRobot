@@ -79,3 +79,9 @@ int32_t MotorPairMixer::getMotorRPM(size_t motorIndex) const
     (void)motorIndex;
     return 0;
 }
+
+float MotorPairMixer::getMotorFrequencyHz(size_t motorIndex) const
+{
+    (void)motorIndex;
+    return 0.0F;
+}

@@ -116,6 +116,7 @@ void Main::setup()
     assert(espErr == ESP_OK && "Unable to setup receiver.");
 #else
     static ReceiverNull receiver;
+    static RadioController radioController(receiver);
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.

@@ -46,7 +46,7 @@ void BlackboxCallbacksSelfBalancingRobot::loadSlowStateFromFlightController(blac
     //memcpy(&slow->flightModeFlags, &_rcModeActivationMask, sizeof(slow->flightModeFlags)); //was flightModeFlags;
     slowState.flightModeFlags = 0;//!!_motorPairController.getFlightModeFlags();
     slowState.stateFlags = 0; // this is GPS state
-    slowState.failsafePhase = _radioController.getFailsafePhase();
+    slowState.failsafePhase = static_cast<uint8_t>(_radioController.getFailsafePhase());
     //slowState.rxSignalReceived = _receiver.isRxReceivingSignal();
     slowState.rxSignalReceived = (slowState.failsafePhase == RadioController::FAILSAFE_IDLE);
     slowState.rxFlightChannelsValid = (slowState.failsafePhase == RadioController::FAILSAFE_IDLE);

@@ -3,7 +3,7 @@
 #include <AHRS.h>
 #include <IMU_BMI270.h>
 #include <IMU_BNO085.h>
-#include <IMU_FiltersDefault.h>
+#include <IMU_Filters.h>
 #include <IMU_LSM6DS3TR_C.h>
 #include <IMU_M5Stack.h>
 #include <IMU_M5Unified.h>
@@ -91,7 +91,7 @@ AHRS& Main::setupAHRS(void* i2cMutex)
 
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
-    static IMU_FiltersDefault imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
+    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_TASK_INTERVAL_MICROSECONDS) / 1000000.0F);
     //static IMU_FiltersDefault imuFilters;
 
     // Statically allocate the AHRS object
