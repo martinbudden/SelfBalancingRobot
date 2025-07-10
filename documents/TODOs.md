@@ -7,6 +7,7 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 3. Get TWAI versions going.
 4. Add setGain function to Madgwick filter.
 5. Get AtomS3R working in interrupt driven mode
+6. Remove Backchannel out of StabilizedVehicle into its own library, hence removing StabilizedVehicle's dependency on Receiver.
 
 ## Done
 
@@ -65,31 +66,30 @@ None
 | ---------------------- | --------- | ----- | ------- | ---------- | ------- |
 | IMU                    | yes       | 0.8.3 | 0.8.3   | yes        | no      |
 | VectorQuaternionMatrix | yes       | 0.3.0 | 0.3.0   | yes        | no      |
-| Filters                | yes       | 0.6.0 | 0.6.0   | yes        | no      |
-| PIDF                   | yes       | 0.2.1 | 0.2.1   | yes        | no      |
+| Filters                | yes       | 0.6.1 | 0.6.1   | yes        | no      |
+| PIDF                   | yes       | 0.3.0 | 0.3.0   | yes        | no      |
 | SensorFusion           | yes       | 0.2.1 | 0.2.1   | yes        | no      |
 | Receiver               | yes       | 0.4.1 | 0.4.1   | yes        | no      |
-| StabilizedVehicle      | yes       | 0.1.2 | 0.1.2   | yes        | no      |
+| StabilizedVehicle      | yes       | 0.2.1 | 0.2.1   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
 | TaskBase               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
-| MultiWiiSerialProtocol | yes       | 0.0.2 | 0.0.2   | yes        | no      |
-| Blackbox               | yes       | 0.0.2 | 0.0.2   | yes        | no      |
+| MultiWiiSerialProtocol | yes       | 0.0.3 | 0.0.3   | yes        | no      |
+| Blackbox               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | AtomJoyStickReceiver   | yes       | 0.0.1 | 0.0.1   | no         | no      |
 
 ```text
 Libraries
-├── Filters @ 0.6.0
-├── PIDF @ 0.2.1
+├── Filters @ 0.6.1
+├── PIDF @ 0.3.0
 ├── Receiver @ 0.4.1
 ├── VectorQuaternionMatrix @ 0.3.0
 ├── IMU @ 0.8.3
 │   └── VectorQuaternionMatrix @ 0.3.0
 ├── SensorFusion @ 0.2.1
 │   └── VectorQuaternionMatrix @ 0.3.0
-├── StabilizedVehicle @ 0.1.2
+├── StabilizedVehicle @ 0.2.1
 │   ├── TaskBase @ 0.0.3
-│   ├── Filters @ 0.6.0
-│   ├── PIDF @ 0.2.1
+│   ├── PIDF @ 0.3.0
 │   ├── Receiver @ 0.4.1
 │   ├── VectorQuaternionMatrix @ 0.3.0
 │   ├── IMU @ 0.8.3
@@ -97,15 +97,15 @@ Libraries
 │   └── SensorFusion @ 0.2.1
 │       └── VectorQuaternionMatrix @ 0.3.0
 └── SelfBalancingRobot @ 0.0.1
-    └── StabilizedVehicle @ 0.1.2
+    └── StabilizedVehicle @ 0.2.1
 
-├── MultiWiiSerialProtocol @ 0.0.2
-    ├── TaskBase @ 0.0.2
+├── MultiWiiSerialProtocol @ 0.0.3
+    ├── TaskBase @ 0.0.3
     ├── StreamBuf @ 0.0.1
     └── VectorQuaternionMatrix @ 0.3.0
 
-├── Blackbox @ 0.0.2
-    ├── TaskBase @ 0.0.2
+├── Blackbox @ 0.0.3
+    ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 ```
 
@@ -127,8 +127,9 @@ git push origin --delete 0.0.1
 ### To remain in this repository
 
 1. MotorPairs
-2. SBR_Main
+2. Main
 3. SelfBalancingRobot
+4. Blackbox (this is just wrapper around Blackbox library)
 
 ### Memory usage
 

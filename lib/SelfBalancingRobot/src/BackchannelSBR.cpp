@@ -119,7 +119,7 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
         return true;
         break;
     case CommandPacketSetPID::RESET_PID:
-        _preferences.putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET });
+        _preferences.putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET });
         return true;
         break;
     case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:

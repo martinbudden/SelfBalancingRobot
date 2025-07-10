@@ -27,9 +27,8 @@
 /*!
 Statically allocate the motors according to the build flags.
 */
-MotorPairBase& MotorPairController::allocateMotors(const vehicle_t& vehicle)
+MotorPairBase& MotorPairController::allocateMotors()
 {
-    (void)vehicle;
     // Statically allocate the MotorPair object as defined by the build flags.
 #if defined(MOTORS_BALA_2)
     static MotorsBala2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
@@ -38,7 +37,7 @@ MotorPairBase& MotorPairController::allocateMotors(const vehicle_t& vehicle)
     static MotorsBalaC motors(MOTOR_DEADBAND_POWER);// NOLINT(misc-const-correctness) false positive
     //motors.setDeadbandPower(MOTOR_DEADBAND_POWER);
 #elif defined(MOTORS_4_ENCODER_MOTOR)
-    static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, vehicle.encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
+    static Motors4EncoderMotor motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN, gVehicle.encoderStepsPerRevolution);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_GO_PLUS_2)
     static MotorsGoPlus2 motors(MOTOR_SDA_PIN, MOTOR_SCL_PIN);// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_ATOMIC_MOTION_BASE)
@@ -47,10 +46,10 @@ MotorPairBase& MotorPairController::allocateMotors(const vehicle_t& vehicle)
 #elif defined(MOTORS_PWR_CAN)
     static MotorsPwrCAN motors;// NOLINT(misc-const-correctness) false positive
 #elif defined(MOTORS_O_DRIVE_CAN)
-    static Motors_ODriveCAN motors(vehicle.encoderStepsPerRevolution);
+    static Motors_ODriveCAN motors(gVehicle.encoderStepsPerRevolution);
     motors.setup();
 #elif defined(MOTORS_O_DRIVE_TWAI)
-    static Motors_ODriveTWAI motors(vehicle.encoderStepsPerRevolution);
+    static Motors_ODriveTWAI motors(gVehicle.encoderStepsPerRevolution);
     motors.setup();
 #elif defined(MOTORS_ROLLER_CAN)
 #elif defined(MOTORS_GPIO)
@@ -61,8 +60,8 @@ MotorPairBase& MotorPairController::allocateMotors(const vehicle_t& vehicle)
     return motors;
 }
 
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex) :
-    MotorPairController(taskIntervalMicroSeconds, ahrs, radioController, i2cMutex, gVehicle, gScaleFactors)
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex) :
+    MotorPairController(taskIntervalMicroSeconds, motorPair, ahrs, radioController, i2cMutex, gVehicle, gScaleFactors)
 {
 }
 
@@ -70,11 +69,11 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, cons
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors) :
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors) :
     VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT),
     _ahrs(ahrs),
     _radioController(radioController),
-    _motorPair(allocateMotors(vehicle)),
+    _motorPair(motorPair),
     _motorPairMixer(_motorPair),
     _taskIntervalMicroSeconds(taskIntervalMicroSeconds),
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),

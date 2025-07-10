@@ -14,21 +14,21 @@ const MotorPairController::vehicle_t vehicleBala2 = {
 };
 
 constexpr MotorPairController::pidf_array_t scaleFactorsBala2 {{
-    { 0.0001F,  0.001F, 0.000002F,  0.01F },    // ROLL_ANGLE_DEGREES=0,
-    { 0.0002F,  0.001F, 0.000002F,  0.01F },    // PITCH_ANGLE_DEGREES
-    { 0.01F,    0.01F,  0.01F,      0.01F },    // YAW_RATE_DPS
-    { 0.01F,    0.01F,  0.00001F,   0.01F },    // SPEED_SERIAL_DPS
-    { 0.001F,   0.01F,  0.0001F,    0.01F },    // SPEED_PARALLEL_DPS
-    { 0.10F,    0.01F,  0.001F,     0.01F }     // POSITION_DEGREES
+    { 0.0001F,  0.001F, 0.000002F,  0.0F, 0.01F },    // ROLL_ANGLE_DEGREES=0,
+    { 0.0002F,  0.001F, 0.000002F,  0.0F, 0.01F },    // PITCH_ANGLE_DEGREES
+    { 0.01F,    0.01F,  0.01F,      0.0F, 0.01F },    // YAW_RATE_DPS
+    { 0.01F,    0.01F,  0.00001F,   0.0F, 0.01F },    // SPEED_SERIAL_DPS
+    { 0.001F,   0.01F,  0.0001F,    0.0F, 0.01F },    // SPEED_PARALLEL_DPS
+    { 0.10F,    0.01F,  0.001F,     0.0F, 0.01F }     // POSITION_DEGREES
 }};
 
 constexpr MotorPairController::pidf_array_t defaultPIDsBala2 {{
-    { 0.0F,     0.0F,   0.0F,       0.1F },     // ROLL_ANGLE_DEGREES=0,
-    { 0.0300F,  0.0F,   0.00020F,   0.1F },     // PITCH_ANGLE_DEGREES
-    { 0.0F,     0.0F,   0.0F,       1.0F },     // YAW_RATE_DPS
-    { 0.0F,     0.0F,   0.0F,       0.0F },     // SPEED_SERIAL_DPS
-    { 0.030F,   0.0F,   0.0F,       0.0F },     // SPEED_PARALLEL_DPS
-    { 0.0F,     0.0F,   0.0F,       0.0F }      // POSITION_DEGREES
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.1F },     // ROLL_ANGLE_DEGREES=0,
+    { 0.0300F,  0.0F,   0.00020F,   0.0F, 0.1F },     // PITCH_ANGLE_DEGREES
+    { 0.0F,     0.0F,   0.0F,       0.0F, 1.0F },     // YAW_RATE_DPS
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_SERIAL_DPS
+    { 0.030F,   0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_PARALLEL_DPS
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F }      // POSITION_DEGREES
 }};
 
 
@@ -43,21 +43,21 @@ const MotorPairController::vehicle_t vehicleBalaC = {
 };
 
 constexpr MotorPairController::pidf_array_t scaleFactorsBalaC {{
-    { 0.0001F,  0.001F, 0.00001F,0.1F },    // ROLL_ANGLE_DEGREES=0,
-    { 0.0001F,  1.0F,   0.00001F,0.1F },    // PITCH_ANGLE_DEGREES
-    { 0.1F,     1.0F,   0.01F,   0.01F },   // YAW_RATE_DPS
-    { 0.01F,    0.01F,  0.0001F, 0.1F },    // SPEED_SERIAL_DPS
-    { 0.01F,    0.01F,  0.0001F, 0.01F },   // SPEED_PARALLEL_DPS
-    { 0.10F,    0.01F,  0.001F,  0.1F }     // POSITION_DEGREES
+    { 0.0001F,  0.001F, 0.00001F,0.0F, 0.1F },    // ROLL_ANGLE_DEGREES=0,
+    { 0.0001F,  1.0F,   0.00001F,0.0F, 0.1F },    // PITCH_ANGLE_DEGREES
+    { 0.1F,     1.0F,   0.01F,   0.0F, 0.01F },   // YAW_RATE_DPS
+    { 0.01F,    0.01F,  0.0001F, 0.0F, 0.1F },    // SPEED_SERIAL_DPS
+    { 0.01F,    0.01F,  0.0001F, 0.0F, 0.01F },   // SPEED_PARALLEL_DPS
+    { 0.10F,    0.01F,  0.001F,  0.0F, 0.1F }     // POSITION_DEGREES
 }};
 
 constexpr MotorPairController::pidf_array_t defaultPIDsBalaC {{
-    { 0.0F,     0.0F,   0.0F,       0.1F },     // ROLL_ANGLE_DEGREES=0,
-    { 0.0300F,  0.0F,   0.0F,       0.0F },     // PITCH_ANGLE_DEGREES
-    { 0.0F,     0.0F,   0.0F,       1.0F },     // YAW_RATE_DPS
-    { 0.0F,     0.0F,   0.0F,       0.0F },     // SPEED_SERIAL_DPS
-    { 0.050F,   0.0F,   0.0F,       0.0F },     // SPEED_PARALLEL_DPS
-    { 0.0F,     0.0F,   0.0F,       0.0F }      // POSITION_DEGREES
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.1F },     // ROLL_ANGLE_DEGREES=0,
+    { 0.0300F,  0.0F,   0.0F,       0.0F, 0.0F },     // PITCH_ANGLE_DEGREES
+    { 0.0F,     0.0F,   0.0F,       0.0F, 1.0F },     // YAW_RATE_DPS
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_SERIAL_DPS
+    { 0.050F,   0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_PARALLEL_DPS
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F }      // POSITION_DEGREES
 }};
 
 
@@ -72,12 +72,12 @@ const MotorPairController::vehicle_t vehicle4EncoderMotor = {
 };
 
 constexpr MotorPairController::pidf_array_t defaultPIDs4EncoderMotor {{
-    { 0.0F,     0.0F,   0.0F,       0.0F },     // ROLL_ANGLE_DEGREES=0,
-    { 0.0460F,  0.0F,   0.00130F,   0.0F },     // PITCH_ANGLE_DEGREES
-    { 0.0F,     0.0F,   0.0F,       0.5F },     // YAW_RATE_DPS
-    { 0.00001F, 0.0F,   0.0F,       0.0F },     // SPEED_SERIAL_DPS
-    { 0.650F,   0.0F,   0.0F,       0.0F },     // SPEED_PARALLEL_DPS
-    { 0.0F,     0.0F,   0.0F,       0.0F }      // POSITION_DEGREES
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F },     // ROLL_ANGLE_DEGREES=0,
+    { 0.0460F,  0.0F,   0.00130F,   0.0F, 0.0F },     // PITCH_ANGLE_DEGREES
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.5F },     // YAW_RATE_DPS
+    { 0.00001F, 0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_SERIAL_DPS
+    { 0.650F,   0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_PARALLEL_DPS
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F }      // POSITION_DEGREES
 }};
 
 const MotorPairController::pidf_array_t& scaleFactors4EncoderMotor = scaleFactorsBala2;
@@ -94,12 +94,12 @@ const MotorPairController::vehicle_t vehicleGoPlus2 = {
 };
 
 constexpr MotorPairController::pidf_array_t defaultPIDsGoPlus2 {{
-    { 0.0F,     0.0F,   0.0F,       0.0F },     // ROLL_ANGLE_DEGREES=0,
-    { 0.0000F,  0.0F,   0.00130F,   0.0F },     // PITCH_ANGLE_DEGREES
-    { 0.0F,     0.0F,   0.0F,       1.0F },     // YAW_RATE_DPS
-    { 0.00000F, 0.0F,   0.0F,       0.0F },     // SPEED_SERIAL_DPS
-    { 0.000F,   0.0F,   0.0F,       0.0F },     // SPEED_PARALLEL_DPS
-    { 0.0F,     0.0F,   0.0F,       0.0F }      // POSITION_DEGREES
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F },     // ROLL_ANGLE_DEGREES=0,
+    { 0.0000F,  0.0F,   0.00130F,   0.0F, 0.0F },     // PITCH_ANGLE_DEGREES
+    { 0.0F,     0.0F,   0.0F,       0.0F, 1.0F },     // YAW_RATE_DPS
+    { 0.00000F, 0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_SERIAL_DPS
+    { 0.000F,   0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_PARALLEL_DPS
+    { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F }      // POSITION_DEGREES
 }};
 
 const MotorPairController::pidf_array_t& scaleFactorsGoPlus2 = scaleFactorsBala2;

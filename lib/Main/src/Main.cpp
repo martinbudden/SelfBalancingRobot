@@ -120,7 +120,8 @@ void Main::setup()
 #endif // USE_ESPNOW
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, radioController, i2cMutex);
+    MotorPairBase& motorPairBase = MotorPairController::allocateMotors();
+    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, motorPairBase, ahrs, radioController, i2cMutex);
     ahrs.setVehicleController(&motorPairController);
     radioController.setMotorPairController(&motorPairController);
 
@@ -275,7 +276,7 @@ void Main::resetPreferences(SV_Preferences& preferences, MotorPairController& mo
     //_preferences->removeAccOffset();
     for (int ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         const std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_e>(ii));
-        constexpr PIDF::PIDF_t pidNOT_SET { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET };
+        constexpr PIDF::PIDF_t pidNOT_SET { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET };
         preferences.putPID(pidName, pidNOT_SET);
     }
     preferences.putFloat(motorPairController.getBalanceAngleName(), SV_Preferences::NOT_SET);

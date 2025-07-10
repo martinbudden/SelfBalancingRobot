@@ -177,7 +177,6 @@ In particular it runs much less frequently than `updateOutputsUsingPIDs` which t
 */
 void MotorPairController::updateSetpoints(const RadioControllerBase::controls_t& controls)
 {
-    //!! TODO: put a critical section around this
     _throttleStick = controls.throttleStick;
     _rollStick = controls.rollStick;
     _pitchStick = controls.pitchStick;
