@@ -1,7 +1,8 @@
 #include "MotorPairController.h"
 
+#include "IMU_FiltersNull.h"
+
 #include <AHRS.h>
-#include <IMU_FiltersNull.h>
 #include <IMU_Null.h>
 #include <RadioController.h>
 #include <ReceiverNull.h>
@@ -33,8 +34,9 @@ void test_motor_pair_controller()
     static RadioController radioController(receiver);
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
-    enum { TASk_INTERVAL_MICROSECONDS = 5000 };
-    MotorPairController mpc(TASk_INTERVAL_MICROSECONDS, ahrs, radioController);
+    enum { TASK_INTERVAL_MICROSECONDS = 5000 };
+    MotorPairBase& motors = MotorPairController::allocateMotors();
+    MotorPairController mpc(TASK_INTERVAL_MICROSECONDS, motors, ahrs, radioController);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();

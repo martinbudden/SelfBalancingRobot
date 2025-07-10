@@ -68,6 +68,7 @@ VehicleControllerBase::PIDF_uint8_t MotorPairController::getPID_MSP(size_t index
         .ki = static_cast<uint8_t>(_PIDS[pidIndex].getI() / _scaleFactors[pidIndex].ki),
         .kd = static_cast<uint8_t>(_PIDS[pidIndex].getD() / _scaleFactors[pidIndex].kd),
         .kf = static_cast<uint8_t>(_PIDS[pidIndex].getF() / _scaleFactors[pidIndex].kf),
+        .ks = static_cast<uint8_t>(_PIDS[pidIndex].getS() / _scaleFactors[pidIndex].ks),
     };
     return ret;
 }
