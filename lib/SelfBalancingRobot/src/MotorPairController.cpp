@@ -58,17 +58,17 @@ uint32_t MotorPairController::getOutputPowerTimeMicroSeconds() const
     return _motorPairMixer.getOutputPowerTimeMicroSeconds();
 }
 
-VehicleControllerBase::PIDF_uint8_t MotorPairController::getPID_MSP(size_t index) const
+VehicleControllerBase::PIDF_uint16_t MotorPairController::getPID_MSP(size_t index) const
 {
     assert(index < PID_COUNT);
 
     const auto pidIndex = static_cast<pid_index_e>(index);
-    const PIDF_uint8_t ret = {
-        .kp = static_cast<uint8_t>(_PIDS[pidIndex].getP() / _scaleFactors[pidIndex].kp),
-        .ki = static_cast<uint8_t>(_PIDS[pidIndex].getI() / _scaleFactors[pidIndex].ki),
-        .kd = static_cast<uint8_t>(_PIDS[pidIndex].getD() / _scaleFactors[pidIndex].kd),
-        .kf = static_cast<uint8_t>(_PIDS[pidIndex].getF() / _scaleFactors[pidIndex].kf),
-        .ks = static_cast<uint8_t>(_PIDS[pidIndex].getS() / _scaleFactors[pidIndex].ks),
+    const PIDF_uint16_t ret = {
+        .kp = static_cast<uint16_t>(_PIDS[pidIndex].getP() / _scaleFactors[pidIndex].kp),
+        .ki = static_cast<uint16_t>(_PIDS[pidIndex].getI() / _scaleFactors[pidIndex].ki),
+        .kd = static_cast<uint16_t>(_PIDS[pidIndex].getD() / _scaleFactors[pidIndex].kd),
+        .kf = static_cast<uint16_t>(_PIDS[pidIndex].getF() / _scaleFactors[pidIndex].kf),
+        .ks = static_cast<uint16_t>(_PIDS[pidIndex].getS() / _scaleFactors[pidIndex].ks),
     };
     return ret;
 }
@@ -176,34 +176,30 @@ How often it is called depends on the type of transmitter and receiver the user 
 but is typically at intervals of between 5 milliseconds and 40 milliseconds (ie 200Hz to 25Hz).
 In particular it runs much less frequently than `updateOutputsUsingPIDs` which typically runs at 1000Hz to 8000Hz.
 */
-void MotorPairController::updateSetpoints(const RadioControllerBase::controls_t& controls)
+void MotorPairController::updateSetpoints(const controls_t& controls)
 {
     _throttleStick = controls.throttleStick;
-    _rollStick = controls.rollStick;
-    _pitchStick = controls.pitchStick;
-    _yawStick = controls.yawStick;
 
     // Set the SPEED PIDs from the THROTTLE stick
-    _PIDS[SPEED_SERIAL_DPS].setSetpoint(_throttleStick);
-    _PIDS[SPEED_PARALLEL_DPS].setSetpoint(_throttleStick);
+    _PIDS[SPEED_SERIAL_DPS].setSetpoint(controls.throttleStick);
+    _PIDS[SPEED_PARALLEL_DPS].setSetpoint(controls.throttleStick);
 
     // MotorPairController uses ENU coordinate convention
 
     // Pushing the ROLL stick to the right gives a positive value of rollStick and we want this to be left side up.
     // For ENU left side up is positive roll, so sign of setpoint is same sign as rollStick.
     // So sign of _rollStick is left unchanged.
-    _PIDS[ROLL_ANGLE_DEGREES].setSetpoint(_rollStick * _rollMaxAngleDegrees);
+    _PIDS[ROLL_ANGLE_DEGREES].setSetpoint(controls.rollStickDegrees);
 
     // Pushing the PITCH stick forward gives a positive value of pitchStick and we want this to be nose down.
     // For ENU nose down is positive pitch, so sign of setpoint is same sign as pitchStick.
     // So sign of _pitchStick is left unchanged.
-    _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(_pitchStick * _pitchMaxAngleDegrees);
+    _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(controls.pitchStickDegrees);
 
     // Pushing the YAW stick to the right gives a positive value of yawStick and we want this to be nose right.
     // For ENU nose left is positive yaw, so sign of setpoint is same as sign of yawStick.
     // So sign of _yawStick is negated
-    _yawStick = -_yawStick;
-    _PIDS[YAW_RATE_DPS].setSetpoint(_yawStick * _yawStickMultiplier); // limit yaw rate to sensible range.
+    _PIDS[YAW_RATE_DPS].setSetpoint(-controls.yawStickDPS * _yawStickMultiplier); // limit yaw rate to sensible range.
 }
 
 /*!

@@ -81,6 +81,7 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, Moto
     _scaleFactors(gScaleFactors)
 {
     (void)taskIntervalMicroSeconds;
+    (void)motorPair;
     (void)i2cMutex;
 
     _motorPairMixer.setMotorSwitchOffAngleDegrees(gVehicle.motorSwitchOffAngleDegrees);

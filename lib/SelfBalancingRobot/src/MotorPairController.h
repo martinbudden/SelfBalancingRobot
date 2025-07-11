@@ -63,6 +63,13 @@ public:
         OUTPUT_COUNT=5,
         OUTPUT_BEGIN=0
     };
+    struct controls_t {
+        uint32_t tickCount;
+        float throttleStick;
+        float rollStickDegrees;
+        float pitchStickDegrees;
+        float yawStickDPS;
+    };
     struct vehicle_t {
         float maxMotorRPM;
         float wheelDiameterMM;
@@ -72,7 +79,7 @@ public:
         float encoderStepsPerRevolution;
     };
     typedef std::array<PIDF::PIDF_t, PID_COUNT> pidf_array_t;
-    typedef std::array<PIDF_uint8_t, PID_COUNT> pidf_uint8_array_t;
+    typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint8_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 private:
     MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors);
@@ -85,16 +92,12 @@ public:
     void motorsSwitchOff();
     void motorsSwitchOn();
     void motorsToggleOnOff();
-    inline bool motorsIsDisabled() const { return _motorPairMixer.motorsIsDisabled(); }
     void setBlackbox(Blackbox& blackbox) { _blackbox = &blackbox; }
 
     virtual uint32_t getOutputPowerTimeMicroSeconds() const override;
 
     inline control_mode_e getControlMode() const { return _controlMode; }
     void setControlMode(control_mode_e controlMode) { _controlMode = controlMode; resetIntegrals(); }
-
-    inline void setFailSafeTickCountThreshold(uint32_t failsafeTickCountThreshold) { _failsafeTickCountThreshold = failsafeTickCountThreshold; }
-    inline void setFailSafeTickCountSwitchOffThreshold(uint32_t failsafeTickCountSwitchOffThreshold) { _failsafeTickCountSwitchOffThreshold = failsafeTickCountSwitchOffThreshold; }
 
     const std::string& getPID_Name(pid_index_e pidIndex) const;
 
@@ -103,7 +106,7 @@ public:
     void setPID_Constants(const pidf_uint8_array_t& pids);
     inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
 
-    virtual PIDF_uint8_t getPID_MSP(size_t index) const override;
+    virtual PIDF_uint16_t getPID_MSP(size_t index) const override;
     void setPID_P_MSP(pid_index_e pidIndex, uint8_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors[pidIndex].kp); }
     void setPID_I_MSP(pid_index_e pidIndex, uint8_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors[pidIndex].ki); }
     void setPID_D_MSP(pid_index_e pidIndex, uint8_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors[pidIndex].kd); }
@@ -126,7 +129,7 @@ public:
 public:
     virtual void loop(float deltaT, uint32_t tickCount) override;
 public:
-    void updateSetpoints(const RadioControllerBase::controls_t& controls);
+    void updateSetpoints(const controls_t& controls);
     void updateMotorSpeedEstimates(float deltaT);
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
     virtual uint32_t updateBlackbox(uint32_t timeMicroSeconds, const xyz_t& gyroRPS, const xyz_t& gyroRPS_unfiltered, const xyz_t& acc) override;
@@ -142,19 +145,11 @@ private:
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
 
     uint32_t _taskIntervalMicroSeconds;
-    float _mixerThrottle {0.0F};
 
-    int32_t _onOffSwitchPressed {false};
-    int32_t _receiverInUse {false};
-    uint32_t _failsafeTickCount {0}; //<! failsafe counter, so the vehicle doesn't run away if it looses contact with the transmitter (for example by going out of range)
-    uint32_t _failsafeTickCountThreshold {1500};
-    uint32_t _failsafeTickCountSwitchOffThreshold {5000};
-
-    // stick values scaled to the range [-1,0, 1.0]
+    // throttle stick scaled to the range [-1,0, 1.0]
     float _throttleStick {0};
-    float _rollStick {0};
-    float _pitchStick {0};
-    float _yawStick {0};
+    float _yawStickMultiplier {1.0};
+    float _mixerThrottle {0.0F};
 
     int32_t _encoderLeft {0}; //!< value read from left motor encoder, raw
     int32_t _encoderRight {0}; //!< value read from right motor encoder, raw
@@ -177,14 +172,10 @@ private:
     float _positionDegrees {0.0}; //!< Position for CONTROL_MODE_POSITION
     float _positionDegreesPrevious {0.0}; //!< Previous position for CONTROL_MODE_POSITION
 
-    const float _rollMaxAngleDegrees {45.0};
     float _pitchBalanceAngleDegrees {0.0};
-    const float _pitchMaxAngleDegrees {20.0};
-    //FilterMovingAverage<4> _pitchAngleDTermFilter {};
     PowerTransferFilter2  _pitchAngleDTermFilter {};
-    float _yawStickMultiplier {1.0};
 
     std::array<float, OUTPUT_COUNT> _outputs {};
     std::array<PIDF, PID_COUNT> _PIDS {};
-    const std::array<PIDF::PIDF_t, PID_COUNT> _scaleFactors;
+    const std::array<PIDF::PIDF_t, PID_COUNT> _scaleFactors; // used to scale PID values for the backchannel
 };

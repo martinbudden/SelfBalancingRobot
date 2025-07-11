@@ -2,11 +2,6 @@
 #include "RadioController.h"
 #include <cmath>
 
-uint32_t RadioController::getFailsafePhase() const
-{
-    return _failsafePhase;
-}
-
 /*!
 Map a control stick to a parabolic curve to give more control for small values of yaw.
 
@@ -28,12 +23,6 @@ void RadioController::updateControls(const controls_t& controls)
     _receiverInUse = true;
     _failsafePhase = FAILSAFE_IDLE; // we've received a packet, so exit failsafe if we were in it
 
-    controls_t controlsCopy = controls;
-    // alpha=0 gives a linear response, alpha=1 gives a parabolic (x^2) curve
-    static constexpr float alpha { 0.2F };
-    controlsCopy.yawStick = mapStick(controls.yawStick, alpha); // map the YAW stick values to give better control at low stick values
-    _motorPairController->updateSetpoints(controlsCopy);
-
     if (_receiver.getSwitch(ReceiverBase::MOTOR_ON_OFF_SWITCH)) {
         _onOffSwitchPressed = true;
     } else {
@@ -43,6 +32,23 @@ void RadioController::updateControls(const controls_t& controls)
             _onOffSwitchPressed = false;
         }
     }
+
+    // alpha=0 gives a linear response, alpha=1 gives a parabolic (x^2) curve
+    static constexpr float alpha { 0.2F };
+    MotorPairController::controls_t mpcControls = {
+        .tickCount = controls.tickCount,
+        .throttleStick = controls.throttleStick,
+        .rollStickDegrees = controls.rollStick * _rollMaxAngleDegrees,
+        .pitchStickDegrees = controls.pitchStick * _pitchMaxAngleDegrees,
+        .yawStickDPS = mapStick(controls.yawStick, alpha) // map the YAW stick values to give better control at low stick values
+    };
+
+    _motorPairController->updateSetpoints(mpcControls);
+}
+
+uint32_t RadioController::getFailsafePhase() const
+{
+    return _failsafePhase;
 }
 
 void RadioController::setFailsafe(const failsafe_t& failsafe)

@@ -50,5 +50,6 @@ private:
     uint32_t _failsafeTickCount {0}; //<! failsafe counter, so the vehicle doesn't fly away if it looses contact with the transmitter (for example by going out of range)
     uint32_t _failsafeTickCountThreshold {1500};
     uint32_t _failsafeTickCountSwitchOffThreshold {5000};
-    std::array<float, 3> _stickMultipliers { 1080.0F, 1080.0F, 720.0F }; //<! the stick multipliers define max value for each axis
+    const float _rollMaxAngleDegrees {45.0};
+    const float _pitchMaxAngleDegrees {20.0};
 };
