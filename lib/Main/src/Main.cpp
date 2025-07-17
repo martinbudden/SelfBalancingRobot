@@ -127,7 +127,7 @@ void Main::setup()
 
 #define USE_BLACKBOX
 #if defined(USE_BLACKBOX)
-    static BlackboxCallbacksSelfBalancingRobot blackboxCallbacks(ahrs, motorPairController, radioController, receiver);
+    static BlackboxCallbacksSelfBalancingRobot blackboxCallbacks(ahrs, motorPairController, radioController, receiver); // NOLINT(misc-const-correctness) false positive
     static BlackboxSerialDeviceSDCard blackboxSerialDevice;
     blackboxSerialDevice.init();
     static BlackboxSelfBalancingRobot blackbox(blackboxCallbacks, blackboxSerialDevice, motorPairController);

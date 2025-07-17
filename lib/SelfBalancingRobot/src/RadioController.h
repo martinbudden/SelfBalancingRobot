@@ -10,7 +10,7 @@ class MotorPairController;
 
 class RadioController : public RadioControllerBase {
 public:
-    explicit RadioController(ReceiverBase& receiver) : RadioControllerBase(receiver) {}
+    explicit RadioController(ReceiverBase& receiver);
 public:
     enum failsafe_phase_e {
         FAILSAFE_IDLE = 0,
