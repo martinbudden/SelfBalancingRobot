@@ -44,7 +44,11 @@ These libraries are designed so they may be used in other projects.
 | VectorQuaternionMatrix | General purpose 3D vector, quaternion, and 3x3 matrix classes | https://github.com/martinbudden/Library-VectorQuaternionMatrix |
 | PIDF                   | PID controller with feed-forward | https://github.com/martinbudden/Library-PIDF |
 | Filters                | Collection of general purpose filters | https://github.com/martinbudden/Library-Filters |
-| SensorFusion           | Sensor Fusion including<br> Complementary Filter<br> Mahony Filter<br> Madgwick Filter<br> VQF | https://github.com/martinbudden/Library-SensorFusion |
+| SensorFusion           | Sensor Fusion including Complementary Filter, Mahony Filter, Madgwick Filter, VQF | https://github.com/martinbudden/Library-SensorFusion |
+| IMU | Inertial Measurement Unit - gyroscopes and accelerometers. | https://github.com/martinbudden/Library-IMU |
+| Stabilized Vehicle | AHRS (Attitude and Heading Reference System) | https://github.com/martinbudden/Library-StabilizedVehicle.git |
+| Receiver | Receiver base class and implementations, including implementation using [ESP-NOW](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/network/esp_now.html) | https://github.com/martinbudden/Library-Receiver |
+| Backchannel | Backchannel over ESP-NOW for telemetry, PID tuning, and benchmarking | https://github.com/martinbudden/Library-Backchannel |
 
 ## Potential Future Implementations
 

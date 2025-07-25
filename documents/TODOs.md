@@ -7,7 +7,6 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 3. Get TWAI versions going.
 4. Add setGain function to Madgwick filter.
 5. Get AtomS3R working in interrupt driven mode
-6. Remove Backchannel out of StabilizedVehicle into its own library, hence removing StabilizedVehicle's dependency on Receiver.
 
 ## Done
 
@@ -21,6 +20,7 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 5. Implement version for Raspberry Pi Pico.
 6. Investigate using microsecond timer for calculating `deltaT`.
 7. Get SPI bus working
+8. Remove Backchannel out of StabilizedVehicle into its own library, hence removing StabilizedVehicle's dependency on Receiver.
 
 ## Don't Do
 
@@ -64,16 +64,16 @@ None
 
 | Library                | On github | tag   | release | platformio | Arduino |
 | ---------------------- | --------- | ----- | ------- | ---------- | ------- |
-| IMU                    | yes       | 0.8.4 | 0.8.4   | yes        | no      |
-| VectorQuaternionMatrix | yes       | 0.4.0 | 0.4.0   | yes        | no      |
 | Filters                | yes       | 0.6.1 | 0.6.1   | yes        | no      |
 | PIDF                   | yes       | 0.3.0 | 0.3.0   | yes        | no      |
+| VectorQuaternionMatrix | yes       | 0.4.0 | 0.4.0   | yes        | no      |
 | SensorFusion           | yes       | 0.2.2 | 0.2.2   | yes        | no      |
+| IMU                    | yes       | 0.8.4 | 0.8.4   | yes        | no      |
+| TaskBase               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | Receiver               | yes       | 0.4.2 | 0.4.2   | yes        | no      |
 | Backchannel            | yes       | 0.0.1 | 0.0.1   | yes        | no      |
 | StabilizedVehicle      | yes       | 0.3.3 | 0.3.3   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
-| TaskBase               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | Blackbox               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | AtomJoyStickReceiver   | yes       | 0.0.1 | 0.0.1   | no         | no      |
@@ -82,14 +82,12 @@ None
 Libraries
 ├── Filters @ 0.6.1
 ├── PIDF @ 0.3.0
-├── TaskBase @ 0.0.3
 ├── VectorQuaternionMatrix @ 0.4.0
-├── Receiver @ 0.4.2
-│   └── TaskBase @ 0.0.3
 ├── SensorFusion @ 0.2.2
 │   └── VectorQuaternionMatrix @ 0.4.0
 ├── IMU @ 0.8.4
 │   └── VectorQuaternionMatrix @ 0.4.0
+├── TaskBase @ 0.0.3
 ├── StabilizedVehicle @ 0.3.3
 │   ├── TaskBase @ 0.0.3
 │   ├── PIDF @ 0.3.0
@@ -98,6 +96,8 @@ Libraries
 │   │   └── VectorQuaternionMatrix @ 0.4.0
 │   └── SensorFusion @ 0.2.2
 │       └── VectorQuaternionMatrix @ 0.4.0
+├── Receiver @ 0.4.2
+│   └── TaskBase @ 0.0.3
 ├── Backchannel @ 0.0.2
 │   ├── Receiver @ 0.4.2
 │   │   └── TaskBase @ 0.0.3
@@ -111,8 +111,7 @@ Libraries
 
 ├── MultiWiiSerialProtocol @ 0.0.3
     ├── TaskBase @ 0.0.3
-    ├── StreamBuf @ 0.0.1
-    └── VectorQuaternionMatrix @ 0.3.0
+    └── StreamBuf @ 0.0.1
 
 ├── Blackbox @ 0.0.3
     ├── TaskBase @ 0.0.3
