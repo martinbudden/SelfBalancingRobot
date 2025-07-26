@@ -50,6 +50,202 @@ These libraries are designed so they may be used in other projects.
 | Receiver | Receiver base class and implementations, including implementation using [ESP-NOW](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/network/esp_now.html) | https://github.com/martinbudden/Library-Receiver |
 | Backchannel | Backchannel over ESP-NOW for telemetry, PID tuning, and benchmarking | https://github.com/martinbudden/Library-Backchannel |
 
+## Class structure
+
+Simplified outline of main classes.
+
+Classes with \<eg\> suffix are specific instances for Bala2 self balancing robot.
+
+All objects are statically allocated in `Main::setup()`.
+
+```mermaid
+classDiagram
+    class SensorFusionFilterBase {
+        <<abstract>>
+        update() Quaternion *
+        getOrientation() Quaternion const
+    }
+
+    class IMU_Base {
+        virtual readAccGyroRPS() accGyroRPS_t
+    }
+
+    class IMU_FiltersBase {
+        <<abstract>>
+        setFilters() *
+        filter() *
+    }
+    IMU_FiltersBase <|-- IMU_Filters
+
+    class VehicleControllerBase {
+        <<abstract>>
+        loop() *
+        updateOutputsUsingPIDs() *
+        updateBlackbox() uint32_t  *
+    }
+    VehicleControllerBase <|-- MotorPairController
+    class MotorPairController {
+        array~PIDF~ _pids
+        updateSetpoints();
+        updateMotorSpeedEstimates();
+    }
+
+    class MotorPairBase {
+        <<abstract>>
+        readEncoder() *
+        setPower() *
+    }
+    MotorPairController *-- MotorPairBase
+    MotorPairController *-- MotorPairMixer
+    MotorPairController o-- RadioControllerBase
+
+    class AHRS {
+        bool readIMUandUpdateOrientation()
+    }
+    AHRS *-- IMU_Base
+    AHRS *-- SensorFusionFilterBase
+    AHRS *-- IMU_FiltersBase
+    AHRS o-- VehicleControllerBase
+    VehicleControllerBase o-- AHRS
+
+    class ReceiverBase {
+        <<abstract>>
+        WAIT_FOR_DATA_RECEIVED() int32_t *
+        update() bool *
+        getStickValues() *
+        getAuxiliaryChannel() uint32_t *
+    }
+
+    class RadioControllerBase {
+        <<abstract>>
+        updateControls() *
+        checkFailsafe() *
+        getFailsafePhase() uint32_t const *
+    }
+
+    RadioController o-- MotorPairController
+    RadioControllerBase o--ReceiverBase
+    RadioControllerBase <|-- RadioController
+    class RadioController {
+        updateControls() override
+        checkFailsafe() override
+        getFailsafePhase() uint32_t const override
+    }
+
+    IMU_Base <|-- IMU_MPU6886
+    class IMU_MPU6886["IMU_MPU6886(eg)"]
+
+    SensorFusionFilterBase  <|-- MadgwickFilter
+    class MadgwickFilter["MadgwickFilter(eg)"] {
+        update() Quaternion override
+    }
+
+    ReceiverBase <|-- ReceiverAtomJoyStick
+    class ReceiverAtomJoyStick["ReceiverAtomJoyStick(eg)"]
+    ReceiverAtomJoyStick *-- ESPNOW_Transceiver
+```
+
+## Task structure
+
+Simplified outline of tasks.
+
+On a dual-core processor `AHRS_Task` has the second core all to itself.
+
+The `AHRS_Task` and the `ReceiverTask` may be either interrupt driven or timer driven.<br>
+All other tasks are timer driven.
+
+Tasks are statically (build-time) polymorphic, not dynamically (run-time) polymorphic. 
+They all have `task` and `loop` functions, but these functions are not virtual.
+This is deliberate.
+
+`BackchannelTask`  is optional tasks and are not required for motion.
+
+```mermaid
+classDiagram
+    class TaskBase {
+        uint32_t _taskIntervalMicroSeconds
+    }
+
+    TaskBase <|-- MainTask
+    class MainTask {
+        +loop()
+        -task() [[noreturn]]
+    }
+    MainTask o-- ButtonsBase : calls update
+    MainTask o-- ScreenBase : calls update
+
+    class RadioControllerBase {
+        <<abstract>>
+        updateControls() *
+        checkFailsafe() *
+        getFailsafePhase() uint32_t const *
+    }
+    class ReceiverBase {
+        <<abstract>>
+        WAIT_FOR_DATA_RECEIVED() int32_t *
+        update() bool *
+        getStickValues() *
+        getAuxiliaryChannel() uint32_t *
+    }
+
+    MotorPairController o-- RadioControllerBase : calls getFailsafePhase
+    RadioControllerBase o--ReceiverBase
+    RadioControllerBase <|-- RadioController
+    RadioController o-- MotorPairController : calls updateSetpoints
+
+    TaskBase <|-- ReceiverTask
+    class ReceiverTask {
+        +loop()
+        -task() [[noreturn]]
+    }
+    class ReceiverWatcher {
+        <<abstract>>
+        newReceiverPacketAvailable() *
+    }
+    ReceiverTask o-- ReceiverWatcher : calls newReceiverPacketAvailable
+    ReceiverTask o-- ReceiverBase : calls WAIT_FOR_DATA_RECEIVED update getStickValues
+    ReceiverWatcher <|-- ScreenBase
+    ReceiverTask o-- RadioControllerBase : calls updateControls checkFailsafe
+
+
+    class VehicleControllerBase {
+        <<abstract>>
+        loop() *
+        updateOutputsUsingPIDs() *
+        updateBlackbox() uint32_t  *
+    }
+    TaskBase <|-- VehicleControllerTask
+    class VehicleControllerTask {
+        +loop()
+        -task() [[noreturn]]
+    }
+    VehicleControllerTask o-- VehicleControllerBase : calls loop
+    VehicleControllerBase <|-- MotorPairController
+
+    TaskBase <|-- AHRS_Task
+    class AHRS_Task {
+        +loop()
+        -task() [[noreturn]]
+    }
+    AHRS_Task o-- AHRS : calls readIMUandUpdateOrientation
+
+    class AHRS {
+        bool readIMUandUpdateOrientation()
+    }
+    AHRS o-- VehicleControllerBase : calls updateOutputsUsingPIDs
+    VehicleControllerBase o-- AHRS
+
+    class Backchannel {
+        processedReceivedPacket() bool
+    }
+    TaskBase <|-- BackchannelTask
+    class BackchannelTask {
+        +loop()
+        -task() [[noreturn]]
+    }
+    BackchannelTask o-- Backchannel : calls processedReceivedPacket
+```
+
 ## Potential Future Implementations
 
 This is more a list of ideas for possible future implementations rather than a plan to make those implementations. I might undertake some of these depending on

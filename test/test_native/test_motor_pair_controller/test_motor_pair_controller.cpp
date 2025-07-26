@@ -36,7 +36,7 @@ void test_motor_pair_controller()
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
     enum { TASK_INTERVAL_MICROSECONDS = 5000 };
     MotorPairBase& motors = MotorPairController::allocateMotors();
-    MotorPairController mpc(TASK_INTERVAL_MICROSECONDS, motors, ahrs, radioController);
+    MotorPairController mpc(TASK_INTERVAL_MICROSECONDS, ahrs, motors, radioController);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();

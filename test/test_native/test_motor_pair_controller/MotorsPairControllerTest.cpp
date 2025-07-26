@@ -67,13 +67,11 @@ MotorPairBase& MotorPairController::allocateMotors()
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex) :
-    VehicleControllerBase(VehicleControllerBase::SELF_BALANCING_ROBOT, PID_COUNT),
-    _ahrs(ahrs),
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex) :
+    VehicleControllerBase(VehicleControllerBase::SELF_BALANCING_ROBOT, PID_COUNT, taskIntervalMicroSeconds, ahrs),
     _radioController(radioController),
     _motorPair(allocateMotors()),
     _motorPairMixer(_motorPair),
-    _taskIntervalMicroSeconds(taskIntervalMicroSeconds),
     _motorMaxSpeedDPS(gVehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),

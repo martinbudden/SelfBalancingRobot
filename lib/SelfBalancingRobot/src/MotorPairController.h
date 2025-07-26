@@ -29,9 +29,9 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex);
-    MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController) : 
-        MotorPairController(taskIntervalMicroSeconds, motorPair, ahrs, radioController, nullptr) {}
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex);
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController) : 
+        MotorPairController(taskIntervalMicroSeconds, ahrs, motorPair, radioController, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -82,10 +82,9 @@ public:
     typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint8_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 private:
-    MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors);
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors);
 public:
     static MotorPairBase& allocateMotors();
-    uint32_t getTaskIntervalMicroSeconds() const { return _taskIntervalMicroSeconds; }
     float getMixerThrottle() const { return _mixerThrottle; }
 
     inline bool motorsIsOn() const { return _motorPairMixer.motorsIsOn(); }
@@ -137,14 +136,11 @@ private:
     void outputToMotors(float deltaT, uint32_t tickCount);
     void updatePositionOutputs(float deltaT);
 private:
-    const AHRS& _ahrs;
     RadioControllerBase& _radioController;
     MotorPairBase& _motorPair; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorPairMixer _motorPairMixer;
     Blackbox* _blackbox {nullptr};
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
-
-    uint32_t _taskIntervalMicroSeconds;
 
     // throttle stick scaled to the range [-1,0, 1.0]
     float _throttleStick {0};

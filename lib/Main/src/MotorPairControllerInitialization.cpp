@@ -60,8 +60,8 @@ MotorPairBase& MotorPairController::allocateMotors()
     return motors;
 }
 
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex) :
-    MotorPairController(taskIntervalMicroSeconds, motorPair, ahrs, radioController, i2cMutex, gVehicle, gScaleFactors)
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex) :
+    MotorPairController(taskIntervalMicroSeconds, ahrs, motorPair, radioController, i2cMutex, gVehicle, gScaleFactors)
 {
 }
 
@@ -69,13 +69,11 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, Moto
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, MotorPairBase& motorPair, const AHRS& ahrs, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors) :
-    VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT),
-    _ahrs(ahrs),
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors) :
+    VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, taskIntervalMicroSeconds, ahrs),
     _radioController(radioController),
     _motorPair(motorPair),
     _motorPairMixer(_motorPair),
-    _taskIntervalMicroSeconds(taskIntervalMicroSeconds),
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),

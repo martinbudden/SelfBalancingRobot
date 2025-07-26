@@ -121,7 +121,7 @@ void Main::setup()
 
     // Statically allocate the motorPairController.
     MotorPairBase& motorPairBase = MotorPairController::allocateMotors();
-    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, motorPairBase, ahrs, radioController, i2cMutex);
+    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, motorPairBase, radioController, i2cMutex);
     ahrs.setVehicleController(&motorPairController);
     radioController.setMotorPairController(&motorPairController);
 
@@ -189,7 +189,7 @@ void Main::setup()
     _tasks.mainTask = &mainTask;
     reportMainTask();
     _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
-    _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE, MPC_TASK_INTERVAL_MICROSECONDS);
+    _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE);
     _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, receiver, radioController, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 #if defined(USE_BLACKBOX)
     _tasks.blackboxTask = BlackboxTask::createTask(blackbox, BLACKBOX_TASK_PRIORITY, BLACKBOX_TASK_CORE, BLACKBOX_TASK_INTERVAL_MICROSECONDS);
