@@ -207,8 +207,8 @@ void Main::setup()
         motorPairController,
         ahrs,
         receiver,
-        preferences,
-        &mainTask
+        &mainTask,
+        preferences
     );
     _tasks.backchannelTask = BackchannelTask::createTask(_tasks.backchannelTaskInfo, backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
 #endif

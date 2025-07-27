@@ -17,8 +17,8 @@ public:
         MotorPairController& motorPairController,
         AHRS& ahrs,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        const TaskBase* mainTask
+        const TaskBase* mainTask,
+        SV_Preferences& preferences
     );
 public:
     virtual bool sendPacket(uint8_t subCommand) override;

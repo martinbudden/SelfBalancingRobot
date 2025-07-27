@@ -16,8 +16,8 @@ BackchannelSBR::BackchannelSBR(
         MotorPairController& motorPairController,
         AHRS& ahrs,
         const ReceiverBase& receiver,
-        SV_Preferences& preferences,
-        const TaskBase* mainTask
+        const TaskBase* mainTask,
+        SV_Preferences& preferences
     ) :
     BackchannelStabilizedVehicle(
         backchannelTransceiver,
