@@ -19,9 +19,10 @@
 #include <AHRS.h>
 #include <AHRS_Task.h>
 
-#if defined(USE_ESPNOW)
-#include <BackchannelESPNOW.h>
+#include <BackchannelSBR.h>
 #include <BackchannelTask.h>
+#if defined(USE_ESPNOW)
+#include <BackchannelTransceiverESPNOW.h>
 #endif
 
 #include <Blackbox.h>
@@ -198,8 +199,9 @@ void Main::setup()
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static BackchannelESPNOW backchannel(
-        receiver.getESPNOW_Transceiver(),
+    static BackchannelTransceiverESPNOW backchannelTransceiverESPNOW(receiver.getESPNOW_Transceiver(), &backchannelMacAddress[0]);
+    static BackchannelSBR backchannel(
+        backchannelTransceiverESPNOW,
         &backchannelMacAddress[0],
         &myMacAddress[0],
         motorPairController,

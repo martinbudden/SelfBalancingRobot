@@ -2,6 +2,7 @@
 
 #include "SBR_Telemetry.h"
 
+#include <AHRS.h>
 #include <ReceiverBase.h>
 #include <SV_Preferences.h>
 #include <SV_Telemetry.h>
@@ -9,9 +10,9 @@
 
 
 BackchannelSBR::BackchannelSBR(
-        const base_init_t& baseInit,
-        uint32_t backchannelID,
-        uint32_t telemetryID,
+        BackchannelTransceiverBase& backchannelTransceiver,
+        const uint8_t* backchannelMacAddress,
+        const uint8_t* myMacAddress,
         MotorPairController& motorPairController,
         AHRS& ahrs,
         const ReceiverBase& receiver,
@@ -19,22 +20,49 @@ BackchannelSBR::BackchannelSBR(
         const TaskBase* mainTask
     ) :
     BackchannelStabilizedVehicle(
-        baseInit,
-        backchannelID,
-        telemetryID,
+        backchannelTransceiver,
+        backchannelMacAddress,
+        myMacAddress,
         motorPairController,
         ahrs,
         receiver,
-        preferences,
         mainTask
     ),
-    _motorPairController(motorPairController)
+    _motorPairController(motorPairController),
+    _preferences(preferences)
 {
 #if !defined(ESP_NOW_MAX_DATA_LEN)
 #define ESP_NOW_MAX_DATA_LEN (250)
 #endif
     static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN); // 100
     static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN); // 192
+}
+
+bool BackchannelSBR::packetSetOffset(const CommandPacketSetOffset& packet)
+{
+    if (BackchannelStabilizedVehicle::packetSetOffset(packet)) {
+        return true;
+    }
+
+    switch (packet.setType) {
+    case CommandPacketSetOffset::SAVE_GYRO_OFFSET: {
+        const IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffset();
+        _preferences.putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
+        break;
+    }
+    case CommandPacketSetOffset::SAVE_ACC_OFFSET: {
+        const IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffset();
+        _preferences.putAccOffset(accOffset.x, accOffset.y, accOffset.z);
+        break;
+    }
+    default:
+#if defined(USE_DEBUG_PRINTF_BACKCHANNEL)
+        Serial.printf("Backchannel::packetSetOffset invalid itemIndex:%d\r\n", packet.setType);
+#endif
+        return false;
+    }
+
+    return true;
 }
 
 bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
