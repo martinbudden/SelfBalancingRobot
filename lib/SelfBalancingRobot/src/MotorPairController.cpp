@@ -86,10 +86,16 @@ This is because:
 motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
 {
     motor_pair_controller_telemetry_t telemetry;
+    
+    const PIDF::error_t pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
+    telemetry.pitchError = { pitchError.P, pitchError.I, pitchError.D, pitchError.F, pitchError.S };
 
-    telemetry.pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
-    telemetry.speedError = _PIDS[_controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
-    telemetry.positionError = _PIDS[POSITION_DEGREES].getError();
+    const PIDF::error_t speedError = _PIDS[_controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
+    telemetry.speedError = { speedError.P, speedError.I, speedError.D, speedError.F, speedError.S };
+
+    const PIDF::error_t positionError = _PIDS[POSITION_DEGREES].getError();
+    telemetry.positionError = { positionError.P, positionError.I, positionError.D, positionError.F, positionError.S };
+
     telemetry.pitchAngleOutput = _outputs[OUTPUT_PITCH_ANGLE_DEGREES];
     telemetry.speedOutput = _outputs[OUTPUT_SPEED_DPS];
     telemetry.positionOutput = _outputs[OUTPUT_POSITION_DEGREES];

@@ -106,10 +106,10 @@ public:
     inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
 
     virtual PIDF_uint16_t getPID_MSP(size_t index) const override;
-    void setPID_P_MSP(pid_index_e pidIndex, uint8_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors[pidIndex].kp); }
-    void setPID_I_MSP(pid_index_e pidIndex, uint8_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors[pidIndex].ki); }
-    void setPID_D_MSP(pid_index_e pidIndex, uint8_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors[pidIndex].kd); }
-    void setPID_F_MSP(pid_index_e pidIndex, uint8_t kf) { _PIDS[pidIndex].setF(kf * _scaleFactors[pidIndex].kf); }
+    void setPID_P_MSP(pid_index_e pidIndex, uint16_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors[pidIndex].kp); }
+    void setPID_I_MSP(pid_index_e pidIndex, uint16_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors[pidIndex].ki); }
+    void setPID_D_MSP(pid_index_e pidIndex, uint16_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors[pidIndex].kd); }
+    void setPID_F_MSP(pid_index_e pidIndex, uint16_t kf) { _PIDS[pidIndex].setF(kf * _scaleFactors[pidIndex].kf); }
 
     const std::array<PIDF::PIDF_t, PID_COUNT>&  getScaleFactors() const { return _scaleFactors; }
 
