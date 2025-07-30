@@ -131,7 +131,6 @@ public:
     void updateSetpoints(const controls_t& controls);
     void updateMotorSpeedEstimates(float deltaT);
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
-    virtual uint32_t updateBlackbox(uint32_t timeMicroSeconds, const xyz_t& gyroRPS, const xyz_t& gyroRPS_unfiltered, const xyz_t& acc) override;
 private:
     void outputToMotors(float deltaT, uint32_t tickCount);
     void updatePositionOutputs(float deltaT);

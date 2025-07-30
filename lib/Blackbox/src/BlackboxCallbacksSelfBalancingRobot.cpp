@@ -41,7 +41,7 @@ uint32_t BlackboxCallbacksSelfBalancingRobot::rcModeActivationMask() const
     return 0;
 }
 
-void BlackboxCallbacksSelfBalancingRobot::loadSlowStateFromFlightController(blackboxSlowState_t& slowState)
+void BlackboxCallbacksSelfBalancingRobot::loadSlowState(blackboxSlowState_t& slowState)
 {
     //memcpy(&slow->flightModeFlags, &_rcModeActivationMask, sizeof(slow->flightModeFlags)); //was flightModeFlags;
     slowState.flightModeFlags = 0;//!!_motorPairController.getFlightModeFlags();
@@ -52,15 +52,22 @@ void BlackboxCallbacksSelfBalancingRobot::loadSlowStateFromFlightController(blac
     slowState.rxFlightChannelsValid = (slowState.failsafePhase == RadioController::FAILSAFE_IDLE);
 }
 
-void BlackboxCallbacksSelfBalancingRobot::loadMainStateFromFlightController(blackboxMainState_t& mainState)
+void BlackboxCallbacksSelfBalancingRobot::loadMainState(blackboxMainState_t& mainState, uint32_t currentTimeUs)
 {
+
+#if true
+    mainState.time = currentTimeUs;
     const AHRS::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
-
-    loadMainStateFromFlightController(mainState, ahrsData.gyroRPS, ahrsData.gyroRPS_unfiltered, ahrsData.acc);
-}
-
-void BlackboxCallbacksSelfBalancingRobot::loadMainStateFromFlightController(blackboxMainState_t& mainState, const xyz_t& gyroRPS, const xyz_t& gyroRPS_unfiltered, const xyz_t& acc)
-{
+    const xyz_t gyroRPS = ahrsData.gyroRPS;
+    const xyz_t gyroRPS_unfiltered = ahrsData.gyroRPS_unfiltered;
+    const xyz_t acc = ahrsData.acc;
+#else
+    (void)currentTimeUs;
+    mainState.time = _queueItem.timeMicroSeconds;
+    const xyz_t gyroRPS = _queueItem.gyroRPS;
+    const xyz_t gyroRPS_unfiltered = _queueItem.gyroRPS_unfiltered;
+    const xyz_t acc = _queueItem.acc;
+#endif
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
 
     constexpr float radiansToDegrees {180.0F / static_cast<float>(M_PI)};

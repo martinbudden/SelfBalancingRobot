@@ -81,7 +81,6 @@ classDiagram
         <<abstract>>
         loop() *
         updateOutputsUsingPIDs() *
-        updateBlackbox() uint32_t  *
     }
     VehicleControllerBase <|-- MotorPairController
     class MotorPairController {
@@ -212,7 +211,6 @@ classDiagram
         <<abstract>>
         loop() *
         updateOutputsUsingPIDs() *
-        updateBlackbox() uint32_t  *
     }
     TaskBase <|-- VehicleControllerTask
     class VehicleControllerTask {

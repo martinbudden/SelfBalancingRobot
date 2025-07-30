@@ -338,12 +338,6 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     _outputs[OUTPUT_SPEED_DPS] = (_outputs[OUTPUT_POSITION_DEGREES] - updatePositionDegreesPrevious) / deltaT;
 }
 
-uint32_t MotorPairController::updateBlackbox(uint32_t timeMicroSeconds, const xyz_t& gyroRPS, const xyz_t& gyroRPS_unfiltered, const xyz_t& acc)
-{
-    assert(_blackbox!=nullptr && "_blackbox not set");
-    return _blackbox->update(timeMicroSeconds, &gyroRPS, &gyroRPS_unfiltered, &acc);
-}
-
 /*!
 Task loop for the MotorPairController. Uses PID controllers to update the motor pair.
 
