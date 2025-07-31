@@ -1,4 +1,4 @@
-#include "BlackboxCallbacksSelfBalancingRobot.h"
+#include "BlackboxCallbacks.h"
 
 #include <AHRS.h>
 #include <Blackbox.h>
@@ -8,40 +8,40 @@
 #include <cmath>
 
 
-bool BlackboxCallbacksSelfBalancingRobot::isArmed() const
+bool BlackboxCallbacks::isArmed() const
 {
     // ARMING_FLAG(ARMED)
     return _motorPairController.motorsIsOn();
 }
 
-bool BlackboxCallbacksSelfBalancingRobot::areMotorsRunning() const
+bool BlackboxCallbacks::areMotorsRunning() const
 {
     return _motorPairController.motorsIsOn();
 }
 
-bool BlackboxCallbacksSelfBalancingRobot::isBlackboxRcModeActive() const
+bool BlackboxCallbacks::isBlackboxRcModeActive() const
 {
     // IS_RC_MODE_ACTIVE(BOX_BLACKBOX)
     return true;
 };
 
-bool BlackboxCallbacksSelfBalancingRobot::isBlackboxModeActivationConditionPresent() const
+bool BlackboxCallbacks::isBlackboxModeActivationConditionPresent() const
 {
     //isModeActivationConditionPresent(BOX_BLACKBOX);
     return true;
 }
 
-uint32_t BlackboxCallbacksSelfBalancingRobot::getArmingBeepTimeMicroSeconds() const
+uint32_t BlackboxCallbacks::getArmingBeepTimeMicroSeconds() const
 {
     return 0;
 }
 
-uint32_t BlackboxCallbacksSelfBalancingRobot::rcModeActivationMask() const
+uint32_t BlackboxCallbacks::rcModeActivationMask() const
 {
     return 0;
 }
 
-void BlackboxCallbacksSelfBalancingRobot::loadSlowState(blackboxSlowState_t& slowState)
+void BlackboxCallbacks::loadSlowState(blackboxSlowState_t& slowState)
 {
     //memcpy(&slow->flightModeFlags, &_rcModeActivationMask, sizeof(slow->flightModeFlags)); //was flightModeFlags;
     slowState.flightModeFlags = 0;//!!_motorPairController.getFlightModeFlags();
@@ -52,7 +52,7 @@ void BlackboxCallbacksSelfBalancingRobot::loadSlowState(blackboxSlowState_t& slo
     slowState.rxFlightChannelsValid = (slowState.failsafePhase == RadioController::FAILSAFE_IDLE);
 }
 
-void BlackboxCallbacksSelfBalancingRobot::loadMainState(blackboxMainState_t& mainState, uint32_t currentTimeUs)
+void BlackboxCallbacks::loadMainState(blackboxMainState_t& mainState, uint32_t currentTimeUs)
 {
 
 #if true

@@ -25,11 +25,14 @@
 #include <BackchannelTransceiverESPNOW.h>
 #endif
 
+#if defined(USE_BLACKBOX)
 #include <Blackbox.h>
-#include <BlackboxCallbacksSelfBalancingRobot.h>
+#include <BlackboxCallbacks.h>
+#include <BlackboxMessageQueueAHRS.h>
 #include <BlackboxSelfBalancingRobot.h>
 #include <BlackboxSerialDeviceSDCard.h>
 #include <BlackboxTask.h>
+#endif
 
 #if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
@@ -126,12 +129,14 @@ void Main::setup()
     ahrs.setVehicleController(&motorPairController);
     radioController.setMotorPairController(&motorPairController);
 
-#define USE_BLACKBOX
 #if defined(USE_BLACKBOX)
-    static BlackboxCallbacksSelfBalancingRobot blackboxCallbacks(ahrs, motorPairController, radioController, receiver); // NOLINT(misc-const-correctness) false positive
+    static BlackboxMessageQueue blackboxMessageQueue;
+    static BlackboxCallbacks blackboxCallbacks(blackboxMessageQueue, ahrs, motorPairController, radioController, receiver); // NOLINT(misc-const-correctness) false positive
     static BlackboxSerialDeviceSDCard blackboxSerialDevice;
     blackboxSerialDevice.init();
-    static BlackboxSelfBalancingRobot blackbox(blackboxCallbacks, blackboxSerialDevice, motorPairController);
+    static BlackboxSelfBalancingRobot blackbox(blackboxCallbacks, blackboxMessageQueue, blackboxSerialDevice, motorPairController);
+    static BlackboxMessageQueueAHRS blackboxMessageQueueAHRS(blackboxMessageQueue);
+    ahrs.setMessageQueue(&blackboxMessageQueueAHRS);
     motorPairController.setBlackbox(blackbox);
     blackbox.init({
         .sample_rate = Blackbox::RATE_ONE,

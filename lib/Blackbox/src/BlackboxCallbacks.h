@@ -3,14 +3,16 @@
 #include "BlackboxCallbacksBase.h"
 
 class AHRS;
+class BlackboxMessageQueue;
 class MotorPairController;
 class RadioController;
 class ReceiverBase;
 
 
-class BlackboxCallbacksSelfBalancingRobot : public BlackboxCallbacksBase {
+class BlackboxCallbacks : public BlackboxCallbacksBase {
 public:
-    BlackboxCallbacksSelfBalancingRobot(AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController, ReceiverBase& receiver) :
+    BlackboxCallbacks(BlackboxMessageQueue& messageQueue, AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController, ReceiverBase& receiver) :
+        _messageQueue(messageQueue),
         _ahrs(ahrs),
         _motorPairController(motorPairController),
         _radioController(radioController),
@@ -27,6 +29,7 @@ public:
     virtual bool areMotorsRunning() const override;
     virtual uint32_t rcModeActivationMask() const override;
 private:
+    BlackboxMessageQueue& _messageQueue;
     AHRS& _ahrs;
     MotorPairController& _motorPairController;
     RadioController& _radioController;
