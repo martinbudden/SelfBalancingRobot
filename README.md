@@ -65,16 +65,19 @@ classDiagram
         update() Quaternion *
         getOrientation() Quaternion const
     }
+    link SensorFusionFilterBase "https://github.com/martinbudden/Library-SensorFusion/blob/main/src/SensorFusion.h"
 
     class IMU_Base {
         virtual readAccGyroRPS() accGyroRPS_t
     }
+    link IMU_Base "https://github.com/martinbudden/Library-IMU/blob/main/src/IMU_Base.h"
 
     class IMU_FiltersBase {
         <<abstract>>
         setFilters() *
         filter() *
     }
+    link IMU_FiltersBase "https://github.com/martinbudden/Library-StabilizedVehicle/blob/main/src/IMU_FiltersBase.h"
     IMU_FiltersBase <|-- IMU_Filters
 
     class VehicleControllerBase {
@@ -82,25 +85,38 @@ classDiagram
         loop() *
         updateOutputsUsingPIDs() *
     }
+    link VehicleControllerBase "https://github.com/martinbudden/Library-StabilizedVehicle/blob/main/src/VehicleControllerBase.h"
+
     VehicleControllerBase <|-- MotorPairController
     class MotorPairController {
         array~PIDF~ _pids
         updateSetpoints();
         updateMotorSpeedEstimates();
     }
+    link MotorPairController "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/SelfBalancingRobot/src/MotorPairController.h"
+
+    class MotorPairMixer {
+    }
+    link MotorPairMixer "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/SelfBalancingRobot/src/MotorPairMixer.h"
 
     class MotorPairBase {
         <<abstract>>
         readEncoder() *
         setPower() *
     }
+    link MotorPairBase "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/SelfBalancingRobot/src/MotorPairBase.h"
     MotorPairController *-- MotorPairBase
     MotorPairController *-- MotorPairMixer
     MotorPairController o-- RadioControllerBase
 
+    MotorPairBase <|-- MotorsBala2
+    class MotorsBala2["MotorsBala2(eg)"]
+    link MotorsBala2 "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/MotorPairs/src/MotorsBala2.h"
+
     class AHRS {
         bool readIMUandUpdateOrientation()
     }
+    link AHRS "https://github.com/martinbudden/Library-StabilizedVehicle/blob/main/src/AHRS.h"
     AHRS *-- IMU_Base
     AHRS *-- SensorFusionFilterBase
     AHRS *-- IMU_FiltersBase
@@ -114,6 +130,7 @@ classDiagram
         getStickValues() *
         getAuxiliaryChannel() uint32_t *
     }
+    link ReceiverBase "https://github.com/martinbudden/Library-Receiver/blob/main/src/ReceiverBase.h"
 
     class RadioControllerBase {
         <<abstract>>
@@ -121,6 +138,7 @@ classDiagram
         checkFailsafe() *
         getFailsafePhase() uint32_t const *
     }
+    link RadioControllerBase "https://github.com/martinbudden/Library-Receiver/blob/main/src/RadioControllerBase.h"
 
     RadioController o-- MotorPairController
     RadioControllerBase o--ReceiverBase
@@ -130,9 +148,11 @@ classDiagram
         checkFailsafe() override
         getFailsafePhase() uint32_t const override
     }
+    link RadioController "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/SelfBalancingRobot/src/RadioController.h"
 
     IMU_Base <|-- IMU_MPU6886
     class IMU_MPU6886["IMU_MPU6886(eg)"]
+    link IMU_MPU6886 "https://github.com/martinbudden/Library-IMU/blob/main/src/IMU_MPU6886.h"
 
     SensorFusionFilterBase  <|-- MadgwickFilter
     class MadgwickFilter["MadgwickFilter(eg)"] {
@@ -141,7 +161,10 @@ classDiagram
 
     ReceiverBase <|-- ReceiverAtomJoyStick
     class ReceiverAtomJoyStick["ReceiverAtomJoyStick(eg)"]
+    link ReceiverAtomJoyStick "https://github.com/martinbudden/Library-Receiver/blob/main/src/ReceiverAtomJoyStick.h"
     ReceiverAtomJoyStick *-- ESPNOW_Transceiver
+    class ESPNOW_Transceiver
+    link ESPNOW_Transceiver "https://github.com/martinbudden/Library-Receiver/blob/main/src/ESPNOW_Transceiver.h"
 ```
 
 ## Task structure
@@ -164,11 +187,11 @@ classDiagram
     class TaskBase {
         uint32_t _taskIntervalMicroSeconds
     }
+    link TaskBase "https://github.com/martinbudden/Library-TaskBase/blob/main/src/TaskBase.h"
 
     TaskBase <|-- MainTask
     class MainTask {
-        +loop()
-        -task() [[noreturn]]
+        loop()
     }
     MainTask o-- ButtonsBase : calls update
     MainTask o-- ScreenBase : calls update
@@ -194,9 +217,10 @@ classDiagram
 
     TaskBase <|-- ReceiverTask
     class ReceiverTask {
-        +loop()
+        loop()
         -task() [[noreturn]]
     }
+    link ReceiverTask "https://github.com/martinbudden/Library-Receiver/blob/main/src/ReceiverTask.h"
     class ReceiverWatcher {
         <<abstract>>
         newReceiverPacketAvailable() *
@@ -206,7 +230,6 @@ classDiagram
     ReceiverWatcher <|-- ScreenBase
     ReceiverTask o-- RadioControllerBase : calls updateControls checkFailsafe
 
-
     class VehicleControllerBase {
         <<abstract>>
         loop() *
@@ -214,17 +237,19 @@ classDiagram
     }
     TaskBase <|-- VehicleControllerTask
     class VehicleControllerTask {
-        +loop()
+        loop()
         -task() [[noreturn]]
     }
+    link VehicleControllerTask "https://github.com/martinbudden/Library-StabilizedVehicle/blob/main/src/VehicleControllerTask.h"
     VehicleControllerTask o-- VehicleControllerBase : calls loop
     VehicleControllerBase <|-- MotorPairController
 
     TaskBase <|-- AHRS_Task
     class AHRS_Task {
-        +loop()
+        loop()
         -task() [[noreturn]]
     }
+    link AHRS_Task "https://github.com/martinbudden/Library-StabilizedVehicle/blob/main/src/AHRS_Task.h"
     AHRS_Task o-- AHRS : calls readIMUandUpdateOrientation
 
     class AHRS {
@@ -238,9 +263,10 @@ classDiagram
     }
     TaskBase <|-- BackchannelTask
     class BackchannelTask {
-        +loop()
+        loop()
         -task() [[noreturn]]
     }
+    link BackchannelTask "https://github.com/martinbudden/Library-Backchannel/blob/main/src/BackchannelTask.h"
     BackchannelTask o-- Backchannel : calls processedReceivedPacket
 ```
 

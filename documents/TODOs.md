@@ -75,7 +75,7 @@ None
 | StabilizedVehicle      | yes       | 0.3.7 | 0.3.7   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.3 | 0.0.3   | yes        | no      |
-| Blackbox               | yes       | 0.0.4 | 0.0.4   | yes        | no      |
+| Blackbox               | yes       | 0.0.5 | 0.0.5   | yes        | no      |
 | AtomJoyStickReceiver   | yes       | 0.0.1 | 0.0.1   | no         | no      |
 
 ```text
@@ -119,7 +119,7 @@ Libraries
     ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 
-└── Blackbox @ 0.0.4
+└── Blackbox @ 0.0.5
     ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 ```
