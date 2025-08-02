@@ -36,6 +36,13 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 | Seeed XIAO nRF52840 Sense/Plus | nRF52840 ARM Cortex-M4F | 64MHz | 256KB | 1MB/2MB   | LSM6DS3TR-C |
 | BBC micro:bit                  | nRF52833 ARM Cortex M4F | 64MHz | 128KB | 512 KB    | LSM303AGR - acc and magnetometer only |
 
+IMUs todo: (in approx order of popularity)
+
+MPU6500
+ICM20602 (seems to be ICM20689 without DMP(digital motion processor) and less prone to noise)
+ICM20689 (end of life) - ICM20649 available, does not seem compatible
+ICM456xx
+
 ## Seeed XIAO nRF52840 Sense/Plus
 
 ```cpp
@@ -65,10 +72,10 @@ None
 | Library                | On github | tag   | release | platformio | Arduino |
 | ---------------------- | --------- | ----- | ------- | ---------- | ------- |
 | Filters                | yes       | 0.6.1 | 0.6.1   | yes        | no      |
-| PIDF                   | yes       | 0.3.0 | 0.3.0   | yes        | no      |
+| PIDF                   | yes       | 0.3.1 | 0.3.1   | yes        | no      |
 | VectorQuaternionMatrix | yes       | 0.4.0 | 0.4.0   | yes        | no      |
 | SensorFusion           | yes       | 0.2.2 | 0.2.2   | yes        | no      |
-| IMU                    | yes       | 0.8.4 | 0.8.4   | yes        | no      |
+| IMU                    | yes       | 0.8.5 | 0.8.5   | yes        | no      |
 | TaskBase               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | Receiver               | yes       | 0.4.2 | 0.4.2   | yes        | no      |
 | Backchannel            | yes       | 0.0.7 | 0.0.7   | yes        | no      |
@@ -85,7 +92,7 @@ Libraries
 ├── TaskBase @ 0.0.3
 ├── VectorQuaternionMatrix @ 0.4.0
 │
-├── IMU @ 0.8.4
+├── IMU @ 0.8.5
 │   └── VectorQuaternionMatrix @ 0.4.0
 │
 ├── SensorFusion @ 0.2.2
@@ -109,8 +116,9 @@ Libraries
 
 
 └── SelfBalancingRobot @ 0.0.1
+    ├── IMU @ 0.8.5
     ├── Filters @ 0.6.1
-    ├── PIDF @ 0.3.0
+    ├── PIDF @ 0.3.1
     ├── StabilizedVehicle @ 0.3.7
     ├── Receiver @ 0.4.2
     └── Backchannel @ 0.0.7

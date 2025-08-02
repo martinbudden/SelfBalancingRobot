@@ -153,16 +153,16 @@ void MotorPairController::motorsToggleOnOff()
 
 void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
 {
-    const MotorMixerBase::commands_t commands =
+    const MotorPairMixer::commands_t commands =
     (_radioController.getFailsafePhase() != RadioController::FAILSAFE_IDLE || !motorsIsOn()) ?
-        MotorMixerBase::commands_t {
+        MotorPairMixer::commands_t {
             .speed  = 0.0F,
             .roll   = 0.0F,
             .pitch  = 0.0F,
             .yaw    = 0.0F
         }
     :
-        MotorMixerBase::commands_t {
+        MotorPairMixer::commands_t {
             .speed  = _outputs[OUTPUT_SPEED_DPS],
             .roll   = _outputs[ROLL_ANGLE_DEGREES],
             .pitch  = _outputs[PITCH_ANGLE_DEGREES],

@@ -1,21 +1,32 @@
 #pragma once
 
 #include <Filters.h>
-#include <MotorMixerBase.h>
 
 class MotorPairBase;
 
 /*!
 The MotorMixer takes the outputs from the MotorPairController and "mixes" the values, to set the appropriate power for each motor.
 */
-class MotorPairMixer : public MotorMixerBase {
+class MotorPairMixer {
+public:
+    struct commands_t {
+        float speed;
+        float roll;
+        float pitch;
+        float yaw;
+    };
 public:
     enum { MOTOR_COUNT = 2 };
 public:
-    explicit MotorPairMixer(MotorPairBase& motorPair) : MotorMixerBase(MOTOR_COUNT), _motorPair(motorPair) {}
+    explicit MotorPairMixer(MotorPairBase& motorPair) : _motorPair(motorPair) {}
 public:
-    virtual void outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount) override;
-    virtual float getMotorOutput(size_t motorIndex) const override;
+    inline bool motorsIsOn() const { return _motorsIsOn; }
+    inline void motorsSwitchOn() { _motorsIsOn = true; }
+    inline void motorsSwitchOff() { _motorsIsOn = false; }
+    inline bool motorsIsDisabled() const { return _motorsIsDisabled; }
+
+    void outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount);
+    float getMotorOutput(size_t motorIndex) const;
 
     void setMotorSwitchOffAngleDegrees(float motorSwitchOffAngleDegrees) { _motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees; }
     inline void setPitchAngleDegreesRaw(float pitchAngleDegreesRaw) { _pitchAngleDegreesRaw = pitchAngleDegreesRaw; }
@@ -25,6 +36,8 @@ public:
     uint32_t getOutputPowerTimeMicroSeconds() const { return _outputPowerTimeMicroSeconds; } //!< for telemetry
 private:
     MotorPairBase& _motorPair; //<! The MotorMixer has a reference to the motor pair for output, ie setting the motor power.
+    int32_t _motorsIsOn {false};
+    int32_t _motorsIsDisabled {false};
     uint32_t _motorSwitchOffTickCount {0}; //<! For switch bounce protection
     float _powerLeft {0.0};
     float _powerRight {0.0};
