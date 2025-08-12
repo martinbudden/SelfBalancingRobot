@@ -71,34 +71,34 @@ None
 
 | Library                | On github | tag   | release | platformio | Arduino |
 | ---------------------- | --------- | ----- | ------- | ---------- | ------- |
-| Filters                | yes       | 0.6.1 | 0.6.1   | yes        | no      |
-| PIDF                   | yes       | 0.3.1 | 0.3.1   | yes        | no      |
+| Filters                | yes       | 0.8.1 | 0.8.1   | yes        | no      |
+| PIDF                   | yes       | 0.3.2 | 0.3.2   | yes        | no      |
 | VectorQuaternionMatrix | yes       | 0.4.0 | 0.4.0   | yes        | no      |
 | SensorFusion           | yes       | 0.2.2 | 0.2.2   | yes        | no      |
-| IMU                    | yes       | 0.8.5 | 0.8.5   | yes        | no      |
+| IMU                    | yes       | 0.8.6 | 0.8.6   | yes        | no      |
 | TaskBase               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | Receiver               | yes       | 0.4.2 | 0.4.2   | yes        | no      |
 | Backchannel            | yes       | 0.0.7 | 0.0.7   | yes        | no      |
-| StabilizedVehicle      | yes       | 0.3.7 | 0.3.7   | yes        | no      |
+| StabilizedVehicle      | yes       | 0.3.9 | 0.3.9   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.3 | 0.0.3   | yes        | no      |
-| Blackbox               | yes       | 0.0.5 | 0.0.5   | yes        | no      |
+| Blackbox               | yes       | 0.0.6 | 0.0.6   | yes        | no      |
 | AtomJoyStickReceiver   | yes       | 0.0.1 | 0.0.1   | no         | no      |
 
 ```text
 Libraries
-├── Filters @ 0.6.1
-├── PIDF @ 0.3.0
+├── Filters @ 0.8.1
+├── PIDF @ 0.3.2
 ├── TaskBase @ 0.0.3
 ├── VectorQuaternionMatrix @ 0.4.0
 │
-├── IMU @ 0.8.5
+├── IMU @ 0.8.6
 │   └── VectorQuaternionMatrix @ 0.4.0
 │
 ├── SensorFusion @ 0.2.2
 │   └── VectorQuaternionMatrix @ 0.4.0
 │
-├── StabilizedVehicle @ 0.3.7
+├── StabilizedVehicle @ 0.3.9 //!!TODO: update to latest IMU
 │   ├── TaskBase @ 0.0.3
 │   ├── VectorQuaternionMatrix @ 0.4.0
 │   ├── IMU @ 0.8.4
@@ -112,14 +112,14 @@ Libraries
 └── Backchannel @ 0.0.7
     ├── TaskBase @ 0.0.3
     ├── Receiver @ 0.4.2
-    └── StabilizedVehicle @ 0.3.7
+    └── StabilizedVehicle @ 0.3.7 !!TODO: update to latest StabilizedVehicle once that is updated
 
 
 └── SelfBalancingRobot @ 0.0.1
-    ├── IMU @ 0.8.5
-    ├── Filters @ 0.6.1
-    ├── PIDF @ 0.3.1
-    ├── StabilizedVehicle @ 0.3.7
+    ├── IMU @ 0.8.6
+    ├── Filters @ 0.8.1
+    ├── PIDF @ 0.3.2
+    ├── StabilizedVehicle @ 0.3.9
     ├── Receiver @ 0.4.2
     └── Backchannel @ 0.0.7
 
@@ -127,7 +127,7 @@ Libraries
     ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 
-└── Blackbox @ 0.0.5
+└── Blackbox @ 0.0.6
     ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 ```
