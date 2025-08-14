@@ -151,27 +151,6 @@ void MotorPairController::motorsToggleOnOff()
     }
 }
 
-void MotorPairController::outputToMotors(float deltaT, uint32_t tickCount)
-{
-    const MotorPairMixer::commands_t commands =
-    (_radioController.getFailsafePhase() != RadioController::FAILSAFE_IDLE || !motorsIsOn()) ?
-        MotorPairMixer::commands_t {
-            .speed  = 0.0F,
-            .roll   = 0.0F,
-            .pitch  = 0.0F,
-            .yaw    = 0.0F
-        }
-    :
-        MotorPairMixer::commands_t {
-            .speed  = _outputs[OUTPUT_SPEED_DPS],
-            .roll   = _outputs[ROLL_ANGLE_DEGREES],
-            .pitch  = _outputs[PITCH_ANGLE_DEGREES],
-            .yaw    = _outputs[YAW_RATE_DPS]
-        };
-    _mixerThrottle = commands.speed;
-    _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
-}
-
 /*!
 Use the new joystick values from the receiver to update the PID setpoints
 using the ENU (East-North-Up) coordinate convention.
@@ -308,6 +287,13 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     // calculate _outputs[YAW_RATE_DPS]
     const float yawRateDPS = -gyroRPS.z * Quaternion::radiansToDegrees;
     _outputs[YAW_RATE_DPS] = _PIDS[YAW_RATE_DPS].update(yawRateDPS, deltaT);
+
+    const VehicleControllerMessageQueue::queue_item_t queueItem {
+        .roll   = _outputs[ROLL_ANGLE_DEGREES],
+        .pitch  = _outputs[PITCH_ANGLE_DEGREES],
+        .yaw = _outputs[YAW_RATE_DPS]
+    };
+    SIGNAL(queueItem);
 }
 
 /*!
@@ -345,6 +331,7 @@ Setpoints are provided by the receiver(joystick), and inputs(process variables) 
 
 There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
 */
+#if false
 void MotorPairController::loop(float deltaT, uint32_t tickCount)
 {
     updateMotorSpeedEstimates(deltaT);
@@ -356,4 +343,33 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
         updateOutputsUsingPIDs(data.gyroRPS, data.acc, orientation, deltaT);
     }
     outputToMotors(deltaT, tickCount);
+}
+#endif
+
+void MotorPairController::outputToMixer(float deltaT, uint32_t tickCount, const VehicleControllerMessageQueue::queue_item_t& queueItem)
+{
+    updateMotorSpeedEstimates(deltaT);
+    if (_radioController.getFailsafePhase() != RadioController::FAILSAFE_IDLE || !motorsIsOn()) {
+        const MotorPairMixer::commands_t commands = {
+            .speed  = 0.0F,
+            .roll   = 0.0F,
+            .pitch  = 0.0F,
+            .yaw    = 0.0F
+        };
+        _mixerThrottle = commands.speed;
+        _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
+        return;
+    }
+
+    const MotorPairMixer::commands_t commands = {
+        .speed  = _outputs[OUTPUT_SPEED_DPS],
+        .roll   = queueItem.roll,
+        .pitch  = queueItem.pitch,
+        .yaw    = queueItem.yaw
+        //.roll   = _outputs[ROLL_ANGLE_DEGREES],
+        //.pitch  = _outputs[PITCH_ANGLE_DEGREES],
+        //.yaw    = _outputs[YAW_RATE_DPS]
+    };
+    _mixerThrottle = commands.speed;
+    _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
 }

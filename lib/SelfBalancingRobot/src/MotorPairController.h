@@ -126,13 +126,12 @@ public:
 
     void motorsResetEncodersToZero();
 public:
-    virtual void loop(float deltaT, uint32_t tickCount) override;
+    virtual void outputToMixer(float deltaT, uint32_t tickCount, const VehicleControllerMessageQueue::queue_item_t& queueItem) override;
 public:
     void updateSetpoints(const controls_t& controls);
     void updateMotorSpeedEstimates(float deltaT);
     virtual void updateOutputsUsingPIDs(const xyz_t& gyroRPS, const xyz_t& acc, const Quaternion& orientation, float deltaT) override;
 private:
-    void outputToMotors(float deltaT, uint32_t tickCount);
     void updatePositionOutputs(float deltaT);
 private:
     RadioControllerBase& _radioController;

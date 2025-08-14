@@ -77,9 +77,9 @@ None
 | SensorFusion           | yes       | 0.2.2 | 0.2.2   | yes        | no      |
 | IMU                    | yes       | 0.8.6 | 0.8.6   | yes        | no      |
 | TaskBase               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
-| Receiver               | yes       | 0.4.2 | 0.4.2   | yes        | no      |
-| Backchannel            | yes       | 0.0.7 | 0.0.7   | yes        | no      |
-| StabilizedVehicle      | yes       | 0.3.9 | 0.3.9   | yes        | no      |
+| Receiver               | yes       | 0.4.3 | 0.4.3   | yes        | no      |
+| Backchannel            | yes       | 0.0.8 | 0.0.8   | yes        | no      |
+| StabilizedVehicle      | yes       | 0.4.1 | 0.4.1   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.3 | 0.0.3   | yes        | no      |
 | Blackbox               | yes       | 0.0.6 | 0.0.6   | yes        | no      |
@@ -98,30 +98,30 @@ Libraries
 ├── SensorFusion @ 0.2.2
 │   └── VectorQuaternionMatrix @ 0.4.0
 │
-├── StabilizedVehicle @ 0.3.9 //!!TODO: update to latest IMU
+├── StabilizedVehicle @ 0.4.1
 │   ├── TaskBase @ 0.0.3
 │   ├── VectorQuaternionMatrix @ 0.4.0
-│   ├── IMU @ 0.8.4
+│   ├── IMU @ 0.8.6
 │   │   └── VectorQuaternionMatrix @ 0.4.0
 │   └── SensorFusion @ 0.2.2
 │       └── VectorQuaternionMatrix @ 0.4.0
 │
-├── Receiver @ 0.4.2
+├── Receiver @ 0.4.3
 │   └── TaskBase @ 0.0.3
 │
-└── Backchannel @ 0.0.7
+└── Backchannel @ 0.0.8
     ├── TaskBase @ 0.0.3
-    ├── Receiver @ 0.4.2
-    └── StabilizedVehicle @ 0.3.7 !!TODO: update to latest StabilizedVehicle once that is updated
+    ├── Receiver @ 0.4.3
+    └── StabilizedVehicle @ 0.4.0 !!TODO: update this at some point
 
 
 └── SelfBalancingRobot @ 0.0.1
     ├── IMU @ 0.8.6
     ├── Filters @ 0.8.1
     ├── PIDF @ 0.3.2
-    ├── StabilizedVehicle @ 0.3.9
-    ├── Receiver @ 0.4.2
-    └── Backchannel @ 0.0.7
+    ├── StabilizedVehicle @ 0.4.1
+    ├── Receiver @ 0.4.3
+    └── Backchannel @ 0.0.8
 
 └── MultiWiiSerialProtocol @ 0.0.3
     ├── TaskBase @ 0.0.3
