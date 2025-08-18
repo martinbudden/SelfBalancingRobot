@@ -176,7 +176,7 @@ On a dual-core processor `AHRS_Task` has the second core all to itself.
 The `AHRS_Task` and the `ReceiverTask` may be either interrupt driven or timer driven.<br>
 All other tasks are timer driven.
 
-Tasks are statically (build-time) polymorphic, not dynamically (run-time) polymorphic. 
+Tasks are statically (build-time) polymorphic, not dynamically (run-time) polymorphic.
 They all have `task` and `loop` functions, but these functions are not virtual.
 This is deliberate.
 

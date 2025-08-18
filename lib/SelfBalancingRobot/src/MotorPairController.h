@@ -30,7 +30,7 @@ class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
     MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex);
-    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController) : 
+    MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController) :
         MotorPairController(taskIntervalMicroSeconds, ahrs, motorPair, radioController, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable

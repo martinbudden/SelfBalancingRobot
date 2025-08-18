@@ -86,7 +86,7 @@ This is because:
 motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
 {
     motor_pair_controller_telemetry_t telemetry;
-    
+
     const PIDF::error_t pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
     telemetry.pitchError = { pitchError.P, pitchError.I, pitchError.D, pitchError.F, pitchError.S };
 
