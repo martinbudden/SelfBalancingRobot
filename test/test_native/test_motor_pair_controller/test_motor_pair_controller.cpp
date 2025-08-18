@@ -1,9 +1,8 @@
-#include "MotorPairController.h"
-
 #include "IMU_FiltersNull.h"
 
 #include <AHRS.h>
 #include <IMU_Null.h>
+#include <MotorPairController.h>
 #include <RadioController.h>
 #include <ReceiverNull.h>
 #include <SV_TelemetryData.h>

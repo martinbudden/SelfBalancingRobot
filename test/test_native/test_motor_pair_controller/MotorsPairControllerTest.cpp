@@ -1,6 +1,5 @@
-#include "AHRS.h"
-#include "MotorPairBase.h"
-
+#include <AHRS.h>
+#include <MotorPairBase.h>
 #include <MotorPairController.h>
 
 class MotorPairTest final : public MotorPairBase {

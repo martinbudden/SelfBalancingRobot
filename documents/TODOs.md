@@ -69,28 +69,27 @@ None
 
 ### Moved to github
 
-| Library                | On github | tag   | release | platformio | Arduino |
-| ---------------------- | --------- | ----- | ------- | ---------- | ------- |
-| Filters                | yes       | 0.8.1 | 0.8.1   | yes        | no      |
-| PIDF                   | yes       | 0.3.2 | 0.3.2   | yes        | no      |
-| VectorQuaternionMatrix | yes       | 0.4.0 | 0.4.0   | yes        | no      |
-| SensorFusion           | yes       | 0.2.2 | 0.2.2   | yes        | no      |
-| IMU                    | yes       | 0.8.6 | 0.8.6   | yes        | no      |
-| TaskBase               | yes       | 0.0.3 | 0.0.3   | yes        | no      |
-| Receiver               | yes       | 0.4.3 | 0.4.3   | yes        | no      |
-| Backchannel            | yes       | 0.0.8 | 0.0.8   | yes        | no      |
-| StabilizedVehicle      | yes       | 0.4.1 | 0.4.1   | yes        | no      |
-| StreamBuf              | yes       | 0.0.1 | 0.0.1   | yes        | no      |
-| MultiWiiSerialProtocol | yes       | 0.0.3 | 0.0.3   | yes        | no      |
-| Blackbox               | yes       | 0.0.6 | 0.0.6   | yes        | no      |
-| AtomJoyStickReceiver   | yes       | 0.0.1 | 0.0.1   | no         | no      |
+| Library                | On github | tag    | release | platformio | Arduino |
+| ---------------------- | --------- | ------ | ------- | ---------- | ------- |
+| Filters                | yes       | 0.9.1  | 0.9.1   | yes        | no      |
+| PIDF                   | yes       | 0.3.2  | 0.3.2   | yes        | no      |
+| VectorQuaternionMatrix | yes       | 0.4.1  | 0.4.1   | yes        | no      |
+| SensorFusion           | yes       | 0.2.2  | 0.2.2   | yes        | no      |
+| IMU                    | yes       | 0.8.6  | 0.8.6   | yes        | no      |
+| TaskBase               | yes       | 0.0.3  | 0.0.3   | yes        | no      |
+| Receiver               | yes       | 0.4.4  | 0.4.4   | yes        | no      |
+| Backchannel            | yes       | 0.0.10 | 0.0.10  | yes        | no      |
+| StabilizedVehicle      | yes       | 0.4.1  | 0.4.1   | yes        | no      |
+| StreamBuf              | yes       | 0.0.1  | 0.0.1   | yes        | no      |
+| MultiWiiSerialProtocol | yes       | 0.0.4  | 0.0.4   | yes        | no      |
+| Blackbox               | yes       | 0.0.7  | 0.0.7   | yes        | no      |
 
 ```text
 Libraries
-├── Filters @ 0.8.1
+├── Filters @ 0.9.1
 ├── PIDF @ 0.3.2
 ├── TaskBase @ 0.0.3
-├── VectorQuaternionMatrix @ 0.4.0
+├── VectorQuaternionMatrix @ 0.4.1
 │
 ├── IMU @ 0.8.6
 │   └── VectorQuaternionMatrix @ 0.4.0
@@ -109,25 +108,25 @@ Libraries
 ├── Receiver @ 0.4.3
 │   └── TaskBase @ 0.0.3
 │
-└── Backchannel @ 0.0.8
+└── Backchannel @ 0.0.10
     ├── TaskBase @ 0.0.3
-    ├── Receiver @ 0.4.3
-    └── StabilizedVehicle @ 0.4.0 !!TODO: update this at some point
+    ├── Receiver @ 0.4.4
+    └── StabilizedVehicle @ 0.4.1
 
 
 └── SelfBalancingRobot @ 0.0.1
     ├── IMU @ 0.8.6
-    ├── Filters @ 0.8.1
+    ├── Filters @ 0.9.1
     ├── PIDF @ 0.3.2
     ├── StabilizedVehicle @ 0.4.1
-    ├── Receiver @ 0.4.3
-    └── Backchannel @ 0.0.8
+    ├── Receiver @ 0.4.4
+    └── Backchannel @ 0.0.10
 
-└── MultiWiiSerialProtocol @ 0.0.3
+└── MultiWiiSerialProtocol @ 0.0.4
     ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 
-└── Blackbox @ 0.0.6
+└── Blackbox @ 0.0.7
     ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 ```
