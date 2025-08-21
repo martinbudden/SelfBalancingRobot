@@ -107,12 +107,11 @@ void Main::setup()
     WiFi.macAddress(&myMacAddress[0]);
 
     // Statically allocate and setup the receiver.
-    static ReceiverAtomJoyStick receiver(&myMacAddress[0]);
-    static RadioController radioController(receiver);
 #if !defined(RECEIVER_CHANNEL)
     constexpr uint8_t RECEIVER_CHANNEL {3};
 #endif
-    const esp_err_t espErr = receiver.setup(RECEIVER_CHANNEL);
+    static ReceiverAtomJoyStick receiver(&myMacAddress[0], RECEIVER_CHANNEL);
+    const esp_err_t espErr = receiver.init();
     //delay(400); // delay to allow serial port to initialize before first print
     Serial.print("\r\n\r\n**** ESP-NOW Ready:");
     Serial.println(espErr);
@@ -120,8 +119,9 @@ void Main::setup()
     assert(espErr == ESP_OK && "Unable to setup receiver.");
 #else
     static ReceiverNull receiver;
-    static RadioController radioController(receiver);
 #endif // USE_ESPNOW
+
+    static RadioController radioController(receiver);
 
     // Statically allocate the motorPairController.
     MotorPairBase& motorPairBase = MotorPairController::allocateMotors();
@@ -336,10 +336,8 @@ void MainTask::loop()
 
 /*!
 The main loop handles:
-1. Input from the backchannel(PID tuning).
-2. Input from the buttons
-3. Output to the backchannel(telemetry).
-4. Output to the screen
+1. Input from the buttons
+2. Output to the screen
 
 The IMU(Inertial Measurement Unit) is read in the AHRS(Attitude and Heading Reference System) task.
 The motors are controlled in the MotorPairController task.

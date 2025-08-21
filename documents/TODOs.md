@@ -74,12 +74,12 @@ None
 | Filters                | yes       | 0.9.1  | 0.9.1   | yes        | no      |
 | PIDF                   | yes       | 0.3.2  | 0.3.2   | yes        | no      |
 | VectorQuaternionMatrix | yes       | 0.4.1  | 0.4.1   | yes        | no      |
-| SensorFusion           | yes       | 0.2.2  | 0.2.2   | yes        | no      |
-| IMU                    | yes       | 0.8.6  | 0.8.6   | yes        | no      |
+| SensorFusion           | yes       | 0.2.3  | 0.2.3   | yes        | no      |
+| IMU                    | yes       | 0.8.7  | 0.8.7   | yes        | no      |
 | TaskBase               | yes       | 0.0.3  | 0.0.3   | yes        | no      |
-| Receiver               | yes       | 0.4.4  | 0.4.4   | yes        | no      |
-| Backchannel            | yes       | 0.0.10 | 0.0.10  | yes        | no      |
-| StabilizedVehicle      | yes       | 0.4.1  | 0.4.1   | yes        | no      |
+| Receiver               | yes       | 0.4.5  | 0.4.5   | yes        | no      |
+| Backchannel            | yes       | 0.0.11 | 0.0.11  | yes        | no      |
+| StabilizedVehicle      | yes       | 0.4.2  | 0.4.2   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1  | 0.0.1   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.4  | 0.0.4   | yes        | no      |
 | Blackbox               | yes       | 0.0.7  | 0.0.7   | yes        | no      |
@@ -91,36 +91,36 @@ Libraries
 ├── TaskBase @ 0.0.3
 ├── VectorQuaternionMatrix @ 0.4.1
 │
-├── IMU @ 0.8.6
-│   └── VectorQuaternionMatrix @ 0.4.0
+├── IMU @ 0.8.7
+│   └── VectorQuaternionMatrix @ 0.4.1
 │
-├── SensorFusion @ 0.2.2
-│   └── VectorQuaternionMatrix @ 0.4.0
+├── SensorFusion @ 0.2.3
+│   └── VectorQuaternionMatrix @ 0.4.1
 │
-├── StabilizedVehicle @ 0.4.1
+├── StabilizedVehicle @ 0.4.2
 │   ├── TaskBase @ 0.0.3
-│   ├── VectorQuaternionMatrix @ 0.4.0
-│   ├── IMU @ 0.8.6
-│   │   └── VectorQuaternionMatrix @ 0.4.0
-│   └── SensorFusion @ 0.2.2
-│       └── VectorQuaternionMatrix @ 0.4.0
+│   ├── VectorQuaternionMatrix @ 0.4.1
+│   ├── IMU @ 0.8.7
+│   │   └── VectorQuaternionMatrix @ 0.4.1
+│   └── SensorFusion @ 0.2.3
+│       └── VectorQuaternionMatrix @ 0.4.1
 │
-├── Receiver @ 0.4.3
+├── Receiver @ 0.4.5
 │   └── TaskBase @ 0.0.3
 │
-└── Backchannel @ 0.0.10
+└── Backchannel @ 0.0.11
     ├── TaskBase @ 0.0.3
-    ├── Receiver @ 0.4.4
-    └── StabilizedVehicle @ 0.4.1
+    ├── Receiver @ 0.4.5
+    └── StabilizedVehicle @ 0.4.2
 
 
 └── SelfBalancingRobot @ 0.0.1
     ├── IMU @ 0.8.6
     ├── Filters @ 0.9.1
     ├── PIDF @ 0.3.2
-    ├── StabilizedVehicle @ 0.4.1
-    ├── Receiver @ 0.4.4
-    └── Backchannel @ 0.0.10
+    ├── StabilizedVehicle @ 0.4.2
+    ├── Receiver @ 0.4.5
+    └── Backchannel @ 0.0.11
 
 └── MultiWiiSerialProtocol @ 0.0.4
     ├── TaskBase @ 0.0.3
