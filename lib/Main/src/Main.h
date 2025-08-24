@@ -11,6 +11,8 @@ class AHRS_Task;
 class BackchannelBase;
 class BackchannelTask;
 class BlackboxTask;
+class IMU_Base;
+class IMU_FiltersBase;
 class MotorPairController;
 class ReceiverTask;
 class SV_Preferences;
@@ -112,7 +114,9 @@ public:
     void loop();
 private:
     void checkStackUsage();
-    AHRS& setupAHRS(void* i2cMutex);
+    IMU_Base& createIMU(void* i2cMutex);
+    AHRS& createAHRS(void* i2cMutex);
+    AHRS& createAHRS(uint32_t AHRS_taskIntervalMicroSeconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
     static void checkIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs);
     static void runIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs);
     static void calibrateIMU(SV_Preferences& preferences, AHRS& ahrs);
