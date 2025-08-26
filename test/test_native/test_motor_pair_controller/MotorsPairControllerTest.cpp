@@ -8,7 +8,6 @@ public:
 // NOLINTBEGIN(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
     virtual void setPower(float leftPower, float rightPower) override;
 private:
-    virtual void readEncoder() override;
 // NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
@@ -16,12 +15,10 @@ MotorPairTest::MotorPairTest() : // NOLINT(hicpp-use-equals-default, modernize-u
     MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED)
     {}
 
-void MotorPairTest::readEncoder()
+void MotorPairTest::setPower(float leftPower, float rightPower)
 {
-}
-
-void MotorPairTest::setPower([[maybe_unused]] float leftPower,[[maybe_unused]] float rightPower)
-{
+    (void)leftPower;
+    (void)rightPower;
 }
 
 const MotorPairController::vehicle_t gVehicle = {

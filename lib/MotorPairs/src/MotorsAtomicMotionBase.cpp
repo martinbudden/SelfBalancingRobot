@@ -1,5 +1,3 @@
-#if defined(MOTORS_ATOMIC_MOTION_BASE)
-
 #include "MotorsAtomicMotionBase.h"
 #include <cmath>
 
@@ -11,11 +9,7 @@
 
 MotorsAtomicMotionBase::MotorsAtomicMotionBase(float deadbandPower, uint8_t SDA_pin, uint8_t SCL_pin) :
     MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED, deadbandPower),
-    _I2C(I2C_ADDRESS, BUS_I2C::pins_t{.sda=SDA_pin, .scl=SCL_pin, .irq=BUS_I2C::IRQ_NOT_SET, .irqLevel=0})
-{
-}
-
-void MotorsAtomicMotionBase::readEncoder()
+    _I2C(I2C_ADDRESS, BUS_I2C::pins_t{.sda=SDA_pin, .scl=SCL_pin, .irq=BUS_I2C::IRQ_NOT_SET})
 {
 }
 
@@ -34,5 +28,3 @@ void MotorsAtomicMotionBase::setPower(float leftPower, float rightPower)
 
     i2cSemaphoreGive();
 }
-
-#endif

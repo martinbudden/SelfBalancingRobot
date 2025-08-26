@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Targets.h"
 #include <MotorPairController.h>
 #include <PIDF.h>
 

@@ -73,29 +73,29 @@ None
 | ---------------------- | --------- | ------ | ------- | ---------- | ------- |
 | Filters                | yes       | 0.9.1  | 0.9.1   | yes        | no      |
 | PIDF                   | yes       | 0.3.2  | 0.3.2   | yes        | no      |
-| VectorQuaternionMatrix | yes       | 0.4.1  | 0.4.1   | yes        | no      |
-| SensorFusion           | yes       | 0.2.3  | 0.2.3   | yes        | no      |
-| IMU                    | yes       | 0.8.7  | 0.8.7   | yes        | no      |
+| VectorQuaternionMatrix | yes       | 0.4.2  | 0.4.2   | yes        | no      |
+| SensorFusion           | yes       | 0.2.4  | 0.2.4   | yes        | no      |
+| IMU                    | yes       | 0.9.0  | 0.8.7   | yes        | no      |
 | TaskBase               | yes       | 0.0.3  | 0.0.3   | yes        | no      |
-| Receiver               | yes       | 0.4.5  | 0.4.5   | yes        | no      |
-| Backchannel            | yes       | 0.0.11 | 0.0.11  | yes        | no      |
-| StabilizedVehicle      | yes       | 0.4.2  | 0.4.2   | yes        | no      |
+| Receiver               | yes       | 0.5.0  | 0.4.5   | yes        | no      |
+| Backchannel            | yes       | 0.2.0  | 0.0.11  | yes        | no      |
+| StabilizedVehicle      | yes       | 0.5.0  | 0.4.2   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1  | 0.0.1   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.4  | 0.0.4   | yes        | no      |
-| Blackbox               | yes       | 0.0.7  | 0.0.7   | yes        | no      |
+| Blackbox               | yes       | 0.0.9  | 0.0.7   | yes        | no      |
 
 ```text
 Libraries
 ├── Filters @ 0.9.1
 ├── PIDF @ 0.3.2
 ├── TaskBase @ 0.0.3
-├── VectorQuaternionMatrix @ 0.4.1
+├── VectorQuaternionMatrix @ 0.4.2
 │
 ├── IMU @ 0.8.7
 │   └── VectorQuaternionMatrix @ 0.4.1
 │
-├── SensorFusion @ 0.2.3
-│   └── VectorQuaternionMatrix @ 0.4.1
+├── SensorFusion @ 0.2.4
+│   └── VectorQuaternionMatrix @ 0.4.2
 │
 ├── StabilizedVehicle @ 0.4.2
 │   ├── TaskBase @ 0.0.3
@@ -287,10 +287,10 @@ lib_deps =
     ${env.lib_deps}
 build_unflags =
     -D FRAMEWORK_ARDUINO
+    -D FRAMEWORK_ARDUINO_ESP32
+    -D LIBRARY_RECEIVER_USE_ESPNOW
     -D USE_ARDUINO_ESP32_PREFERENCES
-    -D USE_ARDUINO_ESP32
     -D BACKCHANNEL_MAC_ADDRESS
-    -D USE_ESPNOW
     -D USE_SCREEN
     -D USE_BUTTONS
 build_flags =

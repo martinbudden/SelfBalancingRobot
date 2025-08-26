@@ -9,8 +9,6 @@ public:
 public:
     virtual void setPower(float leftPower, float rightPower) override;
 private:
-    virtual void readEncoder() override;
-private:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
 
     enum : uint8_t { I2C_ADDRESS = 0x38 };

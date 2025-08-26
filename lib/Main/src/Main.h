@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Targets.h"
+
 #include <TaskBase.h>
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #endif
 
@@ -107,6 +109,9 @@ public:
 };
 
 class Main {
+public:
+    enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7}; // Note: defining PI=8 will cause conflict with Arduino's #define of PI (3.14..)
+    enum {P0=0, P1=1, P2=2, P3=3, P4=4, P5=5, P6=6, P7=7};
 public:
     Main() = default;
 public:

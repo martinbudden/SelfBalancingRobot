@@ -1,5 +1,3 @@
-#if defined(MOTORS_BALA_C)
-
 #include "MotorsBalaC.h"
 #if defined(M5_UNIFIED)
 #include <M5Unified.h>
@@ -11,13 +9,9 @@ MotorsBalaC::MotorsBalaC(float deadbandPower) :
     MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED, deadbandPower)
 {
     enum { SDA_PIN = 0, SCL_PIN = 26 };
-#if !defined(FRAMEWORK_TEST)
+#if defined(M5_UNIFIED)
     Wire.begin(SDA_PIN, SCL_PIN);  // SDA,SCL
 #endif
-}
-
-void MotorsBalaC::readEncoder()
-{
 }
 
 void MotorsBalaC::setPower(float leftPower, float rightPower)
@@ -31,10 +25,7 @@ void MotorsBalaC::setPower(float leftPower, float rightPower)
 
     i2cSemaphoreTake();
 
-#if defined(FRAMEWORK_TEST)
-    (void)leftOutput;
-    (void)rightOutput;
-#else
+#if defined(M5_UNIFIED)
     Wire.beginTransmission(I2C_ADDRESS);
     Wire.write(MOTOR_LEFT);
     Wire.write(leftOutput);
@@ -44,9 +35,10 @@ void MotorsBalaC::setPower(float leftPower, float rightPower)
     Wire.write(MOTOR_RIGHT);
     Wire.write(rightOutput);
     Wire.endTransmission();
+#else
+    (void)leftOutput;
+    (void)rightOutput;
 #endif
 
     i2cSemaphoreGive();
 }
-
-#endif

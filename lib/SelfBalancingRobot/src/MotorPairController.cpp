@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 inline void YIELD_TASK() { taskYIELD(); }

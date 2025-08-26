@@ -37,9 +37,9 @@ Blackbox::write_e BlackboxSelfBalancingRobot::writeSystemInformation()
 #endif
     BLACKBOX_PRINT_HEADER_LINE("Log start datetime", "%s",              "0000-01-01T00:00:00.000");
     BLACKBOX_PRINT_HEADER_LINE("Craft name", "%s",                      "TestCraft");
-    BLACKBOX_PRINT_HEADER_LINE("I interval", "%d",                      blackboxIInterval);
-    BLACKBOX_PRINT_HEADER_LINE("P interval", "%d",                      blackboxPInterval);
-    BLACKBOX_PRINT_HEADER_LINE("P ratio", "%d",                         (uint16_t)(blackboxIInterval / blackboxPInterval));
+    BLACKBOX_PRINT_HEADER_LINE("I interval", "%d",                      _IInterval);
+    BLACKBOX_PRINT_HEADER_LINE("P interval", "%d",                      _PInterval);
+    BLACKBOX_PRINT_HEADER_LINE("P ratio", "%d",                         (uint16_t)(_IInterval / _PInterval));
     BLACKBOX_PRINT_HEADER_LINE("minthrottle", "%d",                     1070);
     BLACKBOX_PRINT_HEADER_LINE("maxthrottle", "%d",                     2000);
     BLACKBOX_PRINT_HEADER_LINE("gyro_scale", "%s",                      "0x3f800000");

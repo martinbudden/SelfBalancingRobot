@@ -3,7 +3,7 @@
 #include <MotorPairBase.h>
 #include <TimeMicroSeconds.h>
 
-#if !defined(UNIT_TEST_BUILD)
+#if !defined(FRAMEWORK_TEST)
 //#define SERIAL_OUTPUT
 #if defined(SERIAL_OUTPUT)
 #include <HardwareSerial.h>

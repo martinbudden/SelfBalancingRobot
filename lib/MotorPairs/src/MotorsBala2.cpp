@@ -1,5 +1,3 @@
-#if defined(MOTORS_BALA_2)
-
 #include "MotorsBala2.h"
 #if defined(M5_UNIFIED)
 #include <M5Unified.h>
@@ -7,6 +5,7 @@
 #include <M5Stack.h>
 #endif
 #include <array>
+#include <cmath>
 
 
 MotorsBala2::MotorsBala2(uint8_t SDA_pin, uint8_t SCL_pin) :
@@ -15,7 +14,7 @@ MotorsBala2::MotorsBala2(uint8_t SDA_pin, uint8_t SCL_pin) :
 
 void MotorsBala2::readEncoder()
 {
-    std::array<uint8_t, 8> data;
+    std::array<uint8_t, 8> data {};
 
     i2cSemaphoreTake();
 #if defined(M5_UNIFIED)
@@ -34,15 +33,16 @@ void MotorsBala2::setPower(float leftPower, float rightPower)
     const float leftClipped = clip(leftPower, -1.0, 1.0);
     const float rightClipped = clip(rightPower, -1.0, 1.0);
     // set signs so positive power moves motor in a forward direction
-    const int16_t left = -static_cast<int16_t>(std::roundf(leftClipped * MAX_POWER));
-    const int16_t right = -static_cast<int16_t>(std::roundf(rightClipped * MAX_POWER));
+    const int16_t left = -static_cast<int16_t>(roundf(leftClipped * MAX_POWER));
+    const int16_t right = -static_cast<int16_t>(roundf(rightClipped * MAX_POWER));
 
-    std::array<uint8_t, 4> data;
     // NOLINTBEGIN(hicpp-signed-bitwise)
-    data[0] = static_cast<uint8_t>(left >> 8);
-    data[1] = static_cast<uint8_t>(left & 0xFF);
-    data[2] = static_cast<uint8_t>(right >> 8);
-    data[3] = static_cast<uint8_t>(right & 0xFF);
+    const std::array<uint8_t, 4> data = {
+        static_cast<uint8_t>(left >> 8),
+        static_cast<uint8_t>(left & 0xFF),
+        static_cast<uint8_t>(right >> 8),
+        static_cast<uint8_t>(right & 0xFF)
+    };
     // NOLINTEND(hicpp-signed-bitwise)
 
     i2cSemaphoreTake();
@@ -50,8 +50,8 @@ void MotorsBala2::setPower(float leftPower, float rightPower)
     M5.Ex_I2C.writeRegister(I2C_ADDRESS, REGISTER_SPEED, &data[0], sizeof(data), I2C_FREQUENCY);
 #elif defined(M5_STACK)
     M5.I2C.writeBytes(I2C_ADDRESS, REGISTER_SPEED, &data[0], 4);
+#else
+    (void)data;
 #endif
     i2cSemaphoreGive();
 }
-
-#endif

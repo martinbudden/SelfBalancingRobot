@@ -11,8 +11,6 @@ public:
 public:
     virtual void setPower(float leftPower, float rightPower) override;
 private:
-    virtual void readEncoder() override;
-private:
     enum : uint8_t { I2C_ADDRESS = 0x38 };
     enum : uint8_t { REGISTER_MOTOR_0 = 0x00, REGISTER_MOTOR_1 = 0x01 };
 

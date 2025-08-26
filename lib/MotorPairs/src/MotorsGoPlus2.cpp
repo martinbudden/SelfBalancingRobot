@@ -1,19 +1,12 @@
-#if defined(MOTORS_GO_PLUS_2)
-
 #include "MotorsGoPlus2.h"
 #include <cmath>
 
 
 MotorsGoPlus2::MotorsGoPlus2(uint8_t SDA_pin, uint8_t SCL_pin) :
     MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED),
-    _I2C(I2C_ADDRESS, BUS_I2C::pins_t{.sda=SDA_pin, .scl=SCL_pin, .irq=BUS_I2C::IRQ_NOT_SET, .irqLevel=0})
+    _I2C(I2C_ADDRESS, BUS_I2C::pins_t{.sda=SDA_pin, .scl=SCL_pin, .irq=BUS_I2C::IRQ_NOT_SET})
 {
 }
-
-void MotorsGoPlus2::readEncoder()
-{
-}
-
 
 void MotorsGoPlus2::setPower(float leftPower, float rightPower)
 {
@@ -30,5 +23,3 @@ void MotorsGoPlus2::setPower(float leftPower, float rightPower)
 
     i2cSemaphoreGive();
 }
-
-#endif

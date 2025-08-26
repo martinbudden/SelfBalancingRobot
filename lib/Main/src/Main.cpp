@@ -4,11 +4,11 @@
 #include <M5Unified.h>
 #endif
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #endif
 
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <WiFi.h>
 #endif
 
@@ -21,7 +21,7 @@
 
 #include <BackchannelSBR.h>
 #include <BackchannelTask.h>
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <BackchannelTransceiverESPNOW.h>
 #endif
 
@@ -34,14 +34,14 @@
 #include <BlackboxTask.h>
 #endif
 
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <HardwareSerial.h>
 #endif
 
 #include <MotorPairController.h>
 #include <RadioController.h>
 
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <ReceiverAtomJoyStick.h>
 #endif
 #include <ReceiverNull.h>
@@ -97,7 +97,7 @@ void Main::setup()
 
     AHRS& ahrs = createAHRS(i2cMutex); // NOLINT(misc-const-correctness) false positive
 
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
     // Set WiFi to station mode
     WiFi.mode(WIFI_STA);
     // Disconnect from Access Point if it was previously connected
@@ -119,7 +119,7 @@ void Main::setup()
     assert(espErr == ESP_OK && "Unable to setup receiver.");
 #else
     static ReceiverNull receiver;
-#endif // USE_ESPNOW
+#endif // LIBRARY_RECEIVER_USE_ESPNOW
 
     static RadioController radioController(receiver);
 
@@ -201,7 +201,7 @@ void Main::setup()
     _tasks.blackboxTask = BlackboxTask::createTask(blackbox, BLACKBOX_TASK_PRIORITY, BLACKBOX_TASK_CORE, BLACKBOX_TASK_INTERVAL_MICROSECONDS);
 #endif
 
-#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(USE_ESPNOW)
+#if defined(BACKCHANNEL_MAC_ADDRESS) && defined(LIBRARY_RECEIVER_USE_ESPNOW)
     // Statically allocate the backchannel.
     constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
     static BackchannelTransceiverESPNOW backchannelTransceiverESPNOW(receiver.getESPNOW_Transceiver(), &backchannelMacAddress[0]);
@@ -231,7 +231,7 @@ void Main::reportMainTask()
 #endif
 }
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 [[noreturn]] void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
     assert(false && "stack overflow");
@@ -327,7 +327,7 @@ void Main::loadPreferences(SV_Preferences& preferences, MotorPairController& mot
 
 void MainTask::loop()
 {
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
     const TickType_t tickCount = xTaskGetTickCount();
     _tickCountDelta = tickCount - _tickCountPrevious;
     _tickCountPrevious = tickCount;
@@ -345,7 +345,7 @@ The receiver (joystick) values are obtained in the Receiver task.
 */
 void Main::loop() // NOLINT(readability-make-member-function-const)
 {
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 
     vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000));
     [[maybe_unused]] const TickType_t tickCount = xTaskGetTickCount();

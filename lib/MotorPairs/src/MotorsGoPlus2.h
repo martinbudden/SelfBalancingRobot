@@ -7,7 +7,6 @@ class MotorsGoPlus2 final : public MotorPairBase {
 public:
     MotorsGoPlus2(uint8_t SDA_pin, uint8_t SCL_pin);
 public:
-    virtual void readEncoder() override;
     virtual void setPower(float leftPower, float rightPower) override;
 private:
     enum { MIN_POWER = -127, MAX_POWER = 127 };
