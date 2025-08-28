@@ -48,8 +48,8 @@ public:
     static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
 protected:
 #if defined(FRAMEWORK_USE_FREERTOS)
-    inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }
-    inline void i2cSemaphoreGive() const { xSemaphoreGive(_i2cMutex); }
+    inline void i2cSemaphoreTake() const { if (_i2cMutex) { xSemaphoreTake(_i2cMutex, portMAX_DELAY); } }
+    inline void i2cSemaphoreGive() const { if (_i2cMutex) { xSemaphoreGive(_i2cMutex); } }
     SemaphoreHandle_t _i2cMutex {nullptr};
 #else
     inline void i2cSemaphoreTake() const {}

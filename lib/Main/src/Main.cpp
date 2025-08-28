@@ -130,12 +130,11 @@ void Main::setup()
     radioController.setMotorPairController(&motorPairController);
 
 #if defined(USE_BLACKBOX)
-    static BlackboxMessageQueue blackboxMessageQueue;
-    static BlackboxCallbacks blackboxCallbacks(blackboxMessageQueue, ahrs, motorPairController, radioController, receiver); // NOLINT(misc-const-correctness) false positive
-    static BlackboxSerialDeviceSDCard blackboxSerialDevice;
-    blackboxSerialDevice.init();
-    static BlackboxSelfBalancingRobot blackbox(blackboxCallbacks, blackboxMessageQueue, blackboxSerialDevice, motorPairController);
-    static BlackboxMessageQueueAHRS blackboxMessageQueueAHRS(blackboxMessageQueue);
+    static BlackboxMessageQueue         blackboxMessageQueue;
+    static BlackboxCallbacks            blackboxCallbacks(blackboxMessageQueue, ahrs, motorPairController, radioController, receiver); // NOLINT(misc-const-correctness) false positive
+    static BlackboxSerialDeviceSDCard   blackboxSerialDevice(BlackboxSerialDeviceSDCard::SDCARD_SPI_PINS);
+    static BlackboxSelfBalancingRobot   blackbox(blackboxCallbacks, blackboxMessageQueue, blackboxSerialDevice, motorPairController);
+    static BlackboxMessageQueueAHRS     blackboxMessageQueueAHRS(blackboxMessageQueue);
     ahrs.setMessageQueue(&blackboxMessageQueueAHRS);
     motorPairController.setBlackbox(blackbox);
     blackbox.init({

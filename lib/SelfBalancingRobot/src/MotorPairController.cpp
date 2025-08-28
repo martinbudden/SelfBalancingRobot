@@ -252,8 +252,9 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
     _pitchAngleDegreesRaw = -orientation.calculateRollDegrees();
     _motorPairMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
-#define CALCULATE_ROLL
-#define CALCULATE_YAW
+
+//#define CALCULATE_ROLL
+//#define CALCULATE_YAW
 #if defined(CALCULATE_ROLL)
     // Roll and yaw are not required for the MotorPairController calculations.
     // They are calculated to be displayed on the screen and by telemetry, which can be useful in debugging.
