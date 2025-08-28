@@ -362,15 +362,24 @@ void MotorPairController::outputToMixer(float deltaT, uint32_t tickCount, const 
         return;
     }
 
-    const MotorPairMixer::commands_t commands = {
-        .speed  = _outputs[OUTPUT_SPEED_DPS],
-        .roll   = queueItem.roll,
-        .pitch  = queueItem.pitch,
-        .yaw    = queueItem.yaw
-        //.roll   = _outputs[ROLL_ANGLE_DEGREES],
-        //.pitch  = _outputs[PITCH_ANGLE_DEGREES],
-        //.yaw    = _outputs[YAW_RATE_DPS]
-    };
+    const MotorPairMixer::commands_t commands = 
+        (_taskIntervalMicroSeconds==0) ?
+            // event driven, so use content of message queue
+            MotorPairMixer::commands_t {
+                .speed  = _outputs[OUTPUT_SPEED_DPS],
+                .roll   = queueItem.roll,
+                .pitch  = queueItem.pitch,
+                .yaw    = queueItem.yaw
+            } 
+        :
+            // time driven
+            MotorPairMixer::commands_t {
+                .speed  = _outputs[OUTPUT_SPEED_DPS],
+                .roll   = _outputs[ROLL_ANGLE_DEGREES],
+                .pitch  = _outputs[PITCH_ANGLE_DEGREES],
+                .yaw    = _outputs[YAW_RATE_DPS]
+            };
+
     _mixerThrottle = commands.speed;
     _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
 }

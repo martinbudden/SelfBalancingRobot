@@ -79,7 +79,7 @@ None
 | TaskBase               | yes       | 0.0.3  | 0.0.3   | yes        | no      |
 | Receiver               | yes       | 0.5.0  | 0.5.0   | yes        | no      |
 | Backchannel            | yes       | 0.1.0  | 0.1.0   | yes        | no      |
-| StabilizedVehicle      | yes       | 0.5.0  | 0.4.2   | yes        | no      |
+| StabilizedVehicle      | yes       | 0.5.0  | 0.5.0   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1  | 0.0.1   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.4  | 0.0.4   | yes        | no      |
 | Blackbox               | yes       | 0.0.8  | 0.0.8   | yes        | no      |
@@ -97,13 +97,13 @@ Libraries
 ├── SensorFusion @ 0.2.4
 │   └── VectorQuaternionMatrix @ 0.4.2
 │
-├── StabilizedVehicle @ 0.4.2 //!!TODO: this needs updating to latest libraries
+├── StabilizedVehicle @ 0.5.0
 │   ├── TaskBase @ 0.0.3
-│   ├── VectorQuaternionMatrix @ 0.4.1
-│   ├── IMU @ 0.8.7
-│   │   └── VectorQuaternionMatrix @ 0.4.1
-│   └── SensorFusion @ 0.2.3
-│       └── VectorQuaternionMatrix @ 0.4.1
+│   ├── VectorQuaternionMatrix @ 0.4.2
+│   ├── IMU @ 0.9.0
+│   │   └── VectorQuaternionMatrix @ 0.4.2
+│   └── SensorFusion @ 0.2.4
+│       └── VectorQuaternionMatrix @ 0.4.2
 │
 ├── Receiver @ 0.5.0
 │   └── TaskBase @ 0.0.3
