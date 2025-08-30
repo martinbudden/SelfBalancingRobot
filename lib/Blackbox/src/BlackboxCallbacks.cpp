@@ -107,7 +107,7 @@ void BlackboxCallbacks::loadMainState(blackboxMainState_t& mainState, uint32_t c
     mainState.rcCommand[3] = controls.throttleStick;
 
     // log the final throttle value used in the mixer
-    mainState.setpoint[3] = static_cast<int16_t>(_motorPairController.getMixerThrottle() * 1000.0F);
+    mainState.setpoint[3] = static_cast<int16_t>(_motorPairController.getMixerThrottleCommand() * 1000.0F);
 
     for (int ii = 0; ii < blackboxMainState_t::DEBUG_VALUE_COUNT; ++ii) {
         mainState.debug[ii] = static_cast<uint16_t>(_ahrs.getTimeChecksMicroSeconds(ii));

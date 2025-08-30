@@ -2,6 +2,8 @@
 
 #include <MotorPairBase.h>
 
+#include <AHRS.h>
+
 #if defined(MOTORS_4_ENCODER_MOTOR)
 #include "Motors4EncoderMotor.h"
 #elif defined(MOTORS_ATOMIC_MOTION_BASE)
@@ -60,8 +62,8 @@ MotorPairBase& MotorPairController::allocateMotors()
     return motors;
 }
 
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex) :
-    MotorPairController(taskIntervalMicroSeconds, ahrs, motorPair, radioController, i2cMutex, gVehicle, gScaleFactors)
+MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex) :
+    MotorPairController(taskDenominator, ahrs, motorPair, radioController, i2cMutex, gVehicle, gScaleFactors)
 {
 }
 
@@ -69,11 +71,12 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, cons
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors) :
-    VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, taskIntervalMicroSeconds, ahrs),
+MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors) :
+    VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, ahrs.getTaskIntervalMicroSeconds() / taskDenominator, ahrs),
     _radioController(radioController),
     _motorPair(motorPair),
     _motorPairMixer(_motorPair),
+    _taskDenominator(taskDenominator),
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),
@@ -95,7 +98,7 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroSeconds, cons
         _PIDS[ii].setPID(gDefaultPIDs[ii]);
     }
 
-    const float deltaT = static_cast<float>(taskIntervalMicroSeconds) / 1000000.0F;
+    const float deltaT = static_cast<float>(_taskIntervalMicroSeconds) / 1000000.0F;
     _pitchAngleDTermFilter.setCutoffFrequency(50.0F, deltaT);
 /*
 gain20=0.493995

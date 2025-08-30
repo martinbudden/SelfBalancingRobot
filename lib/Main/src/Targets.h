@@ -19,7 +19,8 @@ Targets
 
 #if defined(TARGET_M5STACK_STICKC_BALAC)
     #define IMU_AXIS_ORDER      IMU_Base::XPOS_ZPOS_YNEG
-    //#define USE_IMU_M5_UNIFIED
+    #define USE_IMU_M5_UNIFIED
+    #define MPC_TASK_DENOMINATOR 2
     //#define USE_IMU_MPU6886
     //#define IMU_I2C_SDA_PIN 21
     //#define IMU_I2C_SCL_PIN 22
@@ -35,6 +36,7 @@ Targets
 
 #if defined(TARGET_M5STACK_FIRE_BALA2)
     //#define USE_RECEIVER_TASK_TIME_BASED_SCHEDULING
+
     #define IMU_AXIS_ORDER      IMU_Base::XPOS_YPOS_ZPOS
     #define USE_IMU_MPU6886
     #define IMU_I2C_PINS        {.sda=21,.scl=22,.irq=BUS_I2C::IRQ_NOT_SET}
@@ -45,6 +47,7 @@ Targets
     #define MOTOR_SCL_PIN       22
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
+    #define MPC_TASK_DENOMINATOR 2
 #endif
 
 #if defined(TARGET_M5STACK_GREY_4ENCODERMOTOR)
@@ -62,6 +65,7 @@ Targets
     #define MOTOR_SCL_PIN       22
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
+    #define MPC_TASK_DENOMINATOR 2
 #endif
 
 #if defined(TARGET_M5STACK_FIRE_GOPLUS2)
@@ -76,6 +80,7 @@ Targets
     #define MOTOR_SCL_PIN       22
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
+    #define MPC_TASK_DENOMINATOR 2
 #endif
 
 #if defined(TARGET_M5STACK_FIRE_ODRIVE_CAN)

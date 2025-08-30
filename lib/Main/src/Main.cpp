@@ -125,14 +125,14 @@ void Main::setup()
 
     // Statically allocate the motorPairController.
     MotorPairBase& motorPairBase = MotorPairController::allocateMotors();
-    static MotorPairController motorPairController(MPC_TASK_INTERVAL_MICROSECONDS, ahrs, motorPairBase, radioController, i2cMutex);
+    static MotorPairController motorPairController(MPC_TASK_DENOMINATOR, ahrs, motorPairBase, radioController, i2cMutex);
     ahrs.setVehicleController(&motorPairController);
     radioController.setMotorPairController(&motorPairController);
 
 #if defined(USE_BLACKBOX)
     static BlackboxMessageQueue         blackboxMessageQueue;
     static BlackboxCallbacks            blackboxCallbacks(blackboxMessageQueue, ahrs, motorPairController, radioController, receiver); // NOLINT(misc-const-correctness) false positive
-    static BlackboxSerialDeviceSDCard   blackboxSerialDevice(BlackboxSerialDeviceSDCard::SDCARD_SPI_PINS);
+    static BlackboxSerialDeviceSDCard   blackboxSerialDevice(BlackboxSerialDeviceSDCard::SDCARD_SPI_PINS); // NOLINT(misc-const-correctness) false positive
     static BlackboxSelfBalancingRobot   blackbox(blackboxCallbacks, blackboxMessageQueue, blackboxSerialDevice, motorPairController);
     static BlackboxMessageQueueAHRS     blackboxMessageQueueAHRS(blackboxMessageQueue);
     ahrs.setMessageQueue(&blackboxMessageQueueAHRS);

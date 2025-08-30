@@ -77,12 +77,12 @@ None
 | SensorFusion           | yes       | 0.2.4  | 0.2.4   | yes        | no      |
 | IMU                    | yes       | 0.9.0  | 0.9.0   | yes        | no      |
 | TaskBase               | yes       | 0.0.3  | 0.0.3   | yes        | no      |
-| Receiver               | yes       | 0.5.0  | 0.5.0   | yes        | no      |
+| Receiver               | yes       | 0.5.1  | 0.5.1   | yes        | no      |
 | Backchannel            | yes       | 0.1.0  | 0.1.0   | yes        | no      |
-| StabilizedVehicle      | yes       | 0.5.0  | 0.5.0   | yes        | no      |
+| StabilizedVehicle      | yes       | 0.5.1  | 0.5.1   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1  | 0.0.1   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.4  | 0.0.4   | yes        | no      |
-| Blackbox               | yes       | 0.0.8  | 0.0.8   | yes        | no      |
+| Blackbox               | yes       | 0.0.9  | 0.0.9   | yes        | no      |
 
 ```text
 Libraries
@@ -97,7 +97,7 @@ Libraries
 ├── SensorFusion @ 0.2.4
 │   └── VectorQuaternionMatrix @ 0.4.2
 │
-├── StabilizedVehicle @ 0.5.0
+├── StabilizedVehicle @ 0.5.1
 │   ├── TaskBase @ 0.0.3
 │   ├── VectorQuaternionMatrix @ 0.4.2
 │   ├── IMU @ 0.9.0
@@ -105,10 +105,10 @@ Libraries
 │   └── SensorFusion @ 0.2.4
 │       └── VectorQuaternionMatrix @ 0.4.2
 │
-├── Receiver @ 0.5.0
+├── Receiver @ 0.5.1
 │   └── TaskBase @ 0.0.3
 │
-└── Backchannel @ 0.1.0
+└── Backchannel @ 0.1.0 //!!TODO: update to latest stabilized vehicle and receiver
     ├── TaskBase @ 0.0.3
     ├── Receiver @ 0.5.0
     └── StabilizedVehicle @ 0.4.2
@@ -118,15 +118,15 @@ Libraries
     ├── IMU @ 0.9.0
     ├── Filters @ 0.9.1
     ├── PIDF @ 0.3.2
-    ├── StabilizedVehicle @ 0.4.2
+    ├── StabilizedVehicle @ 0.5.1
     ├── Receiver @ 0.5.0
-    └── Backchannel @ 0.0.11
+    └── Backchannel @ 0.1.0
 
 └── MultiWiiSerialProtocol @ 0.0.4
     ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 
-└── Blackbox @ 0.0.8
+└── Blackbox @ 0.0.9
     ├── TaskBase @ 0.0.3
     └── StreamBuf @ 0.0.1
 ```

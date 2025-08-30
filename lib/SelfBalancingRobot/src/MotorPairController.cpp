@@ -290,6 +290,7 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     _outputs[YAW_RATE_DPS] = _PIDS[YAW_RATE_DPS].update(yawRateDPS, deltaT);
 
     const VehicleControllerMessageQueue::queue_item_t queueItem {
+        .throttle = _outputs[OUTPUT_SPEED_DPS],
         .roll   = _outputs[ROLL_ANGLE_DEGREES],
         .pitch  = _outputs[PITCH_ANGLE_DEGREES],
         .yaw = _outputs[YAW_RATE_DPS]
@@ -347,39 +348,35 @@ void MotorPairController::loop(float deltaT, uint32_t tickCount)
 }
 #endif
 
+/*!
+Called from within the VehicleControllerTask when signalled that output data is available.
+*/
 void MotorPairController::outputToMixer(float deltaT, uint32_t tickCount, const VehicleControllerMessageQueue::queue_item_t& queueItem)
 {
+    ++_taskSignalledCount;
+    if (_taskSignalledCount < _taskDenominator) {
+        return;
+    }
+    _taskSignalledCount = 0;
+
     updateMotorSpeedEstimates(deltaT);
     if (_radioController.getFailsafePhase() != RadioController::FAILSAFE_IDLE || !motorsIsOn()) {
         const MotorPairMixer::commands_t commands = {
-            .speed  = 0.0F,
+            .throttle  = 0.0F,
             .roll   = 0.0F,
             .pitch  = 0.0F,
             .yaw    = 0.0F
         };
-        _mixerThrottle = commands.speed;
         _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
         return;
     }
 
-    const MotorPairMixer::commands_t commands = 
-        (_taskIntervalMicroSeconds==0) ?
-            // event driven, so use content of message queue
-            MotorPairMixer::commands_t {
-                .speed  = _outputs[OUTPUT_SPEED_DPS],
-                .roll   = queueItem.roll,
-                .pitch  = queueItem.pitch,
-                .yaw    = queueItem.yaw
-            } 
-        :
-            // time driven
-            MotorPairMixer::commands_t {
-                .speed  = _outputs[OUTPUT_SPEED_DPS],
-                .roll   = _outputs[ROLL_ANGLE_DEGREES],
-                .pitch  = _outputs[PITCH_ANGLE_DEGREES],
-                .yaw    = _outputs[YAW_RATE_DPS]
-            };
+    const MotorPairMixer::commands_t commands = {
+        .throttle  = queueItem.throttle,
+        .roll   = queueItem.roll,
+        .pitch  = queueItem.pitch,
+        .yaw    = queueItem.yaw
+    };
 
-    _mixerThrottle = commands.speed;
     _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
 }

@@ -14,6 +14,7 @@
 void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount)
 {
     (void)deltaT;
+    _throttleCommand = commands.throttle;
 
     // Disable the motors if the pitchAngle exceeds the switchOffAngle.
     // Don't switch on again for at least 2 seconds after robot falls over (ie don't switch on if it falls over and bounces back up again).
@@ -23,8 +24,8 @@ void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, ui
     if (_motorsIsOn && !_motorsIsDisabled) {
         _motorSwitchOffTickCount = 0; // reset the bounce prevention tickcount
 
-        _powerLeft  = commands.pitch + commands.speed - commands.yaw;
-        _powerRight = commands.pitch + commands.speed + commands.yaw;
+        _powerLeft  = commands.pitch + commands.throttle - commands.yaw;
+        _powerRight = commands.pitch + commands.throttle + commands.yaw;
 
         // filter the power input into the motors so they run more smoothly.
         const float powerLeftFiltered = _powerLeftFilter.filter(_powerLeft);
