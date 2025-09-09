@@ -7,6 +7,7 @@ List of potential TODOs for Self Balancing Robot. Not all of these will be imple
 3. Get TWAI versions going.
 4. Add setGain function to Madgwick filter.
 5. Get AtomS3R working in interrupt driven mode
+6. Check if MPU6886, ICM20602, and ICM20608 can share driver
 
 ## Done
 
@@ -72,62 +73,62 @@ None
 | Library                | On github | tag    | release | platformio | Arduino |
 | ---------------------- | --------- | ------ | ------- | ---------- | ------- |
 | Filters                | yes       | 0.9.1  | 0.9.1   | yes        | no      |
-| PIDF                   | yes       | 0.3.2  | 0.3.2   | yes        | no      |
+| PIDF                   | yes       | 0.3.3  | 0.3.3   | yes        | no      |
 | VectorQuaternionMatrix | yes       | 0.4.2  | 0.4.2   | yes        | no      |
 | SensorFusion           | yes       | 0.2.4  | 0.2.4   | yes        | no      |
-| IMU                    | yes       | 0.9.0  | 0.9.0   | yes        | no      |
-| TaskBase               | yes       | 0.0.3  | 0.0.3   | yes        | no      |
-| Receiver               | yes       | 0.5.1  | 0.5.1   | yes        | no      |
-| Backchannel            | yes       | 0.1.0  | 0.1.0   | yes        | no      |
-| StabilizedVehicle      | yes       | 0.5.1  | 0.5.1   | yes        | no      |
+| IMU                    | yes       | 0.9.2  | 0.9.2   | yes        | no      |
+| TaskBase               | yes       | 0.0.5  | 0.0.5   | yes        | no      |
+| Receiver               | yes       | 0.5.3  | 0.5.3   | yes        | no      |
+| Backchannel            | yes       | 0.1.2  | 0.1.2   | yes        | no      |
+| StabilizedVehicle      | yes       | 0.5.4  | 0.5.4   | yes        | no      |
 | StreamBuf              | yes       | 0.0.1  | 0.0.1   | yes        | no      |
 | MultiWiiSerialProtocol | yes       | 0.0.4  | 0.0.4   | yes        | no      |
-| Blackbox               | yes       | 0.0.9  | 0.0.9   | yes        | no      |
+| Blackbox               | yes       | 0.0.10 | 0.0.10  | yes        | no      |
 
 ```text
 Libraries
 ├── Filters @ 0.9.1
-├── PIDF @ 0.3.2
-├── TaskBase @ 0.0.3
+├── PIDF @ 0.3.3
+├── TaskBase @ 0.0.5
 ├── VectorQuaternionMatrix @ 0.4.2
 │
-├── IMU @ 0.9.0
+├── IMU @ 0.9.2
 │   └── VectorQuaternionMatrix @ 0.4.2
 │
 ├── SensorFusion @ 0.2.4
 │   └── VectorQuaternionMatrix @ 0.4.2
 │
-├── StabilizedVehicle @ 0.5.1
-│   ├── TaskBase @ 0.0.3
+├── StabilizedVehicle @ 0.5.4
+│   ├── TaskBase @ 0.0.5
 │   ├── VectorQuaternionMatrix @ 0.4.2
-│   ├── IMU @ 0.9.0
+│   ├── IMU @ 0.9.2
 │   │   └── VectorQuaternionMatrix @ 0.4.2
 │   └── SensorFusion @ 0.2.4
 │       └── VectorQuaternionMatrix @ 0.4.2
 │
-├── Receiver @ 0.5.1
-│   └── TaskBase @ 0.0.3
+├── Receiver @ 0.5.3
+│   └── TaskBase @ 0.0.5
 │
-└── Backchannel @ 0.1.0 //!!TODO: update to latest stabilized vehicle and receiver
-    ├── TaskBase @ 0.0.3
-    ├── Receiver @ 0.5.0
-    └── StabilizedVehicle @ 0.4.2
+└── Backchannel @ 0.1.2
+    ├── TaskBase @ 0.0.5
+    ├── Receiver @ 0.5.3
+    └── StabilizedVehicle @ 0.5.4
 
 
 └── SelfBalancingRobot @ 0.0.1
-    ├── IMU @ 0.9.0
+    ├── IMU @ 0.9.2
     ├── Filters @ 0.9.1
-    ├── PIDF @ 0.3.2
-    ├── StabilizedVehicle @ 0.5.1
-    ├── Receiver @ 0.5.0
-    └── Backchannel @ 0.1.0
+    ├── PIDF @ 0.3.3
+    ├── StabilizedVehicle @ 0.5.4
+    ├── Receiver @ 0.5.2
+    └── Backchannel @ 0.1.1
 
-└── MultiWiiSerialProtocol @ 0.0.4
-    ├── TaskBase @ 0.0.3
+└── MultiWiiSerialProtocol @ 0.0.5
+    ├── TaskBase @ 0.0.5
     └── StreamBuf @ 0.0.1
 
-└── Blackbox @ 0.0.9
-    ├── TaskBase @ 0.0.3
+└── Blackbox @ 0.0.10
+    ├── TaskBase @ 0.0.5
     └── StreamBuf @ 0.0.1
 ```
 

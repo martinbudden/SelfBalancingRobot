@@ -83,8 +83,6 @@ MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& a
     _pitchBalanceAngleDegrees(vehicle.pitchBalanceAngleDegrees),
     _scaleFactors(scaleFactors)
 {
-    _rollAngleDegreesRaw = NOT_SET;
-    _yawAngleDegreesRaw = NOT_SET;
 
 #if defined(I2C_MUTEX_REQUIRED)
     _motorPair.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));

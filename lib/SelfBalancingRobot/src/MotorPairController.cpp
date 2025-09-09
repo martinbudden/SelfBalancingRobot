@@ -6,8 +6,6 @@
 #include <Blackbox.h>
 #include <TimeMicroSeconds.h>
 
-#include <cmath>
-
 #if defined(FRAMEWORK_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -253,17 +251,6 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     _pitchAngleDegreesRaw = -orientation.calculateRollDegrees();
     _motorPairMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
 
-//#define CALCULATE_ROLL
-//#define CALCULATE_YAW
-#if defined(CALCULATE_ROLL)
-    // Roll and yaw are not required for the MotorPairController calculations.
-    // They are calculated to be displayed on the screen and by telemetry, which can be useful in debugging.
-    // AHRS orientation assumes (as is conventional) that roll is around the Y-axis, so convert.
-    _rollAngleDegreesRaw = orientation.calculatePitchDegrees();
-#if defined(CALCULATE_YAW)
-    _yawAngleDegreesRaw = orientation.calculateYawDegrees();
-#endif
-#endif
 
     // calculate _outputs[OUTPUT_SPEED_DPS] and setpoints according to the control mode.
     if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {

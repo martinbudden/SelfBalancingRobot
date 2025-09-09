@@ -1,6 +1,5 @@
 #include "MotorPairController.h"
 #include "RadioController.h"
-#include <cmath>
 
 
 RadioController::RadioController(ReceiverBase& receiver) :
