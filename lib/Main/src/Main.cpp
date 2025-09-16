@@ -4,10 +4,6 @@
 #include <M5Unified.h>
 #endif
 
-#if defined(FRAMEWORK_USE_FREERTOS)
-#include <freertos/FreeRTOS.h>
-#endif
-
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <WiFi.h>
 #endif
@@ -381,27 +377,27 @@ void Main::checkStackUsage()
 {
 #if defined(INCLUDE_uxTaskGetStackHighWaterMark)
     static uint32_t ahrsStackUsedMax = 0;
-    const UBaseType_t ahrsStackUsed =  _tasks.ahrsTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.ahrsTaskInfo.taskHandle);
+    const UBaseType_t ahrsStackUsed =  _tasks.ahrsTaskInfo.stackDepthBytes -  uxTaskGetStackHighWaterMark(_tasks.ahrsTaskInfo.taskHandle);
     if (ahrsStackUsed > ahrsStackUsedMax) {
         ahrsStackUsedMax = ahrsStackUsed;
         Serial.printf("AHRS,                stack used:%d\r\n", ahrsStackUsed);
     }
 
     static uint32_t mpcStackUsedMax = 0;
-    const UBaseType_t mpcStackUsed =  _tasks.vehicleControllerTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.vehicleControllerTaskInfo.taskHandle);
+    const UBaseType_t mpcStackUsed =  _tasks.vehicleControllerTaskInfo.stackDepthBytes -  uxTaskGetStackHighWaterMark(_tasks.vehicleControllerTaskInfo.taskHandle);
     if (mpcStackUsed > mpcStackUsedMax) {
         mpcStackUsedMax = mpcStackUsed;
         Serial.printf("MotorPairController, stack used:%d\r\n", mpcStackUsed);
     }
 
     static uint32_t receiverStackUsedMax = 0;
-    const UBaseType_t receiverStackUsed =  _tasks.receiverTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.receiverTaskInfo.taskHandle);
+    const UBaseType_t receiverStackUsed =  _tasks.receiverTaskInfo.stackDepthBytes -  uxTaskGetStackHighWaterMark(_tasks.receiverTaskInfo.taskHandle);
     if (receiverStackUsed > receiverStackUsedMax) {
         receiverStackUsedMax = receiverStackUsed;
         Serial.printf("Receiver             stack used:%d\r\n", receiverStackUsed);
     }
     static uint32_t backchannelStackUsedMax = 0;
-    const UBaseType_t backchannelStackUsed =  _tasks.backchannelTaskInfo.stackDepth -  uxTaskGetStackHighWaterMark(_tasks.backchannelTaskInfo.taskHandle);
+    const UBaseType_t backchannelStackUsed =  _tasks.backchannelTaskInfo.stackDepthBytes -  uxTaskGetStackHighWaterMark(_tasks.backchannelTaskInfo.taskHandle);
     if (backchannelStackUsed > backchannelStackUsedMax) {
         backchannelStackUsedMax = backchannelStackUsed;
         Serial.printf("backchannel,     stack used:%d\r\n", backchannelStackUsed);

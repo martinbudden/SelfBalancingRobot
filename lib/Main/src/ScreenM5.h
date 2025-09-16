@@ -35,21 +35,21 @@ private:
     inline mode_e getScreenMode() const { return _screenMode; }
     screen_size_e screenSize();
 
-    void updateTemplate128x128() const;
-    void updateReceivedData128x128() const;
-    void update128x128(const TD_AHRS::data_t& ahrsData) const; // M5Atom
+    void updateTemplate_128x128() const;
+    void updateReceivedData_128x128() const;
+    void update_128x128(const TD_AHRS::data_t& ahrsData) const; // M5Atom
 
-    void updateTemplate80x160() const;
-    void updateReceivedData80x160() const;
-    void update80x160(const TD_AHRS::data_t& ahrsData) const; // M5StickC
+    void updateTemplate_80x160() const;
+    void updateReceivedData_80x160() const;
+    void update_80x160(const TD_AHRS::data_t& ahrsData) const; // M5StickC
 
-    void updateTemplate135x240() const;
-    void updateReceivedData135x240() const;
-    void update135x240(const TD_AHRS::data_t& ahrsData) const; // M5StickC Plus
+    void updateTemplate_135x240() const;
+    void updateReceivedData_135x240() const;
+    void update_135x240(const TD_AHRS::data_t& ahrsData) const; // M5StickC Plus
 
-    void updateTemplate320x240() const;
-    void updateReceivedData320x240() const;
-    void update320x240(const TD_AHRS::data_t& ahrsData) const; // MCore
+    void updateTemplate_320x240() const;
+    void updateReceivedData_320x240() const;
+    void update_320x240(const TD_AHRS::data_t& ahrsData) const; // MCore
 
     void updateReceivedData();
     void updateAHRS_Data() const;

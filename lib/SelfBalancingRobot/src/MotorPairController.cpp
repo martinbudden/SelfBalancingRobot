@@ -6,14 +6,6 @@
 #include <Blackbox.h>
 #include <TimeMicroSeconds.h>
 
-#if defined(FRAMEWORK_USE_FREERTOS)
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-inline void YIELD_TASK() { taskYIELD(); }
-#else
-inline void YIELD_TASK() {}
-#endif
-
 
 static const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES = {
     "ROLL_ANGLE",
@@ -28,7 +20,6 @@ const std::string& MotorPairController::getPID_Name(pid_index_e pidIndex) const
 {
     return PID_NAMES[pidIndex];
 }
-
 
 std::string MotorPairController::getBalanceAngleName() const
 {
@@ -119,6 +110,7 @@ motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
 void MotorPairController::motorsSwitchOff()
 {
     _motorPairMixer.motorsSwitchOff();
+    // Switch of PID integration when the motors are switched off, so we don't get integral windup.
     for (auto pid : _PIDS) {
         pid.switchIntegrationOff();
     }
@@ -131,6 +123,7 @@ void MotorPairController::motorsSwitchOn()
     // don't allow motors to be switched on if the sensor fusion has not initialized
     if (!_ahrs.sensorFusionFilterIsInitializing()) {
         _motorPairMixer.motorsSwitchOn();
+        // and switch PID integration back on
         for (auto pid : _PIDS) {
             pid.switchIntegrationOn();
         }
@@ -192,11 +185,12 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 {
 #if defined(MOTORS_HAVE_ENCODERS)
     _motorPair.readEncoder();
-    _encoderLeft = _motorPair.getLeftEncoder();
-    _encoderRight = _motorPair.getRightEncoder();
 
+    _encoderLeft = _motorPair.getLeftEncoder();
     _encoderLeftDelta = _encoderLeft - _encoderLeftPrevious;
     _encoderLeftPrevious = _encoderLeft;
+
+    _encoderRight = _motorPair.getRightEncoder();
     _encoderRightDelta = _encoderRight - _encoderRightPrevious;
     _encoderRightPrevious = _encoderRight;
 
@@ -253,8 +247,9 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
 
 
     // calculate _outputs[OUTPUT_SPEED_DPS] and setpoints according to the control mode.
+    // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-        _outputs[OUTPUT_SPEED_DPS] = -_PIDS[SPEED_PARALLEL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT); // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
+        _outputs[OUTPUT_SPEED_DPS] = -_PIDS[SPEED_PARALLEL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
     } else if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
         const float speedOutput = _PIDS[SPEED_SERIAL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
         // feed the speed update back into the pitchAngle PID and set _outputs[OUTPUT_SPEED_DPS] to zero
@@ -359,7 +354,7 @@ void MotorPairController::outputToMixer(float deltaT, uint32_t tickCount, const 
     }
 
     const MotorPairMixer::commands_t commands = {
-        .throttle  = queueItem.throttle,
+        .throttle = queueItem.throttle,
         .roll   = queueItem.roll,
         .pitch  = queueItem.pitch,
         .yaw    = queueItem.yaw

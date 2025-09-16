@@ -10,8 +10,18 @@
 // https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/api-reference/peripherals/twai.html
 #include <driver/twai.h>
 
+#if defined(FRAMEWORK_USE_FREERTOS)
+#if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#else
+#if defined(FRAMEWORK_ARDUINO_STM32)
+#include <STM32FreeRTOS.h>
+#endif
+#include <FreeRTOS.h>
+#include <task.h>
+#endif
+#endif
 
 #include <array>
 

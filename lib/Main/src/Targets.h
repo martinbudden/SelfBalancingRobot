@@ -4,6 +4,7 @@
 Targets
 */
 
+#define USE_MADGWICK_FILTER
 
 #if defined(TARGET_CODECELL)
     #define BOARD_IDENTIFIER    "CodeCel_ESP32C3"
@@ -32,6 +33,9 @@ Targets
     #define MOTOR_SDA_PIN       0
     #define MOTOR_SCL_PIN       26
     //#define MOTOR_I2C_PINS      {.sda=0,.scl=26}
+
+    #define USE_SCREEN
+    #define USE_BUTTONS
 #endif
 
 #if defined(TARGET_M5STACK_FIRE_BALA2)
@@ -48,6 +52,9 @@ Targets
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
     #define MPC_TASK_DENOMINATOR 2
+
+    #define USE_SCREEN
+    #define USE_BUTTONS
 #endif
 
 #if defined(TARGET_M5STACK_GREY_4ENCODERMOTOR)
@@ -66,6 +73,9 @@ Targets
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
     #define MPC_TASK_DENOMINATOR 2
+
+    #define USE_SCREEN
+    #define USE_BUTTONS
 #endif
 
 #if defined(TARGET_M5STACK_FIRE_GOPLUS2)
@@ -81,6 +91,9 @@ Targets
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
     #define MPC_TASK_DENOMINATOR 2
+
+    #define USE_SCREEN
+    #define USE_BUTTONS
 #endif
 
 #if defined(TARGET_M5STACK_FIRE_ODRIVE_CAN)
@@ -93,6 +106,9 @@ Targets
 
     //#define MOTORS_HAVE_ENCODERS
     #define MOTORS_CAN_ACCURATELY_ESTIMATE_SPEED
+
+    #define USE_SCREEN
+    #define USE_BUTTONS
 #endif
 
 #if defined(TARGET_M5STACK_FIRE_ODRIVE_TWAI)
@@ -105,6 +121,9 @@ Targets
 
     //#define MOTORS_HAVE_ENCODERS
     #define MOTORS_CAN_ACCURATELY_ESTIMATE_SPEED
+
+    #define USE_SCREEN
+    #define USE_BUTTONS
 #endif
 
 #if defined(TARGET_M5STACK_ATOMS3R_MOTION_BASE)
@@ -120,6 +139,9 @@ Targets
     #define MOTOR_SDA_PIN       38
     #define MOTOR_SCL_PIN       39
     //#define MOTOR_I2C_PINS      {.sda=38,.scl=39}
+
+    #define USE_SCREEN
+    #define USE_BUTTONS
 #endif
 
 #if defined(TARGET_M5STACK_CORE2)
@@ -134,6 +156,9 @@ Targets
 
     #define SDCARD_SPI_PINS     pins_t{.cs=4,.sck=18,.cipo=38,.copi=23,.irq=0xFF}
     #define USE_BLACKBOX
+
+    #define USE_SCREEN
+    #define USE_BUTTONS
 #endif
 
 #if defined(TARGET_PICO)

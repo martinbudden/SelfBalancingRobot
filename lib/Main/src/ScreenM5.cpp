@@ -139,7 +139,7 @@ void ScreenM5::displayEUI_Compact(const char* prompt, const ReceiverBase::EUI_48
     M5.Lcd.printf("%s%02x%02x%02x:%02x%02x%02x", prompt, eui.octets[0], eui.octets[1], eui.octets[2], eui.octets[3], eui.octets[4], eui.octets[5]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
 
-void ScreenM5::updateTemplate128x128() const
+void ScreenM5::updateTemplate_128x128() const
 {
     M5.Lcd.setCursor(0, 10);
     displayEUI("M:", _receiver.getMyEUI());
@@ -171,7 +171,7 @@ void ScreenM5::updateTemplate128x128() const
     M5.Lcd.printf("I:");
 }
 
-void ScreenM5::updateReceivedData128x128() const
+void ScreenM5::updateReceivedData_128x128() const
 {
     if (!_remoteEUI_updated) {
         M5.Lcd.setCursor(0, 20);
@@ -194,7 +194,7 @@ void ScreenM5::updateReceivedData128x128() const
     M5.Lcd.printf("%7.3f", controls.pitch);
 }
 
-void ScreenM5::update128x128(const TD_AHRS::data_t& ahrsData) const
+void ScreenM5::update_128x128(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 35;
 
@@ -219,7 +219,7 @@ void ScreenM5::update128x128(const TD_AHRS::data_t& ahrsData) const
     M5.Lcd.printf("%2d  ", _receiver.getTickCountDelta());
 }
 
-void ScreenM5::updateTemplate80x160() const
+void ScreenM5::updateTemplate_80x160() const
 {
     M5.Lcd.setCursor(0, 10);
     displayEUI_Compact("", _receiver.getMyEUI());
@@ -247,7 +247,7 @@ void ScreenM5::updateTemplate80x160() const
     M5.Lcd.printf("I:");
 }
 
-void ScreenM5::updateReceivedData80x160() const
+void ScreenM5::updateReceivedData_80x160() const
 {
     if (!_remoteEUI_updated) {
         M5.Lcd.setCursor(0, 20);
@@ -279,21 +279,21 @@ void ScreenM5::updateReceivedData80x160() const
     M5.Lcd.printf("M%1d%s A%1d F%1d ", mode, mode == ReceiverAtomJoyStick::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 }
 
-void ScreenM5::update80x160(const TD_AHRS::data_t& ahrsData) const
+void ScreenM5::update_80x160(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 30;
     const bool displayAcc = true;
 
     M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("pi:%5.0f", ahrsData.pitch);
+    M5.Lcd.printf("pi:%5.0f", static_cast<double>(ahrsData.pitch));
 
     yPos += 10;
     M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("ro:%5.0f", ahrsData.roll);
+    M5.Lcd.printf("ro:%5.0f", static_cast<double>(ahrsData.roll));
 
     yPos += 10;
     M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("ya:%5.0f", ahrsData.yaw);
+    M5.Lcd.printf("ya:%5.0f", static_cast<double>(ahrsData.yaw));
 
     yPos += 10;
     if (displayAcc) {
@@ -326,7 +326,7 @@ void ScreenM5::update80x160(const TD_AHRS::data_t& ahrsData) const
     M5.Lcd.printf("%2d  ", _receiver.getTickCountDelta());
 }
 
-void ScreenM5::updateTemplate135x240() const
+void ScreenM5::updateTemplate_135x240() const
 {
     M5.Lcd.setCursor(0, 0);
     displayEUI("M:", _receiver.getMyEUI());
@@ -363,12 +363,12 @@ void ScreenM5::updateTemplate135x240() const
     M5.Lcd.printf("M:");
 }
 
-void ScreenM5::updateReceivedData135x240() const
+void ScreenM5::updateReceivedData_135x240() const
 {
-    updateReceivedData80x160();
+    updateReceivedData_80x160();
 }
 
-void ScreenM5::update135x240(const TD_AHRS::data_t& ahrsData) const
+void ScreenM5::update_135x240(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 45;
 
@@ -395,7 +395,7 @@ void ScreenM5::update135x240(const TD_AHRS::data_t& ahrsData) const
     M5.Lcd.printf(_motorPairController.motorsIsOn() ? "ON " : "OFF");
 }
 
-void ScreenM5::updateTemplate320x240() const
+void ScreenM5::updateTemplate_320x240() const
 {
     M5.Lcd.setCursor(0, 0);
     displayEUI("MAC:", _receiver.getMyEUI());
@@ -442,7 +442,7 @@ void ScreenM5::updateTemplate320x240() const
     M5.Lcd.printf("Motors:");
 }
 
-void ScreenM5::updateReceivedData320x240() const
+void ScreenM5::updateReceivedData_320x240() const
 {
     if (!_remoteEUI_updated) {
         M5.Lcd.setCursor(0, 20);
@@ -471,10 +471,10 @@ void ScreenM5::updateReceivedData320x240() const
     M5.Lcd.printf("M%1d %s A%1d F%1d ", mode, mode == ReceiverAtomJoyStick::MODE_STABLE ? "ST" : "SP", altMode, flipButton);
 
     M5.Lcd.setCursor(255, yPos);
-    M5.Lcd.printf("%4d", _receiver.getTickCountDelta());
+    M5.Lcd.printf("%3d", _receiver.getTickCountDelta());
 }
 
-void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
+void ScreenM5::update_320x240(const TD_AHRS::data_t& ahrsData) const
 {
     int32_t yPos = 45;
     M5.Lcd.setCursor(0, yPos);
@@ -482,7 +482,7 @@ void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
 
     yPos += 20;
     M5.Lcd.setCursor(0, yPos);
-    M5.Lcd.printf("gx:%5.0F gy:%5.0f gz:%5.0f", ahrsData.gyroRPS.x*radiansToDegrees, ahrsData.gyroRPS.y*radiansToDegrees, ahrsData.gyroRPS.z*radiansToDegrees);
+    M5.Lcd.printf("gx:%5.0f gy:%5.0f gz:%5.0f", ahrsData.gyroRPS.x*radiansToDegrees, ahrsData.gyroRPS.y*radiansToDegrees, ahrsData.gyroRPS.z*radiansToDegrees);
 
     yPos += 20;
     M5.Lcd.setCursor(0, yPos);
@@ -498,11 +498,11 @@ void ScreenM5::update320x240(const TD_AHRS::data_t& ahrsData) const
 
     yPos = 200;
     M5.Lcd.setCursor(48, yPos);
-    M5.Lcd.printf("%8.0f", mpcTelemetry.speedLeftDPS);
+    M5.Lcd.printf("%8.0f", static_cast<double>(mpcTelemetry.speedLeftDPS));
     M5.Lcd.setCursor(208, yPos);
-    M5.Lcd.printf("%8.0f", mpcTelemetry.speedRightDPS);
+    M5.Lcd.printf("%8.0f", static_cast<double>(mpcTelemetry.speedRightDPS));
     M5.Lcd.setCursor(208, yPos + 20);
-    M5.Lcd.printf("%8.0f", std::roundf(mpcTelemetry.speedDPS_Filtered*(1.0F/6.0F)));
+    M5.Lcd.printf("%8.0f", static_cast<double>(std::roundf(mpcTelemetry.speedDPS_Filtered*(1.0F/6.0F))));
 #else
     yPos = 190;
     M5.Lcd.setCursor(48, yPos);
@@ -523,17 +523,17 @@ void ScreenM5::updateTemplate()
 
     switch (_screenSize) {
     case SIZE_128x128:
-        updateTemplate128x128();
+        updateTemplate_128x128();
         break;
     case SIZE_135x240:
         [[fallthrough]];
     case SIZE_80x160:
-        updateTemplate80x160();
+        updateTemplate_80x160();
         break;
     case SIZE_320x240:
         [[fallthrough]];
     default:
-        updateTemplate320x240();
+        updateTemplate_320x240();
     }
     _templateIsUpdated = true;
 }
@@ -542,17 +542,17 @@ void ScreenM5::updateReceivedData()
 {
     switch (_screenSize) {
     case SIZE_128x128:
-        updateReceivedData128x128();
+        updateReceivedData_128x128();
         break;
     case SIZE_135x240:
         [[fallthrough]];
     case SIZE_80x160:
-        updateReceivedData80x160();
+        updateReceivedData_80x160();
         break;
     case SIZE_320x240:
         [[fallthrough]];
     default:
-        updateReceivedData320x240();
+        updateReceivedData_320x240();
     }
     _remoteEUI_updated = true;
 }
@@ -578,18 +578,18 @@ void ScreenM5::updateAHRS_Data() const
     }
     switch (_screenSize) {
     case SIZE_128x128: // NOLINT(bugprone-branch-clone) false positive
-        update128x128(tdAhrsData);
+        update_128x128(tdAhrsData);
         break;
     case SIZE_80x160:
-        update80x160(tdAhrsData);
+        update_80x160(tdAhrsData);
         break;
     case SIZE_135x240:
-        update135x240(tdAhrsData);
+        update_135x240(tdAhrsData);
         break;
     case SIZE_320x240: // NOLINT(bugprone-branch-clone) false positive
         [[fallthrough]];
     default:
-        update320x240(tdAhrsData);
+        update_320x240(tdAhrsData);
     }
 }
 
