@@ -35,13 +35,13 @@ MotorsPwrCAN::MotorsPwrCAN() :
 void MotorsPwrCAN::readEncoder()
 {
     if (xQueueReceive(CAN_cfg.rx_queue, &_rxFrame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
-        if (_rxFrame.FIR.B.FF == CAN_frame_std) { // NOLINT(bugprone-branch-clone) false positive
+        if (_rxFrame.FIR.B.FF == CAN_frame_std) {
             Serial.println("New standard frame");
         } else {
             Serial.println("New extended frame");
         }
 
-        if (_rxFrame.FIR.B.RTR == CAN_RTR) { // NOLINT(bugprone-branch-clone) false positive
+        if (_rxFrame.FIR.B.RTR == CAN_RTR) {
             Serial.printf("RTR from 0x%08X, DLC %d\r\n", _rxFrame.MsgID, _rxFrame.FIR.B.DLC);
         } else {
             Serial.printf("from 0x%08X, DLC %d, Data\r\n", _rxFrame.MsgID, _rxFrame.FIR.B.DLC);

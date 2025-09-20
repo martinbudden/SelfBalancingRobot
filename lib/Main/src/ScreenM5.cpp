@@ -577,7 +577,7 @@ void ScreenM5::updateAHRS_Data() const
         tdAhrsData.yaw = orientation.calculateYawDegrees();
     }
     switch (_screenSize) {
-    case SIZE_128x128: // NOLINT(bugprone-branch-clone) false positive
+    case SIZE_128x128:
         update_128x128(tdAhrsData);
         break;
     case SIZE_80x160:
@@ -586,7 +586,7 @@ void ScreenM5::updateAHRS_Data() const
     case SIZE_135x240:
         update_135x240(tdAhrsData);
         break;
-    case SIZE_320x240: // NOLINT(bugprone-branch-clone) false positive
+    case SIZE_320x240:
         [[fallthrough]];
     default:
         update_320x240(tdAhrsData);

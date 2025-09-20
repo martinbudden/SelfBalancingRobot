@@ -32,7 +32,7 @@ void IMU_Filters::setFilters()
 void IMU_Filters::setFilters(const filters_t& filters, float deltaT)
 {
     _filters = filters;
-    if (filters.gyro_lpf1_hz == 0) { // NOLINT(bugprone-branch-clone)
+    if (filters.gyro_lpf1_hz == 0) {
         _gyroLPF.setToPassthrough();
     } else {
         _gyroLPF.setCutoffFrequencyAndReset(filters.gyro_lpf1_hz, deltaT);

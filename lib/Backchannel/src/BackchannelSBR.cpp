@@ -134,7 +134,7 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
         _motorPairController.setPitchBalanceAngleDegrees(packet.f0);
         transmit = true;
         break;
-    case CommandPacketSetPID::SAVE_P: // NOLINT(bugprone-branch-clone) false positive
+    case CommandPacketSetPID::SAVE_P:
         [[fallthrough]];
     case CommandPacketSetPID::SAVE_I:
         [[fallthrough]];
