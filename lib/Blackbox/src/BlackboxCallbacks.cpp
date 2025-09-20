@@ -31,7 +31,7 @@ bool BlackboxCallbacks::isBlackboxModeActivationConditionPresent() const
     return true;
 }
 
-uint32_t BlackboxCallbacks::getArmingBeepTimeMicroSeconds() const
+uint32_t BlackboxCallbacks::getArmingBeepTimeMicroseconds() const
 {
     return 0;
 }
@@ -63,7 +63,7 @@ void BlackboxCallbacks::loadMainState(blackboxMainState_t& mainState, uint32_t c
     const xyz_t acc = ahrsData.acc;
 #else
     (void)currentTimeUs;
-    mainState.time = _queueItem.timeMicroSeconds;
+    mainState.time = _queueItem.timeMicroseconds;
     const xyz_t gyroRPS = _queueItem.gyroRPS;
     const xyz_t gyroRPS_unfiltered = _queueItem.gyroRPS_unfiltered;
     const xyz_t acc = _queueItem.acc;
@@ -110,7 +110,7 @@ void BlackboxCallbacks::loadMainState(blackboxMainState_t& mainState, uint32_t c
     mainState.setpoint[3] = static_cast<int16_t>(_motorPairController.getMixerThrottleCommand() * 1000.0F);
 
     for (int ii = 0; ii < blackboxMainState_t::DEBUG_VALUE_COUNT; ++ii) {
-        mainState.debug[ii] = static_cast<uint16_t>(_ahrs.getTimeChecksMicroSeconds(ii));
+        mainState.debug[ii] = static_cast<uint16_t>(_ahrs.getTimeChecksMicroseconds(ii));
     }
     const motor_pair_controller_telemetry_t telemetry = _motorPairController.getTelemetryData();
     mainState.motor[0] = static_cast<int16_t>(std::lroundf(telemetry.powerLeft));

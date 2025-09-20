@@ -79,7 +79,7 @@ IMU_Base& Main::createIMU(void* i2cMutex)
     return imuSensor;
 }
 
-AHRS& Main::createAHRS(uint32_t AHRS_taskIntervalMicroSeconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters)
+AHRS& Main::createAHRS(uint32_t AHRS_taskIntervalMicroseconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters)
 {
     // Statically allocate the Sensor Fusion Filter
     // Timings are for 240MHz ESP32-S3
@@ -90,30 +90,30 @@ AHRS& Main::createAHRS(uint32_t AHRS_taskIntervalMicroSeconds, IMU_Base& imuSens
     // approx 10 microseconds per update
     static MahonyFilter sensorFusionFilter;
 #elif defined(USE_VQF)
-    const float deltaT = static_cast<float>(AHRS_taskIntervalMicroSeconds) / 1000000.0F;
+    const float deltaT = static_cast<float>(AHRS_taskIntervalMicroseconds) / 1000000.0F;
     static VQF sensorFusionFilter(deltaT, deltaT, deltaT, true, false, false);
 #elif defined(USE_VQF_BASIC)
-    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_taskIntervalMicroSeconds) / 1000000.0F);
+    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_taskIntervalMicroseconds) / 1000000.0F);
 #else
     // approx 16 microseconds per update
     static MadgwickFilter sensorFusionFilter;
 #endif
 
-    static AHRS ahrs(AHRS_taskIntervalMicroSeconds, sensorFusionFilter, imuSensor, imuFilters);
+    static AHRS ahrs(AHRS_taskIntervalMicroseconds, sensorFusionFilter, imuSensor, imuFilters);
     return ahrs;
 }
 
 AHRS& Main::createAHRS(void* i2cMutex)
 {
-    const uint32_t AHRS_taskIntervalMicroSeconds = AHRS_TASK_INTERVAL_MICROSECONDS;
+    const uint32_t AHRS_taskIntervalMicroseconds = AHRS_TASK_INTERVAL_MICROSECONDS;
 
     IMU_Base& imuSensor = createIMU(i2cMutex);
 
     // statically allocate the IMU_Filters
     constexpr float cutoffFrequency = 100.0F;
-    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_taskIntervalMicroSeconds) / 1000000.0F);
+    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_taskIntervalMicroseconds) / 1000000.0F);
 
     // Statically allocate the AHRS object
-    return createAHRS(AHRS_taskIntervalMicroSeconds, imuSensor, imuFilters);
+    return createAHRS(AHRS_taskIntervalMicroseconds, imuSensor, imuFilters);
 }
 // NOLINTEND(misc-const-correctness)

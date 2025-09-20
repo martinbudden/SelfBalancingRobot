@@ -72,7 +72,7 @@ MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& a
 Constructor. Sets member data.
 */
 MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors) :
-    VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, ahrs.getTaskIntervalMicroSeconds() / taskDenominator, ahrs),
+    VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, ahrs.getTaskIntervalMicroseconds() / taskDenominator, ahrs),
     _radioController(radioController),
     _motorPair(motorPair),
     _motorPairMixer(_motorPair),
@@ -96,7 +96,7 @@ MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& a
         _PIDS[ii].setPID(gDefaultPIDs[ii]);
     }
 
-    const float deltaT = static_cast<float>(_taskIntervalMicroSeconds) / 1000000.0F;
+    const float deltaT = static_cast<float>(_taskIntervalMicroseconds) / 1000000.0F;
     _pitchAngleDTermFilter.setCutoffFrequency(50.0F, deltaT);
 /*
 gain20=0.493995

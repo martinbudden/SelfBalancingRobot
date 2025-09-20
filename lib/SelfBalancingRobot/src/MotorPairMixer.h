@@ -34,7 +34,7 @@ public:
 
     inline float getPowerLeft() const { return _powerLeft; } //!< for telemetry
     inline float getPowerRight() const { return _powerRight; } //!< for telemetry
-    inline uint32_t getOutputPowerTimeMicroSeconds() const { return _outputPowerTimeMicroSeconds; } //!< for telemetry
+    inline uint32_t getOutputPowerTimeMicroseconds() const { return _outputPowerTimeMicroseconds; } //!< for telemetry
 private:
     MotorPairBase& _motorPair; //<! The MotorMixer has a reference to the motor pair for output, ie setting the motor power.
     int32_t _motorsIsOn {false};
@@ -43,7 +43,7 @@ private:
     float _throttleCommand {0.0F}; //!< used solely for instrumentation
     float _powerLeft {0.0};
     float _powerRight {0.0};
-    uint32_t _outputPowerTimeMicroSeconds {0}; //!< for instrumentation, time taken to set the motor pair power. Can be significant if motors controlled over I2C
+    uint32_t _outputPowerTimeMicroseconds {0}; //!< for instrumentation, time taken to set the motor pair power. Can be significant if motors controlled over I2C
     float _motorSwitchOffAngleDegrees {70.0}; //!< Pitch angle at which the motors switch off. So if the robot flips over it won't lie on its back with its motors spinning.
     float _pitchAngleDegreesRaw {}; //<! The pitch angle, compared with _motorSwitchOffAngleDegrees to see if motors should switch off
     FilterMovingAverage<4> _powerLeftFilter;

@@ -9,7 +9,7 @@ Class to write out the Blackbox header, written in writeSystemInformation()
 class BlackboxSelfBalancingRobot : public Blackbox {
 public:
     BlackboxSelfBalancingRobot(BlackboxCallbacksBase& callbacks, BlackboxMessageQueueBase& messageQueue, BlackboxSerialDevice& serialDevice, MotorPairController& motorPairController) :
-        Blackbox(motorPairController.getTaskIntervalMicroSeconds(), callbacks, messageQueue, serialDevice),
+        Blackbox(motorPairController.getTaskIntervalMicroseconds(), callbacks, messageQueue, serialDevice),
         _motorPairController(motorPairController)
         {}
 public:

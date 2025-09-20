@@ -185,7 +185,7 @@ This is deliberate.
 ```mermaid
 classDiagram
     class TaskBase {
-        uint32_t _taskIntervalMicroSeconds
+        uint32_t _taskIntervalMicroseconds
     }
     link TaskBase "https://github.com/martinbudden/Library-TaskBase/blob/main/src/TaskBase.h"
 

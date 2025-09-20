@@ -102,7 +102,7 @@ enum {
 
 class MainTask : public TaskBase {
 public:
-    explicit MainTask(uint32_t taskIntervalMicroSeconds) : TaskBase(taskIntervalMicroSeconds) {}
+    explicit MainTask(uint32_t taskIntervalMicroseconds) : TaskBase(taskIntervalMicroseconds) {}
     void loop();
 };
 
@@ -119,7 +119,7 @@ private:
     void checkStackUsage();
     IMU_Base& createIMU(void* i2cMutex);
     AHRS& createAHRS(void* i2cMutex);
-    AHRS& createAHRS(uint32_t AHRS_taskIntervalMicroSeconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
+    AHRS& createAHRS(uint32_t AHRS_taskIntervalMicroseconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
     static void checkIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs);
     static void runIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs);
     static void calibrateIMU(SV_Preferences& preferences, AHRS& ahrs);

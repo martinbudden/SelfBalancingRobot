@@ -56,7 +56,7 @@ Blackbox::write_e BlackboxSelfBalancingRobot::writeSystemInformation()
     BLACKBOX_PRINT_HEADER_LINE("vbatref", "%u",                         112);
 
     BLACKBOX_PRINT_HEADER_LINE("currentSensor", "%d,%d",                0, 235);
-    BLACKBOX_PRINT_HEADER_LINE("looptime", "%d",                        _motorPairController.getTaskIntervalMicroSeconds());
+    BLACKBOX_PRINT_HEADER_LINE("looptime", "%d",                        _motorPairController.getTaskIntervalMicroseconds());
     BLACKBOX_PRINT_HEADER_LINE("gyro_sync_denom", "%d",                 1);
     BLACKBOX_PRINT_HEADER_LINE("pid_process_denom", "%d",               1);
 

@@ -4,7 +4,7 @@
 
 #include <AHRS.h>
 #include <Blackbox.h>
-#include <TimeMicroSeconds.h>
+#include <TimeMicroseconds.h>
 
 
 static const std::array<std::string, MotorPairController::PID_COUNT> PID_NAMES = {
@@ -42,9 +42,9 @@ void MotorPairController::setPID_Constants(const pidf_uint8_array_t& pids)
     }
 }
 
-uint32_t MotorPairController::getOutputPowerTimeMicroSeconds() const
+uint32_t MotorPairController::getOutputPowerTimeMicroseconds() const
 {
-    return _motorPairMixer.getOutputPowerTimeMicroSeconds();
+    return _motorPairMixer.getOutputPowerTimeMicroseconds();
 }
 
 VehicleControllerBase::PIDF_uint16_t MotorPairController::getPID_MSP(size_t index) const

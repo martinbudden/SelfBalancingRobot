@@ -1,7 +1,7 @@
 #include "MotorPairMixer.h"
 
 #include <MotorPairBase.h>
-#include <TimeMicroSeconds.h>
+#include <TimeMicroseconds.h>
 
 #if !defined(FRAMEWORK_TEST)
 //#define SERIAL_OUTPUT
@@ -30,9 +30,9 @@ void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, ui
         // filter the power input into the motors so they run more smoothly.
         const float powerLeftFiltered = _powerLeftFilter.filter(_powerLeft);
         const float powerRightFiltered = _powerRightFilter.filter(_powerRight);
-        const timeUs32_t timeMicroSeconds0 = timeUs();
+        const timeUs32_t timeMicroseconds0 = timeUs();
         _motorPair.setPower(powerLeftFiltered, powerRightFiltered);
-        _outputPowerTimeMicroSeconds = timeUs() - timeMicroSeconds0; // for instrumentation
+        _outputPowerTimeMicroseconds = timeUs() - timeMicroseconds0; // for instrumentation
     } else {
         if (_motorSwitchOffTickCount == 0) { // the motors haven't already been switched off
             // Record the current tickCount so we can stop the motors turning back on if the robot bounces back up after it falls over.
@@ -40,7 +40,7 @@ void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, ui
         }
         // Motors switched off, so set everything to zero, ready for motors to be switched on again.
         _motorPair.setPower(0.0F, 0.0F);
-        _outputPowerTimeMicroSeconds = 0;
+        _outputPowerTimeMicroseconds = 0;
         _powerLeft  = 0.0F;
         _powerRight = 0.0F;
         _powerLeftFilter.reset();

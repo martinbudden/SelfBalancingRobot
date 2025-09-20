@@ -93,7 +93,7 @@ public:
     void motorsToggleOnOff();
     void setBlackbox(Blackbox& blackbox) { _blackbox = &blackbox; }
 
-    virtual uint32_t getOutputPowerTimeMicroSeconds() const override;
+    virtual uint32_t getOutputPowerTimeMicroseconds() const override;
 
     inline control_mode_e getControlMode() const { return _controlMode; }
     void setControlMode(control_mode_e controlMode) { _controlMode = controlMode; resetIntegrals(); }
