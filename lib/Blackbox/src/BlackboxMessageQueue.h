@@ -2,6 +2,7 @@
 
 #include <BlackboxMessageQueueBase.h>
 
+#include <Quaternion.h>
 #include <array>
 #include <xyz_type.h>
 
@@ -25,6 +26,7 @@ public:
         xyz_t gyroRPS;
         xyz_t gyroRPS_unfiltered;
         xyz_t acc;
+        Quaternion orientation;
     };
 public:
 #if defined(FRAMEWORK_USE_FREERTOS)

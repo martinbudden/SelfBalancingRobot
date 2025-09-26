@@ -27,7 +27,7 @@ IMU_Base& Main::createIMU(void* i2cMutex)
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
 
     enum { SPI_FREQUENCY_20_MHZ = 20000000 };
-    const BUS_SPI::pins_t pins = IMU_SPI_PINS;
+    const BUS_SPI::spi_pins_t pins = IMU_SPI_PINS;
 #if defined(USE_IMU_MPU6886)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, SPI_FREQUENCY_20_MHZ, BUS_SPI::IMU_SPI_INDEX, pins);
 #elif defined(USE_IMU_BMI270)
@@ -42,10 +42,10 @@ IMU_Base& Main::createIMU(void* i2cMutex)
 
 #if defined(USE_IMU_MPU6886)
 #if defined(M5_STACK)
-    const BUS_I2C::pins_t pins = IMU_I2C_PINS;
+    const BUS_I2C::i2c_pins_t pins = IMU_I2C_PINS;
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, pins);
 #else
-    const BUS_I2C::pins_t pins = BUS_I2C::pins_t {
+    const BUS_I2C::i2c_pins_t pins = BUS_I2C::i2c_pins_t {
         .sda=static_cast<uint8_t>(M5.In_I2C.getSDA()),
         .scl=static_cast<uint8_t>(M5.In_I2C.getSCL()),
         .irq=BUS_I2C::IRQ_NOT_SET
@@ -53,13 +53,13 @@ IMU_Base& Main::createIMU(void* i2cMutex)
     static IMU_MPU6886 imuSensor(IMU_AXIS_ORDER, pins);
 #endif
 #elif defined(USE_IMU_BMI270)
-    const BUS_I2C::pins_t pins = IMU_I2C_PINS;
+    const BUS_I2C::i2c_pins_t pins = IMU_I2C_PINS;
     static IMU_BMI270 imuSensor(IMU_AXIS_ORDER, pins);
 #elif defined(USE_IMU_BNO085)
-    const BUS_I2C::pins_t pins = IMU_I2C_PINS;
+    const BUS_I2C::i2c_pins_t pins = IMU_I2C_PINS;
     static IMU_BNO085 imuSensor(IMU_AXIS_ORDER, pins);
 #elif defined(USE_IMU_LSM6DS3TR_C) || defined(USE_IMU_ISM330DHCX) || defined(USE_LSM6DSOX)
-    const BUS_I2C::pins_t pins = IMU_I2C_PINS;
+    const BUS_I2C::i2c_pins_t pins = IMU_I2C_PINS;
     static IMU_LSM6DS3TR_C imuSensor(IMU_AXIS_ORDER, pins);
 #elif defined(USE_IMU_M5_STACK)
     static IMU_M5_STACK imuSensor(IMU_AXIS_ORDER);

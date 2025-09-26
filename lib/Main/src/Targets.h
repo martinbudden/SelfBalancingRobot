@@ -154,7 +154,7 @@ Targets
     #define MOTORS_GPIO
     #define MOTOR_GPIO_PINS     {.motorLeft=0,.motorRight=0,.servoLeft=0,.servoRight=0}
 
-    #define SDCARD_SPI_PINS     pins_t{.cs=4,.sck=18,.cipo=38,.copi=23,.irq=0xFF}
+    #define SDCARD_SPI_PINS     spi_pins_t{.cs=4,.sck=18,.cipo=38,.copi=23,.irq=0xFF}
     #define USE_BLACKBOX
 
     #define USE_SCREEN
