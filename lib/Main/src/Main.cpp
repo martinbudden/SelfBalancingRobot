@@ -227,7 +227,7 @@ void Main::reportMainTask()
 }
 
 #if defined(FRAMEWORK_USE_FREERTOS)
-[[noreturn]] void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
     assert(false && "stack overflow");
     Serial.printf("\r\n\r\n*********\r\n");
@@ -375,7 +375,7 @@ void Main::loop() // NOLINT(readability-make-member-function-const)
 
 void Main::checkStackUsage()
 {
-#if defined(INCLUDE_uxTaskGetStackHighWaterMark)
+#if defined(INCLUDE_uxTaskGetStackHighWaterMark) && false
     static uint32_t ahrsStackUsedMax = 0;
     const UBaseType_t ahrsStackUsed =  _tasks.ahrsTaskInfo.stackDepthBytes -  uxTaskGetStackHighWaterMark(_tasks.ahrsTaskInfo.taskHandle);
     if (ahrsStackUsed > ahrsStackUsedMax) {

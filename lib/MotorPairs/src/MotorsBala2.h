@@ -10,7 +10,8 @@ public:
     virtual void readEncoder() override;
     virtual void setPower(float leftPower, float rightPower) override;
 private:
-    enum { MIN_POWER = -1023, MAX_POWER = 1023 };
+    static constexpr float MIN_POWER = -1023.0F;
+    static constexpr float MAX_POWER =  1023.0F;
     enum { ENCODER_STEPS_PER_REVOLUTION = 420 };
 
     enum : uint8_t { I2C_ADDRESS = 0x3A };

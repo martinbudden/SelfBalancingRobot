@@ -15,6 +15,7 @@ public:
 public:
     virtual void setPower(float leftPower, float rightPower) override;
 private:
-    static constexpr int MIN_POWER = -127;
-    static constexpr int MAX_POWER = 127;
+    static constexpr float MIN_POWER = -127.0F;
+    static constexpr float MAX_POWER =  127.0F;
+    pins_t _pins {};
 };

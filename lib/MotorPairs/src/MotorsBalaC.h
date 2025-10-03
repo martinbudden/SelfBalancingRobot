@@ -7,7 +7,8 @@ class MotorsBalaC final : public MotorPairBase {
 public:
     explicit MotorsBalaC(float deadbandPower);
 public:
-    enum { MIN_POWER = -127, MAX_POWER = 127 };
+    static constexpr float MIN_POWER = -127.0F;
+    static constexpr float MAX_POWER =  127.0F;
 public:
     virtual void setPower(float leftPower, float rightPower) override;
 private:

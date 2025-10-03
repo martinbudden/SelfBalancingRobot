@@ -9,7 +9,8 @@ public:
 public:
     virtual void setPower(float leftPower, float rightPower) override;
 private:
-    enum { MIN_POWER = -127, MAX_POWER = 127 };
+    static constexpr float MIN_POWER = -127.0F;
+    static constexpr float MAX_POWER =  127.0F;
 
     enum : uint8_t { I2C_ADDRESS = 0x38 };
     enum : uint8_t { REGISTER_MOTOR_A = 0x30, REGISTER_MOTOR_B = 0x31 };

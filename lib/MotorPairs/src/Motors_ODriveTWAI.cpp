@@ -98,7 +98,7 @@ static void onReceive(const twai_message_t& message)
     std::array<uint8_t, MAX_SIZE> buffer;
 
     const uint32_t packetId = message.identifier;
-    const uint packetSize = message.data_length_code;
+    const uint32_t packetSize = message.data_length_code;
     if (packetSize > MAX_SIZE) {
         return; // not supported
     }

@@ -34,8 +34,8 @@ BackchannelSBR::BackchannelSBR(
 #if !defined(ESP_NOW_MAX_DATA_LEN)
 #define ESP_NOW_MAX_DATA_LEN (250)
 #endif
-    static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN); // 100
-    static_assert(sizeof(TD_SBR_PIDS) <= ESP_NOW_MAX_DATA_LEN); // 192
+    static_assert(sizeof(TD_MPC) <= ESP_NOW_MAX_DATA_LEN); // 124
+    static_assert(sizeof(TD_SBR_PID) <= ESP_NOW_MAX_DATA_LEN); // 96
 }
 
 bool BackchannelSBR::packetSetOffset(const CommandPacketSetOffset& packet)

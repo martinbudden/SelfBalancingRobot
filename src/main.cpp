@@ -1,9 +1,43 @@
 #include "Main.h"
 
 
-#if defined(FRAMEWORK_ARDUINO)
 
-#include <Arduino.h>
+#if defined(FRAMEWORK_RPI_PICO)
+
+int main()
+{
+    static Main mainTask;
+    mainTask.setup();
+    while (true) {
+        mainTask.loop();
+    }
+}
+
+#elif defined(FRAMEWORK_ESPIDF)
+
+extern "C" void app_main()
+{
+    static Main mainTask;
+    mainTask.setup();
+    while (true) {
+        mainTask.loop();
+    }
+}
+
+#elif defined(FRAMEWORK_STM32_CUBE)
+
+int main()
+{
+    static Main mainTask;
+    mainTask.setup();
+    while (true) {
+        mainTask.loop();
+    }
+}
+
+#elif defined(FRAMEWORK_TEST)
+
+#else // defaults to FRAMEWORK_ARDUINO
 
 namespace { // use anonymous namespace to make items local to this translation unit
     Main* mainTask;
@@ -20,28 +54,6 @@ void setup()// cppcheck-suppress unusedFunction
 void loop()// cppcheck-suppress unusedFunction
 {
     mainTask->loop();
-}
-
-#elif defined(FRAMEWORK_ESPIDF)
-
-extern "C" void app_main()
-{
-    static Main mainTask;
-    mainTask.setup();
-    while (true) {
-        mainTask.loop();
-    }
-}
-
-#elif defined(FRAMEWORK_RPI_PICO)
-
-int main()
-{
-    static Main mainTask;
-    mainTask.setup();
-    while (true) {
-        mainTask.loop();
-    }
 }
 
 #endif

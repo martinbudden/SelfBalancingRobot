@@ -1,14 +1,16 @@
 #include "Main.h"
 
 #include <AHRS.h>
-#if defined(FRAMEWORK_ARDUINO)
-#include <Arduino.h>
 #if defined(M5_STACK)
 #include <M5Stack.h>
 #elif defined(M5_UNIFIED)
 #include <M5Unified.h>
+#elif defined(FRAMEWORK_ARDUINO)
+#if !defined(FRAMEWORK_ARDUINO_ESP32)
+#include <Arduino.h>
 #endif
 #endif
+
 #include <SV_Preferences.h>
 
 
@@ -83,9 +85,9 @@ void Main::runIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs)
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     if (M5.Lcd.width() > 300) {
         M5.Lcd.printf("gyro offsets\r\n");
-        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", gyroOffset_x, gyroOffset_y, gyroOffset_z);
+        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", static_cast<int>(gyroOffset_x), static_cast<int>(gyroOffset_y), static_cast<int>(gyroOffset_z));
         M5.Lcd.printf("acc offsets\r\n");
-        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", accOffset_x, accOffset_y, accOffset_z);
+        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", static_cast<int>(accOffset_x), static_cast<int>(accOffset_y), static_cast<int>(accOffset_z));
     }
 #endif
 

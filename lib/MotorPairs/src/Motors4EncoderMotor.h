@@ -13,7 +13,8 @@ public:
     float getCurrent() const;
     float getVoltage() const;
 private:
-    enum { MIN_POWER = -127, MAX_POWER = 127 };
+    static constexpr float MIN_POWER = -127.0F;
+    static constexpr float MAX_POWER =  127.0F;
 
     static constexpr uint8_t I2C_ADDRESS = 0x24;
 
@@ -30,7 +31,8 @@ private:
     enum : uint8_t { NORMAL_MODE = 0x00, POSITION_MODE = 0x01, SPEED_MODE = 0x02 };
 
     // map left and right motors to MOTOR_0 and MOTOR_1
-    enum { MOTOR_LEFT = MOTOR_0, MOTOR_RIGHT = MOTOR_1 };
+    static constexpr uint8_t MOTOR_LEFT = MOTOR_0;
+    static constexpr uint8_t MOTOR_RIGHT = MOTOR_1;
 private:
     BUS_I2C _I2C;
 };

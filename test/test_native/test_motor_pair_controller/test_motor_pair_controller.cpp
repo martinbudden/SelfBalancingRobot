@@ -75,20 +75,20 @@ void test_motor_pair_controller()
     const MotorPairController::pidf_array_t& scaleFactors = mpc.getScaleFactors();
     TEST_ASSERT_EQUAL_FLOAT(0.0002F, scaleFactors[MotorPairController::PITCH_ANGLE_DEGREES].kp);
 
-    TEST_ASSERT_EQUAL(TD_PIDS::SELF_BALANCING_ROBOT, VehicleControllerBase::SELF_BALANCING_ROBOT);
-    TEST_ASSERT_EQUAL(TD_PIDS::AIRCRAFT, VehicleControllerBase::AIRCRAFT);
+    TEST_ASSERT_EQUAL(TD_PID::SELF_BALANCING_ROBOT, VehicleControllerBase::SELF_BALANCING_ROBOT);
+    TEST_ASSERT_EQUAL(TD_PID::AIRCRAFT, VehicleControllerBase::AIRCRAFT);
 
-    TEST_ASSERT_TRUE(static_cast<int>(TD_PIDS::MAX_PID_COUNT) >= static_cast<int>(MotorPairController::PID_COUNT));
+    TEST_ASSERT_TRUE(static_cast<int>(TD_PID::MAX_PID_COUNT) >= static_cast<int>(MotorPairController::PID_COUNT));
 }
 
 void test_motor_pair_controller_pid_indexes()
 {
-    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::ROLL_ANGLE_DEGREES) == static_cast<int>(TD_SBR_PIDS::ROLL_ANGLE));
-    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::PITCH_ANGLE_DEGREES) == static_cast<int>(TD_SBR_PIDS::PITCH_ANGLE));
-    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::YAW_RATE_DPS) == static_cast<int>(TD_SBR_PIDS::YAW_RATE));
-    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::SPEED_SERIAL_DPS) == static_cast<int>(TD_SBR_PIDS::SPEED_SERIAL));
-    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::SPEED_PARALLEL_DPS) == static_cast<int>(TD_SBR_PIDS::SPEED_PARALLEL));
-    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::POSITION_DEGREES) == static_cast<int>(TD_SBR_PIDS::POSITION));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::ROLL_ANGLE_DEGREES) == static_cast<int>(TD_SBR_PID::ROLL_ANGLE));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::PITCH_ANGLE_DEGREES) == static_cast<int>(TD_SBR_PID::PITCH_ANGLE));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::YAW_RATE_DPS) == static_cast<int>(TD_SBR_PID::YAW_RATE));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::SPEED_SERIAL_DPS) == static_cast<int>(TD_SBR_PID::SPEED_SERIAL));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::SPEED_PARALLEL_DPS) == static_cast<int>(TD_SBR_PID::SPEED_PARALLEL));
+    TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::POSITION_DEGREES) == static_cast<int>(TD_SBR_PID::POSITION));
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
