@@ -3,7 +3,8 @@
 #include <BackchannelStabilizedVehicle.h>
 
 class MotorPairController;
-class SV_Preferences;
+class NonVolatileStorage;
+
 
 /*!
 Backchannel for Self Balancing Robot.
@@ -18,7 +19,7 @@ public:
         AHRS& ahrs,
         const ReceiverBase& receiver,
         const TaskBase* mainTask,
-        SV_Preferences& preferences
+        NonVolatileStorage& nonVolatileStorage
     );
 public:
     virtual bool sendPacket(uint8_t subCommand) override;
@@ -28,5 +29,5 @@ protected:
     virtual bool packetSetPID(const CommandPacketSetPID& packet) override;
 protected:
     MotorPairController& _motorPairController;
-    SV_Preferences& _preferences;
+    NonVolatileStorage& _nonVolatileStorage;
 };

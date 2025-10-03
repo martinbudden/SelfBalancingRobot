@@ -63,7 +63,7 @@ MotorPairBase& MotorPairController::allocateMotors()
 }
 
 MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex) :
-    MotorPairController(taskDenominator, ahrs, motorPair, radioController, i2cMutex, gVehicle, gScaleFactors)
+    MotorPairController(taskDenominator, ahrs, motorPair, radioController, i2cMutex, gVehicle)
 {
 }
 
@@ -71,7 +71,7 @@ MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& a
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors) :
+MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle) :
     VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, ahrs.getTaskIntervalMicroseconds() / taskDenominator, ahrs),
     _radioController(radioController),
     _motorPair(motorPair),
@@ -80,8 +80,7 @@ MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& a
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
     _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),
-    _pitchBalanceAngleDegrees(vehicle.pitchBalanceAngleDegrees),
-    _scaleFactors(scaleFactors)
+    _pitchBalanceAngleDegrees(vehicle.pitchBalanceAngleDegrees)
 {
 
 #if defined(I2C_MUTEX_REQUIRED)
@@ -91,10 +90,6 @@ MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& a
 #endif
 
     _motorPairMixer.setMotorSwitchOffAngleDegrees(vehicle.motorSwitchOffAngleDegrees);
-
-    for (size_t ii = PID_BEGIN; ii < PID_COUNT; ++ii) {
-        _PIDS[ii].setPID(gDefaultPIDs[ii]);
-    }
 
     const float deltaT = static_cast<float>(_taskIntervalMicroseconds) / 1000000.0F;
     _pitchAngleDTermFilter.setCutoffFrequency(50.0F, deltaT);

@@ -31,15 +31,24 @@ void MotorPairController::motorsResetEncodersToZero()
     _motorPair.resetEncodersToZero();
 }
 
-void MotorPairController::setPID_Constants(const pidf_uint8_array_t& pids)
+void MotorPairController::setPID_Constants(const pidf_uint16_array_t& pids)
 {
     for (size_t ii = PID_BEGIN; ii < PID_COUNT; ++ii) {
         const auto pidIndex = static_cast<pid_index_e>(ii);
-        setPID_P_MSP(pidIndex, pids[pidIndex].kp);
-        setPID_I_MSP(pidIndex, pids[pidIndex].ki);
-        setPID_D_MSP(pidIndex, pids[pidIndex].kd);
-        setPID_F_MSP(pidIndex, pids[pidIndex].kf);
+        setPID_Constants(pidIndex, pids[pidIndex]);
     }
+}
+
+/*!
+Set the P, I, D, F, and S values for the PID with index pidIndex.
+*/
+void MotorPairController::setPID_Constants(pid_index_e pidIndex, const PIDF_uint16_t& pid16)
+{
+    setPID_P_MSP(pidIndex, pid16.kp);
+    setPID_I_MSP(pidIndex, pid16.ki);
+    setPID_D_MSP(pidIndex, pid16.kd);
+    setPID_F_MSP(pidIndex, pid16.kf);
+    setPID_F_MSP(pidIndex, pid16.ks);
 }
 
 uint32_t MotorPairController::getOutputPowerTimeMicroseconds() const
@@ -53,11 +62,11 @@ VehicleControllerBase::PIDF_uint16_t MotorPairController::getPID_MSP(size_t inde
 
     const auto pidIndex = static_cast<pid_index_e>(index);
     const PIDF_uint16_t ret = {
-        .kp = static_cast<uint16_t>(_PIDS[pidIndex].getP() / _scaleFactors[pidIndex].kp),
-        .ki = static_cast<uint16_t>(_PIDS[pidIndex].getI() / _scaleFactors[pidIndex].ki),
-        .kd = static_cast<uint16_t>(_PIDS[pidIndex].getD() / _scaleFactors[pidIndex].kd),
-        .kf = static_cast<uint16_t>(_PIDS[pidIndex].getF() / _scaleFactors[pidIndex].kf),
-        .ks = static_cast<uint16_t>(_PIDS[pidIndex].getS() / _scaleFactors[pidIndex].ks),
+        .kp = static_cast<uint16_t>(_PIDS[pidIndex].getP() / _scaleFactors.kp),
+        .ki = static_cast<uint16_t>(_PIDS[pidIndex].getI() / _scaleFactors.ki),
+        .kd = static_cast<uint16_t>(_PIDS[pidIndex].getD() / _scaleFactors.kd),
+        .kf = static_cast<uint16_t>(_PIDS[pidIndex].getF() / _scaleFactors.kf),
+        .ks = static_cast<uint16_t>(_PIDS[pidIndex].getS() / _scaleFactors.ks),
     };
     return ret;
 }

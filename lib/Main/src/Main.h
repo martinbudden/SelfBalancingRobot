@@ -23,8 +23,8 @@ class BlackboxTask;
 class IMU_Base;
 class IMU_FiltersBase;
 class MotorPairController;
+class NonVolatileStorage;
 class ReceiverTask;
-class SV_Preferences;
 class VehicleControllerBase;
 class VehicleControllerTask;
 
@@ -120,11 +120,11 @@ private:
     IMU_Base& createIMU(void* i2cMutex);
     AHRS& createAHRS(void* i2cMutex);
     AHRS& createAHRS(uint32_t AHRS_taskIntervalMicroseconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
-    static void checkIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs);
-    static void runIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs);
-    static void calibrateIMU(SV_Preferences& preferences, AHRS& ahrs);
-    static void resetPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
-    static void loadPreferences(SV_Preferences& preferences, MotorPairController& motorPairController);
+    static void checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
+    static void runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
+    static void calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
+    static void resetSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController);
+    static void loadSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController);
     static void reportMainTask();
 
     struct tasks_t {

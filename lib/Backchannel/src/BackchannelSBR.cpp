@@ -3,8 +3,8 @@
 #include "SBR_Telemetry.h"
 
 #include <AHRS.h>
+#include <NonVolatileStorage.h>
 #include <ReceiverBase.h>
-#include <SV_Preferences.h>
 #include <SV_Telemetry.h>
 #include <SV_TelemetryData.h>
 
@@ -17,7 +17,7 @@ BackchannelSBR::BackchannelSBR(
         AHRS& ahrs,
         const ReceiverBase& receiver,
         const TaskBase* mainTask,
-        SV_Preferences& preferences
+        NonVolatileStorage& nonVolatileStorage
     ) :
     BackchannelStabilizedVehicle(
         backchannelTransceiver,
@@ -29,7 +29,7 @@ BackchannelSBR::BackchannelSBR(
         mainTask
     ),
     _motorPairController(motorPairController),
-    _preferences(preferences)
+    _nonVolatileStorage(nonVolatileStorage)
 {
 #if !defined(ESP_NOW_MAX_DATA_LEN)
 #define ESP_NOW_MAX_DATA_LEN (250)
@@ -47,12 +47,12 @@ bool BackchannelSBR::packetSetOffset(const CommandPacketSetOffset& packet)
     switch (packet.setType) {
     case CommandPacketSetOffset::SAVE_GYRO_OFFSET: {
         const IMU_Base::xyz_int32_t gyroOffset = _ahrs.getGyroOffset();
-        _preferences.putGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
+        _nonVolatileStorage.storeGyroOffset(gyroOffset.x, gyroOffset.y, gyroOffset.z);
         break;
     }
     case CommandPacketSetOffset::SAVE_ACC_OFFSET: {
         const IMU_Base::xyz_int32_t accOffset = _ahrs.getAccOffset();
-        _preferences.putAccOffset(accOffset.x, accOffset.y, accOffset.z);
+        _nonVolatileStorage.storeAccOffset(accOffset.x, accOffset.y, accOffset.z);
         break;
     }
     default:
@@ -143,18 +143,18 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
     case CommandPacketSetPID::SAVE_F:
         //Serial.printf("Saved PID packetType:%d pidIndex:%d setType:%d\r\n", packet.type, packet.pidIndex, packet.setType);
         // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.
-        _preferences.putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
+        //!!_preferences.putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
+        _nonVolatileStorage.storePID(_motorPairController.getPID_MSP(pidIndex), pidIndex);
         return true;
-        break;
     case CommandPacketSetPID::RESET_PID:
-        _preferences.putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET });
+        //!!_preferences.putPID(_motorPairController.getPID_Name(pidIndex), PIDF::PIDF_t { SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET, SV_Preferences::NOT_SET });
+        _nonVolatileStorage.resetPID(pidIndex);
         return true;
-        break;
     case CommandPacketSetPID::SAVE_PITCH_BALANCE_ANGLE:
         // Save the balance angel, the value of packet.pidIndex is ignored.
-        _preferences.putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
+        //!!_preferences.putFloat(_motorPairController.getBalanceAngleName(), _motorPairController.getPitchBalanceAngleDegrees());
+        _nonVolatileStorage.storeBalanceAngle(_motorPairController.getPitchBalanceAngleDegrees());
         return true;
-        break;
     default:
         //Serial.printf("Backchannel::packetSetPID invalid setType:%d\r\n", packet.pidIndex);
         break;

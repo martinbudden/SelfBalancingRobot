@@ -11,14 +11,14 @@
 #endif
 #endif
 
-#include <SV_Preferences.h>
+#include <NonVolatileStorage.h>
 
 
-void Main::runIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs)
+void Main::runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs)
 {
 #if defined(USE_IMU_M5_UNIFIED)
     (void)ahrs;
-    (void)preferences;
+    (void)nonVolatileStorage;
     // Strength of the calibration operation;
     // 0: disables calibration.
     // 1 is weakest and 255 is strongest.
@@ -91,11 +91,11 @@ void Main::runIMU_Calibration(SV_Preferences& preferences, AHRS& ahrs)
     }
 #endif
 
-    preferences.putGyroOffset(gyroOffset_x, gyroOffset_y, gyroOffset_z);
-    preferences.putAccOffset(accOffset_x, accOffset_y, accOffset_z);
+    nonVolatileStorage.storeGyroOffset(gyroOffset_x, gyroOffset_y, gyroOffset_z);
+    nonVolatileStorage.storeAccOffset(accOffset_x, accOffset_y, accOffset_z);
 }
 
-void Main::calibrateIMU(SV_Preferences& preferences, AHRS& ahrs)
+void Main::calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs)
 {
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     if (M5.Lcd.width() > 300) {
@@ -113,7 +113,7 @@ void Main::calibrateIMU(SV_Preferences& preferences, AHRS& ahrs)
     delay(4000); // delay 4 seconds to allow robot to stabilize after user lets go
 #endif
 
-    runIMU_Calibration(preferences, ahrs);
+    runIMU_Calibration(nonVolatileStorage, ahrs);
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     M5.Lcd.printf("Finished calibration\r\n");

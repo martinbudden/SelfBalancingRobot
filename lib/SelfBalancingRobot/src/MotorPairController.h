@@ -79,10 +79,10 @@ public:
         float encoderStepsPerRevolution;
     };
     typedef std::array<PIDF::PIDF_t, PID_COUNT> pidf_array_t;
-    typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint8_array_t;
+    typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint16_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 private:
-    MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle, const pidf_array_t& scaleFactors);
+    MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle);
 public:
     static MotorPairBase& allocateMotors();
     float getMixerThrottleCommand() const { return _motorPairMixer.getThrottleCommand(); }
@@ -102,16 +102,17 @@ public:
 
     inline const PIDF& getPID(pid_index_e pidIndex) const { return _PIDS[pidIndex]; }
     inline const PIDF::PIDF_t getPID_Constants(pid_index_e pidIndex) const { return _PIDS[pidIndex].getPID(); }
-    void setPID_Constants(const pidf_uint8_array_t& pids);
+
+    void setPID_Constants(const pidf_uint16_array_t& pids);
     inline void setPID_Constants(pid_index_e pidIndex, const PIDF::PIDF_t& pid) { _PIDS[pidIndex].setPID(pid); }
+    void setPID_Constants(pid_index_e pidIndex, const PIDF_uint16_t& pid16);
 
     virtual PIDF_uint16_t getPID_MSP(size_t index) const override;
-    void setPID_P_MSP(pid_index_e pidIndex, uint16_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors[pidIndex].kp); }
-    void setPID_I_MSP(pid_index_e pidIndex, uint16_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors[pidIndex].ki); }
-    void setPID_D_MSP(pid_index_e pidIndex, uint16_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors[pidIndex].kd); }
-    void setPID_F_MSP(pid_index_e pidIndex, uint16_t kf) { _PIDS[pidIndex].setF(kf * _scaleFactors[pidIndex].kf); }
-
-    const std::array<PIDF::PIDF_t, PID_COUNT>&  getScaleFactors() const { return _scaleFactors; }
+    void setPID_P_MSP(pid_index_e pidIndex, uint16_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors.kp); }
+    void setPID_I_MSP(pid_index_e pidIndex, uint16_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors.ki); }
+    void setPID_D_MSP(pid_index_e pidIndex, uint16_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors.kd); }
+    void setPID_F_MSP(pid_index_e pidIndex, uint16_t kf) { _PIDS[pidIndex].setF(kf * _scaleFactors.kf); }
+    void setPID_S_MSP(pid_index_e pidIndex, uint16_t ks) { _PIDS[pidIndex].setF(ks * _scaleFactors.ks); }
 
     inline float getPID_Setpoint(pid_index_e pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
     void setPID_Setpoint(pid_index_e pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
@@ -172,5 +173,5 @@ private:
 
     std::array<float, OUTPUT_COUNT> _outputs {};
     std::array<PIDF, PID_COUNT> _PIDS {};
-    const std::array<PIDF::PIDF_t, PID_COUNT> _scaleFactors; // used to scale PID values for the backchannel
+    static constexpr PIDF::PIDF_t _scaleFactors = { 0.003, 0.025, 0.00005, 0.01, 0.01 };
 };
