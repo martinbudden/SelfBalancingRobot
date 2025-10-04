@@ -14,7 +14,7 @@
 #include <NonVolatileStorage.h>
 
 
-void Main::runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs)
+void Main::runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType)
 {
 #if defined(USE_IMU_M5_UNIFIED)
     (void)ahrs;
@@ -92,10 +92,12 @@ void Main::runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs
 #endif
 
     nonVolatileStorage.storeGyroOffset(gyroOffset_x, gyroOffset_y, gyroOffset_z);
-    nonVolatileStorage.storeAccOffset(accOffset_x, accOffset_y, accOffset_z);
+    if (calibrationType == CALIBRATE_ACC_AND_GYRO) {
+        nonVolatileStorage.storeAccOffset(accOffset_x, accOffset_y, accOffset_z);
+    }
 }
 
-void Main::calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs)
+void Main::calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType)
 {
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     if (M5.Lcd.width() > 300) {
@@ -113,7 +115,7 @@ void Main::calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs)
     delay(4000); // delay 4 seconds to allow robot to stabilize after user lets go
 #endif
 
-    runIMU_Calibration(nonVolatileStorage, ahrs);
+    runIMU_Calibration(nonVolatileStorage, ahrs, calibrationType);
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     M5.Lcd.printf("Finished calibration\r\n");

@@ -3,6 +3,7 @@
 #include <AHRS.h>
 #include <IMU_Null.h>
 #include <MotorPairController.h>
+#include <NonVolatileStorage.h>
 #include <RadioController.h>
 #include <ReceiverNull.h>
 #include <SV_TelemetryData.h>
@@ -91,12 +92,36 @@ void test_motor_pair_controller_pid_indexes()
     TEST_ASSERT_TRUE(static_cast<int>(MotorPairController::POSITION_DEGREES) == static_cast<int>(TD_SBR_PID::POSITION));
 }
 
+void test_motor_non_volatile_storage()
+{
+    std::array<char, 8> chars;
+
+    NonVolatileStorage::toHexChars(&chars[0], 0x1234);
+    TEST_ASSERT_EQUAL('0', chars[0]);
+    TEST_ASSERT_EQUAL('x', chars[1]);
+    TEST_ASSERT_EQUAL('1', chars[2]);
+    TEST_ASSERT_EQUAL('2', chars[3]);
+    TEST_ASSERT_EQUAL('3', chars[4]);
+    TEST_ASSERT_EQUAL('4', chars[5]);
+    TEST_ASSERT_EQUAL(0, chars[6]);
+
+    NonVolatileStorage::toHexChars(&chars[0], 0x010C);
+    TEST_ASSERT_EQUAL('0', chars[0]);
+    TEST_ASSERT_EQUAL('x', chars[1]);
+    TEST_ASSERT_EQUAL('0', chars[2]);
+    TEST_ASSERT_EQUAL('1', chars[3]);
+    TEST_ASSERT_EQUAL('0', chars[4]);
+    TEST_ASSERT_EQUAL('C', chars[5]);
+    TEST_ASSERT_EQUAL(0, chars[6]);
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
     UNITY_BEGIN();
 
     RUN_TEST(test_motor_pair_controller);
     RUN_TEST(test_motor_pair_controller_pid_indexes);
+    RUN_TEST(test_motor_non_volatile_storage);
 
     UNITY_END();
 }

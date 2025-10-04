@@ -95,14 +95,14 @@ void NonVolatileStorage::toHexChars(char* charPtr, uint16_t value)
     *charPtr++ = '0';
     *charPtr++ = 'x';
 
-    auto digit = static_cast<uint8_t>(value >> 24U);
-    *charPtr++ = static_cast<char>((digit <= 9) ? digit +'0' : digit + 'A');
-    digit = static_cast<uint8_t>((value >> 16U) & 0x000FU);
-    *charPtr++ = static_cast<char>((digit <= 9) ? digit +'0' : digit + 'A');
+    auto digit = static_cast<uint8_t>(value >> 12U);
+    *charPtr++ = static_cast<char>((digit <= 9) ? digit +'0' : digit + 'A' - 10);
     digit = static_cast<uint8_t>((value >> 8U) & 0x000FU);
-    *charPtr++ = static_cast<char>((digit <= 9) ? digit +'0' : digit + 'A');
+    *charPtr++ = static_cast<char>((digit <= 9) ? digit +'0' : digit + 'A' - 10);
+    digit = static_cast<uint8_t>((value >> 4U) & 0x000FU);
+    *charPtr++ = static_cast<char>((digit <= 9) ? digit +'0' : digit + 'A' - 10);
     digit = static_cast<uint8_t>(value & 0x000FU);
-    *charPtr++ = static_cast<char>((digit <= 9) ? digit +'0' : digit + 'A');
+    *charPtr++ = static_cast<char>((digit <= 9) ? digit +'0' : digit + 'A' - 10);
     *charPtr = 0;
     // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic,hicpp-signed-bitwise)
 }
@@ -234,7 +234,7 @@ int32_t NonVolatileStorage::storeBalanceAngle(float balanceAngle)
     return storeItem(BalanceAngleKey, &balanceAngle, sizeof(balanceAngle), &defaultBalanceAngle);
 }
 
-
+#if !defined(FRAMEWORK_TEST)
 RadioController::failsafe_t NonVolatileStorage::loadRadioControllerFailsafe() // NOLINT(readability-make-member-function-const)
 {
     RadioController::failsafe_t failsafe {};
@@ -271,6 +271,7 @@ int32_t NonVolatileStorage::storePID(const VehicleControllerBase::PIDF_uint16_t&
     const uint16_t key = PID_Keys[pidIndex] + pidProfileIndex;
     return storeItem(key, &key, sizeof(pid), &DEFAULTS::motorPairControllerPIDs[pidIndex]);
 }
+#endif
 
 void NonVolatileStorage::resetPID(uint8_t pidIndex, uint8_t pidProfileIndex)
 {

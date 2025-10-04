@@ -173,5 +173,5 @@ private:
 
     std::array<float, OUTPUT_COUNT> _outputs {};
     std::array<PIDF, PID_COUNT> _PIDS {};
-    static constexpr PIDF::PIDF_t _scaleFactors = { 0.003, 0.025, 0.00005, 0.01, 0.01 };
+    static constexpr PIDF::PIDF_t _scaleFactors = { 0.0003, 0.025, 0.000005, 0.01, 0.01 };
 };

@@ -151,13 +151,13 @@ void Main::setup()
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
-        calibrateIMU(nvs, ahrs);
+        calibrateIMU(nvs, ahrs, CALIBRATE_ACC_AND_GYRO);
     }
     checkIMU_Calibration(nvs, ahrs);
 
-    // Holding BtnC down while switching on resets the preferences.
+    // Holding BtnC down while switching on clears the preferences.
     if (M5.BtnC.isPressed()) {
-        resetSettings(nvs, motorPairController);
+        clearSettings(nvs, motorPairController, ahrs);
     }
     loadSettings(nvs, motorPairController);
 
@@ -260,7 +260,7 @@ void Main::checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ah
         sprintf(&buf[0], "**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
         Serial.print(&buf[0]);
 #endif
-        if (nonVolatileStorage.loadGyroOffset(offset.x, offset.y, offset.z)) {
+        if (nonVolatileStorage.loadAccOffset(offset.x, offset.y, offset.z)) {
             ahrs.setAccOffset(offset);
 #if defined(FRAMEWORK_ARDUINO)
             sprintf(&buf[0], "**** AHRS accOffsets loaded from preferences:  ax:%5d, ay:%5d, az:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
@@ -268,26 +268,33 @@ void Main::checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ah
 #endif
         }
     } else {
-        calibrateIMU(nonVolatileStorage, ahrs);
+        // a calibrate by default only calibrates the gyro, since the SBR may be in an odd orientation when initially switched on
+        calibrateIMU(nonVolatileStorage, ahrs, CALIBRATE_GYRO_ONLY);
     }
 #endif
 }
 
 /*!
-Resets the PIDs and the Balance Angle
+Clears the settings stored in nonvolatile storage.
 */
-void Main::resetSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController)
+void Main::clearSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController, AHRS& ahrs)
 {
-    //_preferences->clear();
-    //_preferences->removeGyroOffset();
-    //_preferences->removeAccOffset();
+#if defined(USE_ARDUINO_ESP32_PREFERENCES)
+    nonVolatileStorage.clear();
+#else
     for (size_t ii = MotorPairController::PID_BEGIN; ii < MotorPairController::PID_COUNT; ++ii) {
         nonVolatileStorage.resetPID(ii);
     }
     nonVolatileStorage.storeBalanceAngle(DEFAULTS::balanceAngle);
+    nonVolatileStorage.storeAccOffset(0, 0, 0);
+    nonVolatileStorage.storeGyroOffset(0, 0, 0);
+#endif
+    const IMU_Base::xyz_int32_t offset {0, 0, 0};
+    ahrs.setAccOffset(offset);
+    ahrs.setGyroOffset(offset);
     motorPairController.setPitchBalanceAngleDegrees(DEFAULTS::balanceAngle);
 #if defined(FRAMEWORK_ARDUINO)
-    Serial.print("**** NVS reset");
+    Serial.print("**** NVS clear");
 #endif
 }
 
@@ -299,8 +306,8 @@ void Main::loadSettings(NonVolatileStorage& nonVolatileStorage, MotorPairControl
     const float pitchBalanceAngleDegrees =nonVolatileStorage.loadBalanceAngle();
     motorPairController.setPitchBalanceAngleDegrees(pitchBalanceAngleDegrees);
 #if defined(FRAMEWORK_ARDUINO)
-    Serial.print("**** pitch balance angle loaded from preferences:");
-    Serial.print(pitchBalanceAngleDegrees);
+    Serial.print("**** BALANCE ANGLE loaded from preferences: ");
+    Serial.println(pitchBalanceAngleDegrees);
 #endif
 
     // Load the PID constants from preferences, and if they are non-zero then use them to set the motorPairController PIDs.
@@ -310,7 +317,7 @@ void Main::loadSettings(NonVolatileStorage& nonVolatileStorage, MotorPairControl
 #if defined(FRAMEWORK_ARDUINO)
         std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_e>(ii));
         std::array<char, 128> buf;
-        sprintf(&buf[0], "**** %s PID loaded from preferences: P:%d, I:%d, D:%d, F:%d S:%d\r\n", pidName.c_str(), static_cast<int>(pid.kp), static_cast<int>(pid.ki), static_cast<int>(pid.kd), static_cast<int>(pid.kf), static_cast<int>(pid.ks));
+        sprintf(&buf[0], "**** %15s PID loaded from preferences: P:%4d, I:%4d, D:%4d, F:%4d S:%4d\r\n", pidName.c_str(), static_cast<int>(pid.kp), static_cast<int>(pid.ki), static_cast<int>(pid.kd), static_cast<int>(pid.kf), static_cast<int>(pid.ks));
         Serial.print(&buf[0]);
 #endif
     }

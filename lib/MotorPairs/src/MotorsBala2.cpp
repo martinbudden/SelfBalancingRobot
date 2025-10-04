@@ -40,7 +40,11 @@ void MotorsBala2::setPower(float leftPower, float rightPower)
     const int16_t right = -static_cast<int16_t>(roundf(rightClipped * MAX_POWER));
 
     // NOLINTBEGIN(hicpp-signed-bitwise)
+#if defined(M5_STACK)
+    uint8_t data[4] = {
+#else
     const std::array<uint8_t, 4> data = {
+#endif
         static_cast<uint8_t>(left >> 8),
         static_cast<uint8_t>(left & 0xFF),
         static_cast<uint8_t>(right >> 8),

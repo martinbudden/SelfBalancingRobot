@@ -121,9 +121,10 @@ private:
     AHRS& createAHRS(void* i2cMutex);
     AHRS& createAHRS(uint32_t AHRS_taskIntervalMicroseconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
     static void checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
-    static void runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
-    static void calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
-    static void resetSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController);
+    enum calibration_type_e { CALIBRATE_ACC_AND_GYRO, CALIBRATE_GYRO_ONLY };
+    static void runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
+    static void calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
+    static void clearSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController, AHRS& ahrs);
     static void loadSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController);
     static void reportMainTask();
 
