@@ -2,9 +2,11 @@
 #include "RadioController.h"
 
 
-RadioController::RadioController(ReceiverBase& receiver) :
-    RadioControllerBase(receiver)
+RadioController::RadioController(ReceiverBase& receiver, MotorPairController& motorPairController) :
+    RadioControllerBase(receiver),
+    _motorPairController(motorPairController)
 {
+    _motorPairController.setRadioController(this);
 }
 
 /*!
@@ -33,7 +35,7 @@ void RadioController::updateControls(const controls_t& controls)
     } else {
         if (_onOffSwitchPressed) {
             // motorOnOff false and _onOffPressed true means the  on/off button is being released, so toggle the motor state
-            _motorPairController->motorsToggleOnOff();
+            _motorPairController.motorsToggleOnOff();
             _onOffSwitchPressed = false;
         }
     }
@@ -47,7 +49,7 @@ void RadioController::updateControls(const controls_t& controls)
         .pitchStickDegrees = controls.pitchStick * _pitchMaxAngleDegrees,
         .yawStickDPS = mapStick(controls.yawStick, alpha) // map the YAW stick values to give better control at low stick values
     };
-    _motorPairController->updateSetpoints(mpcControls);
+    _motorPairController.updateSetpoints(mpcControls);
 }
 
 uint32_t RadioController::getFailsafePhase() const
@@ -68,7 +70,7 @@ void RadioController::checkFailsafe(uint32_t tickCount)
         // so enter failsafe mode.
         _failsafePhase = FAILSAFE_RX_LOSS_DETECTED;
         if ((tickCount - _failsafeTickCount > _failsafeTickCountSwitchOffThreshold)) {
-            _motorPairController->motorsSwitchOff();
+            _motorPairController.motorsSwitchOff();
             _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
         }
     }

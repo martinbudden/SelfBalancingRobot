@@ -99,6 +99,11 @@ void Main::setup()
 
     AHRS& ahrs = createAHRS(i2cMutex); // NOLINT(misc-const-correctness) false positive
 
+    // Statically allocate the motorPairController.
+    MotorPairBase& motorPairBase = MotorPairController::allocateMotors();
+    static MotorPairController motorPairController(MPC_TASK_DENOMINATOR, ahrs, motorPairBase, i2cMutex);
+    ahrs.setVehicleController(&motorPairController);
+
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
     // Set WiFi to station mode
     WiFi.mode(WIFI_STA);
@@ -122,14 +127,7 @@ void Main::setup()
 #else
     static ReceiverNull receiver;
 #endif // LIBRARY_RECEIVER_USE_ESPNOW
-
-    static RadioController radioController(receiver);
-
-    // Statically allocate the motorPairController.
-    MotorPairBase& motorPairBase = MotorPairController::allocateMotors();
-    static MotorPairController motorPairController(MPC_TASK_DENOMINATOR, ahrs, motorPairBase, radioController, i2cMutex);
-    ahrs.setVehicleController(&motorPairController);
-    radioController.setMotorPairController(&motorPairController);
+    static RadioController radioController(receiver, motorPairController);
 
 #if defined(USE_BLACKBOX)
     static BlackboxMessageQueue         blackboxMessageQueue;
@@ -248,7 +246,7 @@ void Main::checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ah
 #if defined(USE_IMU_M5_UNIFIED)
     // M5_UNIFIED directly uses NVS (non-volatile storage) to store the gyro offsets.
     if (!M5.Imu.loadOffsetFromNVS()) {
-        calibrateIMU(nonVolatileStorage, ahrs);
+        calibrateIMU(nonVolatileStorage, ahrs, CALIBRATE_GYRO_ONLY);
     }
 #else
     // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.

@@ -10,7 +10,7 @@ class MotorPairController;
 
 class RadioController : public RadioControllerBase {
 public:
-    explicit RadioController(ReceiverBase& receiver);
+    explicit RadioController(ReceiverBase& receiver, MotorPairController& motorPairController);
 public:
     enum failsafe_phase_e {
         FAILSAFE_IDLE = 0,
@@ -30,8 +30,6 @@ public:
         uint16_t throttle_low_delay;
     };
 public:
-    void setMotorPairController(MotorPairController* motorPairController) { _motorPairController = motorPairController; }
-
     virtual void updateControls(const controls_t& controls) override;
 
     virtual void checkFailsafe(uint32_t tickCount) override;
@@ -41,7 +39,7 @@ public:
 
     static float mapStick(float stick, float alpha);
 private:
-    MotorPairController* _motorPairController {};
+    MotorPairController& _motorPairController;
     int32_t _onOffSwitchPressed {false}; // on/off switch debouncing
     // failsafe handling
     failsafe_phase_e _failsafePhase {FAILSAFE_IDLE};

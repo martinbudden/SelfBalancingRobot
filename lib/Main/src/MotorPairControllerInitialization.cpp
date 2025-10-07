@@ -62,8 +62,8 @@ MotorPairBase& MotorPairController::allocateMotors()
     return motors;
 }
 
-MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex) :
-    MotorPairController(taskDenominator, ahrs, motorPair, radioController, i2cMutex, gVehicle)
+MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex) :
+    MotorPairController(taskDenominator, ahrs, motorPair, i2cMutex, gVehicle)
 {
 }
 
@@ -71,9 +71,8 @@ MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& a
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, RadioControllerBase& radioController, void* i2cMutex, const vehicle_t& vehicle) :
+MotorPairController::MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex, const vehicle_t& vehicle) :
     VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, ahrs.getTaskIntervalMicroseconds() / taskDenominator, ahrs),
-    _radioController(radioController),
     _motorPair(motorPair),
     _motorPairMixer(_motorPair),
     _taskDenominator(taskDenominator),

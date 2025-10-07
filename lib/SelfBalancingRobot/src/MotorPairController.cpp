@@ -351,7 +351,7 @@ void MotorPairController::outputToMixer(float deltaT, uint32_t tickCount, const 
     _taskSignalledCount = 0;
 
     updateMotorSpeedEstimates(deltaT);
-    if (_radioController.getFailsafePhase() != RadioController::FAILSAFE_IDLE || !motorsIsOn()) {
+    if (_radioController == nullptr || _radioController->getFailsafePhase() != RadioController::FAILSAFE_IDLE || !motorsIsOn()) {
         const MotorPairMixer::commands_t commands = {
             .throttle  = 0.0F,
             .roll   = 0.0F,
