@@ -30,13 +30,11 @@ void test_motor_pair_controller()
     static IMU_Null imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
     static IMU_FiltersNull imuFilters; // NOLINT(misc-const-correctness) false positive
     static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imu, imuFilters);
-    static ReceiverNull receiver; // NOLINT(misc-const-correctness) false positive
-    static RadioController radioController(receiver);
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
-    enum { TASK_INTERVAL_MICROSECONDS = 5000 };
+    enum { TASK_DENOMINATOR = 2 };
     MotorPairBase& motors = MotorPairController::allocateMotors(); // NOLINT(misc-const-correctness)
-    MotorPairController mpc(TASK_INTERVAL_MICROSECONDS, ahrs, motors, radioController);
+    MotorPairController mpc(TASK_DENOMINATOR, ahrs, motors);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();
@@ -72,9 +70,6 @@ void test_motor_pair_controller()
 
     static const std::string pidNamePosition = mpc.getPID_Name(MotorPairController::POSITION_DEGREES);
     TEST_ASSERT_TRUE(pidNamePosition.compare("POSITION") == 0);
-
-    const MotorPairController::pidf_array_t& scaleFactors = mpc.getScaleFactors();
-    TEST_ASSERT_EQUAL_FLOAT(0.0002F, scaleFactors[MotorPairController::PITCH_ANGLE_DEGREES].kp);
 
     TEST_ASSERT_EQUAL(TD_PID::SELF_BALANCING_ROBOT, VehicleControllerBase::SELF_BALANCING_ROBOT);
     TEST_ASSERT_EQUAL(TD_PID::AIRCRAFT, VehicleControllerBase::AIRCRAFT);

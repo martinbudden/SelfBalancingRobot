@@ -183,7 +183,7 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
         // intercept an AHRS_DATA request to replace roll and pitch values
         const Quaternion orientationENU = _ahrs.getOrientationForInstrumentationUsingLock();
 
-        const size_t len = packTelemetryData_AHRS(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _ahrs, _vehicleController);
+        const size_t len = packTelemetryData_AHRS(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _ahrs);
         TD_AHRS* td = reinterpret_cast<TD_AHRS*>(_transmitDataBufferPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
         // AHRS orientation assumes (as is conventional) that roll is around the Y-axis, so convert.
         td->data.roll = orientationENU.calculatePitchDegrees(),

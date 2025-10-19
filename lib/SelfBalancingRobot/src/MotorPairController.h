@@ -29,8 +29,8 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex);
-    MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair) :
+    MotorPairController(uint32_t taskDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex);
+    MotorPairController(uint32_t taskDenominator, AHRS& ahrs, MotorPairBase& motorPair) :
         MotorPairController(taskDenominator, ahrs, motorPair, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
@@ -82,7 +82,7 @@ public:
     typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint16_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 private:
-    MotorPairController(uint32_t taskDenominator, const AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex, const vehicle_t& vehicle);
+    MotorPairController(uint32_t taskDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex, const vehicle_t& vehicle);
 public:
     static MotorPairBase& allocateMotors();
 
@@ -126,6 +126,10 @@ public:
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }
     inline void setPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees) { _pitchBalanceAngleDegrees = pitchBalanceAngleDegrees; }
 
+    float getPitchAngleDegreesRaw() const { return _pitchAngleDegreesRaw; }
+    float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; }
+    float getYawAngleDegreesRaw() const { return _yawAngleDegreesRaw; }
+
     motor_pair_controller_telemetry_t getTelemetryData() const;
 
     void motorsResetEncodersToZero();
@@ -145,6 +149,10 @@ private:
     const uint32_t _taskDenominator;
     uint32_t _taskSignalledCount {0};
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
+
+    float _rollAngleDegreesRaw {0.0F};
+    float _pitchAngleDegreesRaw {0.0F};
+    float _yawAngleDegreesRaw {0.0F};
 
     // throttle stick scaled to the range [-1,0, 1.0]
     float _throttleStick {0};

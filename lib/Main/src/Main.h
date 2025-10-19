@@ -110,6 +110,7 @@ class Main {
 public:
     enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7}; // Note: defining PI=8 will cause conflict with Arduino's #define of PI (3.14..)
     enum {P0=0, P1=1, P2=2, P3=3, P4=4, P5=5, P6=6, P7=7};
+    enum calibration_type_e { CALIBRATE_ACC_AND_GYRO, CALIBRATE_GYRO_ONLY };
 public:
     Main() = default;
 public:
@@ -121,7 +122,6 @@ private:
     AHRS& createAHRS(void* i2cMutex);
     AHRS& createAHRS(uint32_t AHRS_taskIntervalMicroseconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
     static void checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
-    enum calibration_type_e { CALIBRATE_ACC_AND_GYRO, CALIBRATE_GYRO_ONLY };
     static void runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
     static void calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
     static void clearSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController, AHRS& ahrs);

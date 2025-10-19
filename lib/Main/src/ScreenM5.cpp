@@ -562,8 +562,8 @@ void ScreenM5::updateAHRS_Data() const
     const AHRS::data_t ahrsData = _ahrs.getAhrsDataForInstrumentationUsingLock();
     const Quaternion orientation = _ahrs.getOrientationForInstrumentationUsingLock();
     TD_AHRS::data_t tdAhrsData {
-        .pitch = _motorPairController.getPitchAngleDegreesRaw(),
         .roll = _motorPairController.getRollAngleDegreesRaw(),
+        .pitch = _motorPairController.getPitchAngleDegreesRaw(),
         .yaw = _motorPairController.getYawAngleDegreesRaw(),
         .gyroRPS = ahrsData.gyroRPS,
         .acc = ahrsData.acc,
