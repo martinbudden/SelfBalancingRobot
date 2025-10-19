@@ -203,7 +203,7 @@ int32_t NonVolatileStorage::storeItem(uint16_t key, uint8_t pidProfileIndex, con
 
 uint8_t NonVolatileStorage::loadPidProfileIndex() const
 {
-    uint8_t profileIndex {};
+    uint8_t profileIndex {}; // NOLINT(misc-const-correctness)
     if (loadItem(PID_ProfileIndexKey, &profileIndex, sizeof(profileIndex))) { // cppcheck-suppress knownConditionTrueFalse
         return profileIndex;
     }
@@ -221,7 +221,7 @@ int32_t NonVolatileStorage::storePidProfileIndex(uint8_t profileIndex)
 
 float NonVolatileStorage::loadBalanceAngle() const
 {
-    float balanceAngle {};
+    float balanceAngle {}; // NOLINT(misc-const-correctness)
     if (loadItem(BalanceAngleKey, &balanceAngle, sizeof(balanceAngle))) { // cppcheck-suppress knownConditionTrueFalse
         return balanceAngle;
     }
@@ -237,7 +237,7 @@ int32_t NonVolatileStorage::storeBalanceAngle(float balanceAngle)
 #if !defined(FRAMEWORK_TEST)
 RadioController::failsafe_t NonVolatileStorage::loadRadioControllerFailsafe() // NOLINT(readability-make-member-function-const)
 {
-    RadioController::failsafe_t failsafe {};
+    RadioController::failsafe_t failsafe {}; // NOLINT(misc-const-correctness)
     if (loadItem(RadioControllerFailsafeKey, &failsafe, sizeof(failsafe))) { // cppcheck-suppress knownConditionTrueFalse
     }
     return DEFAULTS::radioControllerFailsafe;
@@ -283,7 +283,7 @@ void NonVolatileStorage::resetPID(uint8_t pidIndex, uint8_t pidProfileIndex)
 
 bool NonVolatileStorage::loadAccOffset(int32_t& x, int32_t& y, int32_t& z) const
 {
-    xyz_int32_t xyz {};
+    xyz_int32_t xyz {}; // NOLINT(misc-const-correctness)
     if (loadItem(AccOffsetKey, &xyz, sizeof(xyz))) { // cppcheck-suppress knownConditionTrueFalse
         x = xyz.x;
         y = xyz.y;
@@ -302,7 +302,7 @@ int32_t NonVolatileStorage::storeAccOffset(int32_t x, int32_t y, int32_t z)
 
 bool NonVolatileStorage::loadGyroOffset(int32_t& x, int32_t& y, int32_t& z) const
 {
-    xyz_int32_t xyz {};
+    xyz_int32_t xyz {}; // NOLINT(misc-const-correctness)
     if (loadItem(GyroOffsetKey, &xyz, sizeof(xyz))) { // cppcheck-suppress knownConditionTrueFalse
         x = xyz.x;
         y = xyz.y;

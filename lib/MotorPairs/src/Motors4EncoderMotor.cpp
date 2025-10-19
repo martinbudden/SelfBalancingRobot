@@ -43,8 +43,8 @@ void Motors4EncoderMotor::setPower(float leftPower, float rightPower)
     const float leftClipped = clip(leftPower, -1.0F, 1.0F);
     const float rightClipped = clip(rightPower, -1.0F, 1.0F);
     // set signs so positive power moves motor in a forward direction
-    const int8_t leftOutput =   static_cast<int8_t>(std::roundf(leftClipped * MAX_POWER)); // NOLINT(hicpp-use-auto,modernize-use-auto)
-    const int8_t rightOutput = -static_cast<int8_t>(std::roundf(rightClipped * MAX_POWER));
+    const auto leftOutput =  static_cast<int8_t>( std::roundf(leftClipped * MAX_POWER)); // NOLINT(hicpp-use-auto,modernize-use-auto)
+    const auto rightOutput = static_cast<int8_t>(-std::roundf(rightClipped * MAX_POWER));
 
     i2cSemaphoreTake();
     // cppcheck-suppress badBitmaskCheck

@@ -4,8 +4,6 @@
 #include <IMU_Null.h>
 #include <MotorPairController.h>
 #include <NonVolatileStorage.h>
-#include <RadioController.h>
-#include <ReceiverNull.h>
 #include <SV_TelemetryData.h>
 #include <SensorFusion.h>
 

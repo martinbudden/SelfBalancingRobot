@@ -68,12 +68,12 @@ void MotorsGPIO::setPower(float leftPower, float rightPower)
     rightPower = scalePower(rightPower) * MAX_POWER;
 
     // set signs so positive power moves motor in a forward direction
-    const int8_t leftOutput =   static_cast<int8_t>(roundf(leftPower)); // NOLINT(hicpp-use-auto,modernize-use-auto)
-    const int8_t rightOutput = -static_cast<int8_t>(roundf(rightPower));
+    const auto leftOutput =  static_cast<int8_t>( roundf(leftPower)); // NOLINT(hicpp-use-auto,modernize-use-auto)
+    const auto rightOutput = static_cast<int8_t>(-roundf(rightPower));
 
 #if defined(FRAMEWORK_ARDUINO_ESP32)
     ledcWrite(_pins.motorLeft,  leftOutput);
-    ledcWrite(_pins.motorLeft, rightOutput);
+    ledcWrite(_pins.motorRight, rightOutput);
 #else
     (void)leftOutput;
     (void)rightOutput;

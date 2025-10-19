@@ -13,8 +13,8 @@ void MotorsGoPlus2::setPower(float leftPower, float rightPower)
     const float leftClipped = clip(leftPower, -1.0, 1.0);
     const float rightClipped = clip(rightPower, -1.0, 1.0);
     // set signs so positive power moves motor in a forward direction
-    const int8_t left = -static_cast<int8_t>(std::roundf(leftClipped * MAX_POWER));
-    const int8_t right = -static_cast<int8_t>(std::roundf(rightClipped * MAX_POWER));
+    const auto left = static_cast<int8_t>(-std::roundf(leftClipped * MAX_POWER));
+    const auto right = static_cast<int8_t>(-std::roundf(rightClipped * MAX_POWER));
 
     i2cSemaphoreTake();
 

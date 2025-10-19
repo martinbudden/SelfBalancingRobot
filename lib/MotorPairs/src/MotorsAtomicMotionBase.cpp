@@ -18,8 +18,8 @@ void MotorsAtomicMotionBase::setPower(float leftPower, float rightPower)
     leftPower = scalePower(leftPower) * MAX_POWER;
     rightPower = scalePower(rightPower) * MAX_POWER;
     // set signs so positive power moves motor in a forward direction
-    const int8_t leftOutput = -static_cast<int8_t>(std::roundf(leftPower));
-    const int8_t rightOutput = static_cast<int8_t>(std::roundf(rightPower)); // NOLINT(hicpp-use-auto,modernize-use-auto)
+    const auto leftOutput =  static_cast<int8_t>(-std::roundf(leftPower));
+    const auto rightOutput = static_cast<int8_t>( std::roundf(rightPower));
 
     i2cSemaphoreTake();
 
