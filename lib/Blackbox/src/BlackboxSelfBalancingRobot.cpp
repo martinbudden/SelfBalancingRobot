@@ -73,9 +73,9 @@ Blackbox::write_e BlackboxSelfBalancingRobot::writeSystemInformation()
     BLACKBOX_PRINT_HEADER_LINE("pitchAnglePID", "%d,%d,%d",             _motorPairController.getPID_MSP(MotorPairController::PITCH_ANGLE_DEGREES).kp,
                                                                         _motorPairController.getPID_MSP(MotorPairController::PITCH_ANGLE_DEGREES).ki,
                                                                         _motorPairController.getPID_MSP(MotorPairController::PITCH_ANGLE_DEGREES).kd);
-    BLACKBOX_PRINT_HEADER_LINE("ff_weight", "%d,%d,%d",                 _motorPairController.getPID_MSP(MotorPairController::ROLL_ANGLE_DEGREES).kf,
-                                                                        _motorPairController.getPID_MSP(MotorPairController::PITCH_ANGLE_DEGREES).kf,
-                                                                        _motorPairController.getPID_MSP(MotorPairController::YAW_RATE_DPS).kf);
+    BLACKBOX_PRINT_HEADER_LINE("ff_weight", "%d,%d,%d",                 _motorPairController.getPID_MSP(MotorPairController::ROLL_ANGLE_DEGREES).kk,
+                                                                        _motorPairController.getPID_MSP(MotorPairController::PITCH_ANGLE_DEGREES).kk,
+                                                                        _motorPairController.getPID_MSP(MotorPairController::YAW_RATE_DPS).kk);
 
 
     BLACKBOX_PRINT_HEADER_LINE("gyro_notch_hz", "%d,%d",                0,0);

@@ -315,7 +315,7 @@ void Main::loadSettings(NonVolatileStorage& nonVolatileStorage, MotorPairControl
 #if defined(FRAMEWORK_ARDUINO)
         std::string pidName = motorPairController.getPID_Name(static_cast<MotorPairController::pid_index_e>(ii));
         std::array<char, 128> buf;
-        sprintf(&buf[0], "**** %15s PID loaded from preferences: P:%4d, I:%4d, D:%4d, F:%4d S:%4d\r\n", pidName.c_str(), static_cast<int>(pid.kp), static_cast<int>(pid.ki), static_cast<int>(pid.kd), static_cast<int>(pid.kf), static_cast<int>(pid.ks));
+        sprintf(&buf[0], "**** %15s PID loaded from preferences: P:%4d, I:%4d, D:%4d, S:%4d K:%4d\r\n", pidName.c_str(), static_cast<int>(pid.kp), static_cast<int>(pid.ki), static_cast<int>(pid.kd), static_cast<int>(pid.ks), static_cast<int>(pid.kk));
         Serial.print(&buf[0]);
 #endif
     }

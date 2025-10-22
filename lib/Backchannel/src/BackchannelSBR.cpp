@@ -121,8 +121,12 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
         _motorPairController.setPID_D_MSP(pidIndex, packet.value);
         transmit = true;
         break;
-    case CommandPacketSetPID::SET_F:
-        _motorPairController.setPID_F_MSP(pidIndex, packet.value);
+    case CommandPacketSetPID::SET_S:
+        _motorPairController.setPID_S_MSP(pidIndex, packet.value);
+        transmit = true;
+        break;
+    case CommandPacketSetPID::SET_K:
+        _motorPairController.setPID_K_MSP(pidIndex, packet.value);
         transmit = true;
         break;
     case CommandPacketSetPID::SET_SETPOINT:
@@ -140,7 +144,9 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
         [[fallthrough]];
     case CommandPacketSetPID::SAVE_D:
         [[fallthrough]];
-    case CommandPacketSetPID::SAVE_F:
+    case CommandPacketSetPID::SAVE_S:
+        [[fallthrough]];
+    case CommandPacketSetPID::SAVE_K:
         //Serial.printf("Saved PID packetType:%d pidIndex:%d setType:%d\r\n", packet.type, packet.pidIndex, packet.setType);
         // Currently we don't save individual PID constants: if any save request is received we save all the PID constants.
         //!!_preferences.putPID(_motorPairController.getPID_Name(pidIndex), _motorPairController.getPID_Constants(pidIndex));
@@ -208,6 +214,7 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
             _motorPairController.getPitchBalanceAngleDegrees(),
             0.0F
         );
+        //Serial.printf("KP: %d, %f, sc:%f\r\n", td->data.pids[MotorPairController::PITCH_ANGLE_DEGREES].kp, motorPairController.getPID_Constants(MotorPairController::PITCH_ANGLE_DEGREES).kp, motorPairController.getScaleFactors()[MotorPairController::PITCH_ANGLE_DEGREES].kp);
         //Serial.printf("pidLen:%d\r\n", len);
         sendData(_transmitDataBufferPtr, len);
         _requestType = CommandPacketRequestData::NO_REQUEST; // reset _requestType to NO_REQUEST, since REQUEST_PID_DATA is a one shot, as response to keypress

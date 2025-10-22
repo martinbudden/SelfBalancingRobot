@@ -47,8 +47,8 @@ void MotorPairController::setPID_Constants(pid_index_e pidIndex, const PIDF_uint
     setPID_P_MSP(pidIndex, pid16.kp);
     setPID_I_MSP(pidIndex, pid16.ki);
     setPID_D_MSP(pidIndex, pid16.kd);
-    setPID_F_MSP(pidIndex, pid16.kf);
-    setPID_F_MSP(pidIndex, pid16.ks);
+    setPID_S_MSP(pidIndex, pid16.ks);
+    setPID_K_MSP(pidIndex, pid16.kk);
 }
 
 uint32_t MotorPairController::getOutputPowerTimeMicroseconds() const
@@ -65,8 +65,8 @@ VehicleControllerBase::PIDF_uint16_t MotorPairController::getPID_MSP(size_t inde
         .kp = static_cast<uint16_t>(_PIDS[pidIndex].getP() / _scaleFactors.kp),
         .ki = static_cast<uint16_t>(_PIDS[pidIndex].getI() / _scaleFactors.ki),
         .kd = static_cast<uint16_t>(_PIDS[pidIndex].getD() / _scaleFactors.kd),
-        .kf = static_cast<uint16_t>(_PIDS[pidIndex].getF() / _scaleFactors.kf),
         .ks = static_cast<uint16_t>(_PIDS[pidIndex].getS() / _scaleFactors.ks),
+        .kk = static_cast<uint16_t>(_PIDS[pidIndex].getK() / _scaleFactors.kk),
     };
     return ret;
 }
@@ -86,13 +86,13 @@ motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
     motor_pair_controller_telemetry_t telemetry;
 
     const PIDF::error_t pitchError = _PIDS[PITCH_ANGLE_DEGREES].getError();
-    telemetry.pitchError = { pitchError.P, pitchError.I, pitchError.D, pitchError.F, pitchError.S };
+    telemetry.pitchError = { pitchError.P, pitchError.I, pitchError.D, pitchError.S, pitchError.K };
 
     const PIDF::error_t speedError = _PIDS[_controlMode == CONTROL_MODE_SERIAL_PIDS ? SPEED_SERIAL_DPS : SPEED_PARALLEL_DPS].getError();
-    telemetry.speedError = { speedError.P, speedError.I, speedError.D, speedError.F, speedError.S };
+    telemetry.speedError = { speedError.P, speedError.I, speedError.D, speedError.S, speedError.K };
 
     const PIDF::error_t positionError = _PIDS[POSITION_DEGREES].getError();
-    telemetry.positionError = { positionError.P, positionError.I, positionError.D, positionError.F, positionError.S };
+    telemetry.positionError = { positionError.P, positionError.I, positionError.D, positionError.S, positionError.K };
 
     telemetry.pitchAngleOutput = _outputs[OUTPUT_PITCH_ANGLE_DEGREES];
     telemetry.speedOutput = _outputs[OUTPUT_SPEED_DPS];

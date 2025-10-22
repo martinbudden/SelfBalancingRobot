@@ -114,8 +114,8 @@ public:
     void setPID_P_MSP(pid_index_e pidIndex, uint16_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors.kp); }
     void setPID_I_MSP(pid_index_e pidIndex, uint16_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors.ki); }
     void setPID_D_MSP(pid_index_e pidIndex, uint16_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors.kd); }
-    void setPID_F_MSP(pid_index_e pidIndex, uint16_t kf) { _PIDS[pidIndex].setF(kf * _scaleFactors.kf); }
-    void setPID_S_MSP(pid_index_e pidIndex, uint16_t ks) { _PIDS[pidIndex].setF(ks * _scaleFactors.ks); }
+    void setPID_S_MSP(pid_index_e pidIndex, uint16_t ks) { _PIDS[pidIndex].setS(ks * _scaleFactors.ks); }
+    void setPID_K_MSP(pid_index_e pidIndex, uint16_t kk) { _PIDS[pidIndex].setK(kk * _scaleFactors.kk); }
 
     inline float getPID_Setpoint(pid_index_e pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
     void setPID_Setpoint(pid_index_e pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
