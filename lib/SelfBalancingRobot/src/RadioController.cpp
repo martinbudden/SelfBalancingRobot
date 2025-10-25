@@ -6,7 +6,6 @@ RadioController::RadioController(ReceiverBase& receiver, MotorPairController& mo
     RadioControllerBase(receiver),
     _motorPairController(motorPairController)
 {
-    _motorPairController.setRadioController(this);
 }
 
 /*!
@@ -29,6 +28,7 @@ void RadioController::updateControls(const controls_t& controls)
     // failsafe handling
     _receiverInUse = true;
     _failsafePhase = FAILSAFE_IDLE; // we've received a packet, so exit failsafe if we were in it
+    _failsafeTickCount = controls.tickCount;
 
     if (_receiver.getSwitch(ReceiverBase::MOTOR_ON_OFF_SWITCH)) {
         _onOffSwitchPressed = true;
@@ -52,16 +52,6 @@ void RadioController::updateControls(const controls_t& controls)
     _motorPairController.updateSetpoints(mpcControls);
 }
 
-uint32_t RadioController::getFailsafePhase() const
-{
-    return _failsafePhase;
-}
-
-void RadioController::setFailsafe(const failsafe_t& failsafe)
-{
-    _failsafe = failsafe;
-}
-
 void RadioController::checkFailsafe(uint32_t tickCount)
 {
     if ((tickCount - _failsafeTickCount > _failsafeTickCountThreshold) && _receiverInUse) {
@@ -72,6 +62,16 @@ void RadioController::checkFailsafe(uint32_t tickCount)
         if ((tickCount - _failsafeTickCount > _failsafeTickCountSwitchOffThreshold)) {
             _motorPairController.motorsSwitchOff();
             _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
+        } else {
+            // first phase of failsafe, set all controls to zero to stop the vehicle
+            const MotorPairController::controls_t mpcControls = {
+                .tickCount = tickCount,
+                .throttleStick = 0.0F,
+                .rollStickDegrees = 0.0F,
+                .pitchStickDegrees = 0.0F,
+                .yawStickDPS = 0.0F
+            };
+            _motorPairController.updateSetpoints(mpcControls);
         }
     }
 }

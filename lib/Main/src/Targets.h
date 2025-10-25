@@ -21,7 +21,7 @@ Targets
 #if defined(TARGET_M5STACK_STICKC_BALAC)
     #define IMU_AXIS_ORDER      IMU_Base::XPOS_ZPOS_YNEG
     #define USE_IMU_M5_UNIFIED
-    #define MPC_TASK_DENOMINATOR 2
+    #define OUTPUT_TO_MOTORS_DENOMINATOR 2
     //#define USE_IMU_MPU6886
     //#define IMU_I2C_SDA_PIN 21
     //#define IMU_I2C_SCL_PIN 22
@@ -51,7 +51,7 @@ Targets
     #define MOTOR_SCL_PIN       22
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
-    #define MPC_TASK_DENOMINATOR 2
+    #define OUTPUT_TO_MOTORS_DENOMINATOR 2
 
     #define USE_SCREEN
     #define USE_BUTTONS
@@ -72,7 +72,7 @@ Targets
     #define MOTOR_SCL_PIN       22
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
-    #define MPC_TASK_DENOMINATOR 2
+    #define OUTPUT_TO_MOTORS_DENOMINATOR 2
 
     #define USE_SCREEN
     #define USE_BUTTONS
@@ -90,7 +90,7 @@ Targets
     #define MOTOR_SCL_PIN       22
     //#define MOTOR_I2C_PINS      {.sda=21,.scl=22}
     #define I2C_MUTEX_REQUIRED
-    #define MPC_TASK_DENOMINATOR 2
+    #define OUTPUT_TO_MOTORS_DENOMINATOR 2
 
     #define USE_SCREEN
     #define USE_BUTTONS

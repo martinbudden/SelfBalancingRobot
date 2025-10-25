@@ -55,16 +55,16 @@ Updating the screen takes approximately 50 ticks.
 */
 
 
-#if !defined(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS)
-enum { MAIN_LOOP_TASK_INTERVAL_MICROSECONDS = 10000 };
+#if !defined(DASHBOARD_TASK_INTERVAL_MICROSECONDS)
+enum { DASHBOARD_TASK_INTERVAL_MICROSECONDS = 10000 };
 #endif
 
 #if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
 enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
 #endif
 
-#if !defined(MPC_TASK_DENOMINATOR)
-enum { MPC_TASK_DENOMINATOR = 1 };
+#if !defined(OUTPUT_TO_MOTORS_DENOMINATOR)
+enum { OUTPUT_TO_MOTORS_DENOMINATOR = 1 };
 #endif
 
 #if !defined(BACKCHANNEL_TASK_INTERVAL_MICROSECONDS)
@@ -103,9 +103,9 @@ enum {
 };
 
 
-class MainTask : public TaskBase {
+class DashboardTask : public TaskBase {
 public:
-    explicit MainTask(uint32_t taskIntervalMicroseconds) : TaskBase(taskIntervalMicroseconds) {}
+    explicit DashboardTask(uint32_t taskIntervalMicroseconds) : TaskBase(taskIntervalMicroseconds) {}
     void loop();
 };
 
@@ -122,20 +122,19 @@ public:
 private:
     void checkStackUsage();
     static IMU_Base& createIMU(void* i2cMutex);
-    static AHRS& createAHRS(void* i2cMutex);
-    static AHRS& createAHRS(uint32_t AHRS_taskIntervalMicroseconds, IMU_Base& imuSensor, IMU_FiltersBase& imuFilters);
+    static AHRS& createAHRS(IMU_Base& imuSensor);
     static ReceiverBase& createReceiver();
-    static BackchannelBase& createBackchannel(MotorPairController& motorPairController, AHRS& ahrs, ReceiverBase& receiver, const TaskBase* mainTask, NonVolatileStorage& nvs);
+    static BackchannelBase& createBackchannel(MotorPairController& motorPairController, AHRS& ahrs, ReceiverBase& receiver, const TaskBase* dashboardTask, NonVolatileStorage& nvs);
     static Blackbox& createBlackBox(AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController);
     static void checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
     static void runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
     static void calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
     static void clearSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController, AHRS& ahrs);
     static void loadSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController);
-    static void reportMainTask();
+    static void reportDashboardTask();
 
     struct tasks_t {
-        MainTask* mainTask;
+        DashboardTask* dashboardTask;
 
         AHRS_Task* ahrsTask;
         TaskBase::task_info_t ahrsTaskInfo;

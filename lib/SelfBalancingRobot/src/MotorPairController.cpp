@@ -345,23 +345,12 @@ Called from within the VehicleControllerTask when signalled that output data is 
 void MotorPairController::outputToMixer(float deltaT, uint32_t tickCount, const VehicleControllerMessageQueue::queue_item_t& queueItem)
 {
     ++_taskSignalledCount;
-    if (_taskSignalledCount < _taskDenominator) {
+    if (_taskSignalledCount < _outputToMotorsDenominator) {
         return;
     }
     _taskSignalledCount = 0;
 
     updateMotorSpeedEstimates(deltaT);
-    if (_radioController == nullptr || _radioController->getFailsafePhase() != RadioController::FAILSAFE_IDLE || !motorsIsOn()) {
-        const MotorPairMixer::commands_t commands = {
-            .throttle  = 0.0F,
-            .roll   = 0.0F,
-            .pitch  = 0.0F,
-            .yaw    = 0.0F
-        };
-        _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
-        return;
-    }
-
     const MotorPairMixer::commands_t commands = {
         .throttle = queueItem.throttle,
         .roll   = queueItem.roll,

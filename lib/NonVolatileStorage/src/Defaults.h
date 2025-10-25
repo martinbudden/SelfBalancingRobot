@@ -14,7 +14,6 @@ static const float balanceAngle = 13.0F;
 static const float balanceAngle = 0.0F;
 #endif
 
-#if !defined(FRAMEWORK_TEST)
 static constexpr MotorPairController::pidf_uint16_array_t motorPairControllerPIDs = {{
     {   0,   0,   0,   0,   0 }, // roll angle degrees
     {  80,   0,   0,   0,   0 }, // pitch angle degrees
@@ -32,6 +31,5 @@ static const RadioController::failsafe_t radioControllerFailsafe = {
     .throttle = 1000,
     .throttle_low_delay = 100
 };
-#endif
 
 } // END namespace

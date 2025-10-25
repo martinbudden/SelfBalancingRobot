@@ -80,15 +80,16 @@ void Main::setup()
     void* i2cMutex = nullptr;
 #endif
 
-    AHRS& ahrs = createAHRS(i2cMutex); // NOLINT(misc-const-correctness) false positive
+    IMU_Base& imuSensor = createIMU(i2cMutex);
+
+    AHRS& ahrs = createAHRS(imuSensor);
 
     // Statically allocate the motorPairController.
-    MotorPairBase& motorPairBase = MotorPairController::allocateMotors();
-    static MotorPairController motorPairController(MPC_TASK_DENOMINATOR, ahrs, motorPairBase, i2cMutex);
+    static MotorPairController motorPairController(OUTPUT_TO_MOTORS_DENOMINATOR, ahrs, MotorPairController::allocateMotors(), i2cMutex);
     ahrs.setVehicleController(&motorPairController); //!!TODO: remove this after checking
 
     ReceiverBase& receiver = createReceiver();
-    static RadioController radioController(receiver, motorPairController);
+    static RadioController radioController(receiver, motorPairController); // NOLINT(misc-const-correctness)
 
 #if defined(USE_BLACKBOX)
     Blackbox& blackbox = createBlackBox(ahrs, motorPairController, radioController);
@@ -137,9 +138,9 @@ void Main::setup()
 #endif // M5_STACK || M5_UNIFIED
 
     // Create the tasks
-    static MainTask mainTask(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS); // NOLINT(misc-const-correctness) false positive
-    _tasks.mainTask = &mainTask;
-    reportMainTask();
+    static DashboardTask dashboardTask(DASHBOARD_TASK_INTERVAL_MICROSECONDS); // NOLINT(misc-const-correctness) false positive
+    _tasks.dashboardTask = &dashboardTask;
+    reportDashboardTask();
     _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
     _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE);
     _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, radioController, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
@@ -148,12 +149,12 @@ void Main::setup()
 #endif
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(LIBRARY_RECEIVER_USE_ESPNOW)
-    BackchannelBase& backchannel = createBackchannel(motorPairController, ahrs, receiver, &mainTask, nvs);
+    BackchannelBase& backchannel = createBackchannel(motorPairController, ahrs, receiver, &dashboardTask, nvs);
     _tasks.backchannelTask = BackchannelTask::createTask(_tasks.backchannelTaskInfo, backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
 #endif
 }
 
-void Main::reportMainTask()
+void Main::reportDashboardTask()
 {
 #if defined(USE_ARDUINO_ESP32)
     // The main task is set up by the framework, so just print its details.
@@ -257,7 +258,7 @@ void Main::loadSettings(NonVolatileStorage& nonVolatileStorage, MotorPairControl
     }
 }
 
-void MainTask::loop()
+void DashboardTask::loop()
 {
 #if defined(FRAMEWORK_USE_FREERTOS)
     const TickType_t tickCount = xTaskGetTickCount();
@@ -279,14 +280,14 @@ void Main::loop() // NOLINT(readability-make-member-function-const)
 {
 #if defined(FRAMEWORK_USE_FREERTOS)
 
-    vTaskDelay(pdMS_TO_TICKS(MAIN_LOOP_TASK_INTERVAL_MICROSECONDS / 1000));
+    vTaskDelay(pdMS_TO_TICKS(DASHBOARD_TASK_INTERVAL_MICROSECONDS / 1000));
     [[maybe_unused]] const TickType_t tickCount = xTaskGetTickCount();
     //checkStackUsage();
 
 #else
     [[maybe_unused]] const uint32_t tickCount = timeUs() / 1000;
     // simple round-robbin scheduling
-    _tasks.mainTask->loop();
+    _tasks.dashboardTask->loop();
     _tasks.ahrsTask->loop();
     _tasks.vehicleControllerTask->loop();
     _tasks.receiverTask->loop();

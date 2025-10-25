@@ -29,9 +29,9 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(uint32_t taskDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex);
-    MotorPairController(uint32_t taskDenominator, AHRS& ahrs, MotorPairBase& motorPair) :
-        MotorPairController(taskDenominator, ahrs, motorPair, nullptr) {}
+    MotorPairController(uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex);
+    MotorPairController(uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair) :
+        MotorPairController(outputToMotorsDenominator, ahrs, motorPair, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -82,11 +82,9 @@ public:
     typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint16_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 private:
-    MotorPairController(uint32_t taskDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex, const vehicle_t& vehicle);
+    MotorPairController(uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex, const vehicle_t& vehicle);
 public:
     static MotorPairBase& allocateMotors();
-
-    void setRadioController(RadioControllerBase* radioController) { _radioController = radioController; }
 
     float getMixerThrottleCommand() const { return _motorPairMixer.getThrottleCommand(); }
 
@@ -144,9 +142,8 @@ private:
 private:
     MotorPairBase& _motorPair; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorPairMixer _motorPairMixer;
-    RadioControllerBase* _radioController {nullptr};
     Blackbox* _blackbox {nullptr};
-    const uint32_t _taskDenominator;
+    const uint32_t _outputToMotorsDenominator;
     uint32_t _taskSignalledCount {0};
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
 

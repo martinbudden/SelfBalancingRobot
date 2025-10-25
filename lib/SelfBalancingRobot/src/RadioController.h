@@ -34,8 +34,8 @@ public:
 
     virtual void checkFailsafe(uint32_t tickCount) override;
     const failsafe_t& getFailsafe() const { return _failsafe; }
-    void setFailsafe(const failsafe_t& failsafe);
-    virtual uint32_t getFailsafePhase() const override;
+    failsafe_phase_e getFailsafePhase() const { return _failsafePhase; }
+
 
     static float mapStick(float stick, float alpha);
 private:

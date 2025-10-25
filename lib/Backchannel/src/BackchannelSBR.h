@@ -18,7 +18,7 @@ public:
         MotorPairController& motorPairController,
         AHRS& ahrs,
         const ReceiverBase& receiver,
-        const TaskBase* mainTask,
+        const TaskBase* dashboardTask,
         NonVolatileStorage& nonVolatileStorage
     );
 public:

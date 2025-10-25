@@ -136,7 +136,6 @@ classDiagram
         <<abstract>>
         updateControls() *
         checkFailsafe() *
-        getFailsafePhase() uint32_t const *
     }
     link RadioControllerBase "https://github.com/martinbudden/Library-Receiver/blob/main/src/RadioControllerBase.h"
 
@@ -146,7 +145,7 @@ classDiagram
     class RadioController {
         updateControls() override
         checkFailsafe() override
-        getFailsafePhase() uint32_t const override
+        getFailsafePhase() uint32_t const
     }
     link RadioController "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/SelfBalancingRobot/src/RadioController.h"
 
@@ -200,7 +199,6 @@ classDiagram
         <<abstract>>
         updateControls() *
         checkFailsafe() *
-        getFailsafePhase() uint32_t const *
     }
     class ReceiverBase {
         <<abstract>>
@@ -210,7 +208,6 @@ classDiagram
         getAuxiliaryChannel() uint32_t *
     }
 
-    MotorPairController o-- RadioControllerBase : calls getFailsafePhase
     RadioControllerBase o--ReceiverBase
     RadioControllerBase <|-- RadioController
     RadioController o-- MotorPairController : calls updateSetpoints

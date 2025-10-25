@@ -16,7 +16,7 @@ BackchannelSBR::BackchannelSBR(
         MotorPairController& motorPairController,
         AHRS& ahrs,
         const ReceiverBase& receiver,
-        const TaskBase* mainTask,
+        const TaskBase* dashboardTask,
         NonVolatileStorage& nonVolatileStorage
     ) :
     BackchannelStabilizedVehicle(
@@ -26,7 +26,7 @@ BackchannelSBR::BackchannelSBR(
         motorPairController,
         ahrs,
         receiver,
-        mainTask
+        dashboardTask
     ),
     _motorPairController(motorPairController),
     _nonVolatileStorage(nonVolatileStorage)

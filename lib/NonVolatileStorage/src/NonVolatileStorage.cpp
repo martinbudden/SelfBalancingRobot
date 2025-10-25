@@ -234,7 +234,6 @@ int32_t NonVolatileStorage::storeBalanceAngle(float balanceAngle)
     return storeItem(BalanceAngleKey, &balanceAngle, sizeof(balanceAngle), &defaultBalanceAngle);
 }
 
-#if !defined(FRAMEWORK_TEST)
 RadioController::failsafe_t NonVolatileStorage::loadRadioControllerFailsafe() // NOLINT(readability-make-member-function-const)
 {
     RadioController::failsafe_t failsafe {}; // NOLINT(misc-const-correctness)
@@ -271,7 +270,6 @@ int32_t NonVolatileStorage::storePID(const VehicleControllerBase::PIDF_uint16_t&
     const uint16_t key = PID_Keys[pidIndex] + pidProfileIndex;
     return storeItem(key, &key, sizeof(pid), &DEFAULTS::motorPairControllerPIDs[pidIndex]);
 }
-#endif
 
 void NonVolatileStorage::resetPID(uint8_t pidIndex, uint8_t pidProfileIndex)
 {
