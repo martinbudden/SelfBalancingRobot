@@ -110,7 +110,7 @@ AHRS& Main::createAHRS(void* i2cMutex)
     IMU_Base& imuSensor = createIMU(i2cMutex);
 
     // statically allocate the IMU_Filters
-    constexpr float cutoffFrequency = 100.0F;
+    static constexpr float cutoffFrequency = 100.0F;
     static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_taskIntervalMicroseconds) / 1000000.0F);
 
     // Statically allocate the AHRS object

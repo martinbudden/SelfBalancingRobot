@@ -1,22 +1,21 @@
 #pragma once
 
 #include "BlackboxCallbacksBase.h"
+#include <RadioController.h>
+
 
 class AHRS;
 class BlackboxMessageQueue;
 class MotorPairController;
-class RadioController;
-class ReceiverBase;
-
 
 class BlackboxCallbacks : public BlackboxCallbacksBase {
 public:
-    BlackboxCallbacks(BlackboxMessageQueue& messageQueue, AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController, ReceiverBase& receiver) :
+    BlackboxCallbacks(BlackboxMessageQueue& messageQueue, AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController) :
         _messageQueue(messageQueue),
         _ahrs(ahrs),
         _motorPairController(motorPairController),
         _radioController(radioController),
-        _receiver(receiver)
+        _receiver(radioController.getReceiver())
         {}
 public:
     virtual void loadSlowState(blackboxSlowState_t& slowState) override;

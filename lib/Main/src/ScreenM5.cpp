@@ -31,7 +31,7 @@ enum {
     SCREEN_HEIGHT_M5_PAPER=960
 };
 
-constexpr float radiansToDegrees {180.0 / M_PI};
+static constexpr float radiansToDegrees {180.0 / M_PI};
 
 ScreenM5::ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver) :
     ScreenBase(ahrs, motorPairController, receiver),

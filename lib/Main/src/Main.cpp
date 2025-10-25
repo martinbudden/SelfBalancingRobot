@@ -4,10 +4,6 @@
 #include <M5Unified.h>
 #endif
 
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-#include <WiFi.h>
-#endif
-
 #include "ButtonsM5.h"
 #include "Main.h"
 #include "ScreenM5.h"
@@ -17,16 +13,8 @@
 
 #include <BackchannelSBR.h>
 #include <BackchannelTask.h>
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-#include <BackchannelTransceiverESPNOW.h>
-#endif
 
 #if defined(USE_BLACKBOX)
-#include <Blackbox.h>
-#include <BlackboxCallbacks.h>
-#include <BlackboxMessageQueueAHRS.h>
-#include <BlackboxSelfBalancingRobot.h>
-#include <BlackboxSerialDeviceSDCard.h>
 #include <BlackboxTask.h>
 #endif
 
@@ -38,10 +26,6 @@
 #include <NonVolatileStorage.h>
 #include <RadioController.h>
 
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-#include <ReceiverAtomJoyStick.h>
-#endif
-#include <ReceiverNull.h>
 #include <ReceiverTask.h>
 #include <TimeMicroseconds.h>
 #include <VehicleControllerTask.h>
@@ -85,7 +69,6 @@ void Main::setup()
     const uint8_t currentPID_Profile = nvs.loadPidProfileIndex();
     nvs.setCurrentPidProfileIndex(currentPID_Profile);
 
-
     // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
     // The mutex is created statically, ie without dynamic memory allocation.
     // If the motors and the AHRS are on separate busses (for example the motors were on a CAN bus, or the AHRS was on an SPI bus),
@@ -102,48 +85,13 @@ void Main::setup()
     // Statically allocate the motorPairController.
     MotorPairBase& motorPairBase = MotorPairController::allocateMotors();
     static MotorPairController motorPairController(MPC_TASK_DENOMINATOR, ahrs, motorPairBase, i2cMutex);
-    ahrs.setVehicleController(&motorPairController);
+    ahrs.setVehicleController(&motorPairController); //!!TODO: remove this after checking
 
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-    // Set WiFi to station mode
-    WiFi.mode(WIFI_STA);
-    // Disconnect from Access Point if it was previously connected
-    WiFi.disconnect();
-    // get my MAC address
-    uint8_t myMacAddress[ESP_NOW_ETH_ALEN];
-    WiFi.macAddress(&myMacAddress[0]);
-
-    // Statically allocate and setup the receiver.
-#if !defined(RECEIVER_CHANNEL)
-    constexpr uint8_t RECEIVER_CHANNEL {3};
-#endif
-    static ReceiverAtomJoyStick receiver(&myMacAddress[0], RECEIVER_CHANNEL);
-    const esp_err_t espErr = receiver.init();
-    //delay(400); // delay to allow serial port to initialize before first print
-    Serial.print("\r\n\r\n**** ESP-NOW Ready:");
-    Serial.println(espErr);
-    Serial.println();
-    assert(espErr == ESP_OK && "Unable to setup receiver.");
-#else
-    static ReceiverNull receiver;
-#endif // LIBRARY_RECEIVER_USE_ESPNOW
+    ReceiverBase& receiver = createReceiver();
     static RadioController radioController(receiver, motorPairController);
 
 #if defined(USE_BLACKBOX)
-    static BlackboxMessageQueue         blackboxMessageQueue;
-    static BlackboxCallbacks            blackboxCallbacks(blackboxMessageQueue, ahrs, motorPairController, radioController, receiver); // NOLINT(misc-const-correctness) false positive
-    static BlackboxSerialDeviceSDCard   blackboxSerialDevice(BlackboxSerialDeviceSDCard::SDCARD_SPI_PINS); // NOLINT(misc-const-correctness) false positive
-    static BlackboxSelfBalancingRobot   blackbox(blackboxCallbacks, blackboxMessageQueue, blackboxSerialDevice, motorPairController);
-    static BlackboxMessageQueueAHRS     blackboxMessageQueueAHRS(blackboxMessageQueue);
-    ahrs.setMessageQueue(&blackboxMessageQueueAHRS);
-    motorPairController.setBlackbox(blackbox);
-    blackbox.init({
-        .sample_rate = Blackbox::RATE_ONE,
-        .device = Blackbox::DEVICE_SDCARD,
-        //.device = Blackbox::DEVICE_NONE,
-        .mode = Blackbox::MODE_NORMAL, // logging starts on arming, file is saved when disarmed
-        //.mode = Blackbox::MODE_ALWAYS_ON
-    });
+    Blackbox& blackbox = createBlackBox(ahrs, motorPairController, radioController);
 #endif
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
@@ -200,19 +148,7 @@ void Main::setup()
 #endif
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(LIBRARY_RECEIVER_USE_ESPNOW)
-    // Statically allocate the backchannel.
-    constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
-    static BackchannelTransceiverESPNOW backchannelTransceiverESPNOW(receiver.getESPNOW_Transceiver(), &backchannelMacAddress[0]);
-    static BackchannelSBR backchannel(
-        backchannelTransceiverESPNOW,
-        &backchannelMacAddress[0],
-        &myMacAddress[0],
-        motorPairController,
-        ahrs,
-        receiver,
-        &mainTask,
-        nvs
-    );
+    BackchannelBase& backchannel = createBackchannel(motorPairController, ahrs, receiver, &mainTask, nvs);
     _tasks.backchannelTask = BackchannelTask::createTask(_tasks.backchannelTaskInfo, backchannel, BACKCHANNEL_TASK_PRIORITY, BACKCHANNEL_TASK_CORE, BACKCHANNEL_TASK_INTERVAL_MICROSECONDS);
 #endif
 }

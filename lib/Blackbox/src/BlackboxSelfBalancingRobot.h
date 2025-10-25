@@ -8,12 +8,12 @@ Class to write out the Blackbox header, written in writeSystemInformation()
 */
 class BlackboxSelfBalancingRobot : public Blackbox {
 public:
-    BlackboxSelfBalancingRobot(BlackboxCallbacksBase& callbacks, BlackboxMessageQueueBase& messageQueue, BlackboxSerialDevice& serialDevice, MotorPairController& motorPairController) :
+    BlackboxSelfBalancingRobot(BlackboxCallbacksBase& callbacks, BlackboxMessageQueueBase& messageQueue, BlackboxSerialDevice& serialDevice, const MotorPairController& motorPairController) :
         Blackbox(motorPairController.getTaskIntervalMicroseconds(), callbacks, messageQueue, serialDevice),
         _motorPairController(motorPairController)
         {}
 public:
     virtual Blackbox::write_e writeSystemInformation() override;
 private:
-    MotorPairController& _motorPairController;
+    const MotorPairController& _motorPairController;
 };

@@ -301,7 +301,7 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     // experimental calculation of position using complementary filter of position from encoders and position estimated from integrating power output
     const float distanceDegrees = _positionDegrees - _positionDegreesPrevious;
     _positionDegreesPrevious = _positionDegrees;
-    constexpr float alpha = 0.9F;
+    static constexpr float alpha = 0.9F;
     const float speedEstimate = MotorPairBase::clip((_motorPairMixer.getPowerLeft() + _motorPairMixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
     _positionDegrees += alpha*distanceDegrees + (1.0F - alpha)*speedEstimate*deltaT;
 #endif

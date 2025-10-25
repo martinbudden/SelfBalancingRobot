@@ -35,21 +35,21 @@ const MotorPairController::vehicle_t gVehicle = {
 //constexpr PIDF::PIDF_t speedPID_DefaultParallel               { 0.010F,   0.0F,    0.0F,     0.0F };
 
 constexpr MotorPairController::pidf_array_t gDefaultPIDs {{
-    { 0.0F,     0.0F,   0.0F,       0.0F, 0.1F },     // ROLL_ANGLE_DEGREES=0,
-    { 0.0300F,  0.0F,   0.00020F,   0.0F, 0.1F },     // PITCH_ANGLE_DEGREES
-    { 0.0F,     0.0F,   0.0F,       0.0F, 1.0F },     // YAW_RATE_DPS
+    { 0.0F,     0.0F,   0.0F,       0.1F, 0.0F },     // ROLL_ANGLE_DEGREES=0,
+    { 0.0300F,  0.0F,   0.00020F,   0.1F, 0.0F },     // PITCH_ANGLE_DEGREES
+    { 0.0F,     0.0F,   0.0F,       1.0F, 0.0F },     // YAW_RATE_DPS
     { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_SERIAL_DPS
     { 0.030F,   0.0F,   0.0F,       0.0F, 0.0F },     // SPEED_PARALLEL_DPS
     { 0.0F,     0.0F,   0.0F,       0.0F, 0.0F }      // POSITION_DEGREES
 }};
 
 constexpr MotorPairController::pidf_array_t gScaleFactors {{
-    { 0.0001F,  0.001F, 0.000002F,  0.0F, 0.01F },    // ROLL_ANGLE_DEGREES=0,
-    { 0.0002F,  0.001F, 0.000002F,  0.0F, 0.01F },    // PITCH_ANGLE_DEGREES
-    { 0.01F,    0.01F,  0.01F,      0.0F, 0.01F },    // YAW_RATE_DPS
-    { 0.01F,    0.01F,  0.00001F,   0.0F, 0.01F },    // SPEED_SERIAL_DPS
-    { 0.001F,   0.01F,  0.0001F,    0.0F, 0.01F },    // SPEED_PARALLEL_DPS
-    { 0.10F,    0.01F,  0.001F,     0.0F, 0.01F }     // POSITION_DEGREES
+    { 0.0001F,  0.001F, 0.000002F,  0.01F, 0.01F },    // ROLL_ANGLE_DEGREES=0,
+    { 0.0002F,  0.001F, 0.000002F,  0.01F, 0.01F },    // PITCH_ANGLE_DEGREES
+    { 0.01F,    0.01F,  0.01F,      0.01F, 0.01F },    // YAW_RATE_DPS
+    { 0.01F,    0.01F,  0.00001F,   0.01F, 0.01F },    // SPEED_SERIAL_DPS
+    { 0.001F,   0.01F,  0.0001F,    0.01F, 0.01F },    // SPEED_PARALLEL_DPS
+    { 0.10F,    0.01F,  0.001F,     0.01F, 0.01F }     // POSITION_DEGREES
 }};
 
 

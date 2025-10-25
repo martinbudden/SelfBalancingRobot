@@ -172,7 +172,7 @@ bool Motors_ODriveTWAI::setup()
 
     enum { TASK_PRIORITY = 8 };
     enum { TASK_STACK_DEPTH = 4096 };
-    constexpr void* taskParameters = nullptr;
+    static constexpr void* taskParameters = nullptr;
     static StaticTask_t taskBuffer;
     static StackType_t stack[TASK_STACK_DEPTH];
     const TaskHandle_t taskHandle = xTaskCreateStaticPinnedToCore(twai_receive_task, "TWAI_receive", TASK_STACK_DEPTH, taskParameters, TASK_PRIORITY, stack, &taskBuffer, tskNO_AFFINITY);

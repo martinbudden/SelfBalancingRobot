@@ -22,10 +22,10 @@
 
 namespace {
 // Motor channels
-constexpr int motorLeft  = 0;
-constexpr int motorRight = 1;
-constexpr int servoLeft  = 2;
-constexpr int servoRight = 3;
+static constexpr int motorLeft  = 0;
+static constexpr int motorRight = 1;
+static constexpr int servoLeft  = 2;
+static constexpr int servoRight = 3;
 }; // end namespace
 
 
