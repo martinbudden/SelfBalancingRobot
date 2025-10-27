@@ -54,13 +54,14 @@ The Atom JoyStick transmits a packet every 10ms.
 Updating the screen takes approximately 50 ticks.
 */
 
+#define AHRS_TASK_IS_TIMER_DRIVEN
 
 #if !defined(DASHBOARD_TASK_INTERVAL_MICROSECONDS)
 enum { DASHBOARD_TASK_INTERVAL_MICROSECONDS = 10000 };
 #endif
 
-#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
-enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
+#if !defined(GYRO_SAMPLE_RATE_HZ)
+enum { GYRO_SAMPLE_RATE_HZ = 200 };
 #endif
 
 #if !defined(OUTPUT_TO_MOTORS_DENOMINATOR)

@@ -29,9 +29,9 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex);
-    MotorPairController(uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair) :
-        MotorPairController(outputToMotorsDenominator, ahrs, motorPair, nullptr) {}
+    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex);
+    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair) :
+        MotorPairController(taskIntervalMicroseconds, outputToMotorsDenominator, ahrs, motorPair, nullptr) {}
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -82,7 +82,7 @@ public:
     typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint16_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 private:
-    MotorPairController(uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex, const vehicle_t& vehicle);
+    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex, const vehicle_t& vehicle);
 public:
     static MotorPairBase& allocateMotors();
 

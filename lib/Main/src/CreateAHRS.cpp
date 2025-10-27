@@ -85,6 +85,8 @@ IMU_Base& Main::createIMU(void* i2cMutex)
 
 AHRS& Main::createAHRS(IMU_Base& imuSensor)
 {
+    const uint32_t imuSampleRateHz = imuSensor.getGyroSampleRateHz();
+
     // Statically allocate the Sensor Fusion Filter
     // Timings are for 240MHz ESP32-S3
 #if defined(USE_COMPLEMENTARY_FILTER)
@@ -94,22 +96,27 @@ AHRS& Main::createAHRS(IMU_Base& imuSensor)
     // approx 10 microseconds per update
     static MahonyFilter sensorFusionFilter;
 #elif defined(USE_VQF)
-    const float deltaT = static_cast<float>(AHRS_taskIntervalMicroseconds) / 1000000.0F;
+    const float deltaT = 1.0F / static_cast<float>(imuSampleRateHz);
     static VQF sensorFusionFilter(deltaT, deltaT, deltaT, true, false, false);
 #elif defined(USE_VQF_BASIC)
-    static BasicVQF sensorFusionFilter(static_cast<float>(AHRS_taskIntervalMicroseconds) / 1000000.0F);
+    const float deltaT = 1.0F / static_cast<float>(imuSampleRateHz);
+    static BasicVQF sensorFusionFilter(static_cast<float>(deltaT);
 #else
     // approx 16 microseconds per update
     static MadgwickFilter sensorFusionFilter;
 #endif
 
-    const uint32_t AHRS_taskIntervalMicroseconds = AHRS_TASK_INTERVAL_MICROSECONDS;
     // statically allocate the IMU_Filters
     static constexpr float cutoffFrequency = 100.0F;
-    static IMU_Filters imuFilters(cutoffFrequency, static_cast<float>(AHRS_taskIntervalMicroseconds) / 1000000.0F);
+    const float AHRS_taskIntervalSeconds = 1.0F / static_cast<float>(imuSampleRateHz);
+    static IMU_Filters imuFilters(cutoffFrequency, AHRS_taskIntervalSeconds);
 
 
-    static AHRS ahrs(AHRS_taskIntervalMicroseconds, sensorFusionFilter, imuSensor, imuFilters);
+#if defined(AHRS_TASK_IS_TIMER_DRIVEN)
+    static AHRS ahrs(AHRS::TIMER_DRIVEN, sensorFusionFilter, imuSensor, imuFilters);
+#else
+    static AHRS ahrs(AHRS::INTERRUPT_DRIVEN, sensorFusionFilter, imuSensor, imuFilters);
+#endif
     return ahrs;
 }
 

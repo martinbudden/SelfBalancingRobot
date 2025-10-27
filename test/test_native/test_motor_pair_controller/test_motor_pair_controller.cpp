@@ -9,9 +9,7 @@
 
 #include <unity.h>
 
-#if !defined(AHRS_TASK_INTERVAL_MICROSECONDS)
 enum { AHRS_TASK_INTERVAL_MICROSECONDS = 5000 };
-#endif
 
 
 void setUp()
@@ -27,12 +25,12 @@ void test_motor_pair_controller()
     static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
     static IMU_Null imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
     static IMU_FiltersNull imuFilters; // NOLINT(misc-const-correctness) false positive
-    static AHRS ahrs(AHRS_TASK_INTERVAL_MICROSECONDS, sensorFusionFilter, imu, imuFilters);
+    static AHRS ahrs(AHRS::TIMER_DRIVEN, sensorFusionFilter, imu, imuFilters);
 
     TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
     enum { TASK_DENOMINATOR = 2 };
     MotorPairBase& motors = MotorPairController::allocateMotors(); // NOLINT(misc-const-correctness)
-    MotorPairController mpc(TASK_DENOMINATOR, ahrs, motors);
+    MotorPairController mpc(AHRS_TASK_INTERVAL_MICROSECONDS, TASK_DENOMINATOR, ahrs, motors);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();

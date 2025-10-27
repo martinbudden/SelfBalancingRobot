@@ -81,11 +81,13 @@ void Main::setup()
 #endif
 
     IMU_Base& imuSensor = createIMU(i2cMutex);
+    const uint32_t imuSampleRateHz = imuSensor.getGyroSampleRateHz();
+    const uint32_t AHRS_taskIntervalMicroSeconds = static_cast<uint32_t>(1000000.0F / static_cast<float>(imuSampleRateHz));
 
     AHRS& ahrs = createAHRS(imuSensor);
 
     // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(OUTPUT_TO_MOTORS_DENOMINATOR, ahrs, MotorPairController::allocateMotors(), i2cMutex);
+    static MotorPairController motorPairController(AHRS_taskIntervalMicroSeconds, OUTPUT_TO_MOTORS_DENOMINATOR, ahrs, MotorPairController::allocateMotors(), i2cMutex);
     ahrs.setVehicleController(&motorPairController); //!!TODO: remove this after checking
 
     ReceiverBase& receiver = createReceiver();
@@ -141,7 +143,7 @@ void Main::setup()
     static DashboardTask dashboardTask(DASHBOARD_TASK_INTERVAL_MICROSECONDS); // NOLINT(misc-const-correctness) false positive
     _tasks.dashboardTask = &dashboardTask;
     reportDashboardTask();
-    _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_TASK_INTERVAL_MICROSECONDS);
+    _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_taskIntervalMicroSeconds);
     _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE);
     _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, radioController, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 #if defined(USE_BLACKBOX)
