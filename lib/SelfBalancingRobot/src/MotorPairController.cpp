@@ -252,6 +252,10 @@ so we need to convert the values returned by calculatePitchDegrees() and calcula
 void MotorPairController::updateOutputsUsingPIDs(const AHRS::imu_data_t& imuDataNED)
 {
     _blackboxMessageQueue.SEND(imuDataNED);
+    if (!_blackbox) {
+        // no blackbox task, so receive the IMU data so it is available for the backchannel and telemetry
+        _blackboxMessageQueue.RECEIVE();
+    }
 
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
     _pitchAngleDegreesRaw = -imuDataNED.orientation.calculateRollDegrees();

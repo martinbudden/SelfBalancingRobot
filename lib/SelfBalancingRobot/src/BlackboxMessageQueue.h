@@ -32,7 +32,7 @@ public:
         }
         return ret;
     }
-    //inline int32_t RECEIVE(queue_item_t& queueItem) const { return xQueueReceive(_queue, &_queueItem, portMAX_DELAY); queueItem = _queueItem; }
+    inline int32_t RECEIVE() const { return xQueueReceive(_queue, &_queueItem, portMAX_DELAY); }
     inline void SEND(const AHRS::imu_data_t& queueItem) const { xQueueOverwrite(_queue, &queueItem); }
 #else
     BlackboxMessageQueue() = default;
