@@ -3,7 +3,7 @@
 #include <AHRS.h>
 
 #include <BlackboxCallbacks.h>
-#include <BlackboxMessageQueueAHRS.h>
+#include <BlackboxMessageQueue.h>
 #include <BlackboxSelfBalancingRobot.h>
 #include <BlackboxSerialDeviceSDCard.h>
 #include <TimeMicroseconds.h>
@@ -15,14 +15,10 @@ Statically allocate the Blackbox and associated objects.
 */
 Blackbox& Main::createBlackBox(AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController)
 {
-    static BlackboxMessageQueue         blackboxMessageQueue;
-    static BlackboxMessageQueueAHRS     blackboxMessageQueueAHRS(blackboxMessageQueue);
-    ahrs.setMessageQueue(&blackboxMessageQueueAHRS);
-
-    static BlackboxCallbacks            blackboxCallbacks(blackboxMessageQueue, ahrs, motorPairController, radioController); // NOLINT(misc-const-correctness) false positive
+    static BlackboxCallbacks            blackboxCallbacks(motorPairController.getBlackboxMessageQueue(), ahrs, motorPairController, radioController); // NOLINT(misc-const-correctness) false positive
     static BlackboxSerialDeviceSDCard   blackboxSerialDevice(BlackboxSerialDeviceSDCard::SDCARD_SPI_PINS); // NOLINT(misc-const-correctness) false positive
 
-    static BlackboxSelfBalancingRobot   blackbox(blackboxCallbacks, blackboxMessageQueue, blackboxSerialDevice, motorPairController);
+    static BlackboxSelfBalancingRobot   blackbox(blackboxCallbacks, motorPairController.getBlackboxMessageQueue(), blackboxSerialDevice, motorPairController);
     motorPairController.setBlackbox(blackbox);
     blackbox.init({
         .sample_rate = Blackbox::RATE_ONE,

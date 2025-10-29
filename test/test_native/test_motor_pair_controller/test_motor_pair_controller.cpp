@@ -1,6 +1,7 @@
 #include "IMU_FiltersNull.h"
 
 #include <AHRS.h>
+#include <BlackboxMessageQueue.h>
 #include <IMU_Null.h>
 #include <MotorPairController.h>
 #include <NonVolatileStorage.h>
@@ -22,20 +23,15 @@ void tearDown()
 
 void test_motor_pair_controller()
 {
-    static MadgwickFilter sensorFusionFilter; // NOLINT(misc-const-correctness) false positive
-    static IMU_Null imu(IMU_Base::XPOS_YPOS_ZPOS); // NOLINT(misc-const-correctness) false positive
-    static IMU_FiltersNull imuFilters; // NOLINT(misc-const-correctness) false positive
-    static AHRS ahrs(AHRS::TIMER_DRIVEN, sensorFusionFilter, imu, imuFilters);
-
-    TEST_ASSERT_TRUE(ahrs.sensorFusionFilterIsInitializing());
     enum { TASK_DENOMINATOR = 2 };
+    static BlackboxMessageQueue blackboxMessageQueue;
     MotorPairBase& motors = MotorPairController::allocateMotors(); // NOLINT(misc-const-correctness)
-    MotorPairController mpc(AHRS_TASK_INTERVAL_MICROSECONDS, TASK_DENOMINATOR, ahrs, motors);
+    MotorPairController mpc(AHRS_TASK_INTERVAL_MICROSECONDS, TASK_DENOMINATOR, motors, blackboxMessageQueue, nullptr);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
-    ahrs.setSensorFusionInitializing(false);
+    mpc.setSensorFusionFilterIsInitializing(false);
     mpc.motorsSwitchOn();
     TEST_ASSERT_TRUE(mpc.motorsIsOn());
 

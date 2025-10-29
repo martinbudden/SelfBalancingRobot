@@ -123,7 +123,7 @@ public:
 private:
     void checkStackUsage();
     static IMU_Base& createIMU(void* i2cMutex);
-    static AHRS& createAHRS(IMU_Base& imuSensor);
+    static AHRS& createAHRS(VehicleControllerBase& vehicleController, IMU_Base& imuSensor);
     static ReceiverBase& createReceiver();
     static BackchannelBase& createBackchannel(MotorPairController& motorPairController, AHRS& ahrs, ReceiverBase& receiver, const TaskBase* dashboardTask, NonVolatileStorage& nvs);
     static Blackbox& createBlackBox(AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController);

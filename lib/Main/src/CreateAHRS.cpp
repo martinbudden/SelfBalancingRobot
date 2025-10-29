@@ -83,7 +83,7 @@ IMU_Base& Main::createIMU(void* i2cMutex)
     return imuSensor;
 }
 
-AHRS& Main::createAHRS(IMU_Base& imuSensor)
+AHRS& Main::createAHRS(VehicleControllerBase& vehicleController, IMU_Base& imuSensor)
 {
     const uint32_t imuSampleRateHz = imuSensor.getGyroSampleRateHz();
 
@@ -111,12 +111,12 @@ AHRS& Main::createAHRS(IMU_Base& imuSensor)
     const float AHRS_taskIntervalSeconds = 1.0F / static_cast<float>(imuSampleRateHz);
     static IMU_Filters imuFilters(cutoffFrequency, AHRS_taskIntervalSeconds);
 
-
 #if defined(AHRS_TASK_IS_TIMER_DRIVEN)
-    static AHRS ahrs(AHRS::TIMER_DRIVEN, sensorFusionFilter, imuSensor, imuFilters);
+    static AHRS ahrs(AHRS::TIMER_DRIVEN, vehicleController, sensorFusionFilter, imuSensor, imuFilters);
 #else
-    static AHRS ahrs(AHRS::INTERRUPT_DRIVEN, sensorFusionFilter, imuSensor, imuFilters);
+    static AHRS ahrs(AHRS::INTERRUPT_DRIVEN, vehicleController, sensorFusionFilter, imuSensor, imuFilters);
 #endif
+
     return ahrs;
 }
 

@@ -14,6 +14,7 @@
 #include <BackchannelSBR.h>
 #include <BackchannelTask.h>
 
+#include <BlackboxMessageQueue.h>
 #if defined(USE_BLACKBOX)
 #include <BlackboxTask.h>
 #endif
@@ -80,15 +81,15 @@ void Main::setup()
     void* i2cMutex = nullptr;
 #endif
 
-    IMU_Base& imuSensor = createIMU(i2cMutex);
+    IMU_Base& imuSensor = createIMU(i2cMutex); // NOLINT(misc-const-correctness)
     const uint32_t imuSampleRateHz = imuSensor.getGyroSampleRateHz();
-    const uint32_t AHRS_taskIntervalMicroSeconds = static_cast<uint32_t>(1000000.0F / static_cast<float>(imuSampleRateHz));
+    const auto AHRS_taskIntervalMicroseconds = static_cast<uint32_t>(1000000.0F / static_cast<float>(imuSampleRateHz));
 
-    AHRS& ahrs = createAHRS(imuSensor);
+    static BlackboxMessageQueue blackboxMessageQueue;
+    static MotorPairController motorPairController(AHRS_taskIntervalMicroseconds, OUTPUT_TO_MOTORS_DENOMINATOR, MotorPairController::allocateMotors(), blackboxMessageQueue, i2cMutex);
 
-    // Statically allocate the motorPairController.
-    static MotorPairController motorPairController(AHRS_taskIntervalMicroSeconds, OUTPUT_TO_MOTORS_DENOMINATOR, ahrs, MotorPairController::allocateMotors(), i2cMutex);
-    ahrs.setVehicleController(&motorPairController); //!!TODO: remove this after checking
+    AHRS& ahrs = createAHRS(motorPairController, imuSensor);
+
 
     ReceiverBase& receiver = createReceiver();
     static RadioController radioController(receiver, motorPairController); // NOLINT(misc-const-correctness)
@@ -143,7 +144,7 @@ void Main::setup()
     static DashboardTask dashboardTask(DASHBOARD_TASK_INTERVAL_MICROSECONDS); // NOLINT(misc-const-correctness) false positive
     _tasks.dashboardTask = &dashboardTask;
     reportDashboardTask();
-    _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_taskIntervalMicroSeconds);
+    _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_taskIntervalMicroseconds);
     _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE);
     _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, radioController, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 #if defined(USE_BLACKBOX)

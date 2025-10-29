@@ -17,7 +17,7 @@ static const float balanceAngle = 0.0F;
 static constexpr MotorPairController::pidf_uint16_array_t motorPairControllerPIDs = {{
     {   0,   0,   0,   0,   0 }, // roll angle degrees
     {  80,   0,   0,   0,   0 }, // pitch angle degrees
-    {   0,   0,   0,   0, 100 }, // yaw rate dps
+    {   0,   0,   0, 100,   0 }, // yaw rate dps
     {   0,   0,   0,   0,   0 }, // speed serial dps
     {   0,   0,   0,   0,   0 }, // speed parallel dps
     {   0,   0,   0,   0,   0 }, // position degrees

@@ -1,5 +1,6 @@
-#include "MotorPairController.h"
+#include "BlackboxMessageQueue.h"
 #include "MotorPairBase.h"
+#include "MotorPairController.h"
 #include "RadioController.h"
 
 #include <AHRS.h>
@@ -130,7 +131,7 @@ void MotorPairController::motorsSwitchOn()
     // reset the PID integrals when we switch the motors on, so they don't start with residual I-term windup
     resetIntegrals();
     // don't allow motors to be switched on if the sensor fusion has not initialized
-    if (!_ahrs.sensorFusionFilterIsInitializing()) {
+    if (!_sensorFusionFilterIsInitializing) {
         _motorPairMixer.motorsSwitchOn();
         // and switch PID integration back on
         for (auto pid : _PIDS) {
@@ -248,24 +249,26 @@ So we point the X-axis to the left and the Y axis forward, keeping the Z-axis po
 This means pitch is about the Y-axis and roll about the X-axis (normally pitch is about X-axis and roll is about the Y-axis),
 so we need to convert the values returned by calculatePitchDegrees() and calculateRollDegrees().
 */
-void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_unused]] const xyz_t& acc, const Quaternion& orientation, float deltaT)
+void MotorPairController::updateOutputsUsingPIDs(const AHRS::imu_data_t& imuDataNED)
 {
+    _blackboxMessageQueue.SEND(imuDataNED);
+
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
-    _pitchAngleDegreesRaw = -orientation.calculateRollDegrees();
+    _pitchAngleDegreesRaw = -imuDataNED.orientation.calculateRollDegrees();
     _motorPairMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
 
 
     // calculate _outputs[OUTPUT_SPEED_DPS] and setpoints according to the control mode.
     // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
     if (_controlMode == CONTROL_MODE_PARALLEL_PIDS) {
-        _outputs[OUTPUT_SPEED_DPS] = -_PIDS[SPEED_PARALLEL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
+        _outputs[OUTPUT_SPEED_DPS] = -_PIDS[SPEED_PARALLEL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, imuDataNED.deltaT);
     } else if (_controlMode == CONTROL_MODE_SERIAL_PIDS) {
-        const float speedOutput = _PIDS[SPEED_SERIAL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, deltaT);
+        const float speedOutput = _PIDS[SPEED_SERIAL_DPS].update(_speedDPS * _motorMaxSpeedDPS_reciprocal, imuDataNED.deltaT);
         // feed the speed update back into the pitchAngle PID and set _outputs[OUTPUT_SPEED_DPS] to zero
         _PIDS[PITCH_ANGLE_DEGREES].setSetpoint(speedOutput);
         _outputs[OUTPUT_SPEED_DPS] = 0.0F;
     } else if (_controlMode == CONTROL_MODE_POSITION) {
-        updatePositionOutputs(deltaT);
+        updatePositionOutputs(imuDataNED.deltaT);
     }
 
     // calculate _outputs[PITCH_ANGLE_DEGREES]
@@ -274,11 +277,11 @@ void MotorPairController::updateOutputsUsingPIDs(const xyz_t& gyroRPS, [[maybe_u
     // Use the filtered value of pitchAngleDegreesDelta as input into the PID update.
     // This is beneficial because the DTerm is especially susceptible to noise (since it is the derivative of a noisy value).
     const float pitchAngleFilteredDTerm = _pitchAngleDTermFilter.filter(pitchAngleDegreesDelta);
-    _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleFilteredDTerm, deltaT);
+    _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleFilteredDTerm, imuDataNED.deltaT);
 
     // calculate _outputs[YAW_RATE_DPS]
-    const float yawRateDPS = -gyroRPS.z * Quaternion::radiansToDegrees;
-    _outputs[YAW_RATE_DPS] = _PIDS[YAW_RATE_DPS].update(yawRateDPS, deltaT);
+    const float yawRateDPS = -imuDataNED.accGyroRPS.gyroRPS.z * Quaternion::radiansToDegrees;
+    _outputs[YAW_RATE_DPS] = _PIDS[YAW_RATE_DPS].update(yawRateDPS, imuDataNED.deltaT);
 
     const VehicleControllerMessageQueue::queue_item_t queueItem {
         .throttle = _outputs[OUTPUT_SPEED_DPS],
@@ -324,21 +327,6 @@ Setpoints are provided by the receiver(joystick), and inputs(process variables) 
 
 There are three PIDs, a pitch PID, a speed PID, and a yawRate PID.
 */
-#if false
-void MotorPairController::loop(float deltaT, uint32_t tickCount)
-{
-    updateMotorSpeedEstimates(deltaT);
-    // If the AHRS is configured to run updateOutputsUsingPIDs, then we don't need to
-    if (!_ahrs.configuredToUpdateOutputs()) {
-        const Quaternion orientation = _ahrs.getOrientationUsingLock();
-        const AHRS::data_t data = _ahrs.getAhrsDataUsingLock();
-
-        updateOutputsUsingPIDs(data.gyroRPS, data.acc, orientation, deltaT);
-    }
-    outputToMotors(deltaT, tickCount);
-}
-#endif
-
 /*!
 Called from within the VehicleControllerTask when signalled that output data is available.
 */

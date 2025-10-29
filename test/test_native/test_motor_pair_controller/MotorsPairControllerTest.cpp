@@ -63,10 +63,11 @@ MotorPairBase& MotorPairController::allocateMotors()
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t outputToMotorsDenominator, AHRS& ahrs, MotorPairBase& motorPair, void* i2cMutex) :
-    VehicleControllerBase(VehicleControllerBase::SELF_BALANCING_ROBOT, PID_COUNT, ahrs.getTaskIntervalMicroseconds(), ahrs),
-    _motorPair(allocateMotors()),
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, BlackboxMessageQueue& blackboxMessageQueue, void* i2cMutex) :
+    VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, taskIntervalMicroseconds),
+    _motorPair(motorPair),
     _motorPairMixer(_motorPair),
+    _blackboxMessageQueue(blackboxMessageQueue),
     _outputToMotorsDenominator(outputToMotorsDenominator),
     _motorMaxSpeedDPS(gVehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
