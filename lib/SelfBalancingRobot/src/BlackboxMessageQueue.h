@@ -37,8 +37,8 @@ public:
 #else
     BlackboxMessageQueue() = default;
     virtual int32_t WAIT_IF_EMPTY(uint32_t& timeMicroseconds) const override { timeMicroseconds = 0; return 0; }
-    //inline int32_t RECEIVE(AHRS::imu_data_t& queueItem) const { queueItem = {}; return 0; }
-    inline void SEND(const AHRS::imu_data_t& queueItem) const { (void)queueItem; }
+    inline int32_t RECEIVE() const { return 0; }
+    inline void SEND(const AHRS::imu_data_t& queueItem) const { _queueItem = queueItem; }
     //inline bool SEND_IF_NOT_FULL(const AHRS::imu_data_t& queueItem) const { (void)queueItem; return false; } // cppcheck-suppress knownConditionTrueFalse
 #endif // USE_FREERTOS
 private:
