@@ -20,6 +20,7 @@ class AHRS_Task;
 class BackchannelBase;
 class BackchannelTask;
 class Blackbox;
+class BlackboxMessageQueue;
 class BlackboxTask;
 class IMU_Base;
 class IMU_FiltersBase;
@@ -126,7 +127,7 @@ private:
     static AHRS& createAHRS(VehicleControllerBase& vehicleController, IMU_Base& imuSensor);
     static ReceiverBase& createReceiver();
     static BackchannelBase& createBackchannel(MotorPairController& motorPairController, AHRS& ahrs, ReceiverBase& receiver, const TaskBase* dashboardTask, NonVolatileStorage& nvs);
-    static Blackbox& createBlackBox(AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController);
+    static Blackbox& createBlackBox(AHRS& ahrs, MotorPairController& motorPairController, BlackboxMessageQueue& ahrsMessageQueue, RadioController& radioController);
     static void checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
     static void runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
     static void calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);

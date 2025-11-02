@@ -57,7 +57,7 @@ void BlackboxCallbacks::loadMainState(blackboxMainState_t& mainState, uint32_t c
 {
     (void)currentTimeUs;
 
-    const AHRS::imu_data_t queueItem = _messageQueue.getQueueItem();
+    const AHRS::ahrs_data_t queueItem = _messageQueue.getQueueItem();
 
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
 

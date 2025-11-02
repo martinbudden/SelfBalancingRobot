@@ -3,13 +3,14 @@
 #include <Blackbox.h>
 #include <MotorPairController.h>
 
+
 /*!
 Class to write out the Blackbox header, written in writeSystemInformation()
 */
 class BlackboxSelfBalancingRobot : public Blackbox {
 public:
-    BlackboxSelfBalancingRobot(BlackboxCallbacksBase& callbacks, BlackboxMessageQueueBase& messageQueue, BlackboxSerialDevice& serialDevice, const MotorPairController& motorPairController) :
-        Blackbox(motorPairController.getTaskIntervalMicroseconds(), callbacks, messageQueue, serialDevice),
+    BlackboxSelfBalancingRobot(uint32_t pidLooptimeUs, BlackboxCallbacksBase& callbacks, BlackboxSerialDevice& serialDevice, const MotorPairController& motorPairController) :
+        Blackbox(pidLooptimeUs, callbacks, serialDevice),
         _motorPairController(motorPairController)
         {}
 public:

@@ -95,7 +95,7 @@ void Main::setup()
     static RadioController radioController(receiver, motorPairController); // NOLINT(misc-const-correctness)
 
 #if defined(USE_BLACKBOX)
-    Blackbox& blackbox = createBlackBox(ahrs, motorPairController, radioController);
+    Blackbox& blackbox = createBlackBox(ahrs, motorPairController, blackboxMessageQueue, radioController);
 #endif
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)

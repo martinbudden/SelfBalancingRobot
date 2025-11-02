@@ -560,14 +560,14 @@ void ScreenM5::updateReceivedData()
 
 void ScreenM5::updateAHRS_Data() const
 {
-    const AHRS::imu_data_t queueItem = _motorPairController.getBlackboxMessageQueue().getQueueItem();
-    const Quaternion orientation = queueItem.orientation;
+    const AHRS::ahrs_data_t ahrsData = _motorPairController.getBlackboxMessageQueue().getQueueItem();
+    const Quaternion orientation = ahrsData.orientation;
     TD_AHRS::data_t tdAhrsData {
         .roll = _motorPairController.getRollAngleDegreesRaw(),
         .pitch = _motorPairController.getPitchAngleDegreesRaw(),
         .yaw = _motorPairController.getYawAngleDegreesRaw(),
-        .gyroRPS = queueItem.accGyroRPS.gyroRPS,
-        .acc = queueItem.accGyroRPS.acc,
+        .gyroRPS = ahrsData.accGyroRPS.gyroRPS,
+        .acc = ahrsData.accGyroRPS.acc,
         .gyroOffset = {},
         .accOffset = {}
     };

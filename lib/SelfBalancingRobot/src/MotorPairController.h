@@ -139,7 +139,7 @@ public:
 public:
     void updateSetpoints(const controls_t& controls);
     void updateMotorSpeedEstimates(float deltaT);
-    virtual void updateOutputsUsingPIDs(const AHRS::imu_data_t& imuDataNED) override;
+    virtual void updateOutputsUsingPIDs(const AHRS::ahrs_data_t& imuDataNED) override;
 private:
     void updatePositionOutputs(float deltaT);
 private:

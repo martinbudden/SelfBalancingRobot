@@ -249,7 +249,7 @@ So we point the X-axis to the left and the Y axis forward, keeping the Z-axis po
 This means pitch is about the Y-axis and roll about the X-axis (normally pitch is about X-axis and roll is about the Y-axis),
 so we need to convert the values returned by calculatePitchDegrees() and calculateRollDegrees().
 */
-void MotorPairController::updateOutputsUsingPIDs(const AHRS::imu_data_t& imuDataNED)
+void MotorPairController::updateOutputsUsingPIDs(const AHRS::ahrs_data_t& imuDataNED)
 {
     _blackboxMessageQueue.SEND(imuDataNED);
     if (!_blackbox) {
