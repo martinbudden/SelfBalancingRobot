@@ -1,7 +1,7 @@
 #include "IMU_FiltersNull.h"
 
 #include <AHRS.h>
-#include <BlackboxMessageQueue.h>
+#include <AHRS_MessageQueue.h>
 #include <IMU_Null.h>
 #include <MotorPairController.h>
 #include <NonVolatileStorage.h>
@@ -24,9 +24,9 @@ void tearDown()
 void test_motor_pair_controller()
 {
     enum { TASK_DENOMINATOR = 2 };
-    static BlackboxMessageQueue blackboxMessageQueue;
+    static AHRS_MessageQueue ahrsMessageQueue;
     MotorPairBase& motors = MotorPairController::allocateMotors(); // NOLINT(misc-const-correctness)
-    MotorPairController mpc(AHRS_TASK_INTERVAL_MICROSECONDS, TASK_DENOMINATOR, motors, blackboxMessageQueue, nullptr);
+    MotorPairController mpc(AHRS_TASK_INTERVAL_MICROSECONDS, TASK_DENOMINATOR, motors, ahrsMessageQueue, nullptr);
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
 
     mpc.motorsSwitchOn();

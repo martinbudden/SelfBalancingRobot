@@ -14,7 +14,7 @@
 #include <BackchannelSBR.h>
 #include <BackchannelTask.h>
 
-#include <BlackboxMessageQueue.h>
+#include <AHRS_MessageQueue.h>
 #if defined(USE_BLACKBOX)
 #include <BlackboxTask.h>
 #endif
@@ -85,8 +85,8 @@ void Main::setup()
     const uint32_t imuSampleRateHz = imuSensor.getGyroSampleRateHz();
     const auto AHRS_taskIntervalMicroseconds = static_cast<uint32_t>(1000000.0F / static_cast<float>(imuSampleRateHz));
 
-    static BlackboxMessageQueue blackboxMessageQueue;
-    static MotorPairController motorPairController(AHRS_taskIntervalMicroseconds, OUTPUT_TO_MOTORS_DENOMINATOR, MotorPairController::allocateMotors(), blackboxMessageQueue, i2cMutex);
+    static AHRS_MessageQueue ahrsMessageQueue;
+    static MotorPairController motorPairController(AHRS_taskIntervalMicroseconds, OUTPUT_TO_MOTORS_DENOMINATOR, MotorPairController::allocateMotors(), ahrsMessageQueue, i2cMutex);
 
     AHRS& ahrs = createAHRS(motorPairController, imuSensor);
 
@@ -95,7 +95,7 @@ void Main::setup()
     static RadioController radioController(receiver, motorPairController); // NOLINT(misc-const-correctness)
 
 #if defined(USE_BLACKBOX)
-    Blackbox& blackbox = createBlackBox(ahrs, motorPairController, blackboxMessageQueue, radioController);
+    Blackbox& blackbox = createBlackBox(ahrs, motorPairController, ahrsMessageQueue, radioController);
 #endif
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
@@ -148,7 +148,7 @@ void Main::setup()
     _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE);
     _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, radioController, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 #if defined(USE_BLACKBOX)
-    _tasks.blackboxTask = BlackboxTask::createTask(blackbox, BLACKBOX_TASK_PRIORITY, BLACKBOX_TASK_CORE, BLACKBOX_TASK_INTERVAL_MICROSECONDS);
+    _tasks.blackboxTask = BlackboxTask::createTask(blackbox, ahrsMessageQueue, BLACKBOX_TASK_PRIORITY, BLACKBOX_TASK_CORE, BLACKBOX_TASK_INTERVAL_MICROSECONDS);
 #endif
 
 #if defined(BACKCHANNEL_MAC_ADDRESS) && defined(LIBRARY_RECEIVER_USE_ESPNOW)

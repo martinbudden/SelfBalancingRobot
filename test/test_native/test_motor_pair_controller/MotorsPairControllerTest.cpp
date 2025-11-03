@@ -2,6 +2,7 @@
 #include <MotorPairBase.h>
 #include <MotorPairController.h>
 
+
 class MotorPairTest final : public MotorPairBase {
 public:
     MotorPairTest();
@@ -63,11 +64,11 @@ MotorPairBase& MotorPairController::allocateMotors()
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, BlackboxMessageQueue& blackboxMessageQueue, void* i2cMutex) :
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue, void* i2cMutex) :
     VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, taskIntervalMicroseconds),
     _motorPair(motorPair),
     _motorPairMixer(_motorPair),
-    _blackboxMessageQueue(blackboxMessageQueue),
+    _ahrsMessageQueue(ahrsMessageQueue),
     _outputToMotorsDenominator(outputToMotorsDenominator),
     _motorMaxSpeedDPS(gVehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),

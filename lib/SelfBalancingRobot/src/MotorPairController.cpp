@@ -1,4 +1,4 @@
-#include "BlackboxMessageQueue.h"
+#include "AHRS_MessageQueue.h"
 #include "MotorPairBase.h"
 #include "MotorPairController.h"
 #include "RadioController.h"
@@ -137,9 +137,6 @@ void MotorPairController::motorsSwitchOn()
         for (auto pid : _PIDS) {
             pid.switchIntegrationOn();
         }
-        if (_blackbox) {
-            _blackbox->start({.debugMode = 0, .motorCount = 2, .servoCount = 0});
-        }
     }
 }
 
@@ -251,12 +248,7 @@ so we need to convert the values returned by calculatePitchDegrees() and calcula
 */
 void MotorPairController::updateOutputsUsingPIDs(const AHRS::ahrs_data_t& imuDataNED)
 {
-    _blackboxMessageQueue.SEND(imuDataNED);
-    if (!_blackbox) {
-        // no blackbox task, so receive the IMU data so it is available for the backchannel and telemetry
-        _blackboxMessageQueue.RECEIVE();
-    }
-
+    _ahrsMessageQueue.SEND(imuDataNED);
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
     _pitchAngleDegreesRaw = -imuDataNED.orientation.calculateRollDegrees();
     _motorPairMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle

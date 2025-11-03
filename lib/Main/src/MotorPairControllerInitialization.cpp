@@ -62,8 +62,8 @@ MotorPairBase& MotorPairController::allocateMotors()
     return motors;
 }
 
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, BlackboxMessageQueue& blackboxMessageQueue, void* i2cMutex) :
-    MotorPairController(taskIntervalMicroseconds, outputToMotorsDenominator, motorPair, blackboxMessageQueue, i2cMutex, gVehicle)
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue, void* i2cMutex) :
+    MotorPairController(taskIntervalMicroseconds, outputToMotorsDenominator, motorPair, ahrsMessageQueue, i2cMutex, gVehicle)
 {
 }
 
@@ -71,11 +71,11 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint
 /*!
 Constructor. Sets member data.
 */
-MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, BlackboxMessageQueue& blackboxMessageQueue, void* i2cMutex, const vehicle_t& vehicle) :
+MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue, void* i2cMutex, const vehicle_t& vehicle) :
     VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, taskIntervalMicroseconds),
     _motorPair(motorPair),
     _motorPairMixer(_motorPair),
-    _blackboxMessageQueue(blackboxMessageQueue),
+    _ahrsMessageQueue(ahrsMessageQueue),
     _outputToMotorsDenominator(outputToMotorsDenominator),
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),

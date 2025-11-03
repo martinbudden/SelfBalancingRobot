@@ -10,8 +10,8 @@
 #include <string>
 
 class AHRS;
+class AHRS_MessageQueue;
 class Blackbox;
-class BlackboxMessageQueue;
 
 /*!
 The MotorPairController uses the ENU (East North Up) coordinate convention, the same as used by ROS (Robot Operating System).
@@ -30,11 +30,10 @@ positive yaw is nose right
 class MotorPairController : public VehicleControllerBase {
 public:
     virtual ~MotorPairController() = default;
-    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, BlackboxMessageQueue& blackboxMessageQueue, void* i2cMutex);
-    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, BlackboxMessageQueue& blackboxMessageQueue) :
-        MotorPairController(taskIntervalMicroseconds, outputToMotorsDenominator, motorPair, blackboxMessageQueue, nullptr) {}
-    BlackboxMessageQueue& getBlackboxMessageQueue() { return _blackboxMessageQueue; }
-    const BlackboxMessageQueue& getBlackboxMessageQueue() const { return _blackboxMessageQueue; }
+    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue, void* i2cMutex);
+    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue) :
+        MotorPairController(taskIntervalMicroseconds, outputToMotorsDenominator, motorPair, ahrsMessageQueue, nullptr) {}
+    const AHRS_MessageQueue& getAHRS_MessageQueue() const { return _ahrsMessageQueue; }
 private:
     // MotorPairController is not copyable or moveable
     MotorPairController(const MotorPairController&) = delete;
@@ -85,7 +84,7 @@ public:
     typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint16_array_t;
     static constexpr float NOT_SET = FLT_MAX;
 private:
-    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, BlackboxMessageQueue& blackboxMessageQueue, void* i2cMutex, const vehicle_t& vehicle);
+    MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue, void* i2cMutex, const vehicle_t& vehicle);
 public:
     static MotorPairBase& allocateMotors();
 
@@ -95,7 +94,6 @@ public:
     void motorsSwitchOff();
     void motorsSwitchOn();
     void motorsToggleOnOff();
-    void setBlackbox(Blackbox& blackbox) { _blackbox = &blackbox; }
 
     virtual uint32_t getOutputPowerTimeMicroseconds() const override;
 
@@ -145,8 +143,7 @@ private:
 private:
     MotorPairBase& _motorPair; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
     MotorPairMixer _motorPairMixer;
-    BlackboxMessageQueue& _blackboxMessageQueue;
-    Blackbox* _blackbox {nullptr};
+    AHRS_MessageQueue& _ahrsMessageQueue;
     const uint32_t _outputToMotorsDenominator;
     uint32_t _taskSignalledCount {0};
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};

@@ -5,12 +5,12 @@
 
 
 class AHRS;
-class BlackboxMessageQueue;
+class AHRS_MessageQueue;
 class MotorPairController;
 
 class BlackboxCallbacks : public BlackboxCallbacksBase {
 public:
-    BlackboxCallbacks(BlackboxMessageQueue& messageQueue, AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController) :
+    BlackboxCallbacks(AHRS_MessageQueue& messageQueue, AHRS& ahrs, MotorPairController& motorPairController, RadioController& radioController) :
         _messageQueue(messageQueue),
         _ahrs(ahrs),
         _motorPairController(motorPairController),
@@ -28,7 +28,7 @@ public:
     virtual bool areMotorsRunning() const override;
     virtual uint32_t rcModeActivationMask() const override;
 private:
-    BlackboxMessageQueue& _messageQueue;
+    AHRS_MessageQueue& _messageQueue;
     AHRS& _ahrs;
     MotorPairController& _motorPairController;
     RadioController& _radioController;

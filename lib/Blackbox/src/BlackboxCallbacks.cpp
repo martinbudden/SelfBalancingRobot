@@ -1,5 +1,5 @@
 #include "BlackboxCallbacks.h"
-#include "BlackboxMessageQueue.h"
+#include "AHRS_MessageQueue.h"
 
 #include <AHRS.h>
 #include <Blackbox.h>
@@ -57,23 +57,23 @@ void BlackboxCallbacks::loadMainState(blackboxMainState_t& mainState, uint32_t c
 {
     (void)currentTimeUs;
 
-    const AHRS::ahrs_data_t queueItem = _messageQueue.getQueueItem();
+    const AHRS::ahrs_data_t ahrsData = _messageQueue.getAHRS_Data();
 
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
 
     static constexpr float radiansToDegrees {180.0F / static_cast<float>(M_PI)};
     static constexpr float gyroScale {radiansToDegrees * 10.0F};
 
-    mainState.gyroADC[0] = static_cast<int16_t>(std::lroundf(queueItem.accGyroRPS.gyroRPS.x * gyroScale));
-    mainState.gyroADC[1] = static_cast<int16_t>(std::lroundf(queueItem.accGyroRPS.gyroRPS.y * gyroScale));
-    mainState.gyroADC[2] = static_cast<int16_t>(std::lroundf(queueItem.accGyroRPS.gyroRPS.z * gyroScale));
-    mainState.gyroUnfiltered[0] = static_cast<int16_t>(std::lroundf(queueItem.gyroRPS_unfiltered.x * gyroScale));
-    mainState.gyroUnfiltered[1] = static_cast<int16_t>(std::lroundf(queueItem.gyroRPS_unfiltered.y * gyroScale));
-    mainState.gyroUnfiltered[2] = static_cast<int16_t>(std::lroundf(queueItem.gyroRPS_unfiltered.z * gyroScale));
+    mainState.gyroADC[0] = static_cast<int16_t>(std::lroundf(ahrsData.accGyroRPS.gyroRPS.x * gyroScale));
+    mainState.gyroADC[1] = static_cast<int16_t>(std::lroundf(ahrsData.accGyroRPS.gyroRPS.y * gyroScale));
+    mainState.gyroADC[2] = static_cast<int16_t>(std::lroundf(ahrsData.accGyroRPS.gyroRPS.z * gyroScale));
+    mainState.gyroUnfiltered[0] = static_cast<int16_t>(std::lroundf(ahrsData.gyroRPS_unfiltered.x * gyroScale));
+    mainState.gyroUnfiltered[1] = static_cast<int16_t>(std::lroundf(ahrsData.gyroRPS_unfiltered.y * gyroScale));
+    mainState.gyroUnfiltered[2] = static_cast<int16_t>(std::lroundf(ahrsData.gyroRPS_unfiltered.z * gyroScale));
     // just truncate for acc
-    mainState.accADC[0] = static_cast<int16_t>(queueItem.accGyroRPS.acc.x * 4096);
-    mainState.accADC[1] = static_cast<int16_t>(queueItem.accGyroRPS.acc.y * 4096);
-    mainState.accADC[2] = static_cast<int16_t>(queueItem.accGyroRPS.acc.z * 4096);
+    mainState.accADC[0] = static_cast<int16_t>(ahrsData.accGyroRPS.acc.x * 4096);
+    mainState.accADC[1] = static_cast<int16_t>(ahrsData.accGyroRPS.acc.y * 4096);
+    mainState.accADC[2] = static_cast<int16_t>(ahrsData.accGyroRPS.acc.z * 4096);
 
     for (int ii = 0; ii < blackboxMainState_t::XYZ_AXIS_COUNT; ++ii) {
         const auto pidIndex = static_cast<MotorPairController::pid_index_e>(ii);

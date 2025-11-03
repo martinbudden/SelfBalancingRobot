@@ -3,7 +3,7 @@
 #include "ScreenM5.h"
 
 #include <AHRS.h>
-#include <BlackboxMessageQueue.h>
+#include <AHRS_MessageQueue.h>
 #if defined(M5_STACK)
 #include <M5Stack.h>
 #elif defined(M5_UNIFIED)
@@ -560,7 +560,7 @@ void ScreenM5::updateReceivedData()
 
 void ScreenM5::updateAHRS_Data() const
 {
-    const AHRS::ahrs_data_t ahrsData = _motorPairController.getBlackboxMessageQueue().getQueueItem();
+    const AHRS::ahrs_data_t ahrsData = _motorPairController.getAHRS_MessageQueue().getAHRS_Data();
     const Quaternion orientation = ahrsData.orientation;
     TD_AHRS::data_t tdAhrsData {
         .roll = _motorPairController.getRollAngleDegreesRaw(),
