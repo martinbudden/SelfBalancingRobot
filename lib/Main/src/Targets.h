@@ -164,7 +164,7 @@ Targets
 #if defined(TARGET_PICO)
     #define IMU_AXIS_ORDER      IMU_Base::XPOS_YPOS_ZPOS
     #define USE_IMU_LSM6DS3TR_C
-#if defined(LIBRARY_IMU_USE_SPI_BUS)
+#if defined(LIBRARY_SENSORS_IMU_USE_SPI_BUS)
     #define IMU_SPI_INDEX       BUS_INDEX_0
     #define IMU_SPI_PINS        {.cs=17,.sck=18,.cipo=16,.copi=19,.irq=20}
 #else

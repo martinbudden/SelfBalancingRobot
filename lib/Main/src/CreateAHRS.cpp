@@ -10,7 +10,7 @@
 #include <IMU_MPU6886.h>
 #include <IMU_Null.h>
 
-#if defined(USE_IMU_MPU6886) && !defined(LIBRARY_IMU_USE_SPI_BUS)
+#if defined(USE_IMU_MPU6886) && !defined(LIBRARY_SENSORS_IMU_USE_SPI_BUS)
 #if defined(M5_STACK)
 #include <M5Stack.h>
 #elif defined(M5_UNIFIED)
@@ -25,7 +25,7 @@
 IMU_Base& Main::createIMU(void* i2cMutex)
 {
     // Statically allocate the IMU according the the build flags
-#if defined(LIBRARY_IMU_USE_SPI_BUS)
+#if defined(LIBRARY_SENSORS_IMU_USE_SPI_BUS)
 
     enum { SPI_FREQUENCY_20_MHZ = 20000000 };
     const BUS_SPI::spi_pins_t pins = IMU_SPI_PINS;
