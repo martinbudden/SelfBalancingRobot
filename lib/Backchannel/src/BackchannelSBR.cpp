@@ -191,7 +191,7 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
     if (_requestType == CommandPacketRequestData::REQUEST_AHRS_DATA) {
         // intercept an AHRS_DATA request to replace roll and pitch values
         AHRS::ahrs_data_t ahrsData;
-        _motorPairController.getAHRS_MessageQueue().PEEK_COPY(ahrsData);
+        _motorPairController.getAHRS_MessageQueue().PEEK_TELEMETRY(ahrsData);
         const size_t len = packTelemetryData_AHRS(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _ahrs, ahrsData);
         TD_AHRS* td = reinterpret_cast<TD_AHRS*>(_transmitDataBufferPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
         // AHRS orientation assumes (as is conventional) that roll is around the Y-axis, so convert.

@@ -248,7 +248,10 @@ so we need to convert the values returned by calculatePitchDegrees() and calcula
 */
 void MotorPairController::updateOutputsUsingPIDs(const AHRS::ahrs_data_t& imuDataNED)
 {
+#if defined(USE_BLACKBOX)
     _ahrsMessageQueue.SEND(imuDataNED);
+#endif
+    _ahrsMessageQueue.SEND_TELEMETRY(imuDataNED);
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
     _pitchAngleDegreesRaw = -imuDataNED.orientation.calculateRollDegrees();
     _motorPairMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
