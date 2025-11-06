@@ -148,9 +148,9 @@ private:
     uint32_t _taskSignalledCount {0};
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
 
-    float _rollAngleDegreesRaw {0.0F};
-    float _pitchAngleDegreesRaw {0.0F};
-    float _yawAngleDegreesRaw {0.0F};
+    float _rollAngleDegreesRaw {NOT_SET};
+    float _pitchAngleDegreesRaw {NOT_SET};
+    float _yawAngleDegreesRaw {NOT_SET};
 
     // throttle stick scaled to the range [-1,0, 1.0]
     float _throttleStick {0};

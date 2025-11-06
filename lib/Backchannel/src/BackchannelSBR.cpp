@@ -191,7 +191,7 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
     if (_requestType == CommandPacketRequestData::REQUEST_AHRS_DATA) {
         // intercept an AHRS_DATA request to replace roll and pitch values
         AHRS::ahrs_data_t ahrsData;
-        _motorPairController.getAHRS_MessageQueue().PEEK_TELEMETRY(ahrsData);
+        _motorPairController.getAHRS_MessageQueue().PEEK_AHRS_DATA(ahrsData);
         const size_t len = packTelemetryData_AHRS(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _ahrs, ahrsData);
         TD_AHRS* td = reinterpret_cast<TD_AHRS*>(_transmitDataBufferPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
         // AHRS orientation assumes (as is conventional) that roll is around the Y-axis, so convert.
@@ -230,14 +230,15 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
         sendData(_transmitDataBufferPtr, len);
         break;
     }
+#if false
     case CommandPacketRequestData::REQUEST_MSP_DATA: {
-        (void)subCommand;
-        //const size_t len = packTelemetryData_MSP(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _msp, subCommand);
-        //if (len <= ESP_NOW_MAX_DATA_LEN) {
-        //    sendData(_transmitDataBufferPtr, len);
-        //}
+        const size_t len = packTelemetryData_MSP(_transmitDataBufferPtr, _telemetryID, _sequenceNumber, _msp, subCommand);
+        if (len <= ESP_NOW_MAX_DATA_LEN) {
+            sendData(_transmitDataBufferPtr, len);
+        }
         break;
     }
+#endif
     default:
         return false;
     } // end switch

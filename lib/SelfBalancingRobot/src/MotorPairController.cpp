@@ -251,11 +251,10 @@ void MotorPairController::updateOutputsUsingPIDs(const AHRS::ahrs_data_t& imuDat
 #if defined(USE_BLACKBOX)
     _ahrsMessageQueue.SEND(imuDataNED);
 #endif
-    _ahrsMessageQueue.SEND_TELEMETRY(imuDataNED);
+    _ahrsMessageQueue.SEND_AHRS_DATA(imuDataNED);
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
     _pitchAngleDegreesRaw = -imuDataNED.orientation.calculateRollDegrees();
     _motorPairMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
-
 
     // calculate _outputs[OUTPUT_SPEED_DPS] and setpoints according to the control mode.
     // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]

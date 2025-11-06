@@ -560,8 +560,8 @@ void ScreenM5::updateReceivedData()
 
 void ScreenM5::updateAHRS_Data() const
 {
-    AHRS::ahrs_data_t ahrsData;
-    _motorPairController.getAHRS_MessageQueue().PEEK_TELEMETRY(ahrsData);
+    AHRS::ahrs_data_t ahrsData {};
+    _motorPairController.getAHRS_MessageQueue().PEEK_AHRS_DATA(ahrsData);
     const Quaternion orientation = ahrsData.orientation;
     TD_AHRS::data_t tdAhrsData {
         .roll = _motorPairController.getRollAngleDegreesRaw(),
