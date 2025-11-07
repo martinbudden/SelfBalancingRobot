@@ -573,7 +573,7 @@ void ScreenM5::updateAHRS_Data() const
         .accOffset = {}
     };
     if (tdAhrsData.roll == MotorPairController::NOT_SET) {
-        tdAhrsData.roll = orientation.calculateRollDegrees();
+        tdAhrsData.roll = orientation.calculatePitchDegrees();
     }
     if (tdAhrsData.yaw == MotorPairController::NOT_SET) {
         tdAhrsData.yaw = orientation.calculateYawDegrees();

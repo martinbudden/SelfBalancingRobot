@@ -4,6 +4,10 @@
 #include "SBR_Telemetry.h"
 
 #include <AHRS.h>
+//#define USE_DEBUG_PRINTF_BACKCHANNEL
+#if defined(USE_DEBUG_PRINTF_BACKCHANNEL)
+#include <HardwareSerial.h>
+#endif
 #include <NonVolatileStorage.h>
 #include <ReceiverBase.h>
 #include <SV_Telemetry.h>
@@ -41,6 +45,7 @@ BackchannelSBR::BackchannelSBR(
 
 bool BackchannelSBR::packetSetOffset(const CommandPacketSetOffset& packet)
 {
+    //Serial.printf("    packetSetOffset type:%d, len:%d value:%d, type:%d\r\n", packet.type, packet.len, packet.setType, packet.value);
     if (BackchannelStabilizedVehicle::packetSetOffset(packet)) {
         return true;
     }
@@ -68,7 +73,7 @@ bool BackchannelSBR::packetSetOffset(const CommandPacketSetOffset& packet)
 
 bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
 {
-    //Serial.printf("Control packet type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
+    //Serial.printf("    packetControl type:%d, len:%d, value:%d\r\n", packet.type, packet.len, packet.value);
     switch (packet.control) {
     case CommandPacketControl::MOTORS_SWITCH_OFF:
         _motorPairController.motorsSwitchOff();
@@ -100,7 +105,7 @@ bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
 
 bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
 {
-    //Serial.printf("SetPID packet type:%d, len:%d, pidIndex:%d setType:%d value:%3d f0:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value, packet.f0);
+    //Serial.printf("    packetSetPID type:%d, len:%d, pidIndex:%d setType:%d value:%3d f0:%f\r\n", packet.type, packet.len, packet.pidIndex, packet.setType, packet.value, packet.f0);
 
     static_assert(static_cast<int>(TD_PID::MAX_PID_COUNT) >= static_cast<int>(MotorPairController::PID_COUNT));
 
@@ -188,6 +193,12 @@ bool BackchannelSBR::packetSetPID(const CommandPacketSetPID& packet)
 
 bool BackchannelSBR::sendPacket(uint8_t subCommand)
 {
+#if defined(USE_DEBUG_PRINTF_BACKCHANNEL)
+    if (_requestType != CommandPacketRequestData::NO_REQUEST) {
+        //Serial.printf("SBR sendPacket requestType:%d, subCommand:%d\r\n", _requestType, subCommand);
+    }
+#endif
+    // intercept REQUEST_AHRS_DATA to add additional information
     if (_requestType == CommandPacketRequestData::REQUEST_AHRS_DATA) {
         // intercept an AHRS_DATA request to replace roll and pitch values
         AHRS::ahrs_data_t ahrsData;
@@ -197,6 +208,7 @@ bool BackchannelSBR::sendPacket(uint8_t subCommand)
         // AHRS orientation assumes (as is conventional) that roll is around the Y-axis, so convert.
         const Quaternion orientationENU = ahrsData.orientation;
         td->data.roll = orientationENU.calculatePitchDegrees(),
+        td->data.pitch = orientationENU.calculateRollDegrees(),
         td->data.yaw = orientationENU.calculateYawDegrees(),
         sendData(_transmitDataBufferPtr, len);
         return true;
