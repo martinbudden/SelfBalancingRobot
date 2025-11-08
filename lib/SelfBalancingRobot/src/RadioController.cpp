@@ -1,10 +1,10 @@
 #include "MotorPairController.h"
-#include "RadioController.h"
+#include "Cockpit.h"
 #include <ReceiverBase.h>
 
 
-RadioController::RadioController(ReceiverBase& receiver, MotorPairController& motorPairController) :
-    RadioControllerBase(receiver),
+Cockpit::Cockpit(ReceiverBase& receiver, MotorPairController& motorPairController) :
+    CockpitBase(receiver),
     _motorPairController(motorPairController)
 {
 }
@@ -15,7 +15,7 @@ Map a control stick to a parabolic curve to give more control for small values o
 Higher values of alpha increase the effect
     alpha=0 gives a linear response, alpha=1 gives a parabolic (x^2) curve
 */
-float RadioController::mapStick(float stick, float alpha)
+float Cockpit::mapStick(float stick, float alpha)
 {
     stick *= 1.0F - alpha*(1.0F - (stick < 0.0F ? - stick : stick));
     return stick;
@@ -24,7 +24,7 @@ float RadioController::mapStick(float stick, float alpha)
 /*!
 Called from within ReceiverTask::loop()
 */
-void RadioController::updateControls(const controls_t& controls)
+void Cockpit::updateControls(const controls_t& controls)
 {
     // failsafe handling
     _receiverInUse = true;
@@ -53,7 +53,7 @@ void RadioController::updateControls(const controls_t& controls)
     _motorPairController.updateSetpoints(mpcControls);
 }
 
-void RadioController::checkFailsafe(uint32_t tickCount)
+void Cockpit::checkFailsafe(uint32_t tickCount)
 {
     if ((tickCount - _failsafeTickCount > _failsafeTickCountThreshold) && _receiverInUse) {
         // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.

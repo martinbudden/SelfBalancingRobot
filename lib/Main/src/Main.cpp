@@ -19,13 +19,14 @@
 #include <BlackboxTask.h>
 #endif
 
+#include <Cockpit.h>
+
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <HardwareSerial.h>
 #endif
 
 #include <MotorPairController.h>
 #include <NonVolatileStorage.h>
-#include <RadioController.h>
 
 #include <ReceiverTask.h>
 #include <TimeMicroseconds.h>
@@ -67,8 +68,6 @@ void Main::setup()
 
     static NonVolatileStorage nvs;
     nvs.init();
-    const uint8_t currentPID_Profile = nvs.loadPidProfileIndex();
-    nvs.setCurrentPidProfileIndex(currentPID_Profile);
 
     // Create a mutex to ensure there is no conflict between objects using the I2C bus, namely the motors and the AHRS.
     // The mutex is created statically, ie without dynamic memory allocation.
@@ -92,10 +91,10 @@ void Main::setup()
 
 
     ReceiverBase& receiver = createReceiver();
-    static RadioController radioController(receiver, motorPairController); // NOLINT(misc-const-correctness)
+    static Cockpit cockpit(receiver, motorPairController); // NOLINT(misc-const-correctness)
 
 #if defined(USE_BLACKBOX)
-    Blackbox& blackbox = createBlackBox(ahrs, motorPairController, ahrsMessageQueue, radioController);
+    Blackbox& blackbox = createBlackBox(ahrs, motorPairController, ahrsMessageQueue, cockpit);
 #endif
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
@@ -146,7 +145,7 @@ void Main::setup()
     reportDashboardTask();
     _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_taskIntervalMicroseconds);
     _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE);
-    _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, radioController, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
+    _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, cockpit, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 #if defined(USE_BLACKBOX)
     _tasks.blackboxTask = BlackboxTask::createTask(blackbox, ahrsMessageQueue, BLACKBOX_TASK_PRIORITY, BLACKBOX_TASK_CORE, BLACKBOX_TASK_INTERVAL_MICROSECONDS);
 #endif
@@ -189,19 +188,19 @@ void Main::checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ah
         calibrateIMU(nonVolatileStorage, ahrs, CALIBRATE_GYRO_ONLY);
     }
 #else
-    // For M5_STACK and USE_IMU_MPU6886, the gyro offsets are stored in preferences.
-    IMU_Base::xyz_int32_t offset {};
-    if (nonVolatileStorage.loadGyroOffset(offset.x, offset.y, offset.z)) {
-        ahrs.setGyroOffset(offset);
-#if defined(FRAMEWORK_ARDUINO)
+    if (nonVolatileStorage.loadGyroCalibrationState() == NonVolatileStorage::CALIBRATED) {
+        const xyz_t gyroOffset = nonVolatileStorage.loadGyroOffset();
+        ahrs.setGyroOffset(gyroOffset);
+#if !defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
         std::array<char, 128> buf;
-        sprintf(&buf[0], "**** AHRS gyroOffsets loaded from preferences: gx:%5d, gy:%5d, gz:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
+        sprintf(&buf[0], "**** AHRS gyroOffsets loaded from NVS: gx:%f, gy:%f, gz:%f\r\n", static_cast<double>(gyroOffset.x), static_cast<double>(gyroOffset.y), static_cast<double>(gyroOffset.z));
         Serial.print(&buf[0]);
 #endif
-        if (nonVolatileStorage.loadAccOffset(offset.x, offset.y, offset.z)) {
-            ahrs.setAccOffset(offset);
-#if defined(FRAMEWORK_ARDUINO)
-            sprintf(&buf[0], "**** AHRS accOffsets loaded from preferences:  ax:%5d, ay:%5d, az:%5d\r\n", static_cast<int>(offset.x), static_cast<int>(offset.y), static_cast<int>(offset.z));
+        if (nonVolatileStorage.loadAccCalibrationState() == NonVolatileStorage::CALIBRATED) {
+            const xyz_t accOffset = nonVolatileStorage.loadGyroOffset();
+            ahrs.setAccOffset(accOffset);
+#if !defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
+            sprintf(&buf[0], "**** AHRS accOffsets loaded from NVS: ax:%f, ay:%f, az:%f\r\n", static_cast<double>(accOffset.x), static_cast<double>(accOffset.y), static_cast<double>(accOffset.z));
             Serial.print(&buf[0]);
 #endif
         }
@@ -224,10 +223,10 @@ void Main::clearSettings(NonVolatileStorage& nonVolatileStorage, MotorPairContro
         nonVolatileStorage.resetPID(ii);
     }
     nonVolatileStorage.storeBalanceAngle(DEFAULTS::balanceAngle);
-    nonVolatileStorage.storeAccOffset(0, 0, 0);
-    nonVolatileStorage.storeGyroOffset(0, 0, 0);
+    nonVolatileStorage.storeAccOffset(xyz_t {0.0F, 0.0F, 0.0F});
+    nonVolatileStorage.storeGyroOffset(xyz_t {0.0F, 0.0F, 0.0F});
 #endif
-    const IMU_Base::xyz_int32_t offset {0, 0, 0};
+    const xyz_t offset {0, 0, 0};
     ahrs.setAccOffset(offset);
     ahrs.setGyroOffset(offset);
     motorPairController.setPitchBalanceAngleDegrees(DEFAULTS::balanceAngle);

@@ -13,13 +13,13 @@
 /*!
 Statically allocate the Blackbox and associated objects.
 */
-Blackbox& Main::createBlackBox(AHRS& ahrs, MotorPairController& motorPairController, AHRS_MessageQueue& ahrsMessageQueue, RadioController& radioController)
+Blackbox& Main::createBlackBox(AHRS& ahrs, MotorPairController& motorPairController, AHRS_MessageQueue& ahrsMessageQueue, Cockpit& cockpit)
 {
-    static BlackboxCallbacks            blackboxCallbacks(ahrsMessageQueue, ahrs, motorPairController, radioController); // NOLINT(misc-const-correctness) false positive
+    static BlackboxCallbacks            blackboxCallbacks(ahrsMessageQueue, ahrs, motorPairController, cockpit); // NOLINT(misc-const-correctness) false positive
     static BlackboxSerialDeviceSDCard   blackboxSerialDevice(BlackboxSerialDeviceSDCard::SDCARD_SPI_PINS); // NOLINT(misc-const-correctness) false positive
 
     static BlackboxSelfBalancingRobot   blackbox(motorPairController.getTaskIntervalMicroseconds(), blackboxCallbacks, blackboxSerialDevice, motorPairController);
-    //radioController.setBlackbox(blackbox);
+    //cockpit.setBlackbox(blackbox);
     blackbox.init({
         .sample_rate = Blackbox::RATE_ONE,
         .device = Blackbox::DEVICE_SDCARD,

@@ -20,23 +20,24 @@ Other keys are invalid and may not be used. In particular keys of 0, 64-255, and
 This gives a total of 16,169 usable keys.
 */
 
-static constexpr uint16_t PID_ProfileIndexKey = 0x0001;
+//static constexpr uint16_t PID_ProfileIndexKey = 0x0001;
 //static constexpr uint16_t RateProfileIndexKey = 0x0002;
-static constexpr uint16_t BalanceAngleKey = 0x0003;
+static constexpr uint16_t AccCalibrationStateKey = 0x0003;
+static constexpr uint16_t GyroCalibrationStateKey = 0x0004;
+static constexpr uint16_t BalanceAngleKey = 0x0005;
+
+static constexpr uint16_t AccOffsetKey = 0x0007;
+static constexpr uint16_t GyroOffsetKey = 0x0008;
+static constexpr uint16_t MacAddressKey = 0x0008;
+
+static constexpr uint16_t MotorPairPitchBalanceAngleConfigKey = 0x0009;
+static constexpr uint16_t MotorPairControllerFiltersConfigKey = 0x000A;
+
+static constexpr uint16_t FailsafeKey = 0x000B;
+
 static const std::array<uint16_t, MotorPairController::PID_COUNT> PID_Keys = {
-    // note these must go up in jumps of 4, since one key is used for each profile
-    0x0100, 0x0104, 0x0108, 0x010C, 0x0110, 0x0114
+    0x0100, 0x0101, 0x0102, 0x0103, 0x0104, 0x0105
 };
-static constexpr uint16_t AccOffsetKey = 0x0200;
-static constexpr uint16_t GyroOffsetKey = 0x0201;
-static constexpr uint16_t MacAddressKey = 0x0202;
-
-static constexpr uint16_t MotorPairPitchBalanceAngleConfigKey = 0x0300;
-// Part of PID profile
-static constexpr uint16_t MotorPairControllerFiltersConfigKey = 0x0400;
-
-static constexpr uint16_t RadioControllerFailsafeKey = 0x0506;
-
 
 #if defined(USE_ARDUINO_ESP32_PREFERENCES)
 static const char* nonVolatileStorageNamespace {"SBRB"}; // Self Balancing RoBot
@@ -201,22 +202,64 @@ int32_t NonVolatileStorage::storeItem(uint16_t key, uint8_t pidProfileIndex, con
 }
 
 
-uint8_t NonVolatileStorage::loadPidProfileIndex() const
+NonVolatileStorage::calibration_state_e NonVolatileStorage::loadAccCalibrationState() const
 {
-    uint8_t profileIndex {}; // NOLINT(misc-const-correctness)
-    if (loadItem(PID_ProfileIndexKey, &profileIndex, sizeof(profileIndex))) { // cppcheck-suppress knownConditionTrueFalse
-        return profileIndex;
+    calibration_state_e calibrationState {};
+    if (loadItem(AccCalibrationStateKey, &calibrationState, sizeof(calibrationState))) { // cppcheck-suppress knownConditionTrueFalse
+        return calibrationState;
     }
-    return DEFAULT_PID_PROFILE;
+    return NOT_CALIBRATED;
 }
 
-int32_t NonVolatileStorage::storePidProfileIndex(uint8_t profileIndex)
+int32_t NonVolatileStorage::storeAccCalibrationState(calibration_state_e calibrationState)
 {
-    if (profileIndex >= PID_PROFILE_COUNT) {
-        return ERROR_INVALID_PROFILE;
+    const calibration_state_e defaultCalibrationState = NOT_CALIBRATED;
+    return storeItem(AccCalibrationStateKey, &calibrationState, sizeof(calibrationState), &defaultCalibrationState);
+}
+
+xyz_t NonVolatileStorage::loadAccOffset() const
+{
+    {xyz_t offset {};
+    if (loadItem(AccOffsetKey, &offset, sizeof(offset))) { // cppcheck-suppress knownConditionTrueFalse
+        return offset;
+    }}
+    return xyz_t { .x = 0.0F, .y = 0.0F, .z = 0.0F };
+}
+
+int32_t NonVolatileStorage::storeAccOffset(const xyz_t& offset)
+{
+    const xyz_t defaultOffset = { .x = 0.0F, .y = 0.0F, .z = 0.0F };
+    return storeItem(AccOffsetKey, &offset, sizeof(offset), &defaultOffset);
+}
+
+NonVolatileStorage::calibration_state_e NonVolatileStorage::loadGyroCalibrationState() const
+{
+    calibration_state_e calibrationState {};
+    if (loadItem(GyroCalibrationStateKey, &calibrationState, sizeof(calibrationState))) { // cppcheck-suppress knownConditionTrueFalse
+        return calibrationState;
     }
-    const uint8_t defaultProfileIndex = DEFAULT_PID_PROFILE;
-    return storeItem(PID_ProfileIndexKey, &profileIndex, sizeof(profileIndex), &defaultProfileIndex);
+    return NOT_CALIBRATED;
+}
+
+int32_t NonVolatileStorage::storeGyroCalibrationState(calibration_state_e calibrationState)
+{
+    const calibration_state_e defaultCalibrationState = NOT_CALIBRATED;
+    return storeItem(GyroCalibrationStateKey, &calibrationState, sizeof(calibrationState), &defaultCalibrationState);
+}
+
+xyz_t NonVolatileStorage::loadGyroOffset() const
+{
+    {xyz_t offset {};
+    if (loadItem(GyroOffsetKey, &offset, sizeof(offset))) { // cppcheck-suppress knownConditionTrueFalse
+        return offset;
+    }}
+    return xyz_t { .x = 0.0F, .y = 0.0F, .z = 0.0F };
+}
+
+int32_t NonVolatileStorage::storeGyroOffset(const xyz_t& offset)
+{
+    const xyz_t defaultOffset = { .x = 0.0F, .y = 0.0F, .z = 0.0F };
+    return storeItem(GyroOffsetKey, &offset, sizeof(offset), &defaultOffset);
 }
 
 float NonVolatileStorage::loadBalanceAngle() const
@@ -234,87 +277,39 @@ int32_t NonVolatileStorage::storeBalanceAngle(float balanceAngle)
     return storeItem(BalanceAngleKey, &balanceAngle, sizeof(balanceAngle), &defaultBalanceAngle);
 }
 
-RadioController::failsafe_t NonVolatileStorage::loadRadioControllerFailsafe() // NOLINT(readability-make-member-function-const)
+Cockpit::failsafe_t NonVolatileStorage::loadFailsafe() // NOLINT(readability-make-member-function-const)
 {
-    RadioController::failsafe_t failsafe {}; // NOLINT(misc-const-correctness)
-    if (loadItem(RadioControllerFailsafeKey, &failsafe, sizeof(failsafe))) { // cppcheck-suppress knownConditionTrueFalse
+    Cockpit::failsafe_t failsafe {}; // NOLINT(misc-const-correctness)
+    if (loadItem(FailsafeKey, &failsafe, sizeof(failsafe))) { // cppcheck-suppress knownConditionTrueFalse
     }
-    return DEFAULTS::radioControllerFailsafe;
+    return DEFAULTS::failsafe;
 }
 
-int32_t NonVolatileStorage::storeRadioControllerFailsafe(const RadioController::failsafe_t& failsafe)
+int32_t NonVolatileStorage::storeFailsafe(const Cockpit::failsafe_t& failsafe)
 {
-    return storeItem(RadioControllerFailsafeKey, &failsafe, sizeof(failsafe), &DEFAULTS::radioControllerFailsafe);
+    return storeItem(FailsafeKey, &failsafe, sizeof(failsafe), &DEFAULTS::failsafe);
 }
 
-VehicleControllerBase::PIDF_uint16_t NonVolatileStorage::loadPID(uint8_t pidIndex, uint8_t pidProfileIndex) const
+VehicleControllerBase::PIDF_uint16_t NonVolatileStorage::loadPID(uint8_t pidIndex) const
 {
     assert(pidIndex <= MotorPairController::PID_COUNT);
-    if (pidProfileIndex >= PID_PROFILE_COUNT) {
-        return DEFAULTS::motorPairControllerPIDs[pidIndex];
-    }
-    const uint16_t key = PID_Keys[pidIndex] + pidProfileIndex;
-    VehicleControllerBase::PIDF_uint16_t pid {};
-    if (loadItem(key, &pid, sizeof(pid))) { // cppcheck-suppress knownConditionTrueFalse
+    {VehicleControllerBase::PIDF_uint16_t pid {};
+    if (loadItem(PID_Keys[pidIndex], &pid, sizeof(pid))) { // cppcheck-suppress knownConditionTrueFalse
         return pid;
-    }
+    }}
     return DEFAULTS::motorPairControllerPIDs[pidIndex];
 }
 
-int32_t NonVolatileStorage::storePID(const VehicleControllerBase::PIDF_uint16_t& pid, uint8_t pidIndex, uint8_t pidProfileIndex)
+int32_t NonVolatileStorage::storePID(const VehicleControllerBase::PIDF_uint16_t& pid, uint8_t pidIndex)
 {
     assert(pidIndex <= MotorPairController::PID_COUNT);
-    if (pidProfileIndex >= PID_PROFILE_COUNT) {
-        return ERROR_INVALID_PROFILE;
-    }
-    const uint16_t key = PID_Keys[pidIndex] + pidProfileIndex;
-    return storeItem(key, &key, sizeof(pid), &DEFAULTS::motorPairControllerPIDs[pidIndex]);
+    return storeItem(PID_Keys[pidIndex], &pid, sizeof(pid), &DEFAULTS::motorPairControllerPIDs[pidIndex]);
 }
 
-void NonVolatileStorage::resetPID(uint8_t pidIndex, uint8_t pidProfileIndex)
+void NonVolatileStorage::resetPID(uint8_t pidIndex)
 {
     assert(pidIndex <= MotorPairController::PID_COUNT);
-    assert(pidProfileIndex < PID_PROFILE_COUNT);
     remove(PID_Keys[pidIndex]);
-}
-
-
-bool NonVolatileStorage::loadAccOffset(int32_t& x, int32_t& y, int32_t& z) const
-{
-    xyz_int32_t xyz {}; // NOLINT(misc-const-correctness)
-    if (loadItem(AccOffsetKey, &xyz, sizeof(xyz))) { // cppcheck-suppress knownConditionTrueFalse
-        x = xyz.x;
-        y = xyz.y;
-        z = xyz.z;
-        return true;
-    }
-    return false;
-}
-
-int32_t NonVolatileStorage::storeAccOffset(int32_t x, int32_t y, int32_t z)
-{
-    const xyz_int32_t xyz = { .x = x, .y = y, .z = z };
-    const xyz_int32_t xyzDefault = { .x = 0, .y = 0, .z = 0 };
-    return storeItem(AccOffsetKey, &xyz, sizeof(xyz), &xyzDefault);
-}
-
-bool NonVolatileStorage::loadGyroOffset(int32_t& x, int32_t& y, int32_t& z) const
-{
-    xyz_int32_t xyz {}; // NOLINT(misc-const-correctness)
-    if (loadItem(GyroOffsetKey, &xyz, sizeof(xyz))) { // cppcheck-suppress knownConditionTrueFalse
-        x = xyz.x;
-        y = xyz.y;
-        z = xyz.z;
-        return true;
-    }
-    return false;
-}
-
-int32_t NonVolatileStorage::storeGyroOffset(int32_t x, int32_t y, int32_t z)
-{
-    const xyz_int32_t xyz = { .x = x, .y = y, .z = z };
-    const xyz_int32_t xyzDefault = { .x = 0, .y = 0, .z = 0 };
-    return storeItem(GyroOffsetKey, &xyz, sizeof(xyz), &xyzDefault);
 }
 
 void NonVolatileStorage::loadMacAddress(uint8_t* macAddress) const // NOLINT(readability-non-const-parameter)

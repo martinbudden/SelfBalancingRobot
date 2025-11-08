@@ -17,7 +17,6 @@ public:
     IMU_Filters();
 public:
     virtual void filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) override;
-    virtual void setFilters() override;
     void setFilters(const filters_t& filters, float deltaT);
 protected:
     float _deltaT;

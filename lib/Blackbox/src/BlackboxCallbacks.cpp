@@ -3,8 +3,8 @@
 
 #include <AHRS.h>
 #include <Blackbox.h>
+#include <Cockpit.h>
 #include <MotorPairController.h>
-#include <RadioController.h>
 #include <ReceiverBase.h>
 #include <cmath>
 
@@ -47,10 +47,10 @@ void BlackboxCallbacks::loadSlowState(blackboxSlowState_t& slowState)
     //memcpy(&slow->flightModeFlags, &_rcModeActivationMask, sizeof(slow->flightModeFlags)); //was flightModeFlags;
     slowState.flightModeFlags = 0;//!!_motorPairController.getFlightModeFlags();
     slowState.stateFlags = 0; // this is GPS state
-    slowState.failsafePhase = static_cast<uint8_t>(_radioController.getFailsafePhase());
+    slowState.failsafePhase = static_cast<uint8_t>(_cockpit.getFailsafePhase());
     //slowState.rxSignalReceived = _receiver.isRxReceivingSignal();
-    slowState.rxSignalReceived = (slowState.failsafePhase == RadioController::FAILSAFE_IDLE);
-    slowState.rxFlightChannelsValid = (slowState.failsafePhase == RadioController::FAILSAFE_IDLE);
+    slowState.rxSignalReceived = (slowState.failsafePhase == Cockpit::FAILSAFE_IDLE);
+    slowState.rxFlightChannelsValid = (slowState.failsafePhase == Cockpit::FAILSAFE_IDLE);
 }
 
 void BlackboxCallbacks::loadMainState(blackboxMainState_t& mainState, uint32_t currentTimeUs)

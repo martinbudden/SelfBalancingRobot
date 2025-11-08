@@ -24,11 +24,6 @@ void IMU_Filters::filter(xyz_t& gyroRPS, xyz_t& acc, float deltaT) // cppcheck-s
     acc = _accLPF.filter(acc);
 }
 
-void IMU_Filters::setFilters()
-{
-    // Do nothing
-}
-
 void IMU_Filters::setFilters(const filters_t& filters, float deltaT)
 {
     _filters = filters;

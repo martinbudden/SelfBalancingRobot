@@ -1,7 +1,7 @@
 #pragma once
 
+#include <Cockpit.h>
 #include <MotorPairController.h>
-#include <RadioController.h>
 
 
 namespace DEFAULTS {
@@ -23,7 +23,7 @@ static constexpr MotorPairController::pidf_uint16_array_t motorPairControllerPID
     {   0,   0,   0,   0,   0 }, // position degrees
 }};
 
-static const RadioController::failsafe_t radioControllerFailsafe = {
+static const Cockpit::failsafe_t failsafe = {
     .delay = 15,
     .landing_time = 60,
     .switch_mode = 0,

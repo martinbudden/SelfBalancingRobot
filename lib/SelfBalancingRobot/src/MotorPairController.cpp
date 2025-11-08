@@ -1,7 +1,7 @@
 #include "AHRS_MessageQueue.h"
+#include "Cockpit.h"
 #include "MotorPairBase.h"
 #include "MotorPairController.h"
-#include "RadioController.h"
 
 #include <AHRS.h>
 #include <Blackbox.h>

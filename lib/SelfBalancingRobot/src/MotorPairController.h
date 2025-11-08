@@ -1,9 +1,9 @@
 #pragma once
 
 #include "MotorPairMixer.h"
+#include <CockpitBase.h>
 #include <Filters.h>
 #include <PIDF.h>
-#include <RadioControllerBase.h>
 #include <SV_TelemetryData.h>
 #include <VehicleControllerBase.h>
 #include <cfloat>

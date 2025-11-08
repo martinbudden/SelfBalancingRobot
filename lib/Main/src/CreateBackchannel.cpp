@@ -11,7 +11,7 @@
 BackchannelBase& Main::createBackchannel(MotorPairController& motorPairController, AHRS& ahrs, ReceiverBase& receiver, const TaskBase* dashboardTask, NonVolatileStorage& nvs)
 {
     // statically allocate an MSP object
-    // static MSP_ProtoFlight mspProtoFlightBackchannel(features, ahrs, flightController, radioController, receiver);
+    // static MSP_ProtoFlight mspProtoFlightBackchannel(features, ahrs, flightController, cockpit, receiver);
     // Statically allocate the backchannel.
     static constexpr uint8_t backchannelMacAddress[ESP_NOW_ETH_ALEN] BACKCHANNEL_MAC_ADDRESS;
     auto& receiverAtomJoyStick = static_cast<ReceiverAtomJoyStick&>(receiver); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)

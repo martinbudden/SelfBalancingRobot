@@ -58,42 +58,49 @@ void Main::runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs
         accZ += z;
     }
 
-    const auto gyroOffset_x = static_cast<int32_t>(gyroX / count);
-    const auto gyroOffset_y = static_cast<int32_t>(gyroY / count);
-    const auto gyroOffset_z = static_cast<int32_t>(gyroZ / count);
+    const xyz_t gyroOffset = xyz_t {
+        .x = static_cast<float>(gyroX) / count,
+        .y = static_cast<float>(gyroY) / count,
+        .z = static_cast<float>(gyroZ) / count
+    } * ahrs.getIMU().getAccResolution();
 
-    auto accOffset_x = static_cast<int32_t>(accX / count);
-    auto accOffset_y = static_cast<int32_t>(accY / count);
-    auto accOffset_z = static_cast<int32_t>(accZ / count);
+    xyz_t accOffset = {
+        .x = static_cast<float>(accX) / count,
+        .y = static_cast<float>(accY) / count,
+        .z = static_cast<float>(accZ) / count
+    };
 
-    const int32_t oneG = ahrs.getAccOneG_Raw();
-    const int32_t halfG = oneG / 2;
-    if (accOffset_x > halfG) {
-        accOffset_x -= oneG;
-    } else if (accOffset_x < - halfG) {
-        accOffset_x += oneG;
-    } else if (accOffset_y > halfG) {
-        accOffset_y -= oneG;
-    } else if (accOffset_y < - halfG) {
-        accOffset_y += oneG;
-    } else if (accOffset_z > halfG) {
-        accOffset_z -= oneG;
-    } else if (accOffset_z < - halfG) {
-        accOffset_z += oneG;
+    const float oneG = 1.0F / ahrs.getIMU().getAccResolution();
+    const float halfG = oneG / 2.0F;
+    if (accOffset.x > halfG) {
+        accOffset.x -= oneG;
+    } else if (accOffset.x < - halfG) {
+        accOffset.x += oneG;
+    } else if (accOffset.y > halfG) {
+        accOffset.y -= oneG;
+    } else if (accOffset.y < - halfG) {
+        accOffset.y += oneG;
+    } else if (accOffset.z > halfG) {
+        accOffset.z -= oneG;
+    } else if (accOffset.z < - halfG) {
+        accOffset.z += oneG;
     }
+    accOffset *= ahrs.getIMU().getAccResolution();
 
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     if (M5.Lcd.width() > 300) {
         M5.Lcd.printf("gyro offsets\r\n");
-        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", static_cast<int>(gyroOffset_x), static_cast<int>(gyroOffset_y), static_cast<int>(gyroOffset_z));
+        M5.Lcd.printf("x:%f y:%f z:%f\r\n\r\n", static_cast<double>(gyroOffset.x), static_cast<double>(gyroOffset.y), static_cast<double>(gyroOffset.z));
         M5.Lcd.printf("acc offsets\r\n");
-        M5.Lcd.printf("x:%5d y:%5d z:%5d\r\n\r\n", static_cast<int>(accOffset_x), static_cast<int>(accOffset_y), static_cast<int>(accOffset_z));
+        M5.Lcd.printf("x:%f y:%f z:%f\r\n\r\n", static_cast<double>(accOffset.x), static_cast<double>(accOffset.y), static_cast<double>(accOffset.z));
     }
 #endif
 
-    nonVolatileStorage.storeGyroOffset(gyroOffset_x, gyroOffset_y, gyroOffset_z);
+    nonVolatileStorage.storeGyroOffset(gyroOffset);
+    nonVolatileStorage.storeGyroCalibrationState(NonVolatileStorage::CALIBRATED);
     if (calibrationType == CALIBRATE_ACC_AND_GYRO) {
-        nonVolatileStorage.storeAccOffset(accOffset_x, accOffset_y, accOffset_z);
+        nonVolatileStorage.storeAccOffset(accOffset);
+        nonVolatileStorage.storeAccCalibrationState(NonVolatileStorage::CALIBRATED);
     }
 }
 

@@ -107,7 +107,7 @@ classDiagram
     link MotorPairBase "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/SelfBalancingRobot/src/MotorPairBase.h"
     MotorPairController *-- MotorPairBase
     MotorPairController *-- MotorPairMixer
-    MotorPairController o-- RadioControllerBase
+    MotorPairController o-- CockpitBase
 
     MotorPairBase <|-- MotorsBala2
     class MotorsBala2["MotorsBala2(eg)"]
@@ -132,22 +132,22 @@ classDiagram
     }
     link ReceiverBase "https://github.com/martinbudden/Library-Receiver/blob/main/src/ReceiverBase.h"
 
-    class RadioControllerBase {
+    class CockpitBase {
         <<abstract>>
         updateControls() *
         checkFailsafe() *
     }
-    link RadioControllerBase "https://github.com/martinbudden/Library-Receiver/blob/main/src/RadioControllerBase.h"
+    link CockpitBase "https://github.com/martinbudden/Library-Receiver/blob/main/src/CockpitBase.h"
 
-    RadioController o-- MotorPairController
-    RadioControllerBase o--ReceiverBase
-    RadioControllerBase <|-- RadioController
-    class RadioController {
+    Cockpit o-- MotorPairController
+    CockpitBase o--ReceiverBase
+    CockpitBase <|-- Cockpit
+    class Cockpit {
         updateControls() override
         checkFailsafe() override
         getFailsafePhase() uint32_t const
     }
-    link RadioController "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/SelfBalancingRobot/src/RadioController.h"
+    link Cockpit "https://github.com/martinbudden/SelfBalancingRobot/blob/main/lib/SelfBalancingRobot/src/Cockpit.h"
 
     IMU_Base <|-- IMU_MPU6886
     class IMU_MPU6886["IMU_MPU6886(eg)"]
@@ -195,7 +195,7 @@ classDiagram
     MainTask o-- ButtonsBase : calls update
     MainTask o-- ScreenBase : calls update
 
-    class RadioControllerBase {
+    class CockpitBase {
         <<abstract>>
         updateControls() *
         checkFailsafe() *
@@ -208,9 +208,9 @@ classDiagram
         getAuxiliaryChannel() uint32_t *
     }
 
-    RadioControllerBase o--ReceiverBase
-    RadioControllerBase <|-- RadioController
-    RadioController o-- MotorPairController : calls updateSetpoints
+    CockpitBase o--ReceiverBase
+    CockpitBase <|-- Cockpit
+    Cockpit o-- MotorPairController : calls updateSetpoints
 
     TaskBase <|-- ReceiverTask
     class ReceiverTask {
@@ -225,7 +225,7 @@ classDiagram
     ReceiverTask o-- ReceiverWatcher : calls newReceiverPacketAvailable
     ReceiverTask o-- ReceiverBase : calls WAIT_FOR_DATA_RECEIVED update getStickValues
     ReceiverWatcher <|-- ScreenBase
-    ReceiverTask o-- RadioControllerBase : calls updateControls checkFailsafe
+    ReceiverTask o-- CockpitBase : calls updateControls checkFailsafe
 
     class VehicleControllerBase {
         <<abstract>>

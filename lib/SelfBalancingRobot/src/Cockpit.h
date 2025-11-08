@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RadioControllerBase.h>
+#include <CockpitBase.h>
 
 #include <array>
 #include <cstddef>
@@ -8,9 +8,9 @@
 
 class MotorPairController;
 
-class RadioController : public RadioControllerBase {
+class Cockpit : public CockpitBase {
 public:
-    explicit RadioController(ReceiverBase& receiver, MotorPairController& motorPairController);
+    Cockpit(ReceiverBase& receiver, MotorPairController& motorPairController);
 public:
     enum failsafe_phase_e {
         FAILSAFE_IDLE = 0,
