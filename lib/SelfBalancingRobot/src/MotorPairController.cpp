@@ -29,7 +29,8 @@ std::string MotorPairController::getBalanceAngleName() const
 
 void MotorPairController::motorsResetEncodersToZero()
 {
-    _motorPair.resetEncodersToZero();
+    _motorMixer.resetEncoderToZero(MotorPairMixer::MOTOR_LEFT);
+    _motorMixer.resetEncoderToZero(MotorPairMixer::MOTOR_RIGHT);
 }
 
 void MotorPairController::setPID_Constants(const pidf_uint16_array_t& pids)
@@ -54,7 +55,7 @@ void MotorPairController::setPID_Constants(pid_index_e pidIndex, const PIDF_uint
 
 uint32_t MotorPairController::getOutputPowerTimeMicroseconds() const
 {
-    return _motorPairMixer.getOutputPowerTimeMicroseconds();
+    return _motorMixer.getOutputPowerTimeMicroseconds();
 }
 
 VehicleControllerBase::PIDF_uint16_t MotorPairController::getPID_MSP(size_t index) const
@@ -100,8 +101,8 @@ motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
     telemetry.positionOutput = _outputs[OUTPUT_POSITION_DEGREES];
     telemetry.yawRateOutput = _outputs[OUTPUT_YAW_RATE_DPS];
 
-    telemetry.powerLeft = _motorPairMixer.getPowerLeft();
-    telemetry.powerRight = _motorPairMixer.getPowerRight();
+    telemetry.powerLeft = _motorMixer.getMotorOutput(MotorPairMixer::MOTOR_LEFT);
+    telemetry.powerRight = _motorMixer.getMotorOutput(MotorPairMixer::MOTOR_RIGHT);
 
     telemetry.encoderLeft = _encoderLeft;
     telemetry.encoderRight = _encoderRight;
@@ -119,7 +120,7 @@ motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
 
 void MotorPairController::motorsSwitchOff()
 {
-    _motorPairMixer.motorsSwitchOff();
+    _motorMixer.motorsSwitchOff();
     // Switch of PID integration when the motors are switched off, so we don't get integral windup.
     for (auto pid : _PIDS) {
         pid.switchIntegrationOff();
@@ -132,7 +133,7 @@ void MotorPairController::motorsSwitchOn()
     resetIntegrals();
     // don't allow motors to be switched on if the sensor fusion has not initialized
     if (!_sensorFusionFilterIsInitializing) {
-        _motorPairMixer.motorsSwitchOn();
+        _motorMixer.motorsSwitchOn();
         // and switch PID integration back on
         for (auto pid : _PIDS) {
             pid.switchIntegrationOn();
@@ -191,19 +192,20 @@ If new stick values are available then update the setpoint using the stick value
 void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 {
 #if defined(MOTORS_HAVE_ENCODERS)
-    _motorPair.readEncoder();
+    _motorMixer.readEncoder(MotorPairMixer::MOTOR_LEFT);
+    _motorMixer.readEncoder(MotorPairMixer::MOTOR_RIGHT);
 
-    _encoderLeft = _motorPair.getLeftEncoder();
+    _encoderLeft = _motorMixer.getEncoder(MotorPairMixer::MOTOR_LEFT);
     _encoderLeftDelta = _encoderLeft - _encoderLeftPrevious;
     _encoderLeftPrevious = _encoderLeft;
 
-    _encoderRight = _motorPair.getRightEncoder();
+    _encoderRight = _motorMixer.getEncoder(MotorPairMixer::MOTOR_RIGHT);
     _encoderRightDelta = _encoderRight - _encoderRightPrevious;
     _encoderRightPrevious = _encoderRight;
 
-    if (_motorPair.canAccuratelyEstimateSpeed()) {
-        _speedLeftDPS = _motorPair.getLeftSpeed();
-        _speedRightDPS = _motorPair.getRightSpeed();
+    if (_motorMixer.canAccuratelyEstimateSpeed(MotorPairMixer::MOTOR_LEFT)) {
+        _speedLeftDPS = _motorMixer.getSpeed(MotorPairMixer::MOTOR_LEFT);
+        _speedRightDPS = _motorMixer.getSpeed(MotorPairMixer::MOTOR_RIGHT);
         _speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
     } else {
         // For reference, at 420 steps per revolution, with a 100Hz (10ms) update rate,
@@ -232,7 +234,7 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 #else
     (void)deltaT;
     // no encoders, so estimate speed from power output
-    _speedDPS =  _motorMaxSpeedDPS * MotorPairBase::clip((_motorPairMixer.getPowerLeft() + _motorPairMixer.getPowerRight()) * 0.5F, -1.0F, 1.0F);
+    _speedDPS =  _motorMaxSpeedDPS * MotorPairBase::clip((_motorMixer.getMotorOutput(MotorPairMixer::MOTOR_LEFT) + _motorMixer.getMotorOutput(MotorPairMixer::MOTOR_LEFT)) * 0.5F, -1.0F, 1.0F);
 #endif
 }
 
@@ -254,7 +256,7 @@ void MotorPairController::updateOutputsUsingPIDs(const AHRS::ahrs_data_t& imuDat
     _ahrsMessageQueue.SEND_AHRS_DATA(imuDataNED);
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
     _pitchAngleDegreesRaw = -imuDataNED.orientation.calculateRollDegrees();
-    _motorPairMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
+    _motorMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
 
     // calculate _outputs[OUTPUT_SPEED_DPS] and setpoints according to the control mode.
     // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
@@ -303,7 +305,7 @@ void MotorPairController::updatePositionOutputs(float deltaT)
     const float distanceDegrees = _positionDegrees - _positionDegreesPrevious;
     _positionDegreesPrevious = _positionDegrees;
     static constexpr float alpha = 0.9F;
-    const float speedEstimate = MotorPairBase::clip((_motorPairMixer.getPowerLeft() + _motorPairMixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
+    const float speedEstimate = MotorPairBase::clip((_motorMixer.getPowerLeft() + _motorMixer.getPowerRight()) * 0.5F, -1.0F, 1.0F) * _motorMaxSpeedDPS;
     _positionDegrees += alpha*distanceDegrees + (1.0F - alpha)*speedEstimate*deltaT;
 #endif
 #else
@@ -344,5 +346,5 @@ void MotorPairController::outputToMixer(float deltaT, uint32_t tickCount, const 
         .yaw    = queueItem.yaw
     };
 
-    _motorPairMixer.outputToMotors(commands, deltaT, tickCount);
+    _motorMixer.outputToMotors(commands, deltaT, tickCount);
 }

@@ -66,19 +66,17 @@ Constructor. Sets member data.
 */
 MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue, void* i2cMutex) :
     VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, taskIntervalMicroseconds),
-    _motorPair(motorPair),
-    _motorPairMixer(_motorPair),
+    _motorMixer(motorPair),
     _ahrsMessageQueue(ahrsMessageQueue),
     _outputToMotorsDenominator(outputToMotorsDenominator),
     _motorMaxSpeedDPS(gVehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
-    _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),
+    _motorPairStepsPerRevolution(motorPair.getStepsPerRevolution()),
     _pitchBalanceAngleDegrees(gVehicle.pitchBalanceAngleDegrees)
 {
-    (void)motorPair;
     (void)i2cMutex;
 
-    _motorPairMixer.setMotorSwitchOffAngleDegrees(gVehicle.motorSwitchOffAngleDegrees);
+    _motorMixer.setMotorSwitchOffAngleDegrees(gVehicle.motorSwitchOffAngleDegrees);
 
     for (size_t ii = PID_BEGIN; ii < PID_COUNT; ++ii) {
         _PIDS[ii].setPID(gDefaultPIDs[ii]);

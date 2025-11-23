@@ -73,23 +73,22 @@ Constructor. Sets member data.
 */
 MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue, void* i2cMutex, const vehicle_t& vehicle) :
     VehicleControllerBase(SELF_BALANCING_ROBOT, PID_COUNT, taskIntervalMicroseconds),
-    _motorPair(motorPair),
-    _motorPairMixer(_motorPair),
+    _motorMixer(motorPair),
     _ahrsMessageQueue(ahrsMessageQueue),
     _outputToMotorsDenominator(outputToMotorsDenominator),
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
-    _motorPairStepsPerRevolution(_motorPair.getStepsPerRevolution()),
+    _motorPairStepsPerRevolution(motorPair.getStepsPerRevolution()),
     _pitchBalanceAngleDegrees(vehicle.pitchBalanceAngleDegrees)
 {
 
 #if defined(I2C_MUTEX_REQUIRED)
-    _motorPair.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
+    motorPair.setMutex(static_cast<SemaphoreHandle_t>(i2cMutex));
 #else
     (void)i2cMutex;
 #endif
 
-    _motorPairMixer.setMotorSwitchOffAngleDegrees(vehicle.motorSwitchOffAngleDegrees);
+    _motorMixer.setMotorSwitchOffAngleDegrees(vehicle.motorSwitchOffAngleDegrees);
 
     const float deltaT = static_cast<float>(_taskIntervalMicroseconds) / 1000000.0F;
     _pitchAngleDTermFilter.setCutoffFrequency(50.0F, deltaT);

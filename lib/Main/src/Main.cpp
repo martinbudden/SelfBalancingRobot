@@ -299,14 +299,14 @@ void Main::loop() // NOLINT(readability-make-member-function-const)
 #if defined(USE_SCREEN)
     // screen and button update tick counts are coprime, so screen and buttons are not normally updated in same loop
     // update the screen every 101 ticks (0.1 seconds)
-    if (_screenTickCount - tickCount > 101) {
+    if (tickCount - _screenTickCount > 101) {
         _screenTickCount = tickCount;
         _screen->update();
     }
 #endif
 #if defined(USE_BUTTONS)
     // update the buttons every 149 ticks (0.15 seconds)
-    if (_buttonsTickCount - tickCount > 149) {
+    if (tickCount - _buttonsTickCount > 149) {
         _buttonsTickCount = tickCount;
         _buttons->update();
     }

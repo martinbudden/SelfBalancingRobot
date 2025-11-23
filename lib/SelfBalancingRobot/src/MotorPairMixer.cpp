@@ -74,3 +74,39 @@ float MotorPairMixer::getMotorOutput(size_t motorIndex) const
 {
     return motorIndex == 0 ? _powerLeft : _powerRight;
 }
+
+void MotorPairMixer::readEncoder(size_t motorIndex)
+{
+    // motorPair reads both encoders, so to avoid reading twice, only read for left motor
+    if (motorIndex == MOTOR_LEFT) {
+        _motorPair.readEncoder();
+    }
+}
+
+int32_t MotorPairMixer::getEncoder(size_t motorIndex) const
+{
+    return motorIndex == 0 ? _motorPair.getLeftEncoder() : _motorPair.getRightEncoder();
+}
+
+float MotorPairMixer::getStepsPerRevolution(size_t motorIndex) const
+{
+    (void)motorIndex;
+    return _motorPair.getStepsPerRevolution();
+}
+
+void MotorPairMixer::resetEncoderToZero(size_t motorIndex)
+{
+    (void)motorIndex;
+    _motorPair.resetEncodersToZero();
+}
+
+bool MotorPairMixer::canAccuratelyEstimateSpeed(size_t motorIndex) const
+{
+    (void)motorIndex;
+    return _motorPair.canAccuratelyEstimateSpeed();
+}
+
+float MotorPairMixer::getSpeed(size_t motorIndex) const
+{
+    return motorIndex == 0 ? _motorPair.getLeftSpeed() : _motorPair.getRightSpeed();
+}

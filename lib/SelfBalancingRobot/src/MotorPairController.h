@@ -88,9 +88,9 @@ private:
 public:
     static MotorPairBase& allocateMotors();
 
-    float getMixerThrottleCommand() const { return _motorPairMixer.getThrottleCommand(); }
+    float getMixerThrottleCommand() const { return _motorMixer.getThrottleCommand(); }
 
-    inline bool motorsIsOn() const { return _motorPairMixer.motorsIsOn(); }
+    inline bool motorsIsOn() const { return _motorMixer.motorsIsOn(); }
     void motorsSwitchOff();
     void motorsSwitchOn();
     void motorsToggleOnOff();
@@ -141,8 +141,7 @@ public:
 private:
     void updatePositionOutputs(float deltaT);
 private:
-    MotorPairBase& _motorPair; //!< The MotorPairController has a reference to the motors for input, ie reading the encoders.
-    MotorPairMixer _motorPairMixer;
+    MotorPairMixer _motorMixer;
     AHRS_MessageQueue& _ahrsMessageQueue;
     const uint32_t _outputToMotorsDenominator;
     uint32_t _taskSignalledCount {0};

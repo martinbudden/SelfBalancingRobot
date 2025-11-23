@@ -4,6 +4,7 @@
 
 class MotorPairBase;
 
+
 /*!
 The MotorMixer takes the outputs from the MotorPairController and "mixes" the values, to set the appropriate power for each motor.
 */
@@ -16,7 +17,7 @@ public:
         float yaw;
     };
 public:
-    enum { MOTOR_COUNT = 2 };
+    enum { MOTOR_LEFT = 0, MOTOR_RIGHT = 1, MOTOR_COUNT = 2 };
 public:
     explicit MotorPairMixer(MotorPairBase& motorPair) : _motorPair(motorPair) {}
 public:
@@ -32,9 +33,14 @@ public:
     inline void setMotorSwitchOffAngleDegrees(float motorSwitchOffAngleDegrees) { _motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees; }
     inline void setPitchAngleDegreesRaw(float pitchAngleDegreesRaw) { _pitchAngleDegreesRaw = pitchAngleDegreesRaw; }
 
-    inline float getPowerLeft() const { return _powerLeft; } //!< for telemetry
-    inline float getPowerRight() const { return _powerRight; } //!< for telemetry
     inline uint32_t getOutputPowerTimeMicroseconds() const { return _outputPowerTimeMicroseconds; } //!< for telemetry
+
+    void readEncoder(size_t motorIndex);
+    int32_t getEncoder(size_t motorIndex) const;
+    float getStepsPerRevolution(size_t motorIndex) const;
+    void resetEncoderToZero(size_t motorIndex);
+    bool canAccuratelyEstimateSpeed(size_t motorIndex) const;
+    float getSpeed(size_t motorIndex) const;
 private:
     MotorPairBase& _motorPair; //<! The MotorMixer has a reference to the motor pair for output, ie setting the motor power.
     int32_t _motorsIsOn {false};
