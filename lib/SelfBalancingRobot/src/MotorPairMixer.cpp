@@ -94,10 +94,9 @@ float MotorPairMixer::getStepsPerRevolution(size_t motorIndex) const
     return _motorPair.getStepsPerRevolution();
 }
 
-void MotorPairMixer::resetEncoderToZero(size_t motorIndex)
+void MotorPairMixer::resetAllEncoders()
 {
-    (void)motorIndex;
-    _motorPair.resetEncodersToZero();
+    _motorPair.resetAllEncoders();
 }
 
 bool MotorPairMixer::canAccuratelyEstimateSpeed(size_t motorIndex) const

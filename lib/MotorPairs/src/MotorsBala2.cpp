@@ -33,8 +33,8 @@ void MotorsBala2::readEncoder()
 
 void MotorsBala2::setPower(float leftPower, float rightPower)
 {
-    const float leftClipped = clip(leftPower, -1.0, 1.0);
-    const float rightClipped = clip(rightPower, -1.0, 1.0);
+    const float leftClipped = clip(leftPower, -1.0F, 1.0F);
+    const float rightClipped = clip(rightPower, -1.0F, 1.0F);
     // set signs so positive power moves motor in a forward direction
     const auto left = static_cast<int16_t>(-roundf(leftClipped * MAX_POWER));
     const auto right = static_cast<int16_t>(-roundf(rightClipped * MAX_POWER));

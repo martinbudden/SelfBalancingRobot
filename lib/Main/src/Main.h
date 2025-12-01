@@ -2,6 +2,7 @@
 
 #include "Targets.h"
 
+#include <IMU_Base.h>
 #include <TaskBase.h>
 
 #if defined(FRAMEWORK_USE_FREERTOS)
@@ -23,7 +24,6 @@ class BackchannelTask;
 class Blackbox;
 class BlackboxTask;
 class Cockpit;
-class IMU_Base;
 class IMU_FiltersBase;
 class MotorPairController;
 class NonVolatileStorage;
@@ -115,7 +115,6 @@ class Main {
 public:
     enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7}; // Note: defining PI=8 will cause conflict with Arduino's #define of PI (3.14..)
     enum {P0=0, P1=1, P2=2, P3=3, P4=4, P5=5, P6=6, P7=7};
-    enum calibration_type_e { CALIBRATE_ACC_AND_GYRO, CALIBRATE_GYRO_ONLY };
 public:
     Main() = default;
 public:
@@ -128,9 +127,9 @@ private:
     static ReceiverBase& createReceiver();
     static BackchannelBase& createBackchannel(MotorPairController& motorPairController, AHRS& ahrs, ReceiverBase& receiver, const TaskBase* dashboardTask, NonVolatileStorage& nvs);
     static Blackbox& createBlackBox(AHRS& ahrs, MotorPairController& motorPairController, AHRS_MessageQueue& ahrsMessageQueue, Cockpit& cockpit);
-    static void checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs);
-    static void runIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
-    static void calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
+    static void checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, IMU_Base& imu);
+    static void calibrateIMUandSave(NonVolatileStorage& nonVolatileStorage, IMU_Base& imu, IMU_Base::calibration_type_e calibrationType);
+    //static void calibrateIMU(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs, calibration_type_e calibrationType);
     static void clearSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController, AHRS& ahrs);
     static void loadSettings(NonVolatileStorage& nonVolatileStorage, MotorPairController& motorPairController);
     static void reportDashboardTask();

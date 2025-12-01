@@ -23,13 +23,14 @@ static constexpr MotorPairController::pidf_uint16_array_t motorPairControllerPID
     {   0,   0,   0,   0,   0 }, // position degrees
 }};
 
-static const Cockpit::failsafe_t failsafe = {
-    .delay = 15,
-    .landing_time = 60,
-    .switch_mode = 0,
+static const Cockpit::failsafe_config_t failsafeConfig = {
+    .throttle_pwm = 1000,
+    .throttle_low_delay_deciseconds = 100,
+    .recovery_delay_deciseconds = 5,
+    .delay_deciseconds = 15,
+    .landing_time_seconds = 60,
     .procedure = 0,
-    .throttle = 1000,
-    .throttle_low_delay = 100
+    .switch_mode = 0,
 };
 
 } // END namespace

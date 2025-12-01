@@ -131,7 +131,7 @@ public:
 
     motor_pair_controller_telemetry_t getTelemetryData() const;
 
-    void motorsResetEncodersToZero();
+    void motorsResetAllEncoders();
 public:
     virtual void outputToMixer(float deltaT, uint32_t tickCount, const VehicleControllerMessageQueue::queue_item_t& queueItem) override;
 public:
@@ -153,7 +153,7 @@ private:
 
     // throttle stick scaled to the range [-1,0, 1.0]
     float _throttleStick {0};
-    float _yawStickMultiplier {1.0};
+    float _yawStickMultiplier {1.0F};
 
     int32_t _encoderLeft {0}; //!< value read from left motor encoder, raw
     int32_t _encoderRight {0}; //!< value read from right motor encoder, raw
@@ -164,7 +164,7 @@ private:
 
     float _speedLeftDPS {0}; //!< rotation speed of left motor, degrees per second
     float _speedRightDPS {0}; //!< rotation speed of right motor, degrees per second
-    float _speedDPS {0.0}; //<!< filtered average of left and right motor speeds
+    float _speedDPS {0.0F}; //<!< filtered average of left and right motor speeds
     FilterMovingAverage<4> _speedMovingAverageFilter;
     IIR_filter _speedFilter;
 
@@ -172,11 +172,11 @@ private:
     const float _motorMaxSpeedDPS_reciprocal;
     const float _motorPairStepsPerRevolution; //!< Local copy of the value of _motors->getStepsPerRevolution().
 
-    float _positionSetpointDegrees {0.0}; //!< Position setpoint for CONTROL_MODE_POSITION
-    float _positionDegrees {0.0}; //!< Position for CONTROL_MODE_POSITION
-    float _positionDegreesPrevious {0.0}; //!< Previous position for CONTROL_MODE_POSITION
+    float _positionSetpointDegrees {0.0F}; //!< Position setpoint for CONTROL_MODE_POSITION
+    float _positionDegrees {0.0F}; //!< Position for CONTROL_MODE_POSITION
+    float _positionDegreesPrevious {0.0F}; //!< Previous position for CONTROL_MODE_POSITION
 
-    float _pitchBalanceAngleDegrees {0.0};
+    float _pitchBalanceAngleDegrees {0.0F};
     PowerTransferFilter2  _pitchAngleDTermFilter {};
 
     std::array<float, OUTPUT_COUNT> _outputs {};

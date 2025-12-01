@@ -80,8 +80,8 @@ public:
     int32_t storeItem(uint16_t key, const void* item, size_t length, const void* defaults);
     int32_t storeItem(uint16_t key, uint8_t pidProfileIndex, const void* item, size_t length, const void* defaults);
 
-    Cockpit::failsafe_t loadFailsafe();
-    int32_t storeFailsafe(const Cockpit::failsafe_t& failsafe);
+    Cockpit::failsafe_config_t loadFailsafeConfig();
+    int32_t storeFailsafeConfig(const Cockpit::failsafe_config_t& config);
 
 private:
 #if defined(USE_FLASH_KLV)

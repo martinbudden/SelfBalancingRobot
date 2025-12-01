@@ -9,7 +9,7 @@ class MotorPairController;
 class ScreenBase : public ReceiverWatcher {
 public:
     virtual ~ScreenBase() = default;
-    ScreenBase(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver) :
+    ScreenBase(const AHRS& ahrs, const MotorPairController& motorPairController, ReceiverBase& receiver) :
         _ahrs(ahrs), _motorPairController(motorPairController), _receiver(receiver) {}
 public:
     virtual void nextScreenMode() = 0;

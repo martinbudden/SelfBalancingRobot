@@ -17,7 +17,7 @@ public:
     };
     enum mode_e { MODE_NORMAL = 1, MODE_INVERTED = 3, MODE_QRCODE = 5 };
 public:
-    ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver);
+    ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairController, ReceiverBase& receiver);
 private:
     // ScreenM5 is not copyable or moveable
     ScreenM5(const ScreenM5&) = delete;

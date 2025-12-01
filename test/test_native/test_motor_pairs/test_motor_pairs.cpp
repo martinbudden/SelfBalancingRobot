@@ -55,7 +55,7 @@ void test_BalaC_motors_deadband()
     TEST_ASSERT_EQUAL_FLOAT(deadbandPower, motors.getDeadbandPower());
 
     float power = motors.scalePower(0.0F);
-    TEST_ASSERT_EQUAL_FLOAT(0.0, power);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, power);
 
     power = motors.scalePower(0.01F);
     TEST_ASSERT_EQUAL_FLOAT(0.208F, power);

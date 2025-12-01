@@ -15,7 +15,7 @@ enum { RX_QUEUE_CAPACITY = 10 };
 uint8_t ucQueueStorageArea[RX_QUEUE_CAPACITY * sizeof(CAN_frame_t)]; // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 } // end namespace
 
-constexpr float encoderStepsPerRevolution {100.0};
+constexpr float encoderStepsPerRevolution {100.0F};
 
 
 MotorsPwrCAN::MotorsPwrCAN() :

@@ -38,7 +38,7 @@ public:
     void readEncoder(size_t motorIndex);
     int32_t getEncoder(size_t motorIndex) const;
     float getStepsPerRevolution(size_t motorIndex) const;
-    void resetEncoderToZero(size_t motorIndex);
+    void resetAllEncoders();
     bool canAccuratelyEstimateSpeed(size_t motorIndex) const;
     float getSpeed(size_t motorIndex) const;
 private:
@@ -47,10 +47,10 @@ private:
     int32_t _motorsIsDisabled {false};
     uint32_t _motorSwitchOffTickCount {0}; //<! For switch bounce protection
     float _throttleCommand {0.0F}; //!< used solely for instrumentation
-    float _powerLeft {0.0};
-    float _powerRight {0.0};
+    float _powerLeft {0.0F};
+    float _powerRight {0.0F};
     uint32_t _outputPowerTimeMicroseconds {0}; //!< for instrumentation, time taken to set the motor pair power. Can be significant if motors controlled over I2C
-    float _motorSwitchOffAngleDegrees {70.0}; //!< Pitch angle at which the motors switch off. So if the robot flips over it won't lie on its back with its motors spinning.
+    float _motorSwitchOffAngleDegrees {70.0F}; //!< Pitch angle at which the motors switch off. So if the robot flips over it won't lie on its back with its motors spinning.
     float _pitchAngleDegreesRaw {}; //<! The pitch angle, compared with _motorSwitchOffAngleDegrees to see if motors should switch off
     FilterMovingAverage<4> _powerLeftFilter;
     FilterMovingAverage<4> _powerRightFilter;

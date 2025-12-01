@@ -34,7 +34,7 @@ enum {
 
 static constexpr float radiansToDegrees {180.0 / M_PI};
 
-ScreenM5::ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairController, const ReceiverBase& receiver) :
+ScreenM5::ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairController, ReceiverBase& receiver) :
     ScreenBase(ahrs, motorPairController, receiver),
     _screenSize(screenSize()),
     _screenRotationOffset(
@@ -42,6 +42,7 @@ ScreenM5::ScreenM5(const AHRS& ahrs, const MotorPairController& motorPairControl
         _screenSize == SIZE_128x128 ? -1 :
          0)
 {
+    receiver.setReceiverWatcher(this);
     M5.Lcd.setRotation(_screenMode + _screenRotationOffset);
     M5.Lcd.setTextSize(_screenSize == ScreenM5::SIZE_128x128 || _screenSize == ScreenM5::SIZE_80x160 || _screenSize == ScreenM5::SIZE_135x240 ? 1 : 2);
     M5.Lcd.fillScreen(TFT_BLACK);

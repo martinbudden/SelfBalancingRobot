@@ -82,7 +82,7 @@ bool BackchannelSBR::packetControl(const CommandPacketControl& packet)
         return true;
         break;
     case CommandPacketControl::RESET:
-        _motorPairController.motorsResetEncodersToZero();
+        _motorPairController.motorsResetAllEncoders();
         return true;
         break;
     case CommandPacketControl::SET_MODE:

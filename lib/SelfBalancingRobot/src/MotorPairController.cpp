@@ -27,10 +27,9 @@ std::string MotorPairController::getBalanceAngleName() const
     return "BALANCE_ANGLE";
 }
 
-void MotorPairController::motorsResetEncodersToZero()
+void MotorPairController::motorsResetAllEncoders()
 {
-    _motorMixer.resetEncoderToZero(MotorPairMixer::MOTOR_LEFT);
-    _motorMixer.resetEncoderToZero(MotorPairMixer::MOTOR_RIGHT);
+    _motorMixer.resetAllEncoders();
 }
 
 void MotorPairController::setPID_Constants(const pidf_uint16_array_t& pids)
@@ -225,8 +224,8 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
         // Additionally apply IIR filter.
         _speedDPS = _speedFilter.filter(speedDPS);
 
-        //static float motorSpeed {0.0};
-        //static constexpr float motorSpeedWeighting {0.8};
+        //static float motorSpeed {0.0F};
+        //static constexpr float motorSpeedWeighting {0.8F};
         //motorSpeed = motorSpeedWeighting * _motorSpeed + (1.0F - motorSpeedWeighting) * (_encoderLeftDelta + _encoderRightDelta);
         //motorSpeed = motorSpeedWeighting * motorSpeed + (1.0F - motorSpeedWeighting) * speedDPS;
         //_speedDPS = motorSpeed;

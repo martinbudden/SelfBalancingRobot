@@ -100,9 +100,9 @@ void Main::setup()
 #if defined(M5_STACK) || defined(M5_UNIFIED)
     // Holding BtnA down while switching on enters calibration mode.
     if (M5.BtnA.isPressed()) {
-        calibrateIMU(nvs, ahrs, CALIBRATE_ACC_AND_GYRO);
+        calibrateIMUandSave(nvs, imuSensor, IMU_Base::CALIBRATE_ACC_AND_GYRO);
     }
-    checkIMU_Calibration(nvs, ahrs);
+    checkIMU_Calibration(nvs, imuSensor);
 
     // Holding BtnC down while switching on clears the preferences.
     if (M5.BtnC.isPressed()) {
@@ -112,7 +112,6 @@ void Main::setup()
 
     // Statically allocate the screen.
     static ScreenM5 screen(ahrs, motorPairController, receiver);
-    ReceiverWatcher* const receiverWatcher =  &screen;
     _screen = &screen;
     _screen->updateTemplate(); // Update the template as soon as we can, to minimize the time the screen is blank
 
@@ -131,11 +130,10 @@ void Main::setup()
 
 #else
 
-    checkIMU_Calibration(nvs, ahrs);
+    checkIMU_Calibration(nvs, imuSensor);
     loadSettings(nvs, motorPairController);
     // no buttons defined, so always broadcast address for binding on startup
     receiver.broadcastMyEUI();
-    ReceiverWatcher* const receiverWatcher =  nullptr; // no screen available
 
 #endif // M5_STACK || M5_UNIFIED
 
@@ -145,7 +143,7 @@ void Main::setup()
     reportDashboardTask();
     _tasks.ahrsTask = AHRS_Task::createTask(_tasks.ahrsTaskInfo, ahrs, AHRS_TASK_PRIORITY, AHRS_TASK_CORE, AHRS_taskIntervalMicroseconds);
     _tasks.vehicleControllerTask = VehicleControllerTask::createTask(_tasks.vehicleControllerTaskInfo, motorPairController, MPC_TASK_PRIORITY, MPC_TASK_CORE);
-    _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, cockpit, receiverWatcher, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
+    _tasks.receiverTask = ReceiverTask::createTask(_tasks.receiverTaskInfo, receiver, cockpit, RECEIVER_TASK_PRIORITY, RECEIVER_TASK_CORE);
 #if defined(USE_BLACKBOX)
     _tasks.blackboxTask = BlackboxTask::createTask(blackbox, ahrsMessageQueue, BLACKBOX_TASK_PRIORITY, BLACKBOX_TASK_CORE, BLACKBOX_TASK_INTERVAL_MICROSECONDS);
 #endif
@@ -179,18 +177,18 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 #endif
 
 
-void Main::checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ahrs)
+void Main::checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, IMU_Base& imuSensor)
 {
     // Set the gyro offsets from non-volatile storage.
 #if defined(USE_IMU_M5_UNIFIED)
     // M5_UNIFIED directly uses NVS (non-volatile storage) to store the gyro offsets.
     if (!M5.Imu.loadOffsetFromNVS()) {
-        calibrateIMU(nonVolatileStorage, ahrs, CALIBRATE_GYRO_ONLY);
+        calibrateIMUandSave(nonVolatileStorage, imuSensor, IMU_Base::CALIBRATE_GYRO_ONLY);
     }
 #else
     if (nonVolatileStorage.loadGyroCalibrationState() == NonVolatileStorage::CALIBRATED) {
         const xyz_t gyroOffset = nonVolatileStorage.loadGyroOffset();
-        ahrs.setGyroOffset(gyroOffset);
+        imuSensor.setGyroOffset(gyroOffset);
 #if !defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
         std::array<char, 128> buf;
         sprintf(&buf[0], "**** AHRS gyroOffsets loaded from NVS: gx:%f, gy:%f, gz:%f\r\n", static_cast<double>(gyroOffset.x), static_cast<double>(gyroOffset.y), static_cast<double>(gyroOffset.z));
@@ -198,7 +196,7 @@ void Main::checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ah
 #endif
         if (nonVolatileStorage.loadAccCalibrationState() == NonVolatileStorage::CALIBRATED) {
             const xyz_t accOffset = nonVolatileStorage.loadGyroOffset();
-            ahrs.setAccOffset(accOffset);
+            imuSensor.setAccOffset(accOffset);
 #if !defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
             sprintf(&buf[0], "**** AHRS accOffsets loaded from NVS: ax:%f, ay:%f, az:%f\r\n", static_cast<double>(accOffset.x), static_cast<double>(accOffset.y), static_cast<double>(accOffset.z));
             Serial.print(&buf[0]);
@@ -206,7 +204,7 @@ void Main::checkIMU_Calibration(NonVolatileStorage& nonVolatileStorage, AHRS& ah
         }
     } else {
         // a calibrate by default only calibrates the gyro, since the SBR may be in an odd orientation when initially switched on
-        calibrateIMU(nonVolatileStorage, ahrs, CALIBRATE_GYRO_ONLY);
+        calibrateIMUandSave(nonVolatileStorage, imuSensor, IMU_Base::CALIBRATE_GYRO_ONLY);
     }
 #endif
 }

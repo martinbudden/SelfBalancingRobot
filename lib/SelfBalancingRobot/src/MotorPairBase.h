@@ -43,7 +43,7 @@ public:
     inline int32_t getLeftEncoder() const { return _leftEncoder - _leftEncoderOffset; }
     inline int32_t getRightEncoder() const { return _rightEncoder - _rightEncoderOffset; }
     inline float getStepsPerRevolution() const { return _stepsPerRevolution; }
-    inline void resetEncodersToZero() { _leftEncoderOffset = _leftEncoder; _rightEncoderOffset = _rightEncoder; }
+    inline void resetAllEncoders() { _leftEncoderOffset = _leftEncoder; _rightEncoderOffset = _rightEncoder; }
     inline bool canAccuratelyEstimateSpeed() const { return _canAccuratelyEstimateSpeed; }
     inline float getLeftSpeed() const { return _leftSpeed; }
     inline float getRightSpeed() const { return _rightSpeed; }
@@ -72,13 +72,13 @@ protected:
     int32_t _rightEncoder {0};
     int32_t _leftEncoderOffset {0};
     int32_t _rightEncoderOffset {0};
-    float _leftSpeed  {0.0}; // revolutions/second
-    float _rightSpeed {0.0};
+    float _leftSpeed  {0.0F}; // revolutions/second
+    float _rightSpeed {0.0F};
 };
 
 inline float MotorPairBase::scalePower(float power) const
 {
-    power = clip(power, -1.0, 1.0);
+    power = clip(power, -1.0F, 1.0F);
     if (power < 0.0F) {
         power = -_deadbandPower + power * (1.0F - _deadbandPower);
     } else if (power > 0.0F) {

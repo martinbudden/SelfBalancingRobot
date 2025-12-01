@@ -92,6 +92,6 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint
     // copy of motorMaxSpeedDPS for telemetry, so telemetry viewer can scale motor speed
 
     const float yawRateDPS_AtMaxPower = _motorMaxSpeedDPS * gVehicle.wheelDiameterMM / gVehicle.wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
-    static constexpr float maxDesiredYawRateDPS {720.0};
+    static constexpr float maxDesiredYawRateDPS {720.0F};
     _yawStickMultiplier = maxDesiredYawRateDPS / yawRateDPS_AtMaxPower;
 }

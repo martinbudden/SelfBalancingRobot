@@ -106,6 +106,6 @@ gain100=0.829970
     //_PIDS[SPEED_DPS].setIntegralMax(1.0F);
 
     const float yawRateDPS_AtMaxPower = _motorMaxSpeedDPS * vehicle.wheelDiameterMM / vehicle.wheelTrackMM; // =7200 *45/75 = 4320 DPS, this is insanely fast
-    static constexpr float maxDesiredYawRateDPS {720.0};
+    static constexpr float maxDesiredYawRateDPS {720.0F};
     _yawStickMultiplier = maxDesiredYawRateDPS / yawRateDPS_AtMaxPower;
 }

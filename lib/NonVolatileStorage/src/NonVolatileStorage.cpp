@@ -33,7 +33,7 @@ static constexpr uint16_t MacAddressKey = 0x0008;
 static constexpr uint16_t MotorPairPitchBalanceAngleConfigKey = 0x0009;
 static constexpr uint16_t MotorPairControllerFiltersConfigKey = 0x000A;
 
-static constexpr uint16_t FailsafeKey = 0x000B;
+static constexpr uint16_t FailsafeConfigKey = 0x000B;
 
 static const std::array<uint16_t, MotorPairController::PID_COUNT> PID_Keys = {
     0x0100, 0x0101, 0x0102, 0x0103, 0x0104, 0x0105
@@ -277,17 +277,17 @@ int32_t NonVolatileStorage::storeBalanceAngle(float balanceAngle)
     return storeItem(BalanceAngleKey, &balanceAngle, sizeof(balanceAngle), &defaultBalanceAngle);
 }
 
-Cockpit::failsafe_t NonVolatileStorage::loadFailsafe() // NOLINT(readability-make-member-function-const)
+Cockpit::failsafe_config_t NonVolatileStorage::loadFailsafeConfig() // NOLINT(readability-make-member-function-const)
 {
-    Cockpit::failsafe_t failsafe {}; // NOLINT(misc-const-correctness)
-    if (loadItem(FailsafeKey, &failsafe, sizeof(failsafe))) { // cppcheck-suppress knownConditionTrueFalse
+    Cockpit::failsafe_config_t config {}; // NOLINT(misc-const-correctness)
+    if (loadItem(FailsafeConfigKey, &config, sizeof(config))) { // cppcheck-suppress knownConditionTrueFalse
     }
-    return DEFAULTS::failsafe;
+    return DEFAULTS::failsafeConfig;
 }
 
-int32_t NonVolatileStorage::storeFailsafe(const Cockpit::failsafe_t& failsafe)
+int32_t NonVolatileStorage::storeFailsafeConfig(const Cockpit::failsafe_config_t& config)
 {
-    return storeItem(FailsafeKey, &failsafe, sizeof(failsafe), &DEFAULTS::failsafe);
+    return storeItem(FailsafeConfigKey, &config, sizeof(config), &DEFAULTS::failsafeConfig);
 }
 
 VehicleControllerBase::PIDF_uint16_t NonVolatileStorage::loadPID(uint8_t pidIndex) const
