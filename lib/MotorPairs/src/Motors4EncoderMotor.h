@@ -6,7 +6,7 @@
 
 class Motors4EncoderMotor final : public MotorPairBase {
 public:
-    Motors4EncoderMotor(uint8_t SDA_pin, uint8_t SCL_pin, float encoderStepsPerRevolution);
+    Motors4EncoderMotor(uint8_t SDA_pin, uint8_t SCL_pin, uint32_t encoderStepsPerRevolution);
 public:
     virtual void readEncoder() override;
     virtual void setPower(float leftPower, float rightPower) override;

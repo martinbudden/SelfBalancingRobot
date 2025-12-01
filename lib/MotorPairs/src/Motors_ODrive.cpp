@@ -64,7 +64,7 @@ Motors_ODrive* motors_ODrive;
 } // end namespace
 
 Motors_ODrive::Motors_ODrive(float stepsPerRevolution) :
-    MotorPairBase(stepsPerRevolution, CAN_ACCURATELY_ESTIMATE_SPEED)
+    MotorPairBase(stepsPerRevolution, CAN_REPORT_SPEED)
 {
 
     // set motors_ODrive for use by callback functions.

@@ -25,26 +25,27 @@ class MotorPairBase {
 public:
     enum { I2C_FREQUENCY = 400000 }; // 400 kHz
 public:
-    enum can_accurately_estimate_speed_e { CANNOT_ACCURATELY_ESTIMATE_SPEED = 0,  CAN_ACCURATELY_ESTIMATE_SPEED = 1};
+    enum can_report_speed_e { CANNOT_REPORT_SPEED = 0,  CAN_REPORT_SPEED = 1};
 public:
     virtual ~MotorPairBase() = default;
-    inline MotorPairBase(float stepsPerRevolution, can_accurately_estimate_speed_e canAccuratelyEstimateSpeed, float deadbandPower) :
+    inline MotorPairBase(uint32_t stepsPerRevolution, can_report_speed_e canReportSpeed, float deadbandPower) :
         _stepsPerRevolution(stepsPerRevolution),
-        _canAccuratelyEstimateSpeed(canAccuratelyEstimateSpeed),
+        _canReportSpeed(canReportSpeed),
         _deadbandPower(deadbandPower)
         {}
-    inline MotorPairBase(float stepsPerRevolution, can_accurately_estimate_speed_e canAccuratelyEstimateSpeed) :
-        MotorPairBase(stepsPerRevolution, canAccuratelyEstimateSpeed, 0.0F)
+    inline MotorPairBase(uint32_t stepsPerRevolution, can_report_speed_e canReportSpeed) :
+        MotorPairBase(stepsPerRevolution, canReportSpeed, 0.0F)
         {}
 public:
 #if defined(FRAMEWORK_USE_FREERTOS)
     inline void setMutex(SemaphoreHandle_t i2cMutex) { _i2cMutex = i2cMutex; }
 #endif
+    inline bool canReportPosition() const { return _stepsPerRevolution == 0 ? false : true; }
     inline int32_t getLeftEncoder() const { return _leftEncoder - _leftEncoderOffset; }
     inline int32_t getRightEncoder() const { return _rightEncoder - _rightEncoderOffset; }
-    inline float getStepsPerRevolution() const { return _stepsPerRevolution; }
+    inline uint32_t getStepsPerRevolution() const { return _stepsPerRevolution; }
     inline void resetAllEncoders() { _leftEncoderOffset = _leftEncoder; _rightEncoderOffset = _rightEncoder; }
-    inline bool canAccuratelyEstimateSpeed() const { return _canAccuratelyEstimateSpeed; }
+    inline bool canReportSpeed() const { return _canReportSpeed; }
     inline float getLeftSpeed() const { return _leftSpeed; }
     inline float getRightSpeed() const { return _rightSpeed; }
     inline float scalePower(float power) const;
@@ -65,8 +66,8 @@ protected:
     inline void i2cSemaphoreGive() const {}
 #endif
 protected:
-    const float _stepsPerRevolution;
-    const int _canAccuratelyEstimateSpeed;
+    const uint32_t _stepsPerRevolution;
+    const int _canReportSpeed;
     float _deadbandPower;
     int32_t _leftEncoder {0};
     int32_t _rightEncoder {0};

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Filters.h>
+#include <MotorMixerBase.h>
 
 class MotorPairBase;
 
@@ -8,43 +9,36 @@ class MotorPairBase;
 /*!
 The MotorMixer takes the outputs from the MotorPairController and "mixes" the values, to set the appropriate power for each motor.
 */
-class MotorPairMixer {
+class MotorPairMixer : public MotorMixerBase {
 public:
-    struct commands_t {
-        float throttle;
-        float roll;
-        float pitch;
-        float yaw;
-    };
+    enum { MOTOR_LEFT = 0, MOTOR_RIGHT = 1, MOTOR_COUNT = 2, SERVO_COUNT = 0 };
 public:
-    enum { MOTOR_LEFT = 0, MOTOR_RIGHT = 1, MOTOR_COUNT = 2 };
+    explicit MotorPairMixer(MotorPairBase& motorPair) :
+        MotorMixerBase(CUSTOM, MOTOR_COUNT, SERVO_COUNT, nullptr),
+        _motorPair(motorPair) {}
 public:
-    explicit MotorPairMixer(MotorPairBase& motorPair) : _motorPair(motorPair) {}
-public:
-    inline bool motorsIsOn() const { return _motorsIsOn; }
-    inline void motorsSwitchOn() { _motorsIsOn = true; }
-    inline void motorsSwitchOff() { _motorsIsOn = false; }
-    inline bool motorsIsDisabled() const { return _motorsIsDisabled; }
-    inline float getThrottleCommand() const { return _throttleCommand; }
 
-    void outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount);
-    float getMotorOutput(size_t motorIndex) const;
+    void outputToMotors(commands_t& commands, float deltaT, uint32_t tickCount) override;
+    float getMotorOutput(size_t motorIndex) const override;
 
-    inline void setMotorSwitchOffAngleDegrees(float motorSwitchOffAngleDegrees) { _motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees; }
-    inline void setPitchAngleDegreesRaw(float pitchAngleDegreesRaw) { _pitchAngleDegreesRaw = pitchAngleDegreesRaw; }
+    bool canReportPosition(size_t motorIndex) const override;
+    void resetAllEncoders() override;
+    void readEncoder(size_t motorIndex) override;
+    int32_t getEncoder(size_t motorIndex) const override;
+    uint32_t getStepsPerRevolution(size_t motorIndex) const override;
+
+    bool canReportSpeed(size_t motorIndex) const override;
+    int32_t getMotorRPM(size_t motorIndex) const override;
+    float getMotorSpeedDPS(size_t motorIndex) const override;
+
+    float getMixerThrottleCommand() const override;
 
     inline uint32_t getOutputPowerTimeMicroseconds() const { return _outputPowerTimeMicroseconds; } //!< for telemetry
-
-    void readEncoder(size_t motorIndex);
-    int32_t getEncoder(size_t motorIndex) const;
-    float getStepsPerRevolution(size_t motorIndex) const;
-    void resetAllEncoders();
-    bool canAccuratelyEstimateSpeed(size_t motorIndex) const;
-    float getSpeed(size_t motorIndex) const;
+    inline void setMotorSwitchOffAngleDegrees(float motorSwitchOffAngleDegrees) { _motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees; }
+    inline void setPitchAngleDegreesRaw(float pitchAngleDegreesRaw) { _pitchAngleDegreesRaw = pitchAngleDegreesRaw; }
 private:
     MotorPairBase& _motorPair; //<! The MotorMixer has a reference to the motor pair for output, ie setting the motor power.
-    int32_t _motorsIsOn {false};
-    int32_t _motorsIsDisabled {false};
+
     uint32_t _motorSwitchOffTickCount {0}; //<! For switch bounce protection
     float _throttleCommand {0.0F}; //!< used solely for instrumentation
     float _powerLeft {0.0F};
@@ -55,4 +49,3 @@ private:
     FilterMovingAverage<4> _powerLeftFilter;
     FilterMovingAverage<4> _powerRightFilter;
 };
-

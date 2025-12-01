@@ -11,7 +11,7 @@
 #endif
 
 
-void MotorPairMixer::outputToMotors(const commands_t& commands, float deltaT, uint32_t tickCount)
+void MotorPairMixer::outputToMotors(commands_t& commands, float deltaT, uint32_t tickCount)
 {
     (void)deltaT;
     _throttleCommand = commands.throttle;
@@ -75,6 +75,12 @@ float MotorPairMixer::getMotorOutput(size_t motorIndex) const
     return motorIndex == 0 ? _powerLeft : _powerRight;
 }
 
+bool MotorPairMixer::canReportPosition(size_t motorIndex) const
+{
+    (void)motorIndex;
+    return _motorPair.canReportPosition();
+}
+
 void MotorPairMixer::readEncoder(size_t motorIndex)
 {
     // motorPair reads both encoders, so to avoid reading twice, only read for left motor
@@ -88,7 +94,7 @@ int32_t MotorPairMixer::getEncoder(size_t motorIndex) const
     return motorIndex == 0 ? _motorPair.getLeftEncoder() : _motorPair.getRightEncoder();
 }
 
-float MotorPairMixer::getStepsPerRevolution(size_t motorIndex) const
+uint32_t MotorPairMixer::getStepsPerRevolution(size_t motorIndex) const
 {
     (void)motorIndex;
     return _motorPair.getStepsPerRevolution();
@@ -99,13 +105,23 @@ void MotorPairMixer::resetAllEncoders()
     _motorPair.resetAllEncoders();
 }
 
-bool MotorPairMixer::canAccuratelyEstimateSpeed(size_t motorIndex) const
+bool MotorPairMixer::canReportSpeed(size_t motorIndex) const
 {
     (void)motorIndex;
-    return _motorPair.canAccuratelyEstimateSpeed();
+    return _motorPair.canReportSpeed();
 }
 
-float MotorPairMixer::getSpeed(size_t motorIndex) const
+int32_t MotorPairMixer::getMotorRPM(size_t motorIndex) const
+{
+    return static_cast<int32_t>(DPStoRPM*getMotorSpeedDPS(motorIndex));
+}
+
+float MotorPairMixer::getMotorSpeedDPS(size_t motorIndex) const
 {
     return motorIndex == 0 ? _motorPair.getLeftSpeed() : _motorPair.getRightSpeed();
+}
+
+float MotorPairMixer::getMixerThrottleCommand() const
+{
+    return _throttleCommand;
 }

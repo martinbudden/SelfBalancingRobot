@@ -16,7 +16,7 @@ void test_motor_construction()
     enum {STEPS_PER_REVOLUTION = 123};
 
     const Motors4EncoderMotor motors(0, 0, STEPS_PER_REVOLUTION);
-    TEST_ASSERT_EQUAL_FLOAT(STEPS_PER_REVOLUTION, motors.getStepsPerRevolution());
+    TEST_ASSERT_EQUAL(STEPS_PER_REVOLUTION, motors.getStepsPerRevolution());
     TEST_ASSERT_EQUAL_INT32(0, motors.getLeftEncoder());
     TEST_ASSERT_EQUAL_INT32(0, motors.getRightEncoder());
 }
@@ -26,7 +26,7 @@ void test_BalaC_motors_clipping()
     constexpr float deadbandPower = 0.0F;
     const MotorsBalaC motors(deadbandPower);
 
-    TEST_ASSERT_EQUAL_FLOAT(0.0F, motors.getStepsPerRevolution());
+    TEST_ASSERT_EQUAL_UINT32(0, motors.getStepsPerRevolution());
     TEST_ASSERT_EQUAL_FLOAT(0.0F, motors.getDeadbandPower());
     TEST_ASSERT_EQUAL_INT32(0, motors.getLeftEncoder());
     TEST_ASSERT_EQUAL_INT32(0, motors.getRightEncoder());

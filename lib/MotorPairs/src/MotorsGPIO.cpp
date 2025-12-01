@@ -30,7 +30,7 @@ static constexpr int servoRight = 3;
 
 
 MotorsGPIO::MotorsGPIO(const pins_t& pins) :
-    MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED),
+    MotorPairBase(0, CANNOT_REPORT_SPEED),
     _pins(pins)
 {
 #if defined(FRAMEWORK_ARDUINO_ESP32)

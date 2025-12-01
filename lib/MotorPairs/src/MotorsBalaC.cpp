@@ -6,7 +6,7 @@
 
 
 MotorsBalaC::MotorsBalaC(float deadbandPower) :
-    MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED, deadbandPower)
+    MotorPairBase(0, CANNOT_REPORT_SPEED, deadbandPower)
 {
     enum { SDA_PIN = 0, SCL_PIN = 26 };
 #if defined(M5_UNIFIED)

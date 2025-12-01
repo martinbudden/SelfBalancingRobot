@@ -13,7 +13,7 @@ private:
 };
 
 MotorPairTest::MotorPairTest() : // NOLINT(hicpp-use-equals-default, modernize-use-equals-default)
-    MotorPairBase(0, CANNOT_ACCURATELY_ESTIMATE_SPEED)
+    MotorPairBase(0, CANNOT_REPORT_SPEED)
     {}
 
 void MotorPairTest::setPower(float leftPower, float rightPower)
@@ -71,7 +71,7 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint
     _outputToMotorsDenominator(outputToMotorsDenominator),
     _motorMaxSpeedDPS(gVehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
-    _motorPairStepsPerRevolution(motorPair.getStepsPerRevolution()),
+    _motorPairStepsPerRevolution(static_cast<float>(motorPair.getStepsPerRevolution())),
     _pitchBalanceAngleDegrees(gVehicle.pitchBalanceAngleDegrees)
 {
     (void)i2cMutex;

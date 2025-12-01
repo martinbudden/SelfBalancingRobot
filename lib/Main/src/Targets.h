@@ -105,7 +105,7 @@ Targets
     #define IMU_I2C_PINS        {.sda=21,.scl=22,.irq=BUS_I2C::IRQ_NOT_SET}
 
     //#define MOTORS_HAVE_ENCODERS
-    #define MOTORS_CAN_ACCURATELY_ESTIMATE_SPEED
+    #define MOTORS_CAN_REPORT_SPEED
 
     #define USE_SCREEN
     #define USE_BUTTONS
@@ -120,7 +120,7 @@ Targets
     #define IMU_I2C_PINS        {.sda=21,.scl=22,.irq=BUS_I2C::IRQ_NOT_SET}
 
     //#define MOTORS_HAVE_ENCODERS
-    #define MOTORS_CAN_ACCURATELY_ESTIMATE_SPEED
+    #define MOTORS_CAN_REPORT_SPEED
 
     #define USE_SCREEN
     #define USE_BUTTONS

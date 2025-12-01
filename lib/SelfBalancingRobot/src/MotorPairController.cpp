@@ -202,9 +202,9 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
     _encoderRightDelta = _encoderRight - _encoderRightPrevious;
     _encoderRightPrevious = _encoderRight;
 
-    if (_motorMixer.canAccuratelyEstimateSpeed(MotorPairMixer::MOTOR_LEFT)) {
-        _speedLeftDPS = _motorMixer.getSpeed(MotorPairMixer::MOTOR_LEFT);
-        _speedRightDPS = _motorMixer.getSpeed(MotorPairMixer::MOTOR_RIGHT);
+    if (_motorMixer.canReportSpeed(MotorPairMixer::MOTOR_LEFT)) {
+        _speedLeftDPS = _motorMixer.getMotorSpeedDPS(MotorPairMixer::MOTOR_LEFT);
+        _speedRightDPS = _motorMixer.getMotorSpeedDPS(MotorPairMixer::MOTOR_RIGHT);
         _speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
     } else {
         // For reference, at 420 steps per revolution, with a 100Hz (10ms) update rate,
@@ -338,7 +338,7 @@ void MotorPairController::outputToMixer(float deltaT, uint32_t tickCount, const 
     _taskSignalledCount = 0;
 
     updateMotorSpeedEstimates(deltaT);
-    const MotorPairMixer::commands_t commands = {
+    MotorPairMixer::commands_t commands = { // NOLINT(misc-const-correctness)
         .throttle = queueItem.throttle,
         .roll   = queueItem.roll,
         .pitch  = queueItem.pitch,

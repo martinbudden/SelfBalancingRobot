@@ -9,7 +9,7 @@
 
 
 MotorsBala2::MotorsBala2(uint8_t SDA_pin, uint8_t SCL_pin) :
-    MotorPairBase(ENCODER_STEPS_PER_REVOLUTION, CANNOT_ACCURATELY_ESTIMATE_SPEED)
+    MotorPairBase(ENCODER_STEPS_PER_REVOLUTION, CANNOT_REPORT_SPEED)
 {
     (void)SDA_pin;
     (void)SCL_pin;

@@ -78,7 +78,7 @@ MotorPairController::MotorPairController(uint32_t taskIntervalMicroseconds, uint
     _outputToMotorsDenominator(outputToMotorsDenominator),
     _motorMaxSpeedDPS(vehicle.maxMotorRPM * 360 / 60),
     _motorMaxSpeedDPS_reciprocal(1.0F / _motorMaxSpeedDPS),
-    _motorPairStepsPerRevolution(motorPair.getStepsPerRevolution()),
+    _motorPairStepsPerRevolution(static_cast<float>(motorPair.getStepsPerRevolution())),
     _pitchBalanceAngleDegrees(vehicle.pitchBalanceAngleDegrees)
 {
 

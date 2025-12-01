@@ -19,7 +19,7 @@ constexpr float encoderStepsPerRevolution {100.0F};
 
 
 MotorsPwrCAN::MotorsPwrCAN() :
-    MotorPairBase(encoderStepsPerRevolution, MotorPairBase::CAN_ACCURATELY_ESTIMATE_SPEED)
+    MotorPairBase(encoderStepsPerRevolution, MotorPairBase::CAN_REPORT_SPEED)
 {
 
     CAN_cfg.speed     = CAN_SPEED_125KBPS;

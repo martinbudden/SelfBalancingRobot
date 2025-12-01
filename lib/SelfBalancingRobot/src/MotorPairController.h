@@ -88,7 +88,7 @@ private:
 public:
     static MotorPairBase& allocateMotors();
 
-    float getMixerThrottleCommand() const { return _motorMixer.getThrottleCommand(); }
+    float getMixerThrottleCommand() const { return _motorMixer.getMixerThrottleCommand(); }
 
     inline bool motorsIsOn() const { return _motorMixer.motorsIsOn(); }
     void motorsSwitchOff();
