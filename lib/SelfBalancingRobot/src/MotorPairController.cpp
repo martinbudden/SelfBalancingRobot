@@ -62,7 +62,7 @@ void MotorPairController::setPID_PD_MSP(pid_index_e pidIndex, uint16_t kp)
     const PIDF pid = getPID(pidIndex);
     const float ratio = pid.getD() / pid.getP();
     setPID_P_MSP(pidIndex, kp);
-    setPID_D_MSP(pidIndex, static_cast<uint16_t>(kp*ratio));
+    setPID_D_MSP(pidIndex, static_cast<uint16_t>(static_cast<float>(kp)*ratio));
 }
 
 void MotorPairController::setPID_I_MSP(pid_index_e pidIndex, uint16_t ki)

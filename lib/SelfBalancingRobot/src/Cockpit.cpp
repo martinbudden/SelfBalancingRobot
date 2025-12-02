@@ -27,9 +27,8 @@ Called from within ReceiverTask::loop()
 void Cockpit::updateControls(const controls_t& controls)
 {
     // failsafe handling
-    _receiverInUse = true;
-    _failsafePhase = FAILSAFE_IDLE; // we've received a packet, so exit failsafe if we were in it
-    _failsafeTickCount = controls.tickCount;
+    _failsafe.phase = FAILSAFE_IDLE; // we've received a packet, so exit failsafe if we were in it
+    _failsafe.tickCount = controls.tickCount;
 
     if (_receiver.getSwitch(ReceiverBase::MOTOR_ON_OFF_SWITCH)) {
         _onOffSwitchPressed = true;
@@ -60,25 +59,25 @@ void Cockpit::updateControls(const controls_t& controls)
 
 void Cockpit::checkFailsafe(uint32_t tickCount)
 {
-    if ((tickCount - _failsafeTickCount > _failsafeTickCountThreshold) && _receiverInUse) {
-        // _receiverInUse is initialized to false, so the motors won't turn off it the transmitter hasn't been turned on yet.
+    // _failsafe.phase is initialized FAILSAFE_SWITCH_OFF, so the motors won't turn off if the transmitter hasn't been turned on yet.
+    if ((tickCount - _failsafe.tickCount > _failsafe.tickCountLossDetectedThreshold) && (_failsafe.phase != FAILSAFE_SWITCH_OFF)) {
         // We've had 1500 ticks (1.5 seconds) without a packet, so we seem to have lost contact with the transmitter,
-        // so enter failsafe mode.
-        _failsafePhase = FAILSAFE_RX_LOSS_DETECTED;
-        if ((tickCount - _failsafeTickCount > _failsafeTickCountSwitchOffThreshold)) {
-            _motorPairController.motorsSwitchOff();
-            _receiverInUse = false; // set to false to allow us to switch the motors on again if we regain a signal
-        } else {
-            // first phase of failsafe, set all controls to zero to stop the vehicle
-            const MotorPairController::controls_t mpcControls = {
+        if ((tickCount - _failsafe.tickCount < _failsafe.tickCountSwitchOffThreshold)) {
+            // first phase of failsafe: set all controls to zero so the vehicle stops and holds its current position
+            _failsafe.phase = FAILSAFE_RX_LOSS_DETECTED;
+            const MotorPairController::controls_t controls = {
                 .tickCount = tickCount,
                 .throttleStick = 0.0F,
                 .rollStickDegrees = 0.0F,
                 .pitchStickDegrees = 0.0F,
                 .yawStickDPS = 0.0F,
-               .controlMode = MotorPairController::CONTROL_MODE_SERIAL_PIDS
+                .controlMode = MotorPairController::CONTROL_MODE_SERIAL_PIDS
              };
-            _motorPairController.updateSetpoints(mpcControls);
+            _motorPairController.updateSetpoints(controls);
+        } else {
+            // second phase of failsafe, switch the motors off
+            _failsafe.phase = FAILSAFE_SWITCH_OFF; // this will allow us to switch the motors on again if we regain a signal
+            _motorPairController.motorsSwitchOff();
         }
     }
 }

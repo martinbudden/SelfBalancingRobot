@@ -94,7 +94,6 @@ void Main::setup()
 
     AHRS& ahrs = createAHRS(motorPairController, imuSensor);
 
-
     ReceiverBase& receiver = createReceiver();
     static Cockpit cockpit(receiver, motorPairController); // NOLINT(misc-const-correctness)
 
