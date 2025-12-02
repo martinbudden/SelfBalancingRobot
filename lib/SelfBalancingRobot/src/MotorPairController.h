@@ -91,7 +91,6 @@ public:
     inline bool motorsIsOn() const { return _motorMixer.motorsIsOn(); }
     void motorsSwitchOff();
     void motorsSwitchOn();
-    void motorsToggleOnOff();
 
     virtual uint32_t getOutputPowerTimeMicroseconds() const override;
 
@@ -108,11 +107,11 @@ public:
     void setPID_Constants(pid_index_e pidIndex, const PIDF_uint16_t& pid16);
 
     virtual PIDF_uint16_t getPID_MSP(size_t index) const override;
-    void setPID_P_MSP(pid_index_e pidIndex, uint16_t kp) { _PIDS[pidIndex].setP(kp * _scaleFactors.kp); }
-    void setPID_I_MSP(pid_index_e pidIndex, uint16_t ki) { _PIDS[pidIndex].setI(ki * _scaleFactors.ki); }
-    void setPID_D_MSP(pid_index_e pidIndex, uint16_t kd) { _PIDS[pidIndex].setD(kd * _scaleFactors.kd); }
-    void setPID_S_MSP(pid_index_e pidIndex, uint16_t ks) { _PIDS[pidIndex].setS(ks * _scaleFactors.ks); }
-    void setPID_K_MSP(pid_index_e pidIndex, uint16_t kk) { _PIDS[pidIndex].setK(kk * _scaleFactors.kk); }
+    void setPID_P_MSP(pid_index_e pidIndex, uint16_t kp);
+    void setPID_I_MSP(pid_index_e pidIndex, uint16_t ki);
+    void setPID_D_MSP(pid_index_e pidIndex, uint16_t kd);
+    void setPID_S_MSP(pid_index_e pidIndex, uint16_t ks);
+    void setPID_K_MSP(pid_index_e pidIndex, uint16_t kk);
 
     inline float getPID_Setpoint(pid_index_e pidIndex) const { return _PIDS[pidIndex].getSetpoint(); }
     void setPID_Setpoint(pid_index_e pidIndex, float setpoint) { _PIDS[pidIndex].setSetpoint(setpoint); }
@@ -132,11 +131,10 @@ public:
 
     void motorsResetAllEncoders();
 public:
-    virtual void outputToMixer(float deltaT, uint32_t tickCount, const VehicleControllerMessageQueue::queue_item_t& queueItem) override;
-public:
     void updateSetpoints(const controls_t& controls);
     void updateMotorSpeedEstimates(float deltaT);
-    virtual void updateOutputsUsingPIDs(const AHRS::ahrs_data_t& imuDataNED) override;
+    virtual void updateOutputsUsingPIDs(const AHRS::ahrs_data_t& ahrsDataNED) override;
+    virtual void outputToMixer(float deltaT, uint32_t tickCount, const VehicleControllerMessageQueue::queue_item_t& queueItem) override;
 private:
     void updatePositionOutputs(float deltaT);
 private:

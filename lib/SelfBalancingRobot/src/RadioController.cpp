@@ -36,7 +36,11 @@ void Cockpit::updateControls(const controls_t& controls)
     } else {
         if (_onOffSwitchPressed) {
             // motorOnOff false and _onOffPressed true means the  on/off button is being released, so toggle the motor state
-            _motorPairController.motorsToggleOnOff();
+            if (_motorPairController.motorsIsOn()) {
+                _motorPairController.motorsSwitchOff();
+            } else {
+                _motorPairController.motorsSwitchOn();
+            }
             _onOffSwitchPressed = false;
         }
     }

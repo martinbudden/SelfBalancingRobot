@@ -35,11 +35,6 @@ void test_motor_pair_controller()
     mpc.motorsSwitchOn();
     TEST_ASSERT_TRUE(mpc.motorsIsOn());
 
-    mpc.motorsToggleOnOff();
-    TEST_ASSERT_FALSE(mpc.motorsIsOn());
-    mpc.motorsToggleOnOff();
-    TEST_ASSERT_TRUE(mpc.motorsIsOn());
-
     mpc.motorsSwitchOff();
     TEST_ASSERT_FALSE(mpc.motorsIsOn());
     mpc.motorsSwitchOn();
