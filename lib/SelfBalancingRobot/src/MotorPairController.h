@@ -150,8 +150,8 @@ private:
     int32_t _encoderLeftDelta {0}; //!< difference between current left motor encoder value and previous value, raw
     int32_t _encoderRightDelta {0}; //!< difference between current right motor encoder value and previous value, raw
 
-    float _speedLeftDPS {0}; //!< rotation speed of left motor, degrees per second
-    float _speedRightDPS {0}; //!< rotation speed of right motor, degrees per second
+    float _speedLeftDPS {0.0F}; //!< rotation speed of left motor, degrees per second
+    float _speedRightDPS {0.0F}; //!< rotation speed of right motor, degrees per second
     float _speedDPS {0.0F}; //<!< filtered average of left and right motor speeds
     FilterMovingAverage<4> _speedMovingAverageFilter;
     IIR_filter _speedFilter;

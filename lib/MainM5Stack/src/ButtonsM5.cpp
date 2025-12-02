@@ -1,5 +1,3 @@
-#if defined(M5_UNIFIED) || defined(M5_STACK)
-
 #include "ButtonsM5.h"
 
 #if defined(M5_STACK)
@@ -88,4 +86,3 @@ void ButtonsM5::update()
 #endif // defined(M5_STACK)
 #endif //defined(M5_ATOM)
 }
-#endif

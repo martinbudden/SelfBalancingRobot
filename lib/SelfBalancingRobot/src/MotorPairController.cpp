@@ -85,11 +85,6 @@ void MotorPairController::setPID_K_MSP(pid_index_e pidIndex, uint16_t kk)
     _PIDS[pidIndex].setK(kk * _scaleFactors.kk);
 }
 
-uint32_t MotorPairController::getOutputPowerTimeMicroseconds() const
-{
-    return _motorMixer.getOutputPowerTimeMicroseconds();
-}
-
 VehicleControllerBase::PIDF_uint16_t MotorPairController::getPID_MSP(size_t index) const
 {
     assert(index < PID_COUNT);
@@ -103,6 +98,11 @@ VehicleControllerBase::PIDF_uint16_t MotorPairController::getPID_MSP(size_t inde
         .kk = static_cast<uint16_t>(_PIDS[pidIndex].getK() / _scaleFactors.kk),
     };
     return ret;
+}
+
+uint32_t MotorPairController::getOutputPowerTimeMicroseconds() const
+{
+    return _motorMixer.getOutputPowerTimeMicroseconds();
 }
 
 /*!

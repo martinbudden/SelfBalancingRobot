@@ -1,5 +1,3 @@
-#if defined(M5_UNIFIED) || defined(M5_STACK)
-
 #include "ScreenM5.h"
 
 #include <AHRS.h>
@@ -609,4 +607,3 @@ void ScreenM5::update()
         }
     }
 }
-#endif

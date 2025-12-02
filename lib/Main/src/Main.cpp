@@ -4,9 +4,13 @@
 #include <M5Unified.h>
 #endif
 
+#if defined(M5_STACK) || defined(M5_UNIFIED)
 #include "ButtonsM5.h"
+#endif
 #include "Main.h"
+#if defined(M5_STACK) || defined(M5_UNIFIED)
 #include "ScreenM5.h"
+#endif
 
 #include <AHRS.h>
 #include <AHRS_Task.h>
@@ -28,6 +32,7 @@
 #include <MotorPairController.h>
 #include <NonVolatileStorage.h>
 
+#include <ReceiverBase.h>
 #include <ReceiverTask.h>
 #include <TimeMicroseconds.h>
 #include <VehicleControllerTask.h>
