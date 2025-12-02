@@ -6,12 +6,10 @@
 #include <PIDF.h>
 #include <SV_TelemetryData.h>
 #include <VehicleControllerBase.h>
-#include <cfloat>
 #include <string>
 
-class AHRS;
 class AHRS_MessageQueue;
-class Blackbox;
+
 
 /*!
 The MotorPairController uses the ENU (East North Up) coordinate convention, the same as used by ROS (Robot Operating System).
@@ -71,6 +69,7 @@ public:
         float rollStickDegrees;
         float pitchStickDegrees;
         float yawStickDPS;
+        control_mode_e controlMode;
     };
     struct vehicle_t {
         float maxMotorRPM;
@@ -82,20 +81,19 @@ public:
     };
     typedef std::array<PIDF::PIDF_t, PID_COUNT> pidf_array_t;
     typedef std::array<PIDF_uint16_t, PID_COUNT> pidf_uint16_array_t;
-    static constexpr float NOT_SET = FLT_MAX;
 private:
     MotorPairController(uint32_t taskIntervalMicroseconds, uint32_t outputToMotorsDenominator, MotorPairBase& motorPair, AHRS_MessageQueue& ahrsMessageQueue, void* i2cMutex, const vehicle_t& vehicle);
 public:
     static MotorPairBase& allocateMotors();
 
-    inline bool motorsIsOn() const { return _motorMixer.motorsIsOn(); }
+    bool motorsIsOn() const;
     void motorsSwitchOff();
     void motorsSwitchOn();
 
     virtual uint32_t getOutputPowerTimeMicroseconds() const override;
 
     inline control_mode_e getControlMode() const { return _controlMode; }
-    void setControlMode(control_mode_e controlMode) { _controlMode = controlMode; resetIntegrals(); }
+    void setControlMode(control_mode_e controlMode);
 
     const std::string& getPID_Name(pid_index_e pidIndex) const;
 
@@ -108,6 +106,7 @@ public:
 
     virtual PIDF_uint16_t getPID_MSP(size_t index) const override;
     void setPID_P_MSP(pid_index_e pidIndex, uint16_t kp);
+    void setPID_PD_MSP(pid_index_e pidIndex, uint16_t kp); // Set P and change D to preserve P/D ratio
     void setPID_I_MSP(pid_index_e pidIndex, uint16_t ki);
     void setPID_D_MSP(pid_index_e pidIndex, uint16_t kd);
     void setPID_S_MSP(pid_index_e pidIndex, uint16_t ks);
@@ -121,10 +120,6 @@ public:
     std::string getBalanceAngleName() const;
     inline float getPitchBalanceAngleDegrees() const { return _pitchBalanceAngleDegrees; }
     inline void setPitchBalanceAngleDegrees(float pitchBalanceAngleDegrees) { _pitchBalanceAngleDegrees = pitchBalanceAngleDegrees; }
-
-    float getPitchAngleDegreesRaw() const { return _pitchAngleDegreesRaw; }
-    float getRollAngleDegreesRaw() const { return _rollAngleDegreesRaw; }
-    float getYawAngleDegreesRaw() const { return _yawAngleDegreesRaw; }
 
     motor_pair_controller_telemetry_t getTelemetryData() const;
     const MotorMixerBase& getMotorMixer() const { return _motorMixer; }
@@ -143,10 +138,6 @@ private:
     const uint32_t _outputToMotorsDenominator;
     uint32_t _taskSignalledCount {0};
     control_mode_e _controlMode {CONTROL_MODE_SERIAL_PIDS};
-
-    float _rollAngleDegreesRaw {NOT_SET};
-    float _pitchAngleDegreesRaw {NOT_SET};
-    float _yawAngleDegreesRaw {NOT_SET};
 
     // throttle stick scaled to the range [-1,0, 1.0]
     float _throttleStick {0};

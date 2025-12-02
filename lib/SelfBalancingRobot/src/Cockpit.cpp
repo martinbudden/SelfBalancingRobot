@@ -44,7 +44,7 @@ void Cockpit::updateControls(const controls_t& controls)
             _onOffSwitchPressed = false;
         }
     }
-
+    const MotorPairController::control_mode_e controlMode = MotorPairController::CONTROL_MODE_SERIAL_PIDS;
     // alpha=0 gives a linear response, alpha=1 gives a parabolic (x^2) curve
     static constexpr float alpha { 0.2F };
     const MotorPairController::controls_t mpcControls = {
@@ -52,7 +52,8 @@ void Cockpit::updateControls(const controls_t& controls)
         .throttleStick = controls.throttleStick,
         .rollStickDegrees = controls.rollStick * _rollMaxAngleDegrees,
         .pitchStickDegrees = controls.pitchStick * _pitchMaxAngleDegrees,
-        .yawStickDPS = mapStick(controls.yawStick, alpha) // map the YAW stick values to give better control at low stick values
+        .yawStickDPS = mapStick(controls.yawStick, alpha), // map the YAW stick values to give better control at low stick values
+        .controlMode = controlMode
     };
     _motorPairController.updateSetpoints(mpcControls);
 }
@@ -74,8 +75,9 @@ void Cockpit::checkFailsafe(uint32_t tickCount)
                 .throttleStick = 0.0F,
                 .rollStickDegrees = 0.0F,
                 .pitchStickDegrees = 0.0F,
-                .yawStickDPS = 0.0F
-            };
+                .yawStickDPS = 0.0F,
+               .controlMode = MotorPairController::CONTROL_MODE_SERIAL_PIDS
+             };
             _motorPairController.updateSetpoints(mpcControls);
         }
     }

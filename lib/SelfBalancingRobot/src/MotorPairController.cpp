@@ -57,6 +57,14 @@ void MotorPairController::setPID_P_MSP(pid_index_e pidIndex, uint16_t kp)
     _PIDS[pidIndex].setP(kp * _scaleFactors.kp);
 }
 
+void MotorPairController::setPID_PD_MSP(pid_index_e pidIndex, uint16_t kp)
+{
+    const PIDF pid = getPID(pidIndex);
+    const float ratio = pid.getD() / pid.getP();
+    setPID_P_MSP(pidIndex, kp);
+    setPID_D_MSP(pidIndex, static_cast<uint16_t>(kp*ratio));
+}
+
 void MotorPairController::setPID_I_MSP(pid_index_e pidIndex, uint16_t ki)
 {
     _PIDS[pidIndex].setI(ki * _scaleFactors.ki);
@@ -142,6 +150,11 @@ motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
     return telemetry;
 }
 
+bool MotorPairController::motorsIsOn() const
+{
+    return _motorMixer.motorsIsOn();
+}
+
 void MotorPairController::motorsSwitchOff()
 {
     _motorMixer.motorsSwitchOff();
@@ -165,6 +178,11 @@ void MotorPairController::motorsSwitchOn()
     }
 }
 
+void MotorPairController::setControlMode(control_mode_e controlMode)
+{
+    _controlMode = controlMode; resetIntegrals();
+}
+
 /*!
 Use the new joystick values from the receiver to update the PID setpoints
 using the ENU (East-North-Up) coordinate convention.
@@ -177,6 +195,8 @@ In particular it runs much less frequently than `updateOutputsUsingPIDs` which t
 */
 void MotorPairController::updateSetpoints(const controls_t& controls)
 {
+    setControlMode(controls.controlMode);
+
     _throttleStick = controls.throttleStick;
 
     // Set the SPEED PIDs from the THROTTLE stick
@@ -270,8 +290,8 @@ void MotorPairController::updateOutputsUsingPIDs(const AHRS::ahrs_data_t& ahrsDa
 #endif
     _ahrsMessageQueue.SEND_AHRS_DATA(ahrsDataNED);
     // AHRS orientation assumes (as is conventional) that pitch is around the X-axis, so convert.
-    _pitchAngleDegreesRaw = -ahrsDataNED.orientation.calculateRollDegrees();
-    _motorMixer.setPitchAngleDegreesRaw(_pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
+    const float pitchAngleDegreesRaw = -ahrsDataNED.orientation.calculateRollDegrees();
+    _motorMixer.setPitchAngleDegreesRaw(pitchAngleDegreesRaw); // the mixer will switch off the motors if the pitch angle exceeds the maximum pitch angle
 
     // calculate _outputs[OUTPUT_SPEED_DPS] and setpoints according to the control mode.
     // _speedDPS * _motorMaxSpeedDPS_reciprocal is in range [-1.0, 1.0]
@@ -287,7 +307,7 @@ void MotorPairController::updateOutputsUsingPIDs(const AHRS::ahrs_data_t& ahrsDa
     }
 
     // calculate _outputs[PITCH_ANGLE_DEGREES]
-    const float pitchAngleDegrees = _pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
+    const float pitchAngleDegrees = pitchAngleDegreesRaw - _pitchBalanceAngleDegrees;
     const float pitchAngleDegreesDelta = pitchAngleDegrees - _PIDS[PITCH_ANGLE_DEGREES].getPreviousMeasurement();
     // Use the filtered value of pitchAngleDegreesDelta as input into the PID update.
     // This is beneficial because the DTerm is especially susceptible to noise (since it is the derivative of a noisy value).

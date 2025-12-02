@@ -565,20 +565,14 @@ void ScreenM5::updateAHRS_Data() const
     _motorPairController.getAHRS_MessageQueue().PEEK_AHRS_DATA(ahrsData);
     const Quaternion orientation = ahrsData.orientation;
     TD_AHRS::data_t tdAhrsData {
-        .roll = _motorPairController.getRollAngleDegreesRaw(),
-        .pitch = _motorPairController.getPitchAngleDegreesRaw(),
-        .yaw = _motorPairController.getYawAngleDegreesRaw(),
+        .roll = orientation.calculatePitchDegrees(),
+        .pitch = -orientation.calculateRollDegrees(),
+        .yaw = orientation.calculateYawDegrees(),
         .gyroRPS = ahrsData.accGyroRPS.gyroRPS,
         .acc = ahrsData.accGyroRPS.acc,
         .gyroOffset = {},
         .accOffset = {}
     };
-    if (tdAhrsData.roll == MotorPairController::NOT_SET) {
-        tdAhrsData.roll = orientation.calculatePitchDegrees();
-    }
-    if (tdAhrsData.yaw == MotorPairController::NOT_SET) {
-        tdAhrsData.yaw = orientation.calculateYawDegrees();
-    }
     switch (_screenSize) {
     case SIZE_128x128:
         update_128x128(tdAhrsData);
