@@ -31,8 +31,6 @@ public:
     int32_t getMotorRPM(size_t motorIndex) const override;
     float getMotorSpeedDPS(size_t motorIndex) const override;
 
-    float getMixerThrottleCommand() const override;
-
     inline uint32_t getOutputPowerTimeMicroseconds() const { return _outputPowerTimeMicroseconds; } //!< for telemetry
     inline void setMotorSwitchOffAngleDegrees(float motorSwitchOffAngleDegrees) { _motorSwitchOffAngleDegrees = motorSwitchOffAngleDegrees; }
     inline void setPitchAngleDegreesRaw(float pitchAngleDegreesRaw) { _pitchAngleDegreesRaw = pitchAngleDegreesRaw; }
@@ -40,7 +38,6 @@ private:
     MotorPairBase& _motorPair; //<! The MotorMixer has a reference to the motor pair for output, ie setting the motor power.
 
     uint32_t _motorSwitchOffTickCount {0}; //<! For switch bounce protection
-    float _throttleCommand {0.0F}; //!< used solely for instrumentation
     float _powerLeft {0.0F};
     float _powerRight {0.0F};
     uint32_t _outputPowerTimeMicroseconds {0}; //!< for instrumentation, time taken to set the motor pair power. Can be significant if motors controlled over I2C

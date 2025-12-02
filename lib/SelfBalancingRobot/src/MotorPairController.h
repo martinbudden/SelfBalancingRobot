@@ -88,8 +88,6 @@ private:
 public:
     static MotorPairBase& allocateMotors();
 
-    float getMixerThrottleCommand() const { return _motorMixer.getMixerThrottleCommand(); }
-
     inline bool motorsIsOn() const { return _motorMixer.motorsIsOn(); }
     void motorsSwitchOff();
     void motorsSwitchOn();
@@ -130,6 +128,7 @@ public:
     float getYawAngleDegreesRaw() const { return _yawAngleDegreesRaw; }
 
     motor_pair_controller_telemetry_t getTelemetryData() const;
+    const MotorMixerBase& getMotorMixer() const { return _motorMixer; }
 
     void motorsResetAllEncoders();
 public:

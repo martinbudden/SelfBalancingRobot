@@ -120,8 +120,3 @@ float MotorPairMixer::getMotorSpeedDPS(size_t motorIndex) const
 {
     return motorIndex == 0 ? _motorPair.getLeftSpeed() : _motorPair.getRightSpeed();
 }
-
-float MotorPairMixer::getMixerThrottleCommand() const
-{
-    return _throttleCommand;
-}
