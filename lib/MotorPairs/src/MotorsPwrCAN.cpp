@@ -32,7 +32,7 @@ MotorsPwrCAN::MotorsPwrCAN() :
     ESP32Can.CANInit();
 }
 
-void MotorsPwrCAN::readEncoder()
+void MotorsPwrCAN::readAllEncoders()
 {
     if (xQueueReceive(CAN_cfg.rx_queue, &_rxFrame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
         if (_rxFrame.FIR.B.FF == CAN_frame_std) {

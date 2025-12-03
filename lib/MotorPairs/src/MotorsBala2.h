@@ -7,7 +7,7 @@ class MotorsBala2 final : public MotorPairBase {
 public:
     MotorsBala2(uint8_t SDA_pin, uint8_t SCL_pin);
 public:
-    virtual void readEncoder() override;
+    virtual void readAllEncoders() override;
     virtual void setPower(float leftPower, float rightPower) override;
 private:
     static constexpr float MIN_POWER = -1023.0F;

@@ -227,8 +227,7 @@ If new stick values are available then update the setpoint using the stick value
 void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 {
 #if defined(MOTORS_HAVE_ENCODERS)
-    _motorMixer.readEncoder(MotorPairMixer::MOTOR_LEFT);
-    _motorMixer.readEncoder(MotorPairMixer::MOTOR_RIGHT);
+    _motorMixer.readAllEncoders();
 
     _encoderLeft = _motorMixer.getEncoder(MotorPairMixer::MOTOR_LEFT);
     _encoderLeftDelta = _encoderLeft - _encoderLeftPrevious;

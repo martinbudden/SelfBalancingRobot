@@ -18,7 +18,7 @@ Motors4EncoderMotor::Motors4EncoderMotor(uint8_t SDA_pin, uint8_t SCL_pin, uint3
     _I2C.writeRegister(REGISTER_CONFIGURE | (MOTOR_RIGHT << 4), NORMAL_MODE);
 }
 
-void Motors4EncoderMotor::readEncoder()
+void Motors4EncoderMotor::readAllEncoders()
 {
     std::array<uint8_t, 4> data;
 

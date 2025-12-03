@@ -71,7 +71,7 @@ Motors_ODrive::Motors_ODrive(float stepsPerRevolution) :
     motors_ODrive = this;
 }
 
-void Motors_ODrive::readEncoder()
+void Motors_ODrive::readAllEncoders()
 {
     _feedback0 = _oDrv0_user_data.last_feedback;
     _oDrv0_user_data.received_feedback = false;

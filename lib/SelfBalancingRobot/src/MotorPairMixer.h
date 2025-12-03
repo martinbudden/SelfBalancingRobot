@@ -23,6 +23,7 @@ public:
 
     bool canReportPosition(size_t motorIndex) const override;
     void resetAllEncoders() override;
+    void readAllEncoders() override;
     void readEncoder(size_t motorIndex) override;
     int32_t getEncoder(size_t motorIndex) const override;
     uint32_t getStepsPerRevolution(size_t motorIndex) const override;

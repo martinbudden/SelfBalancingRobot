@@ -15,7 +15,7 @@ MotorsBala2::MotorsBala2(uint8_t SDA_pin, uint8_t SCL_pin) :
     (void)SCL_pin;
 }
 
-void MotorsBala2::readEncoder()
+void MotorsBala2::readAllEncoders()
 {
     std::array<uint8_t, 8> data {};
 

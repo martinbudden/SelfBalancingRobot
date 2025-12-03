@@ -52,7 +52,7 @@ public:
     float getDeadbandPower() const { return _deadbandPower; }
     void setDeadbandPower(float deadbandPower) { _deadbandPower = deadbandPower; }
 public:
-    virtual void readEncoder() {};
+    virtual void readAllEncoders() {};
     virtual void setPower(float leftPower, float rightPower) = 0;
 public:
     static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }

@@ -81,12 +81,15 @@ bool MotorPairMixer::canReportPosition(size_t motorIndex) const
     return _motorPair.canReportPosition();
 }
 
+void MotorPairMixer::readAllEncoders()
+{
+    _motorPair.readAllEncoders();
+}
+
 void MotorPairMixer::readEncoder(size_t motorIndex)
 {
-    // motorPair reads both encoders, so to avoid reading twice, only read for left motor
-    if (motorIndex == MOTOR_LEFT) {
-        _motorPair.readEncoder();
-    }
+    (void)motorIndex;
+    _motorPair.readAllEncoders();
 }
 
 int32_t MotorPairMixer::getEncoder(size_t motorIndex) const

@@ -18,7 +18,7 @@ public:
     };
 public:
     explicit Motors_ODrive(float stepsPerRevolution);
-    virtual void readEncoder() override;
+    virtual void readAllEncoders() override;
 public:
     enum { CAN_BAUDRATE = 250000 }; //!< Default ODrive baudrate is 250000
     enum { O_DRIVE_0_NODE_ID = 0, O_DRIVE_1_NODE_ID = 1 };
