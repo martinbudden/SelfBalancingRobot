@@ -40,7 +40,12 @@ MotorsGPIO::MotorsGPIO(const pins_t& pins) :
     // PWM Resolution
     constexpr int resolution = 8;
 
-#if defined(ESPRESSIF32_6_11_0)
+#if defined(LIBRARY_MOTOR_MIXERS_USE_LEDC_ATTACH)
+    (void)frequency;
+    (void)resolution;
+    ledcAttach(pins.motorLeft, frequency, resolution);
+    ledcAttach(pins.motorRight, frequency, resolution);
+#else
     ledcSetup(motorLeft, frequency, resolution);
     ledcSetup(motorRight, frequency, resolution);
     ledcSetup(servoLeft, frequency, resolution);
@@ -50,11 +55,6 @@ MotorsGPIO::MotorsGPIO(const pins_t& pins) :
     ledcAttachPin(pins.motorRight, motorRight);
     ledcAttachPin(pins.servoLeft, servoLeft);
     ledcAttachPin(pins.servoRight, servoRight);
-#else
-    (void)frequency;
-    (void)resolution;
-    ledcAttach(pins.motorLeft, frequency, resolution);
-    ledcAttach(pins.motorRight, frequency, resolution);
 #endif // ESPRESSIF32_6_11_0
 
 #else

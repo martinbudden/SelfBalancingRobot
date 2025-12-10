@@ -39,6 +39,7 @@ private:
     MotorPairController(MotorPairController&&) = delete;
     MotorPairController& operator=(MotorPairController&&) = delete;
 public:
+    enum { MOTOR_LEFT = MotorPairMixer::MOTOR_LEFT, MOTOR_RIGHT = MotorPairMixer::MOTOR_RIGHT };
     enum control_mode_e {
         CONTROL_MODE_SERIAL_PIDS, //!< Serial configuration for pitch and speed PIDs. Output from speed PID is added to the setpoint of the pitch PID.
         CONTROL_MODE_PARALLEL_PIDS, //!< Parallel configuration for pitch and speed PIDs. Pitch and speed are independently set.

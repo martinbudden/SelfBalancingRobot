@@ -29,6 +29,7 @@ public:
     uint32_t getStepsPerRevolution(size_t motorIndex) const override;
 
     bool canReportSpeed(size_t motorIndex) const override;
+    bool canReportSpeed() const { return (canReportSpeed(MOTOR_LEFT) && canReportSpeed(MOTOR_RIGHT)); }
     int32_t getMotorRPM(size_t motorIndex) const override;
     float getMotorSpeedDPS(size_t motorIndex) const override;
 

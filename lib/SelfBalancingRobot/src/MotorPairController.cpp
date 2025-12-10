@@ -133,8 +133,8 @@ motor_pair_controller_telemetry_t MotorPairController::getTelemetryData() const
     telemetry.positionOutput = _outputs[OUTPUT_POSITION_DEGREES];
     telemetry.yawRateOutput = _outputs[OUTPUT_YAW_RATE_DPS];
 
-    telemetry.powerLeft = _motorMixer.getMotorOutput(MotorPairMixer::MOTOR_LEFT);
-    telemetry.powerRight = _motorMixer.getMotorOutput(MotorPairMixer::MOTOR_RIGHT);
+    telemetry.powerLeft = _motorMixer.getMotorOutput(MOTOR_LEFT);
+    telemetry.powerRight = _motorMixer.getMotorOutput(MOTOR_RIGHT);
 
     telemetry.encoderLeft = _encoderLeft;
     telemetry.encoderRight = _encoderRight;
@@ -229,19 +229,20 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 #if defined(MOTORS_HAVE_ENCODERS)
     _motorMixer.readAllEncoders();
 
-    _encoderLeft = _motorMixer.getEncoder(MotorPairMixer::MOTOR_LEFT);
+    _encoderLeft = _motorMixer.getEncoder(MOTOR_LEFT);
     _encoderLeftDelta = _encoderLeft - _encoderLeftPrevious;
     _encoderLeftPrevious = _encoderLeft;
 
-    _encoderRight = _motorMixer.getEncoder(MotorPairMixer::MOTOR_RIGHT);
+    _encoderRight = _motorMixer.getEncoder(MOTOR_RIGHT);
     _encoderRightDelta = _encoderRight - _encoderRightPrevious;
     _encoderRightPrevious = _encoderRight;
 
-    if (_motorMixer.canReportSpeed(MotorPairMixer::MOTOR_LEFT)) {
-        _speedLeftDPS = _motorMixer.getMotorSpeedDPS(MotorPairMixer::MOTOR_LEFT);
-        _speedRightDPS = _motorMixer.getMotorSpeedDPS(MotorPairMixer::MOTOR_RIGHT);
+    if (_motorMixer.canReportSpeed()) {
+        _speedLeftDPS = _motorMixer.getMotorSpeedDPS(MOTOR_LEFT);
+        _speedRightDPS = _motorMixer.getMotorSpeedDPS(MOTOR_RIGHT);
         _speedDPS = (_speedLeftDPS + _speedRightDPS) * 0.5F;
     } else {
+        // The motor mixer cannot report speed directly, so estimate it using the encoder values.
         // For reference, at 420 steps per revolution, with a 100Hz (10ms) update rate,
         // 1 step per update gives a speed of (360 * 1/420) * 100 = 85 DPS (degrees per second)
         // With a 200Hz (5ms) update rate that is 170 DPS.
@@ -268,7 +269,7 @@ void MotorPairController::updateMotorSpeedEstimates(float deltaT)
 #else
     (void)deltaT;
     // no encoders, so estimate speed from power output
-    _speedDPS =  _motorMaxSpeedDPS * MotorPairBase::clip((_motorMixer.getMotorOutput(MotorPairMixer::MOTOR_LEFT) + _motorMixer.getMotorOutput(MotorPairMixer::MOTOR_LEFT)) * 0.5F, -1.0F, 1.0F);
+    _speedDPS =  _motorMaxSpeedDPS * MotorPairBase::clip((_motorMixer.getMotorOutput(MOTOR_LEFT) + _motorMixer.getMotorOutput(MOTOR_LEFT)) * 0.5F, -1.0F, 1.0F);
 #endif
 }
 
@@ -314,7 +315,7 @@ void MotorPairController::updateOutputsUsingPIDs(const AHRS::ahrs_data_t& ahrsDa
     _outputs[PITCH_ANGLE_DEGREES] = -_PIDS[PITCH_ANGLE_DEGREES].updateDelta(pitchAngleDegrees, pitchAngleFilteredDTerm, ahrsDataNED.deltaT);
 
     // calculate _outputs[YAW_RATE_DPS]
-    const float yawRateDPS = -ahrsDataNED.accGyroRPS.gyroRPS.z * Quaternion::radiansToDegrees;
+    const float yawRateDPS = -ahrsDataNED.accGyroRPS.gyroRPS.z * Quaternion::RADIANS_TO_DEGREES;
     _outputs[YAW_RATE_DPS] = _PIDS[YAW_RATE_DPS].update(yawRateDPS, ahrsDataNED.deltaT);
 
     const VehicleControllerMessageQueue::queue_item_t queueItem {
